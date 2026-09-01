@@ -795,3 +795,23 @@
 ### 다음 작업
 
 - `DEV-0013`: local query plan/dependency release gate
+
+## DEV-0013 — Dependency Frontend Lane
+
+- 날짜: 2026-09-02
+- Milestone: 6A local hardening
+- 상태: COMPLETED
+- 예정 commit: `perf(dev): verify local query and dependency gates [DEV-0013]`
+
+### 완료와 검증
+
+- registry current stable Expo 57.0.19/Router 57.0.18과 compatible pin 일치, `expo install --check`를 재확인했다.
+- root audit의 Expo 경로 moderate 14와 비호환 force-fix 제안을 기록하고 실제 package 변경은 하지 않았다.
+
+### 이슈·누락·Handoff
+
+- `FE-ISSUE-0001`은 OPEN 유지한다. local release는 조건부 통과, 원격 preview 전 upstream 해소 또는 사용자 위험 수용이 필요하다.
+
+### 다음 작업
+
+- `DEV-0014`: final local portfolio documentation/acceptance

@@ -836,6 +836,30 @@
 
 - `DEV-0013`: local 핵심 query plan과 dependency advisory 재확인
 
+## DEV-0013 — Query Plan과 Dependency Backend Lane
+
+- 날짜: 2026-09-02
+- Milestone: 6A local hardening
+- 상태: COMPLETED
+- base commit: `45d6aa1e0813e5239124dc7114f803d35fe0da95`
+- migration revision: `0009_finapp_order_list_index`
+- migration owner: single main, local/Testcontainers only
+- 예정 commit: `perf(dev): verify local query and dependency gates [DEV-0013]`
+
+### 완료와 검증
+
+- four-plan runtime-role gate와 performance evidence를 추가하고 order keyset index를 exact composite order로 재생성했다.
+- Testcontainers migration 10 tests와 보존 Compose forward migration, expected index와 100ms ceiling을 통과했다.
+- Drizzle current stable pin과 build-time moderate 4건, production backend workspace audit 0을 재확인했다.
+
+### 이슈·누락·Handoff
+
+- 중앙 `GAP-0009` RESOLVED. `BE-ISSUE-0001`은 원격 preview release risk로 OPEN 유지한다.
+
+### 다음 작업
+
+- `DEV-0014`: final local portfolio documentation/acceptance
+
 ## 새 기록 Template
 
 ```markdown

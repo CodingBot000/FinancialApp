@@ -20,7 +20,7 @@ backend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한�
 - 해결 조건: Drizzle Kit stable이 해당 dependency를 제거한 버전으로 갱신되고 migration generation/check, Testcontainers migration, lint, typecheck와 build가 모두 통과한다. 호환성 검증 없이 beta 강제 업그레이드 또는 전역 esbuild override를 적용하지 않는다.
 - 목표 BE: Milestone 1 통합 전 upstream 재확인, 늦어도 Milestone 6 release gate 전 해결
 - 해결 BE:
-- 검증: BE-0009 `npm audit --json` moderate 18/high 0/critical 0. simulator Docker runtime stage는 144 package, vulnerability 0을 보고했다.
+- 검증: DEV-0013 registry 재확인에서도 current stable은 Drizzle Kit `0.31.10`, ORM `0.45.2`다. root audit moderate 18/high 0/critical 0 중 build-time Drizzle 경로 4건이 유지되며 platform/simulator production image workspace audit은 각각 vulnerability 0이다. 원격 preview 전 upstream 해소 또는 사용자 위험 수용이 필요하다.
 
 ## Resolved Issue History
 

@@ -89,7 +89,7 @@ describe('platform Drizzle migration', () => {
         SELECT count(*)::text AS count
         FROM finapp_meta.finapp_platform_drizzle_migrations
       `);
-      expect(history.rows[0]?.count).toBe('9');
+      expect(history.rows[0]?.count).toBe('10');
     } finally {
       await client.end();
     }

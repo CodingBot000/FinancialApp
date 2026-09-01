@@ -7,8 +7,8 @@
 - 활성 branch/worktree: `main` / `/Users/switch/Development/Web/FinancialApp`
 - 현재 실행 종료선: 단계 10 로컬 하드닝 완료 후 STOP
 - 현재 실행 제외: 원격 DB 접속·사전점검·migration/seed와 원격 배포
-- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`, 단계 3 `BE-0010`, 단계 4 `FE-0010`, 단계 5 `FE-0011`, 단계 6 `FE-0012`, FE-0013 진입 보강 `BE-0011`, 단계 7 `FE-0013`, 단계 8 `FE-0014`, 단계 9 `DEV-0011`
-- 다음 작업 ID: `DEV-0013`
+- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`, 단계 3 `BE-0010`, 단계 4 `FE-0010`, 단계 5 `FE-0011`, 단계 6 `FE-0012`, FE-0013 진입 보강 `BE-0011`, 단계 7 `FE-0013`, 단계 8 `FE-0014`, 단계 9 `DEV-0011`, 단계 10의 `BE-0012`~`BE-0015`·`DEV-0012`·`DEV-0013`
+- 다음 작업 ID: `DEV-0014`
 
 ## 1. 목적과 문서 권한
 
@@ -48,8 +48,8 @@
 | Milestone 5 | quote, biometric/idempotent mobile BUY, simulator brokerage/scenario, settlement/reconciliation/ledger/position/execution/audit와 UNKNOWN GET recovery | 단계 9 clean full-stack acceptance | DONE (기능) |
 | Simulator MVP | 계좌/보유/거래/시세/주문/status, 6개 장애 scenario, deterministic reset/reseed와 platform developer proxy | mobile 포함 전체 E2E에서 재검증 | DONE (local service boundary) |
 | Contract 품질 | OpenAPI 2개, 현재 operation 31개 controller/provider/fixture/consumer 추적과 호환성 gate | 이후 operation 추가 시 같은 coverage와 provider schema 검증 유지 | DONE (current surface) |
-| Local E2E | 서비스별 test와 수동 Compose smoke | mobile→IdP→platform→simulator→DB 전체 인수 시나리오 | NOT_STARTED |
-| Milestone 6A local | DEV-0011 인수, BE-0012 outbox, BE-0013 crypto, BE-0014 security/log isolation, BE-0015 readiness/metrics/resilience와 DEV-0012 profile 범위 완료 | 성능·dependency와 포트폴리오 문서 | IN_PROGRESS |
+| Local E2E | clean Compose에서 mobile-equivalent client→IdP→platform→simulator→DB 12단계 자동 인수와 OIDC/profile actual smoke 완료 | DEV-0014 최종 clean 재검증 | DONE (DEV-0011 기준) |
+| Milestone 6A local | DEV-0011 인수, BE-0012 outbox, BE-0013 crypto, BE-0014 security/log isolation, BE-0015 readiness/metrics/resilience, DEV-0012 profile과 DEV-0013 성능/dependency 완료 | 최종 포트폴리오 문서와 local acceptance | IN_PROGRESS |
 | Milestone 6B remote | 없음 | Lightsail DB migration, AWS KMS, HTTPS/EAS와 원격 rollback | CURRENT_RUN_EXCLUDED |
 
 ### 3.1 최초 계획에서 누락되거나 약하게 연결된 항목
@@ -357,6 +357,8 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 진행 기록: BE-0015에서 DB timeout readiness, private bounded metrics와 simulator closed/open/half-open circuit breaker를 구현하고 canonical 33 operations/36 fixtures, platform 77 tests와 actual Compose readiness/12단계 smoke로 검증했다. 주문 POST 자동 retry는 추가하지 않았다.
 
 범위 결정: DEV-0012에서 별도 onboarding wizard와 portfolio recommendation은 명시적 제외로 유지했다. OIDC default profile + Settings owner/versioned 편집만 구현했으며 추천 비율·적합성·수익 보장 결과는 생성하지 않는다. canonical 계약은 35 operations/38 fixtures로 확장했다.
+
+성능/release 결정: DEV-0013에서 네 actual PostgreSQL plan을 runtime role로 자동 검증하고 주문 keyset index의 UUID tie-breaker를 migration `0009`로 보강했다. root advisory moderate 18/high·critical 0과 두 backend runtime 0은 local 조건부 통과로 판정하며 원격 preview의 security-clean 판정은 보류한다.
 
 ### 단계 11 — 원격 Demo와 Preview (`CURRENT_RUN_EXCLUDED`)
 

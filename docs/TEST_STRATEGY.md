@@ -84,6 +84,8 @@ platform-api와 실제 institution-simulator를 실행한다.
 
 `npm run smoke:local-order`는 clean local Compose migration/seed 뒤 합성 local JWT로 platform process를 시작해 sync→NORMAL FILLED→ORDER_REJECT→UNKNOWN reconciliation FILLED→outbox processed/delivery 3건→reset을 실제 HTTP로 검증한다. 이 명령은 원격 endpoint나 credential을 사용하지 않는다. `make smoke-test`는 stale host build를 피하기 위해 platform build를 먼저 수행한다.
 
+`make performance-test`는 기동된 local Compose PostgreSQL에 `financial_platform_app` role로 연결해 asset snapshot, account holding, owner order page와 reconciliation claim 네 query를 `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)`으로 실행한다. 각 plan은 expected `finapp_` index 하나 이상과 local 100ms ceiling을 만족해야 하며 ID/credential을 출력하지 않는다. 이는 query shape 회귀 gate이지 production capacity benchmark가 아니다.
+
 HTTP adapter mock은 세부 client unit test에 사용할 수 있지만 이 suite를 대체하지 않는다.
 
 ### Security

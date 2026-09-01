@@ -2,7 +2,7 @@
 
 - 마지막 갱신: 2026-09-02
 - 다음 ISSUE ID: `ISSUE-0013`
-- 다음 GAP ID: `GAP-0009`
+- 다음 GAP ID: `GAP-0010`
 
 이 문서는 defect, blocker, 위험과 불가피한 누락을 삭제하지 않고 추적한다.
 
@@ -34,7 +34,7 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 해결 조건: Expo SDK 57 호환 patch로 advisory가 해소되거나, 공식 호환성이 확인된 override 후 Expo Doctor·native build·전체 test를 통과하거나, 사용자가 잔여 위험을 명시적으로 수용한다.
 - 목표 DEV: 늦어도 Milestone 6 release gate 전 해결
 - 해결 DEV:
-- 검증: DEV-0006 통합 `npm audit --json`에서 Expo 관련 moderate 14건을 확인했다. 자동 fix는 Expo 46, Expo Router 5 또는 다른 비호환 조합을 제안하므로 적용하지 않았다. 전체 통합 결과는 Drizzle 관련 4건을 포함해 moderate 18, high 0, critical 0이다.
+- 검증: DEV-0013에서 Expo `~57.0.19`, Expo Router `~57.0.18`이 registry current stable과 일치하고 `expo install --check`가 통과함을 재확인했다. root audit은 Expo 경로 moderate 14를 포함해 총 moderate 18/high 0/critical 0이며 제안 fix는 Expo 46/Router 5 등 비호환 downgrade이므로 적용하지 않았다. local release gate는 조건부 통과, 향후 원격 preview는 upstream 해소 또는 사용자 위험 수용 전 security-clean 판정하지 않는다.
 
 ### ISSUE-0003 — Drizzle Kit build-time transitive advisory
 
@@ -50,7 +50,7 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 해결 조건: 안전한 stable Drizzle Kit 갱신 후 schema generation, migration, Testcontainers, lint, typecheck와 build가 모두 통과한다.
 - 목표 DEV: 늦어도 Milestone 6 release gate 전 해결
 - 해결 DEV:
-- 검증: DEV-0006 통합 `npm audit --json`에서 Drizzle 관련 moderate 4건, production image runtime vulnerability 0을 확인했다.
+- 검증: DEV-0013에서 registry current stable이 Drizzle Kit `0.31.10`, ORM `0.45.2`로 현재 pin과 같음을 확인했다. root audit은 Drizzle build-time 경로 moderate 4건을 유지하고 두 production backend image workspace audit은 vulnerability 0이다. local release gate는 조건부 통과하며 강제 downgrade/override는 적용하지 않았다.
 
 ## Active Gap
 
@@ -100,6 +100,21 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 검증: clean local volume에서 `make acceptance-test`를 실행해 `npm ci`, root 168 tests/build, migration/seed, actual Keycloak OIDC, raw/processing/wealth/simulation, FILLED/REJECTED/UNKNOWN→FILLED, 동일 key replay와 DB execution/ledger/position/audit 증거, production image audit 0을 통과했다. 최종 JSON은 `acceptance=passed`, `scenarioSteps=12`, `remoteResourcesUsed=false`를 기록했다.
 
 ## Resolved History
+
+### GAP-0009 — 주문 목록 keyset 정렬과 index tie-breaker 불일치
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 최초 발견: 2026-09-02
+- 마지막 갱신: 2026-09-02
+- 발견 DEV: DEV-0013 local query plan
+- 원래 요구사항: 핵심 조회 3개 이상의 actual PostgreSQL query plan과 성능 근거
+- 누락/연기 이유: 기존 주문 index는 `(user_id, created_at DESC)`까지만 포함해 실제 `(created_at DESC, id DESC)` keyset order의 UUID tie-breaker를 incremental sort했다.
+- 현재 영향: 없음. 보강 전에도 결과와 1.458ms local latency는 정상이었으나 cardinality 증가 시 불필요한 sort 가능성이 있었다.
+- 목표 Milestone: 6A local hardening
+- 재확인 조건: exact keyset index migration, 빈/보존 PostgreSQL 적용과 plan에서 incremental sort 제거
+- 해결 DEV: DEV-0013
+- 검증: migration `0009_finapp_order_list_index` 후 owner order page가 composite index를 직접 사용하고 `Incremental Sort` 없이 1.126ms를 기록했다. `make performance-test`의 네 plan이 expected index와 100ms ceiling을 통과했다.
 
 ### ISSUE-0012 — `make smoke-test`가 stale host build 실행
 

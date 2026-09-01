@@ -60,6 +60,7 @@
 | D-049 | ACCEPTED | 인증·인가 실패는 append-only security event에 stable reason code, trace ID, HMAC source IP와 allowlist metadata만 저장한다. 일반 HTTP log는 query/header/body를 받지 않는 구조화 allowlist event만 출력하며 보안 이벤트 저장 실패가 인증 fail-closed 결정을 바꾸지 않는다. |
 | D-050 | ACCEPTED | readiness는 bounded timeout을 둔 application DB `SELECT 1`만 필수 dependency로 검사하고 IdP·simulator 장애와 강결합하지 않는다. metrics는 private monitoring ingress에서만 노출하는 process-local bounded JSON counter/pool snapshot으로 시작한다. 외부 simulator adapter는 closed/open/half-open circuit breaker를 공유하되 외부 HTTP 중 DB transaction을 유지하지 않고 주문 POST를 자동 retry하지 않는다. |
 | D-051 | ACCEPTED | Milestone 6 onboarding은 검증된 OIDC subject의 합성 기본 risk profile 자동 생성과 Settings의 owner-scoped 조회/수정으로 완료한다. 별도 wizard는 만들지 않는다. risk profile은 planning preference이며 portfolio recommendation, 목표 배분 생성, 투자 적합성 판정이나 수익 보장 표현을 제공하지 않는다. update는 `financial.write`와 optimistic version을 요구한다. |
+| D-052 | ACCEPTED | local performance gate는 runtime role의 actual PostgreSQL JSON plan에서 expected index와 100ms ceiling을 검증하되 capacity/SLO 증거로 과장하지 않는다. root moderate 18/high·critical 0과 backend runtime 0인 dependency 상태는 local 단계 조건부 통과로 판정하며, 원격 preview의 security-clean 판정은 upstream 해소 또는 사용자 위험 수용 전 보류한다. `npm audit fix --force`와 비호환 downgrade는 적용하지 않는다. |
 
 ## 정정 이력
 

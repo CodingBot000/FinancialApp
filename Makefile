@@ -1,7 +1,7 @@
 COMPOSE_ENV_FILE ?= infra/docker/.env
 COMPOSE = docker compose --env-file $(COMPOSE_ENV_FILE) -f infra/docker/compose.yaml
 
-.PHONY: acceptance-test backend-test bootstrap build concurrency-test contract-check format format-check infra-down infra-up integration-test lint mobile-test reset-demo seed smoke-test test typecheck unit-test verify
+.PHONY: acceptance-test backend-test bootstrap build concurrency-test contract-check format format-check infra-down infra-up integration-test lint mobile-test performance-test reset-demo seed smoke-test test typecheck unit-test verify
 
 bootstrap:
 	npm ci
@@ -64,6 +64,9 @@ seed:
 
 reset-demo:
 	npm run reset:local-demo
+
+performance-test:
+	COMPOSE_ENV_FILE=$(COMPOSE_ENV_FILE) node scripts/verify-local-query-plans.mjs
 
 smoke-test:
 	npm run build -w @finapp/platform-api

@@ -503,7 +503,7 @@ Unique: `finapp_uq_idempotency_user_operation_key`.
 | `created_at` | `timestamptz` | N | - | |
 | `updated_at` | `timestamptz` | N | - | |
 
-Unique/indexes: `finapp_uq_order_client_id`, `finapp_idx_order_user_created`, `finapp_idx_order_status_updated`.
+Unique/indexes: `finapp_uq_order_client_id`, `finapp_idx_order_user_created(user_id, created_at DESC, id DESC)`, `finapp_idx_order_status_updated`.
 
 ### `finapp_trading.finapp_fund_reservation`
 

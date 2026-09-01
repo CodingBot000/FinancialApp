@@ -889,7 +889,11 @@ export const finappTradeOrder = finappTradingSchema.table(
       'finapp_ck_order_status',
       sql`${table.status} IN ('CREATED', 'FUNDS_RESERVED', 'PENDING_SUBMISSION', 'ACCEPTED', 'UNKNOWN', 'FILLED', 'REJECTED', 'FAILED', 'CANCELLED')`,
     ),
-    index('finapp_idx_order_user_created').on(table.userId, table.createdAt),
+    index('finapp_idx_order_user_created').on(
+      table.userId,
+      table.createdAt.desc(),
+      table.id.desc(),
+    ),
     index('finapp_idx_order_status_updated').on(table.status, table.updatedAt),
   ],
 );

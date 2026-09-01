@@ -769,6 +769,28 @@
 - `BE-ISSUE-0009` provisioning/profile port coupling과 `FE-ISSUE-0011` production 저장 message 미노출을 해결했다.
 - 다음은 `DEV-0013` 핵심 query plan과 dependency advisory/release risk 재검증이다.
 
+## DEV-0013 — Local Query Plan과 Dependency Release Gate
+
+- 날짜: 2026-09-02
+- Milestone: 6A local hardening
+- 상태: COMPLETED
+- 예정 commit: `perf(dev): verify local query and dependency gates [DEV-0013]`
+
+### 완료와 검증
+
+- runtime app role로 asset snapshot, account holding, owner order page와 reconciliation claim 네 JSON plan을 실행하는 `make performance-test`를 추가했다.
+- 주문 keyset order의 UUID tie-breaker가 기존 index에 없어 발생한 incremental sort를 `0009_finapp_order_list_index`로 제거했다.
+- 최종 보존 Compose plan은 0.228/0.329/1.524/0.347ms였고 모두 expected prefix index와 100ms ceiling을 통과했다.
+- 빈 Testcontainers PostgreSQL은 migration history 10개, prefix/role/권한과 기존 domain integration을 통과했다.
+- registry current stable과 pin을 비교하고 root audit moderate 18/high 0/critical 0, 두 backend production image workspace audit 0을 재확인했다.
+- local release는 조건부 통과로 판정했다. `ISSUE-0002`/`ISSUE-0003`은 원격 preview security-clean 판정 전에 upstream 해소 또는 사용자 위험 수용이 필요하다.
+- 원격 DB·endpoint/credential·catalog·migration/seed·deploy는 사용하지 않았다.
+
+### 이슈와 다음 작업
+
+- `GAP-0009` RESOLVED.
+- 다음은 `DEV-0014` 최종 portfolio documentation과 clean local acceptance다.
+
 ## FE-0013 — Biometric BUY와 Recovery Mobile 통합
 
 - 날짜: 2026-09-02

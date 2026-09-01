@@ -22,7 +22,7 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 해결 조건: 중앙 `ISSUE-0002`의 해결 조건 충족
 - 목표 FE: Milestone 6 preview/demo release gate 전 호환 patch 상태 재확인
 - 해결 FE:
-- 검증: FE-0001에서 `npm view expo@57 version --json`과 Expo 공식 SDK 57 문서를 확인한 결과 stable 최신 patch는 `57.0.18`이며 현재 manifest와 동일하다. FE-0008의 AuthSession/WebBrowser까지 추가한 뒤에도 `expo install --check`는 통과하고 `npm audit --json`은 moderate 13/high 0/critical 0으로 유지됐다. 제안된 강제 fix는 Expo 46 또는 Expo Router 5로의 비호환 downgrade다. Android API 31 Development Build chart runtime smoke는 FE-0004, LocalAuthentication과 OIDC browser native compile은 FE-0006/FE-0008에서 통과했다.
+- 검증: DEV-0013에서 registry current stable Expo `57.0.19`, Expo Router `57.0.18`과 현재 compatible pin이 일치하고 `expo install --check`가 통과했다. root audit은 Expo 경로 moderate 14를 포함해 총 moderate 18/high 0/critical 0이다. 제안된 강제 fix는 Expo 46 또는 Router 5의 비호환 downgrade라 적용하지 않았다. local release는 조건부 통과, 원격 preview 전 upstream 해소 또는 사용자 위험 수용이 필요하다.
 
 ## Active Gap
 
