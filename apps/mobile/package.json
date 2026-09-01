@@ -6,9 +6,10 @@
   "main": "expo-router/entry",
   "scripts": {
     "android": "expo start --android",
+    "architecture:check": "node scripts/check-architecture.mjs",
     "dependency:check": "expo install --check",
     "ios": "expo start --ios",
-    "lint": "eslint src vitest.config.ts expo-env.d.ts",
+    "lint": "eslint src scripts vitest.config.ts",
     "start": "expo start",
     "start:web": "expo start --web",
     "test": "vitest run --config vitest.config.ts",

@@ -14,14 +14,15 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 상태: OPEN
 - 심각도: MEDIUM
 - 발견 FE: DEV-0005 공통 scaffold
+- 마지막 갱신: 2026-09-01, FE-0001
 - 관련 contract revision: `platform-v1`
 - 중앙 연결: `ISSUE-0002`
 - 내용: 공식 Expo SDK 57.0.18 dependency tree에서 `npm audit` moderate 13건이 보고된다.
 - 영향: local 개발과 자동 검증은 통과하지만 preview/demo release 전에 upstream patch 또는 공식 호환 override를 확인해야 한다.
 - 해결 조건: 중앙 `ISSUE-0002`의 해결 조건 충족
-- 목표 FE: FE-0001에서 최신 Expo patch와 advisory 상태 재확인
+- 목표 FE: Milestone 6 preview/demo release gate 전 호환 patch 상태 재확인
 - 해결 FE:
-- 검증: `npm audit --json`, Expo Doctor와 native Development Build
+- 검증: FE-0001에서 `npm view expo@57 version --json`과 Expo 공식 SDK 57 문서를 확인한 결과 stable 최신 patch는 `57.0.18`이며 현재 manifest와 동일하다. `expo install --check`는 통과했다. `npm audit --json`은 moderate 13/high 0/critical 0으로 DEV-0005와 동일하고 제안된 강제 fix는 Expo 46 또는 Expo Router 5로의 비호환 downgrade다. Expo Doctor와 native Development Build는 후속 Milestone 1 검증에 포함한다.
 
 ## Issue Template
 
