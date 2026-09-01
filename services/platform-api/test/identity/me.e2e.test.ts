@@ -8,6 +8,10 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { AppModule } from '../../src/app.module.js';
 import { createFastifyAdapter } from '../../src/core/http/create-fastify-adapter.js';
 import { IDENTITY_REPOSITORY } from '../../src/modules/identity/application/ports/identity-repository.port.js';
+import { INSTITUTION_PORT } from '../../src/modules/mydata/application/ports/institution.port.js';
+import { MYDATA_REPOSITORY } from '../../src/modules/mydata/application/ports/mydata-repository.port.js';
+import { SENSITIVE_DATA_PORT } from '../../src/modules/mydata/application/ports/sensitive-data.port.js';
+import { WEALTH_REPOSITORY } from '../../src/modules/wealth/application/ports/wealth-repository.port.js';
 
 describe('GET /api/v1/me OIDC boundary', () => {
   const identityRepository = {
@@ -18,6 +22,46 @@ describe('GET /api/v1/me OIDC boundary', () => {
       datasetVersion: 'FINANCIAL_APP_DATASET_V1',
       syntheticData: true,
     }),
+  };
+  const myDataRepository = {
+    createConnection: vi.fn().mockResolvedValue({
+      connectionId: '44fc3d1c-cd8f-46ba-833f-96dac39dddfd',
+      institutionCode: 'SYNTH_WEALTH_001',
+      status: 'ACTIVE',
+      consentExpiresAt: '2027-09-01T00:00:00.000Z',
+      lastSuccessfulSyncAt: null,
+    }),
+    listConnections: vi.fn().mockResolvedValue([]),
+    createSync: vi.fn(),
+    getSync: vi.fn(),
+    beginSync: vi.fn(),
+    completeSync: vi.fn(),
+    failSync: vi.fn(),
+  };
+  const sensitiveData = {
+    encrypt: vi.fn().mockReturnValue({
+      ciphertext: Buffer.from('encrypted-test-value'),
+      keyVersion: 'test-v1',
+    }),
+    decrypt: vi.fn(),
+    lookupHash: vi.fn().mockReturnValue('a'.repeat(64)),
+  };
+  const wealthRepository = {
+    summary: vi.fn().mockResolvedValue({
+      asOfDate: '2026-09-01',
+      currency: 'KRW',
+      totalAssets: '185400000.0000',
+      cash: '15400000.0000',
+      investments: '170000000.0000',
+      change: { amount: '0.0000', rate: 0 },
+      allocation: [],
+      lastSyncedAt: '2026-09-01T10:00:02.000Z',
+    }),
+    accounts: vi.fn(),
+    account: vi.fn(),
+    holdings: vi.fn(),
+    transactions: vi.fn(),
+    history: vi.fn(),
   };
   let app: NestFastifyApplication;
   let issuer: string;
@@ -59,6 +103,14 @@ describe('GET /api/v1/me OIDC boundary', () => {
     })
       .overrideProvider(IDENTITY_REPOSITORY)
       .useValue(identityRepository)
+      .overrideProvider(MYDATA_REPOSITORY)
+      .useValue(myDataRepository)
+      .overrideProvider(INSTITUTION_PORT)
+      .useValue({ fetchDataset: vi.fn() })
+      .overrideProvider(SENSITIVE_DATA_PORT)
+      .useValue(sensitiveData)
+      .overrideProvider(WEALTH_REPOSITORY)
+      .useValue(wealthRepository)
       .compile();
     app = moduleRef.createNestApplication<NestFastifyApplication>(
       createFastifyAdapter(),
@@ -163,5 +215,65 @@ describe('GET /api/v1/me OIDC boundary', () => {
       issuer,
       'synthetic-user-a',
     );
+  });
+
+  it('enforces financial.write on connection creation', async () => {
+    const response = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: { authorization: `Bearer ${await accessToken()}` },
+        method: 'POST',
+        url: '/api/v1/mydata/connections',
+        payload: {
+          institutionCode: 'SYNTH_WEALTH_001',
+          consentExpiresAt: '2027-09-01T00:00:00.000Z',
+        },
+      });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json().code).toBe('AUTH_SCOPE_MISSING');
+  });
+
+  it('creates a connection without exposing the external customer identifier', async () => {
+    const response = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: {
+          authorization: `Bearer ${await accessToken({ scope: 'financial.write' })}`,
+        },
+        method: 'POST',
+        url: '/api/v1/mydata/connections',
+        payload: {
+          institutionCode: 'SYNTH_WEALTH_001',
+          consentExpiresAt: '2027-09-01T00:00:00.000Z',
+        },
+      });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.body).not.toContain('SYNTH-CUSTOMER-A');
+    expect(response.json()).toMatchObject({
+      institutionCode: 'SYNTH_WEALTH_001',
+      status: 'ACTIVE',
+    });
+  });
+
+  it('returns the server-authoritative asset summary', async () => {
+    const response = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: { authorization: `Bearer ${await accessToken()}` },
+        method: 'GET',
+        url: '/api/v1/assets/summary',
+      });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      totalAssets: '185400000.0000',
+      cash: '15400000.0000',
+      investments: '170000000.0000',
+    });
   });
 });

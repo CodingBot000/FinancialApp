@@ -64,6 +64,263 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/mydata/connections:
+    post:
+      operationId: createMyDataConnection
+      summary: Create the single synthetic institution connection
+      description: Requires `financial.write`; the external customer identifier is never returned.
+      security:
+        - BearerAuth: []
+      tags: [MyData]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConnectionRequest'
+      responses:
+        '201':
+          description: Synthetic institution connection created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connection'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: An active connection already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    get:
+      operationId: listMyDataConnections
+      summary: List the current user's institution connections
+      description: Requires `financial.read`.
+      security:
+        - BearerAuth: []
+      tags: [MyData]
+      responses:
+        '200':
+          description: Zero or one connection in MVP.
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1
+                items:
+                  $ref: '#/components/schemas/Connection'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/mydata/syncs:
+    post:
+      operationId: createMyDataSync
+      summary: Queue a manual synthetic institution synchronization
+      description: Requires `financial.write`. An already-active sync is returned with HTTP 200.
+      security:
+        - BearerAuth: []
+      tags: [MyData]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSyncRequest'
+      responses:
+        '200':
+          description: Existing active sync.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sync'
+        '202':
+          description: New sync queued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sync'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/mydata/syncs/{syncId}:
+    get:
+      operationId: getMyDataSync
+      summary: Read a user-owned sync status
+      description: Requires `financial.read` and ownership.
+      security:
+        - BearerAuth: []
+      tags: [MyData]
+      parameters:
+        - name: syncId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Current sync status and normalized counts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sync'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/assets/summary:
+    get:
+      operationId: getAssetSummary
+      summary: Read the server-authoritative asset summary
+      description: Requires `financial.read`.
+      security:
+        - BearerAuth: []
+      tags: [Wealth]
+      responses:
+        '200':
+          description: Latest asset snapshot and allocation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/accounts:
+    get:
+      operationId: listAccounts
+      summary: List user-owned normalized accounts
+      description: Requires `financial.read`; only masked account identifiers are returned.
+      security:
+        - BearerAuth: []
+      tags: [Wealth]
+      responses:
+        '200':
+          description: Account page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/accounts/{accountId}:
+    get:
+      operationId: getAccount
+      summary: Read one user-owned account
+      description: Requires `financial.read`; non-owned resources return 404.
+      security:
+        - BearerAuth: []
+      tags: [Wealth]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Account detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/holdings:
+    get:
+      operationId: listHoldings
+      summary: List user-owned normalized holdings
+      description: Requires `financial.read` and applies ownership to an optional account filter.
+      security:
+        - BearerAuth: []
+      tags: [Wealth]
+      parameters:
+        - name: accountId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Holding page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HoldingPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/transactions:
+    get:
+      operationId: listTransactions
+      summary: List user-owned normalized transactions
+      description: Requires `financial.read`.
+      security:
+        - BearerAuth: []
+      tags: [Wealth]
+      responses:
+        '200':
+          description: Transaction page ordered by occurrence time descending.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/assets/history:
+    get:
+      operationId: getAssetHistory
+      summary: Read unique daily asset snapshot points in ascending order
+      description: Requires `financial.read`.
+      security:
+        - BearerAuth: []
+      tags: [Wealth]
+      parameters:
+        - name: range
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [1M, 3M, 1Y, ALL]
+            default: 1Y
+      responses:
+        '200':
+          description: Asset history points.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetHistory'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 components:
   securitySchemes:
     BearerAuth:
@@ -83,7 +340,328 @@ components:
         type: string
         minLength: 1
         maxLength: 128
+  responses:
+    Unauthorized:
+      description: Bearer token is missing, expired, or cannot be verified.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Forbidden:
+      description: Bearer token does not include the required scope.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    ValidationFailed:
+      description: Request validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    NotFound:
+      description: Resource does not exist or is not owned by the caller.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
   schemas:
+    CreateConnectionRequest:
+      type: object
+      additionalProperties: false
+      required: [institutionCode, consentExpiresAt]
+      properties:
+        institutionCode:
+          type: string
+          const: SYNTH_WEALTH_001
+        consentExpiresAt:
+          type: string
+          format: date-time
+    Connection:
+      type: object
+      additionalProperties: false
+      required:
+        - connectionId
+        - institutionCode
+        - status
+        - consentExpiresAt
+        - lastSuccessfulSyncAt
+      properties:
+        connectionId:
+          type: string
+          format: uuid
+        institutionCode:
+          type: string
+          const: SYNTH_WEALTH_001
+        status:
+          type: string
+          enum: [ACTIVE, REVOKED, EXPIRED]
+        consentExpiresAt:
+          type: string
+          format: date-time
+        lastSuccessfulSyncAt:
+          type: [string, 'null']
+          format: date-time
+    CreateSyncRequest:
+      type: object
+      additionalProperties: false
+      required: [connectionId]
+      properties:
+        connectionId:
+          type: string
+          format: uuid
+    Sync:
+      type: object
+      additionalProperties: false
+      required:
+        - syncId
+        - connectionId
+        - status
+        - createdAt
+        - startedAt
+        - completedAt
+        - counts
+        - errorCode
+      properties:
+        syncId:
+          type: string
+          format: uuid
+        connectionId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [QUEUED, FETCHING, RAW_STORED, NORMALIZING, COMPLETED, FAILED]
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: [string, 'null']
+          format: date-time
+        completedAt:
+          type: [string, 'null']
+          format: date-time
+        counts:
+          $ref: '#/components/schemas/SyncCounts'
+        errorCode:
+          type: [string, 'null']
+    SyncCounts:
+      type: object
+      additionalProperties: false
+      required: [rawRecords, accounts, holdings, transactions]
+      properties:
+        rawRecords:
+          type: integer
+          minimum: 0
+        accounts:
+          type: integer
+          minimum: 0
+        holdings:
+          type: integer
+          minimum: 0
+        transactions:
+          type: integer
+          minimum: 0
+    Money:
+      type: string
+      pattern: '^-?[0-9]+\.[0-9]{4}$'
+    AssetSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - asOfDate
+        - currency
+        - totalAssets
+        - cash
+        - investments
+        - change
+        - allocation
+        - lastSyncedAt
+      properties:
+        asOfDate:
+          type: string
+          format: date
+        currency:
+          type: string
+          const: KRW
+        totalAssets:
+          $ref: '#/components/schemas/Money'
+        cash:
+          $ref: '#/components/schemas/Money'
+        investments:
+          $ref: '#/components/schemas/Money'
+        change:
+          type: object
+          additionalProperties: false
+          required: [amount, rate]
+          properties:
+            amount:
+              $ref: '#/components/schemas/Money'
+            rate:
+              type: number
+        allocation:
+          type: array
+          items:
+            $ref: '#/components/schemas/Allocation'
+        lastSyncedAt:
+          type: [string, 'null']
+          format: date-time
+    Allocation:
+      type: object
+      additionalProperties: false
+      required: [assetClass, amount, weight]
+      properties:
+        assetClass:
+          type: string
+        amount:
+          $ref: '#/components/schemas/Money'
+        weight:
+          type: number
+          minimum: 0
+          maximum: 1
+    Account:
+      type: object
+      additionalProperties: false
+      required:
+        - accountId
+        - institutionCode
+        - maskedAccountNumber
+        - accountType
+        - currency
+        - status
+        - cashBalance
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        institutionCode:
+          type: string
+        maskedAccountNumber:
+          type: string
+        accountType:
+          type: string
+        currency:
+          type: string
+        status:
+          type: string
+        cashBalance:
+          $ref: '#/components/schemas/Money'
+    AccountPage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+        nextCursor:
+          type: 'null'
+    Holding:
+      type: object
+      additionalProperties: false
+      required:
+        - holdingId
+        - accountId
+        - instrumentCode
+        - displayName
+        - assetClass
+        - quantity
+        - averagePrice
+        - marketValue
+        - asOfAt
+      properties:
+        holdingId:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+        instrumentCode:
+          type: string
+        displayName:
+          type: string
+        assetClass:
+          type: string
+        quantity:
+          type: string
+        averagePrice:
+          $ref: '#/components/schemas/Money'
+        marketValue:
+          $ref: '#/components/schemas/Money'
+        asOfAt:
+          type: string
+          format: date-time
+    HoldingPage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Holding'
+        nextCursor:
+          type: 'null'
+    Transaction:
+      type: object
+      additionalProperties: false
+      required:
+        - transactionId
+        - accountId
+        - transactionType
+        - amount
+        - currency
+        - occurredAt
+      properties:
+        transactionId:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+        transactionType:
+          type: string
+        amount:
+          $ref: '#/components/schemas/Money'
+        currency:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
+    TransactionPage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        nextCursor:
+          type: 'null'
+    AssetHistory:
+      type: object
+      additionalProperties: false
+      required: [points]
+      properties:
+        points:
+          type: array
+          maxItems: 1000
+          items:
+            type: object
+            additionalProperties: false
+            required: [date, totalAssets, cash, investments]
+            properties:
+              date:
+                type: string
+                format: date
+              totalAssets:
+                $ref: '#/components/schemas/Money'
+              cash:
+                $ref: '#/components/schemas/Money'
+              investments:
+                $ref: '#/components/schemas/Money'
     MeResponse:
       type: object
       additionalProperties: false

@@ -1,9 +1,9 @@
 # Backend Workstream Issue와 Gap Register
 
 - 다음 ISSUE ID: `BE-ISSUE-0002`
-- 다음 GAP ID: `BE-GAP-0001`
+- 다음 GAP ID: `BE-GAP-0002`
 - active issue: `BE-ISSUE-0001`
-- active gap: 없음
+- active gap: `BE-GAP-0001`
 
 backend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한다. frontend·계약·milestone 완료에도 영향을 주면 handoff와 중앙 `ISSUE_REGISTER.md`에 연결한다.
 
@@ -22,9 +22,24 @@ backend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한�
 - 해결 BE:
 - 검증: `npm audit --json` moderate 17/high 0/critical 0. Docker runtime stage는 platform/simulator 각각 144 package, vulnerability 0을 보고했다.
 
+## Active Gap
+
+### BE-GAP-0001 — scheduled sync와 stale worker lease recovery
+
+- 상태: DEFERRED
+- 심각도: MEDIUM
+- 발견 BE: BE-0004
+- 누락/연기 이유: BE-0004는 connection, manual sync, immutable raw, normalization과 조회 API의 단일 vertical slice를 완료했다. scheduler와 다중 node lease 회수는 별도 concurrency/fault slice로 분리한다.
+- 현재 영향: 정상 manual sync와 중복 활성 job 방지는 동작하지만 process가 `FETCHING` 이후 비정상 종료되면 자동 lease 만료·재claim이 아직 없다. 원격 환경에는 적용하지 않았다.
+- 목표 Milestone: Milestone 3 / BE-0005
+- 재확인 조건: scheduled claim, manual/scheduled 충돌, stale lock, timeout/500 retry backoff와 최대 시도 후 stable failure를 PostgreSQL concurrency test로 검증한다.
+- 해결 BE:
+- 검증: BE-0004에서 active sync partial unique와 정상/500/malformed/timeout adapter 동작까지 검증했다. lease recovery scheduler는 미구현이다.
+
 ## 단계별 검토 이력
 
 - BE-0003 (2026-09-02): `BE-ISSUE-0001` 변화 없음. 신규 issue/gap 없음. clean PostgreSQL migration과 seed 2회, prefix/권한 catalog 검사, 전체 `npm run verify`, simulator runtime audit 0으로 확인했다.
+- BE-0004 (2026-09-02): `BE-ISSUE-0001` 변화 없음. `BE-GAP-0001`을 등록했다. clean PostgreSQL에서 실제 simulator HTTP sync 2회, raw immutable 권한, derived dedup, prefix/role catalog, 전체 `npm run verify`, platform runtime audit 0을 확인했다.
 
 ## Issue Template
 

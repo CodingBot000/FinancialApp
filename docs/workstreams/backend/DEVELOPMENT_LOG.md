@@ -1,10 +1,10 @@
 # Backend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `BE-0004`
+- 다음 ID: `BE-0005`
 - branch/worktree: `codex/backend` / `/Users/switch/Development/Web/FinancialApp-backend`
 - base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
-- contract revision: `platform-v1` at BE-0002, `institution-simulator-v1` at BE-0003
+- contract revision: `platform-v1` at BE-0004, `institution-simulator-v1` at BE-0003
 - migration owner: backend session 또는 integration owner가 작업마다 기록
 
 backend session은 `services/**`, `infra/**`, OpenAPI와 migration 변경을 commit 단위로 기록한다. 중앙 `DEVELOPMENT_LOG.md`는 integration owner 역할로 통합할 때만 수정한다.
@@ -183,6 +183,68 @@ backend session은 `services/**`, `infra/**`, OpenAPI와 migration 변경을 com
 ### 다음 작업
 
 - BE-0004: platform MyData connection/raw/sync/normalization과 asset summary API 구현
+
+## BE-0004 — 합성 MyData 수집과 자산 정규화
+
+- 날짜: 2026-09-02
+- Milestone: 3
+- 상태: COMPLETED
+- base commit: `f3ff499` (`BE-0003`)
+- contract revision: `platform-v1` (MyData connection/sync와 wealth 조회 API 추가)
+- migration owner: backend session; local Compose/Testcontainers만 적용
+- commit: `feat(be): ingest synthetic account data [BE-0004]`
+
+### 완료
+
+- `finapp_mydata` connection/sync/raw batch/raw record/processing result와 `finapp_wealth` account/instrument/holding/transaction/cash/snapshot/allocation Drizzle schema 및 forward-only migration을 추가했다.
+- 모든 table/index/PK/FK/unique/check 이름을 `finapp_`로 생성하고 runtime role이 simulator schema를 직접 읽지 못하도록 유지했다.
+- 합성 customer identifier를 AES-256-GCM ciphertext와 HMAC lookup hash로 분리하고 API에는 masked 값만 노출한다.
+- manual sync의 활성 job 중복 생성을 partial unique index와 repository race 처리로 방지하고 상태를 `QUEUED → FETCHING → RAW_STORED → NORMALIZING → COMPLETED|FAILED`로 전이한다.
+- simulator account/holding/transaction을 HTTP로만 수집하고 canonical SHA-256 checksum과 함께 새 raw batch/record로 매번 보존한다.
+- raw record별 processing result와 derived resource ID를 기록하고 외부 key upsert로 account/holding/transaction을 정규화한다.
+- 같은 payload 재동기화에서 raw 이력은 누적하지만 파생 transaction은 한 행만 유지하며 서버에서 cash, investment, total과 allocation snapshot을 계산한다.
+- connection/sync API와 asset summary, accounts/detail, holdings, transactions, history API에 scope와 ownership 조건을 적용하고 canonical OpenAPI 계약을 추가했다.
+- Compose bootstrap의 MyData default DML grant를 제거하고 raw batch/record/processing result의 UPDATE/DELETE를 migration에서 명시적으로 revoke했다.
+
+### 변경 파일
+
+- `services/platform-api/src/modules/mydata/**`
+- `services/platform-api/src/modules/wealth/**`
+- `services/platform-api/src/database/schema.ts`, `src/app.module.ts`
+- `services/platform-api/drizzle/0002_finapp_mydata_wealth.sql`, migration journal
+- `services/platform-api/test/database/**`, `test/identity/**`, `test/mydata/**`
+- `infra/database/init/002-finapp-schemas.sql`, `infra/docker/**`
+- `contracts/openapi/platform-v1.yaml`
+- `docs/workstreams/backend/**`
+
+### 검증
+
+- 명령: platform lint, strict typecheck, dependency-cruiser, Vitest, Nest build
+- 결과: 4 test files / 19 tests 통과. 실제 PostgreSQL 17.6 migration, active sync dedup, 동일 dataset 2회 raw/derived 처리, raw immutable 권한, 정상/500/malformed/timeout HTTP adapter와 auth scope 포함
+- 명령: root `npm run verify` (Node 24.19.0, Colima socket 명시)
+- 결과: formatter, OpenAPI/fixture, Expo dependency, secret scan, 전체 lint/typecheck/test/build 통과; 전체 8 test files / 28 tests 통과
+- 명령: platform production Docker image build
+- 결과: Node 24.19.0 build 성공, runtime 145 package audit vulnerability 0
+- 명령: clean Compose에서 두 migration, simulator seed와 실제 simulator HTTP sync 2회, catalog/role query
+- 결과: platform history 3, MyData table 5, wealth table 7, prefix 위반 relation/constraint 0; raw/processing 각 6행과 derived transaction 1행; raw UPDATE/DELETE false, simulator schema USAGE false
+- 명령: asset summary query
+- 결과: total `185400000.0000` = cash `15400000.0000` + investments `170000000.0000`, CASH/EQUITY allocation과 last sync 확인
+
+### 원격 DB
+
+- 사용 여부: 사용하지 않음
+- migration commit/dataset version: local/Testcontainers `0002_finapp_mydata_wealth` / `FINANCIAL_APP_DATASET_V1`
+- 결과: Lightsail 연결, migration과 seed 모두 미실행
+
+### 이슈·누락·Handoff
+
+- `BE-ISSUE-0001`: 변화 없음. build-time only이며 platform production image audit은 0이다.
+- `BE-GAP-0001`: scheduled sync, stale worker lease 회수와 retry backoff는 manual sync vertical slice 다음 단계로 연기했다.
+- Handoff: frontend는 BE-0004 `platform-v1`의 connection/sync polling, summary/account/holding/transaction/history 계약을 소비할 수 있다. full external identifier는 계약에 포함되지 않는다.
+
+### 다음 작업
+
+- BE-0005: scheduled sync claim, stale lease recovery, retry/backoff와 fault 상태 검증
 
 ## 새 기록 Template
 

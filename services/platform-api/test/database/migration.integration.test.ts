@@ -4,6 +4,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { migratePlatformDatabase } from '../../src/database/migrate.js';
 import { DrizzleIdentityRepository } from '../../src/modules/identity/infrastructure/persistence/drizzle-identity.repository.js';
+import { AesSensitiveDataAdapter } from '../../src/modules/mydata/infrastructure/crypto/aes-sensitive-data.adapter.js';
+import { DrizzleMyDataRepository } from '../../src/modules/mydata/infrastructure/persistence/drizzle-mydata.repository.js';
+import { DrizzleWealthRepository } from '../../src/modules/wealth/infrastructure/persistence/drizzle-wealth.repository.js';
 
 const POSTGRES_IMAGE =
   'postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94';
@@ -73,6 +76,11 @@ describe('platform Drizzle migration', () => {
       expect(result.rows).toEqual([
         { table_name: 'finapp_platform_drizzle_migrations' },
       ]);
+      const history = await client.query<{ count: string }>(`
+        SELECT count(*)::text AS count
+        FROM finapp_meta.finapp_platform_drizzle_migrations
+      `);
+      expect(history.rows[0]?.count).toBe('3');
     } finally {
       await client.end();
     }
@@ -204,6 +212,187 @@ describe('platform Drizzle migration', () => {
         users: '1',
       });
     } finally {
+      await pool.end();
+    }
+  });
+
+  it('keeps raw immutable and deduplicates normalized data across repeated syncs', async () => {
+    const platformUrl = new URL(connectionString);
+    platformUrl.username = 'financial_platform_app';
+    platformUrl.password = 'example-platform-test-only';
+    const pool = new Pool({ connectionString: platformUrl.toString(), max: 3 });
+    const identity = new DrizzleIdentityRepository(pool);
+    const repository = new DrizzleMyDataRepository(pool);
+    const wealth = new DrizzleWealthRepository(pool);
+    const cipher = new AesSensitiveDataAdapter();
+    const previousKey = process.env.FINAPP_MYDATA_ENCRYPTION_KEY_BASE64;
+    const previousVersion = process.env.FINAPP_MYDATA_ENCRYPTION_KEY_VERSION;
+    process.env.FINAPP_MYDATA_ENCRYPTION_KEY_BASE64 = Buffer.alloc(
+      32,
+      7,
+    ).toString('base64');
+    process.env.FINAPP_MYDATA_ENCRYPTION_KEY_VERSION = 'test-v1';
+
+    try {
+      const user = await identity.provisionFromOidc(
+        'https://issuer.example/realms/finapp',
+        'sync-user-a',
+      );
+      const encrypted = cipher.encrypt('SYNTH-CUSTOMER-A');
+      expect(encrypted.ciphertext.toString('utf8')).not.toContain(
+        'SYNTH-CUSTOMER-A',
+      );
+      const connection = await repository.createConnection({
+        userId: user.userId,
+        institutionCode: 'SYNTH_WEALTH_001',
+        externalCustomerIdHash: cipher.lookupHash('SYNTH-CUSTOMER-A'),
+        externalCustomerIdCiphertext: encrypted.ciphertext,
+        encryptionKeyVersion: encrypted.keyVersion,
+        maskedExternalCustomerId: 'SYNTH-****-A',
+        consentExpiresAt: new Date('2027-09-01T00:00:00.000Z'),
+      });
+      const dataset = {
+        accounts: {
+          schemaVersion: 'simulator-v1' as const,
+          items: [
+            {
+              externalAccountId: 'SYNTH-ACCOUNT-A-001',
+              maskedAccountNumber: 'SYNTH-****-0001',
+              accountType: 'BROKERAGE',
+              currency: 'KRW',
+              cashBalance: '15400000.0000',
+              status: 'ACTIVE',
+            },
+          ],
+          nextCursor: null,
+          requestId: 'request-accounts',
+        },
+        holdings: {
+          schemaVersion: 'simulator-v1' as const,
+          items: [
+            {
+              externalAccountId: 'SYNTH-ACCOUNT-A-001',
+              externalHoldingId: 'SYNTH-HOLDING-A-001',
+              instrumentCode: 'SYNTH-EQUITY-001',
+              displayName: '가상 성장형 펀드',
+              assetClass: 'EQUITY',
+              quantity: '1360.00000000',
+              averagePrice: '125000.0000',
+              asOfAt: '2026-09-01T00:00:00.000Z',
+            },
+          ],
+          nextCursor: null,
+          requestId: 'request-holdings',
+        },
+        transactions: {
+          schemaVersion: 'simulator-v1' as const,
+          items: [
+            {
+              externalAccountId: 'SYNTH-ACCOUNT-A-001',
+              externalTransactionId: 'SYNTH-TX-A-001',
+              transactionType: 'DEPOSIT',
+              amount: '1500000.0000',
+              currency: 'KRW',
+              occurredAt: '2026-08-25T00:00:00.000Z',
+            },
+          ],
+          nextCursor: null,
+          requestId: 'request-transactions',
+        },
+      };
+
+      for (let iteration = 0; iteration < 2; iteration += 1) {
+        const created = await repository.createSync(
+          user.userId,
+          connection.connectionId,
+        );
+        expect(created.created).toBe(true);
+        if (iteration === 0) {
+          const duplicateActive = await repository.createSync(
+            user.userId,
+            connection.connectionId,
+          );
+          expect(duplicateActive).toMatchObject({
+            created: false,
+            sync: { syncId: created.sync.syncId, status: 'QUEUED' },
+          });
+        }
+        const claimed = await repository.beginSync(created.sync.syncId);
+        expect(
+          cipher.decrypt(
+            claimed?.ciphertext ?? Buffer.alloc(0),
+            claimed?.encryptionKeyVersion ?? '',
+          ),
+        ).toBe('SYNTH-CUSTOMER-A');
+        await repository.completeSync(created.sync.syncId, dataset);
+        const completed = await repository.getSync(
+          user.userId,
+          created.sync.syncId,
+        );
+        expect(completed).toMatchObject({
+          status: 'COMPLETED',
+          counts: {
+            rawRecords: 3,
+            accounts: 1,
+            holdings: 1,
+            transactions: 1,
+          },
+        });
+      }
+
+      const summary = await wealth.summary(user.userId);
+      expect(summary).toMatchObject({
+        asOfDate: '2026-09-01',
+        totalAssets: '185400000.0000',
+        cash: '15400000.0000',
+        investments: '170000000.0000',
+      });
+      expect(await wealth.accounts(user.userId)).toHaveLength(1);
+      expect(await wealth.holdings(user.userId)).toHaveLength(1);
+      expect(await wealth.transactions(user.userId)).toHaveLength(1);
+      expect(await wealth.history(user.userId, 'ALL')).toHaveLength(1);
+
+      const counts = await pool.query<{
+        derived_transactions: string;
+        raw: string;
+      }>(`
+        SELECT
+          (SELECT count(*) FROM finapp_mydata.finapp_raw_record)::text AS raw,
+          (SELECT count(*) FROM finapp_wealth.finapp_financial_transaction)::text AS derived_transactions
+      `);
+      expect(counts.rows[0]).toEqual({
+        derived_transactions: '1',
+        raw: '6',
+      });
+      const immutablePrivileges = await pool.query<{
+        can_delete: boolean;
+        can_update: boolean;
+      }>(`
+        SELECT
+          has_table_privilege(current_user, 'finapp_mydata.finapp_raw_record', 'UPDATE') AS can_update,
+          has_table_privilege(current_user, 'finapp_mydata.finapp_raw_record', 'DELETE') AS can_delete
+      `);
+      expect(immutablePrivileges.rows[0]).toEqual({
+        can_delete: false,
+        can_update: false,
+      });
+      await expect(
+        pool.query(`
+          UPDATE finapp_mydata.finapp_raw_record
+          SET payload = '{}'::jsonb
+        `),
+      ).rejects.toMatchObject({ code: '42501' });
+    } finally {
+      if (previousKey === undefined) {
+        delete process.env.FINAPP_MYDATA_ENCRYPTION_KEY_BASE64;
+      } else {
+        process.env.FINAPP_MYDATA_ENCRYPTION_KEY_BASE64 = previousKey;
+      }
+      if (previousVersion === undefined) {
+        delete process.env.FINAPP_MYDATA_ENCRYPTION_KEY_VERSION;
+      } else {
+        process.env.FINAPP_MYDATA_ENCRYPTION_KEY_VERSION = previousVersion;
+      }
       await pool.end();
     }
   });

@@ -3,9 +3,12 @@ import {
   bigint,
   boolean,
   check,
+  customType,
+  date,
   foreignKey,
   index,
   integer,
+  jsonb,
   numeric,
   pgSchema,
   primaryKey,
@@ -14,6 +17,10 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
+
+const bytea = customType<{ data: Buffer }>({
+  dataType: () => 'bytea',
+});
 
 export const finappMetaSchema = pgSchema('finapp_meta');
 export const finappIdentitySchema = pgSchema('finapp_identity');
@@ -110,6 +117,498 @@ export const finappRiskProfile = finappIdentitySchema.table(
     check(
       'finapp_ck_risk_profile_values',
       sql`${table.investmentHorizonMonths} BETWEEN 1 AND 600 AND ${table.monthlyContribution} >= 0`,
+    ),
+  ],
+);
+
+export const finappInstitutionConnection = finappMyDataSchema.table(
+  'finapp_institution_connection',
+  {
+    id: uuid('id').notNull(),
+    userId: uuid('user_id').notNull(),
+    institutionCode: varchar('institution_code', { length: 50 }).notNull(),
+    externalCustomerIdHash: varchar('external_customer_id_hash', {
+      length: 64,
+    }).notNull(),
+    externalCustomerIdCiphertext: bytea(
+      'external_customer_id_ciphertext',
+    ).notNull(),
+    encryptionKeyVersion: varchar('encryption_key_version', {
+      length: 32,
+    }).notNull(),
+    maskedExternalCustomerId: varchar('masked_external_customer_id', {
+      length: 100,
+    }).notNull(),
+    status: varchar('status', { length: 20 }).notNull().default('ACTIVE'),
+    consentExpiresAt: timestamp('consent_expires_at', {
+      withTimezone: true,
+      mode: 'date',
+    }).notNull(),
+    lastSuccessfulSyncAt: timestamp('last_successful_sync_at', {
+      withTimezone: true,
+      mode: 'date',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({
+      name: 'finapp_pk_institution_connection',
+      columns: [table.id],
+    }),
+    foreignKey({
+      name: 'finapp_fk_connection_user',
+      columns: [table.userId],
+      foreignColumns: [finappAppUser.id],
+    }).onDelete('restrict'),
+    check(
+      'finapp_ck_connection_status',
+      sql`${table.status} IN ('ACTIVE', 'REVOKED', 'EXPIRED')`,
+    ),
+  ],
+);
+
+export const finappSyncJob = finappMyDataSchema.table(
+  'finapp_sync_job',
+  {
+    id: uuid('id').notNull(),
+    connectionId: uuid('connection_id').notNull(),
+    status: varchar('status', { length: 24 }).notNull().default('QUEUED'),
+    attempt: integer('attempt').notNull().default(0),
+    nextAttemptAt: timestamp('next_attempt_at', {
+      withTimezone: true,
+      mode: 'date',
+    }),
+    lockedAt: timestamp('locked_at', { withTimezone: true, mode: 'date' }),
+    lockedBy: varchar('locked_by', { length: 100 }),
+    errorCode: varchar('error_code', { length: 80 }),
+    startedAt: timestamp('started_at', { withTimezone: true, mode: 'date' }),
+    completedAt: timestamp('completed_at', {
+      withTimezone: true,
+      mode: 'date',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_sync_job', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_sync_job_connection',
+      columns: [table.connectionId],
+      foreignColumns: [finappInstitutionConnection.id],
+    }).onDelete('restrict'),
+    check('finapp_ck_sync_job_attempt', sql`${table.attempt} >= 0`),
+    check(
+      'finapp_ck_sync_job_status',
+      sql`${table.status} IN ('QUEUED', 'FETCHING', 'RAW_STORED', 'NORMALIZING', 'COMPLETED', 'FAILED')`,
+    ),
+    index('finapp_idx_sync_job_claim').on(
+      table.status,
+      table.nextAttemptAt,
+      table.createdAt,
+    ),
+    index('finapp_idx_sync_job_connection_created').on(
+      table.connectionId,
+      table.createdAt,
+    ),
+  ],
+);
+
+export const finappRawBatch = finappMyDataSchema.table(
+  'finapp_raw_batch',
+  {
+    id: uuid('id').notNull(),
+    syncJobId: uuid('sync_job_id').notNull(),
+    resourceType: varchar('resource_type', { length: 30 }).notNull(),
+    requestId: varchar('request_id', { length: 100 }).notNull(),
+    schemaVersion: varchar('schema_version', { length: 30 }).notNull(),
+    pageCursor: varchar('page_cursor', { length: 500 }),
+    payloadChecksum: varchar('payload_checksum', { length: 64 }).notNull(),
+    receivedAt: timestamp('received_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_raw_batch', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_raw_batch_sync_job',
+      columns: [table.syncJobId],
+      foreignColumns: [finappSyncJob.id],
+    }).onDelete('restrict'),
+    check(
+      'finapp_ck_raw_batch_resource_type',
+      sql`${table.resourceType} IN ('ACCOUNT', 'HOLDING', 'TRANSACTION')`,
+    ),
+    index('finapp_idx_raw_batch_sync').on(table.syncJobId),
+    index('finapp_idx_raw_batch_checksum').on(table.payloadChecksum),
+  ],
+);
+
+export const finappRawRecord = finappMyDataSchema.table(
+  'finapp_raw_record',
+  {
+    id: uuid('id').notNull(),
+    rawBatchId: uuid('raw_batch_id').notNull(),
+    resourceType: varchar('resource_type', { length: 30 }).notNull(),
+    externalResourceId: varchar('external_resource_id', {
+      length: 200,
+    }).notNull(),
+    payload: jsonb('payload').notNull(),
+    payloadChecksum: varchar('payload_checksum', { length: 64 }).notNull(),
+    receivedAt: timestamp('received_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_raw_record', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_raw_record_batch',
+      columns: [table.rawBatchId],
+      foreignColumns: [finappRawBatch.id],
+    }).onDelete('restrict'),
+    unique('finapp_uq_raw_record_batch_resource').on(
+      table.rawBatchId,
+      table.resourceType,
+      table.externalResourceId,
+    ),
+    check(
+      'finapp_ck_raw_record_resource_type',
+      sql`${table.resourceType} IN ('ACCOUNT', 'HOLDING', 'TRANSACTION')`,
+    ),
+    index('finapp_idx_raw_record_checksum').on(table.payloadChecksum),
+  ],
+);
+
+export const finappRawProcessingResult = finappMyDataSchema.table(
+  'finapp_raw_processing_result',
+  {
+    id: uuid('id').notNull(),
+    rawRecordId: uuid('raw_record_id').notNull(),
+    processorVersion: varchar('processor_version', { length: 30 }).notNull(),
+    status: varchar('status', { length: 20 }).notNull(),
+    derivedResourceType: varchar('derived_resource_type', { length: 40 }),
+    derivedResourceId: uuid('derived_resource_id'),
+    errorCode: varchar('error_code', { length: 80 }),
+    processedAt: timestamp('processed_at', {
+      withTimezone: true,
+      mode: 'date',
+    })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({
+      name: 'finapp_pk_raw_processing_result',
+      columns: [table.id],
+    }),
+    foreignKey({
+      name: 'finapp_fk_raw_processing_result_record',
+      columns: [table.rawRecordId],
+      foreignColumns: [finappRawRecord.id],
+    }).onDelete('restrict'),
+    unique('finapp_uq_raw_process_record_version').on(
+      table.rawRecordId,
+      table.processorVersion,
+    ),
+    check(
+      'finapp_ck_raw_processing_status',
+      sql`${table.status} IN ('PROCESSED', 'DUPLICATE', 'INVALID', 'FAILED')`,
+    ),
+  ],
+);
+
+export const finappFinancialAccount = finappWealthSchema.table(
+  'finapp_financial_account',
+  {
+    id: uuid('id').notNull(),
+    userId: uuid('user_id').notNull(),
+    connectionId: uuid('connection_id').notNull(),
+    institutionCode: varchar('institution_code', { length: 50 }).notNull(),
+    externalAccountIdHash: varchar('external_account_id_hash', {
+      length: 64,
+    }).notNull(),
+    maskedAccountNumber: varchar('masked_account_number', {
+      length: 100,
+    }).notNull(),
+    accountType: varchar('account_type', { length: 30 }).notNull(),
+    currency: varchar('currency', { length: 3 }).notNull().default('KRW'),
+    status: varchar('status', { length: 20 }).notNull().default('ACTIVE'),
+    openedAt: date('opened_at'),
+    closedAt: date('closed_at'),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_financial_account', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_financial_account_user',
+      columns: [table.userId],
+      foreignColumns: [finappAppUser.id],
+    }).onDelete('restrict'),
+    foreignKey({
+      name: 'finapp_fk_financial_account_connection',
+      columns: [table.connectionId],
+      foreignColumns: [finappInstitutionConnection.id],
+    }).onDelete('restrict'),
+    unique('finapp_uq_account_connection_external').on(
+      table.connectionId,
+      table.externalAccountIdHash,
+    ),
+    index('finapp_idx_account_user_status').on(table.userId, table.status),
+  ],
+);
+
+export const finappInstrument = finappWealthSchema.table(
+  'finapp_instrument',
+  {
+    id: uuid('id').notNull(),
+    instrumentCode: varchar('instrument_code', { length: 50 }).notNull(),
+    displayName: varchar('display_name', { length: 150 }).notNull(),
+    assetClass: varchar('asset_class', { length: 30 }).notNull(),
+    currency: varchar('currency', { length: 3 }).notNull().default('KRW'),
+    status: varchar('status', { length: 20 }).notNull().default('ACTIVE'),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_instrument', columns: [table.id] }),
+    unique('finapp_uq_instrument_code').on(table.instrumentCode),
+  ],
+);
+
+export const finappHolding = finappWealthSchema.table(
+  'finapp_holding',
+  {
+    id: uuid('id').notNull(),
+    userId: uuid('user_id').notNull(),
+    accountId: uuid('account_id').notNull(),
+    instrumentId: uuid('instrument_id').notNull(),
+    externalHoldingId: varchar('external_holding_id', { length: 200 }),
+    quantity: numeric('quantity', { precision: 19, scale: 8 })
+      .notNull()
+      .default('0'),
+    averagePrice: numeric('average_price', { precision: 19, scale: 4 })
+      .notNull()
+      .default('0'),
+    asOfAt: timestamp('as_of_at', {
+      withTimezone: true,
+      mode: 'date',
+    }).notNull(),
+    version: bigint('version', { mode: 'bigint' }).notNull().default(0n),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_holding', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_holding_user',
+      columns: [table.userId],
+      foreignColumns: [finappAppUser.id],
+    }).onDelete('restrict'),
+    foreignKey({
+      name: 'finapp_fk_holding_account',
+      columns: [table.accountId],
+      foreignColumns: [finappFinancialAccount.id],
+    }).onDelete('restrict'),
+    foreignKey({
+      name: 'finapp_fk_holding_instrument',
+      columns: [table.instrumentId],
+      foreignColumns: [finappInstrument.id],
+    }).onDelete('restrict'),
+    unique('finapp_uq_holding_account_instrument').on(
+      table.accountId,
+      table.instrumentId,
+    ),
+    check(
+      'finapp_ck_holding_values',
+      sql`${table.quantity} >= 0 AND ${table.averagePrice} >= 0`,
+    ),
+    index('finapp_idx_holding_user_account').on(table.userId, table.accountId),
+  ],
+);
+
+export const finappFinancialTransaction = finappWealthSchema.table(
+  'finapp_financial_transaction',
+  {
+    id: uuid('id').notNull(),
+    userId: uuid('user_id').notNull(),
+    accountId: uuid('account_id').notNull(),
+    externalTransactionId: varchar('external_transaction_id', {
+      length: 200,
+    }).notNull(),
+    transactionType: varchar('transaction_type', { length: 30 }).notNull(),
+    amount: numeric('amount', { precision: 19, scale: 4 }).notNull(),
+    currency: varchar('currency', { length: 3 }).notNull().default('KRW'),
+    occurredAt: timestamp('occurred_at', {
+      withTimezone: true,
+      mode: 'date',
+    }).notNull(),
+    rawRecordId: uuid('raw_record_id'),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({
+      name: 'finapp_pk_financial_transaction',
+      columns: [table.id],
+    }),
+    foreignKey({
+      name: 'finapp_fk_financial_transaction_user',
+      columns: [table.userId],
+      foreignColumns: [finappAppUser.id],
+    }).onDelete('restrict'),
+    foreignKey({
+      name: 'finapp_fk_financial_transaction_account',
+      columns: [table.accountId],
+      foreignColumns: [finappFinancialAccount.id],
+    }).onDelete('restrict'),
+    foreignKey({
+      name: 'finapp_fk_financial_transaction_raw',
+      columns: [table.rawRecordId],
+      foreignColumns: [finappRawRecord.id],
+    }).onDelete('restrict'),
+    unique('finapp_uq_transaction_account_external').on(
+      table.accountId,
+      table.externalTransactionId,
+    ),
+    index('finapp_idx_transaction_user_occurred').on(
+      table.userId,
+      table.occurredAt,
+    ),
+  ],
+);
+
+export const finappCashAccount = finappWealthSchema.table(
+  'finapp_cash_account',
+  {
+    id: uuid('id').notNull(),
+    userId: uuid('user_id').notNull(),
+    accountId: uuid('account_id').notNull(),
+    availableBalance: numeric('available_balance', {
+      precision: 19,
+      scale: 4,
+    })
+      .notNull()
+      .default('0'),
+    reservedBalance: numeric('reserved_balance', {
+      precision: 19,
+      scale: 4,
+    })
+      .notNull()
+      .default('0'),
+    currency: varchar('currency', { length: 3 }).notNull().default('KRW'),
+    version: bigint('version', { mode: 'bigint' }).notNull().default(0n),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_cash_account', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_cash_account_user',
+      columns: [table.userId],
+      foreignColumns: [finappAppUser.id],
+    }).onDelete('restrict'),
+    foreignKey({
+      name: 'finapp_fk_cash_account_account',
+      columns: [table.accountId],
+      foreignColumns: [finappFinancialAccount.id],
+    }).onDelete('restrict'),
+    unique('finapp_uq_cash_account_account').on(table.accountId),
+    check(
+      'finapp_ck_cash_account_balance',
+      sql`${table.availableBalance} >= 0 AND ${table.reservedBalance} >= 0`,
+    ),
+  ],
+);
+
+export const finappAssetSnapshot = finappWealthSchema.table(
+  'finapp_asset_snapshot',
+  {
+    id: uuid('id').notNull(),
+    userId: uuid('user_id').notNull(),
+    asOfDate: date('as_of_date').notNull(),
+    currency: varchar('currency', { length: 3 }).notNull().default('KRW'),
+    totalAssets: numeric('total_assets', { precision: 19, scale: 4 }).notNull(),
+    cashAmount: numeric('cash_amount', { precision: 19, scale: 4 }).notNull(),
+    investmentAmount: numeric('investment_amount', {
+      precision: 19,
+      scale: 4,
+    }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_asset_snapshot', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_asset_snapshot_user',
+      columns: [table.userId],
+      foreignColumns: [finappAppUser.id],
+    }).onDelete('restrict'),
+    unique('finapp_uq_asset_snapshot_user_date').on(
+      table.userId,
+      table.asOfDate,
+      table.currency,
+    ),
+    check(
+      'finapp_ck_asset_snapshot_amounts',
+      sql`${table.totalAssets} >= 0 AND ${table.cashAmount} >= 0 AND ${table.investmentAmount} >= 0 AND ${table.totalAssets} = ${table.cashAmount} + ${table.investmentAmount}`,
+    ),
+    index('finapp_idx_asset_snapshot_user_date').on(
+      table.userId,
+      table.asOfDate,
+    ),
+  ],
+);
+
+export const finappAssetSnapshotAllocation = finappWealthSchema.table(
+  'finapp_asset_snapshot_allocation',
+  {
+    id: uuid('id').notNull(),
+    snapshotId: uuid('snapshot_id').notNull(),
+    assetClass: varchar('asset_class', { length: 30 }).notNull(),
+    amount: numeric('amount', { precision: 19, scale: 4 }).notNull(),
+    weight: numeric('weight', { precision: 12, scale: 8 }).notNull(),
+  },
+  (table) => [
+    primaryKey({
+      name: 'finapp_pk_asset_snapshot_allocation',
+      columns: [table.id],
+    }),
+    foreignKey({
+      name: 'finapp_fk_snapshot_allocation_snapshot',
+      columns: [table.snapshotId],
+      foreignColumns: [finappAssetSnapshot.id],
+    }).onDelete('cascade'),
+    unique('finapp_uq_snapshot_allocation_class').on(
+      table.snapshotId,
+      table.assetClass,
+    ),
+    check(
+      'finapp_ck_snapshot_allocation_values',
+      sql`${table.amount} >= 0 AND ${table.weight} BETWEEN 0 AND 1`,
     ),
   ],
 );

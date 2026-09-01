@@ -9,6 +9,7 @@ import { DrizzleIdentityRepository } from './infrastructure/persistence/drizzle-
 
 @Module({
   controllers: [MeController],
+  exports: [IDENTITY_REPOSITORY],
   imports: [AuthModule, DatabaseModule],
   providers: [
     GetCurrentUserUseCase,
