@@ -23,6 +23,11 @@ export interface SyncConnection {
   readonly encryptionKeyVersion: string;
 }
 
+export interface ScheduledConnection {
+  readonly connectionId: string;
+  readonly userId: string;
+}
+
 export interface MyDataRepository {
   createConnection(input: CreateConnectionInput): Promise<ConnectionView>;
   listConnections(userId: string): Promise<readonly ConnectionView[]>;
@@ -33,5 +38,21 @@ export interface MyDataRepository {
   getSync(userId: string, syncId: string): Promise<SyncView | undefined>;
   beginSync(syncId: string): Promise<SyncConnection | undefined>;
   completeSync(syncId: string, dataset: InstitutionDataset): Promise<void>;
-  failSync(syncId: string, errorCode: string): Promise<void>;
+  rescheduleOrFailSync(
+    syncId: string,
+    errorCode: string,
+    maxAttempts: number,
+    retryAt: Date,
+  ): Promise<'QUEUED' | 'FAILED' | undefined>;
+  listDueConnections(
+    lastSyncBefore: Date,
+    now: Date,
+    limit: number,
+  ): Promise<readonly ScheduledConnection[]>;
+  listDueSyncIds(now: Date, limit: number): Promise<readonly string[]>;
+  recoverStaleSyncs(
+    staleBefore: Date,
+    maxAttempts: number,
+    retryAt: Date,
+  ): Promise<number>;
 }

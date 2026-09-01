@@ -121,7 +121,18 @@ export class MyDataService {
       const dataset = await this.institution.fetchDataset(customerId);
       await this.repository.completeSync(syncId, dataset);
     } catch {
-      await this.repository.failSync(syncId, 'MYDATA_INSTITUTION_SYNC_FAILED');
+      await this.repository.rescheduleOrFailSync(
+        syncId,
+        'MYDATA_INSTITUTION_SYNC_FAILED',
+        Number.parseInt(process.env.MYDATA_SYNC_MAX_ATTEMPTS ?? '3', 10),
+        new Date(
+          Date.now() +
+            Number.parseInt(
+              process.env.MYDATA_SYNC_RETRY_BACKOFF_MS ?? '5000',
+              10,
+            ),
+        ),
+      );
     }
   }
 }

@@ -1,7 +1,7 @@
 # Backend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `BE-0005`
+- 다음 ID: `BE-0006`
 - branch/worktree: `codex/backend` / `/Users/switch/Development/Web/FinancialApp-backend`
 - base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
 - contract revision: `platform-v1` at BE-0004, `institution-simulator-v1` at BE-0003
@@ -245,6 +245,65 @@ backend session은 `services/**`, `infra/**`, OpenAPI와 migration 변경을 com
 ### 다음 작업
 
 - BE-0005: scheduled sync claim, stale lease recovery, retry/backoff와 fault 상태 검증
+
+## BE-0005 — scheduled sync와 lease 복구
+
+- 날짜: 2026-09-02
+- Milestone: 3
+- 상태: COMPLETED
+- base commit: `e649979` (`BE-0004`)
+- contract revision: `platform-v1` at BE-0004 (변경 없음)
+- migration owner: backend session; schema/migration 변경 없음
+- commit: `feat(be): recover scheduled sync workers [BE-0005]`
+
+### 완료
+
+- Nest lifecycle 기반 scheduler가 활성 consent connection을 주기적으로 찾아 sync job을 생성하고 due job을 batch 단위로 실행한다.
+- `QUEUED` job claim은 status와 `next_attempt_at` 조건을 포함한 단일 UPDATE로 수행해 여러 node가 경쟁해도 한 worker만 성공한다.
+- institution timeout/HTTP 오류는 같은 job을 `QUEUED`로 재예약하고 `next_attempt_at` backoff와 안정적인 `MYDATA_INSTITUTION_SYNC_FAILED` 코드를 기록한다.
+- 최대 attempt 도달 시 job을 `FAILED`로 종결하며 성공하면 이전 오류와 lock/retry 정보를 제거한다.
+- `FETCHING`, `RAW_STORED`, `NORMALIZING` 상태의 만료된 `locked_at` lease를 회수해 재예약하거나 최대 attempt에서 `MYDATA_SYNC_LEASE_EXPIRED`로 실패시킨다.
+- scheduler tick 중첩을 process 내부에서 차단하고 DB startup/migration 전 일시적 query 실패는 다음 tick에서 재시도한다.
+- Compose platform profile에 scheduler tick, schedule interval, lease, retry, max attempt와 batch 설정을 명시했다.
+
+### 변경 파일
+
+- `services/platform-api/src/modules/mydata/application/mydata-scheduler.service.ts`
+- `services/platform-api/src/modules/mydata/application/mydata.service.ts`, repository port
+- `services/platform-api/src/modules/mydata/infrastructure/persistence/drizzle-mydata.repository.ts`
+- `services/platform-api/src/modules/mydata/mydata.module.ts`
+- `services/platform-api/test/database/**`, `test/mydata/**`
+- `infra/docker/compose.yaml`
+- `docs/workstreams/backend/**`
+
+### 검증
+
+- 명령: platform lint, strict typecheck, dependency-cruiser, Vitest, Nest build
+- 결과: 5 test files / 21 tests 통과. 두 worker 동시 claim에서 한 개만 성공, active/scheduled dedup, retry→FAILED, stale lease→retry, scheduler orchestration 포함
+- 명령: root `npm run verify` (Node 24.19.0, Colima socket 명시)
+- 결과: formatter, OpenAPI/fixture, Expo dependency, secret scan, 전체 lint/typecheck/test/build 통과; 전체 9 test files / 30 tests 통과
+- 명령: platform production Docker image build
+- 결과: Node 24.19.0 build 성공. runtime dependency layer는 BE-0004와 동일한 145 package/audit vulnerability 0 결과를 재사용했다.
+- 명령: clean Compose scheduled sync smoke
+- 결과: connection만 생성한 뒤 scheduler 첫 claim에서 attempt 1, `COMPLETED`, raw 3, derived transaction 1 확인
+- 명령: simulator stop/start fault smoke
+- 결과: stop 중 `QUEUED:1:MYDATA_INSTITUTION_SYNC_FAILED`, 재시작 후 `COMPLETED:2:none`으로 backoff 복구 확인
+
+### 원격 DB
+
+- 사용 여부: 사용하지 않음
+- migration commit/dataset version: BE-0004 local migration 유지 / `FINANCIAL_APP_DATASET_V1`
+- 결과: Lightsail 연결, migration과 seed 모두 미실행
+
+### 이슈·누락·Handoff
+
+- `BE-ISSUE-0001`: 변화 없음.
+- `BE-GAP-0001`: RESOLVED. scheduled claim, stale lease, retry/backoff와 max attempt가 자동/Compose 검증을 통과했다.
+- 신규 backend issue/gap과 contract handoff: 없음.
+
+### 다음 작업
+
+- BE-0006: versioned assumption set과 deterministic Monte Carlo simulation API 구현
 
 ## 새 기록 Template
 

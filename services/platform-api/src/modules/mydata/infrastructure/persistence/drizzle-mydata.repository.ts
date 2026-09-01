@@ -1,7 +1,20 @@
 import { randomUUID } from 'node:crypto';
 
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, count, desc, eq, inArray, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gt,
+  inArray,
+  isNull,
+  lt,
+  lte,
+  or,
+  sql,
+} from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { Pool } from 'pg';
 
@@ -23,6 +36,7 @@ import {
 import type {
   CreateConnectionInput,
   MyDataRepository,
+  ScheduledConnection,
   SyncConnection,
 } from '../../application/ports/mydata-repository.port.js';
 import type {
@@ -287,7 +301,14 @@ export class DrizzleMyDataRepository implements MyDataRepository {
           lockedBy: `platform-${process.pid}`,
         })
         .where(
-          and(eq(finappSyncJob.id, syncId), eq(finappSyncJob.status, 'QUEUED')),
+          and(
+            eq(finappSyncJob.id, syncId),
+            eq(finappSyncJob.status, 'QUEUED'),
+            or(
+              isNull(finappSyncJob.nextAttemptAt),
+              lte(finappSyncJob.nextAttemptAt, now),
+            ),
+          ),
         )
         .returning({ connectionId: finappSyncJob.connectionId });
       const connectionId = claimed[0]?.connectionId;
@@ -642,14 +663,28 @@ export class DrizzleMyDataRepository implements MyDataRepository {
     });
   }
 
-  async failSync(syncId: string, errorCode: string): Promise<void> {
+  async rescheduleOrFailSync(
+    syncId: string,
+    errorCode: string,
+    maxAttempts: number,
+    retryAt: Date,
+  ): Promise<'QUEUED' | 'FAILED' | undefined> {
+    const attempts = await this.database
+      .select({ attempt: finappSyncJob.attempt })
+      .from(finappSyncJob)
+      .where(eq(finappSyncJob.id, syncId))
+      .limit(1);
+    const attempt = attempts[0]?.attempt;
+    if (attempt === undefined) return undefined;
+    const failed = attempt >= maxAttempts;
     const now = new Date();
-    await this.database
+    const rows = await this.database
       .update(finappSyncJob)
       .set({
-        status: 'FAILED',
+        status: failed ? 'FAILED' : 'QUEUED',
         errorCode,
-        completedAt: now,
+        completedAt: failed ? now : null,
+        nextAttemptAt: failed ? null : retryAt,
         updatedAt: now,
         lockedAt: null,
         lockedBy: null,
@@ -659,7 +694,105 @@ export class DrizzleMyDataRepository implements MyDataRepository {
           eq(finappSyncJob.id, syncId),
           inArray(finappSyncJob.status, ACTIVE_SYNC_STATUSES),
         ),
+      )
+      .returning({ status: finappSyncJob.status });
+    return rows[0]?.status as 'QUEUED' | 'FAILED' | undefined;
+  }
+
+  async listDueConnections(
+    lastSyncBefore: Date,
+    now: Date,
+    limit: number,
+  ): Promise<readonly ScheduledConnection[]> {
+    return this.database
+      .select({
+        connectionId: finappInstitutionConnection.id,
+        userId: finappInstitutionConnection.userId,
+      })
+      .from(finappInstitutionConnection)
+      .where(
+        and(
+          eq(finappInstitutionConnection.status, 'ACTIVE'),
+          gt(finappInstitutionConnection.consentExpiresAt, now),
+          or(
+            isNull(finappInstitutionConnection.lastSuccessfulSyncAt),
+            lte(
+              finappInstitutionConnection.lastSuccessfulSyncAt,
+              lastSyncBefore,
+            ),
+          ),
+        ),
+      )
+      .orderBy(asc(finappInstitutionConnection.updatedAt))
+      .limit(limit);
+  }
+
+  async listDueSyncIds(now: Date, limit: number): Promise<readonly string[]> {
+    const rows = await this.database
+      .select({ id: finappSyncJob.id })
+      .from(finappSyncJob)
+      .where(
+        and(
+          eq(finappSyncJob.status, 'QUEUED'),
+          or(
+            isNull(finappSyncJob.nextAttemptAt),
+            lte(finappSyncJob.nextAttemptAt, now),
+          ),
+        ),
+      )
+      .orderBy(asc(finappSyncJob.createdAt))
+      .limit(limit);
+    return rows.map(({ id }) => id);
+  }
+
+  async recoverStaleSyncs(
+    staleBefore: Date,
+    maxAttempts: number,
+    retryAt: Date,
+  ): Promise<number> {
+    const stale = await this.database
+      .select({ id: finappSyncJob.id, attempt: finappSyncJob.attempt })
+      .from(finappSyncJob)
+      .where(
+        and(
+          inArray(finappSyncJob.status, [
+            'FETCHING',
+            'RAW_STORED',
+            'NORMALIZING',
+          ]),
+          lt(finappSyncJob.lockedAt, staleBefore),
+        ),
       );
+    let recovered = 0;
+    for (const job of stale) {
+      const failed = job.attempt >= maxAttempts;
+      const now = new Date();
+      const rows = await this.database
+        .update(finappSyncJob)
+        .set({
+          status: failed ? 'FAILED' : 'QUEUED',
+          errorCode: 'MYDATA_SYNC_LEASE_EXPIRED',
+          completedAt: failed ? now : null,
+          nextAttemptAt: failed ? null : retryAt,
+          lockedAt: null,
+          lockedBy: null,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(finappSyncJob.id, job.id),
+            inArray(finappSyncJob.status, [
+              'FETCHING',
+              'RAW_STORED',
+              'NORMALIZING',
+            ]),
+            lt(finappSyncJob.lockedAt, staleBefore),
+          ),
+        )
+        .returning({ id: finappSyncJob.id });
+      recovered += rows.length;
+    }
+    return recovered;
   }
 
   private async findActiveSync(

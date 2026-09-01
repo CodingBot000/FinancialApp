@@ -340,6 +340,78 @@ describe('platform Drizzle migration', () => {
         });
       }
 
+      const retrying = await repository.createSync(
+        user.userId,
+        connection.connectionId,
+      );
+      expect(await repository.beginSync(retrying.sync.syncId)).toBeDefined();
+      expect(
+        await repository.rescheduleOrFailSync(
+          retrying.sync.syncId,
+          'MYDATA_INSTITUTION_SYNC_FAILED',
+          2,
+          new Date('2020-01-01T00:00:00.000Z'),
+        ),
+      ).toBe('QUEUED');
+      expect(await repository.listDueSyncIds(new Date(), 10)).toContain(
+        retrying.sync.syncId,
+      );
+      expect(await repository.beginSync(retrying.sync.syncId)).toBeDefined();
+      expect(
+        await repository.rescheduleOrFailSync(
+          retrying.sync.syncId,
+          'MYDATA_INSTITUTION_SYNC_FAILED',
+          2,
+          new Date('2020-01-01T00:00:00.000Z'),
+        ),
+      ).toBe('FAILED');
+
+      const stale = await repository.createSync(
+        user.userId,
+        connection.connectionId,
+      );
+      expect(await repository.beginSync(stale.sync.syncId)).toBeDefined();
+      expect(
+        await repository.recoverStaleSyncs(
+          new Date(Date.now() + 1000),
+          3,
+          new Date('2020-01-01T00:00:00.000Z'),
+        ),
+      ).toBe(1);
+      expect(await repository.beginSync(stale.sync.syncId)).toBeDefined();
+      await repository.rescheduleOrFailSync(
+        stale.sync.syncId,
+        'MYDATA_SYNC_LEASE_EXPIRED',
+        1,
+        new Date('2020-01-01T00:00:00.000Z'),
+      );
+      expect(
+        await repository.listDueConnections(
+          new Date(Date.now() + 1000),
+          new Date(),
+          10,
+        ),
+      ).toContainEqual({
+        connectionId: connection.connectionId,
+        userId: user.userId,
+      });
+
+      const contested = await repository.createSync(
+        user.userId,
+        connection.connectionId,
+      );
+      const claims = await Promise.all([
+        repository.beginSync(contested.sync.syncId),
+        repository.beginSync(contested.sync.syncId),
+      ]);
+      expect(claims.filter((claim) => claim !== undefined)).toHaveLength(1);
+      await repository.rescheduleOrFailSync(
+        contested.sync.syncId,
+        'MYDATA_TEST_COMPLETE',
+        1,
+        new Date('2020-01-01T00:00:00.000Z'),
+      );
+
       const summary = await wealth.summary(user.userId);
       expect(summary).toMatchObject({
         asOfDate: '2026-09-01',
