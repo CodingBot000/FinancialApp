@@ -97,6 +97,7 @@ Drizzle migration history:
 | `finapp_trading` | `finapp_position` | 5 | platform |
 | `finapp_trading` | `finapp_reconciliation_job` | 5 | platform worker |
 | `finapp_trading` | `finapp_outbox_event` | 6 | platform worker |
+| `finapp_trading` | `finapp_outbox_delivery` | 6 | platform worker, insert-only receipt |
 | `finapp_audit` | `finapp_audit_event` | 3 | platform, insert-only |
 | `finapp_audit` | `finapp_security_event` | 6 | platform, insert-only |
 | `finapp_crypto` | `finapp_data_keyring` | 6 | platform crypto adapter |
@@ -591,10 +592,24 @@ Indexes: `finapp_idx_reconcile_claim`, partial unique `finapp_uq_reconcile_order
 | `status` | `varchar(20)` | N | `'PENDING'` | |
 | `attempt` | `integer` | N | `0` | |
 | `available_at` | `timestamptz` | N | - | |
+| `locked_at` | `timestamptz` | Y | - | bounded worker lease |
+| `locked_by` | `varchar(100)` | Y | - | claim owner |
+| `last_error_code` | `varchar(80)` | Y | - | stable internal code only |
 | `processed_at` | `timestamptz` | Y | - | |
 | `created_at` | `timestamptz` | N | - | |
 
-Index: `finapp_idx_outbox_status_available`.
+Constraints/indexes: `finapp_uq_outbox_aggregate_event`, `finapp_ck_outbox_attempt`, `finapp_ck_outbox_status`, `finapp_idx_outbox_status_available`.
+
+### `finapp_trading.finapp_outbox_delivery` — Milestone 6
+
+| Column | Type | Null | Default | Key/Rule |
+|---|---|---:|---|---|
+| `id` | `uuid` | N | - | PK |
+| `event_id` | `uuid` | N | - | FK → outbox event |
+| `consumer_name` | `varchar(100)` | N | - | stable local consumer identity |
+| `delivered_at` | `timestamptz` | N | `now()` | |
+
+`(event_id, consumer_name)` unique receipt가 publish 성공 뒤 outbox complete 전에 process가 종료되는 crash window의 중복 효과를 막는다. Runtime role은 INSERT/SELECT만 허용한다.
 
 ## 10. finapp_audit와 finapp_crypto
 

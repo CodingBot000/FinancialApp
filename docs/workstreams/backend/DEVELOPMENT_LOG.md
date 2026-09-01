@@ -1,7 +1,7 @@
 # Backend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `BE-0012` (통합 순서상 다음은 `FE-0013`)
+- 다음 ID: `BE-0013`
 - 운영 상태: `codex/backend`는 DEV-0006 통합 이력으로 보존, 신규 BE commit은 단일 `main`에서 수행
 - 활성 worktree: `/Users/switch/Development/Web/FinancialApp`
 - 통합 검토 기준: `main` at `2574ad0`, `platform-v1` at BE-0008, `institution-simulator-v1` at BE-0003
@@ -657,6 +657,46 @@
 ### 다음 작업
 
 - 통합 순서 `FE-0013`: BUY order와 UNKNOWN recovery mobile vertical slice
+
+## BE-0012 — Settlement Transactional Outbox와 Idempotent Publisher
+
+- 날짜: 2026-09-02
+- Milestone: 6A local hardening
+- 상태: COMPLETED
+- base commit: `0e05a511224e198ae6447e14b2f3f16932c8fa7c`
+- contract revision: HTTP API 변경 없음
+- migration owner: single main / local 및 Testcontainers만 적용
+- 예정 commit: `feat(be): add transactional settlement outbox [BE-0012]`
+
+### 완료
+
+- FILLED/REJECTED/최대 reconciliation FAILED의 order/cash/position/audit settlement transaction에 redacted `ORDER_SETTLED` insert를 포함했다.
+- `finapp_outbox_event`에 status/attempt/available/lease/error/processed 상태와 aggregate event unique, claim index를 구현했다.
+- `finapp_outbox_delivery`의 event/consumer unique receipt로 publish 성공 뒤 complete 전 종료 시 재claim을 durable `DUPLICATE` 성공으로 수렴시켰다.
+- Nest worker는 `SKIP LOCKED`, stale lease, bounded backoff/max attempt를 사용하며 외부 HTTP나 장시간 transaction을 포함하지 않는다.
+
+### 검증
+
+- platform architecture/lint/strict typecheck와 outbox scheduler 3 tests 통과
+- PostgreSQL 17.6 Testcontainers migration 8 tests: terminal event 4건, redaction, 2-worker distinct claim, stale crash-window duplicate receipt 1건, processed 4건
+- local Compose forward migration과 actual OIDC/business smoke: FILLED/REJECTED/UNKNOWN→FILLED 후 outbox processed/delivery 각 3건
+- `make smoke-test`는 platform host build를 선행하며 재실행 통과
+- root formatter/contract/secret/architecture/lint/typecheck, mobile 95/simulator 12/platform 64 총 171 tests와 두 backend build 통과
+
+### 원격 DB
+
+- 사용 여부: 사용하지 않음
+- migration revision/dataset: local/Testcontainers `0007_finapp_outbox` / `FINANCIAL_APP_DATASET_V1`
+- 결과: 원격 사전 검토, endpoint/credential 요청, 연결, catalog, migration, seed와 배포 모두 미실행
+
+### 이슈·누락·Handoff
+
+- `BE-ISSUE-0004`, `BE-ISSUE-0005`, 중앙 `ISSUE-0012` RESOLVED
+- `BE-ISSUE-0001` build-time advisory는 변화 없으며 단계 10 dependency slice에서 재평가한다.
+
+### 다음 작업
+
+- `BE-0013`: local DataKeyProvider/AWS KMS adapter boundary와 wrong AAD test
 
 ## 새 기록 Template
 

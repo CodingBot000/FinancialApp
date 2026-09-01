@@ -319,8 +319,15 @@ flowchart LR
 - aggregate와 event type
 - redacted payload
 - 처리 상태, attempt, available/processed time
+- claim lease owner/time과 stable last error code
 
 settlement transaction과 같은 transaction에서 INSERT한다.
+
+### `finapp_trading.finapp_outbox_delivery` — Milestone 6
+
+- event ID와 stable consumer name의 durable delivery receipt
+- `(event_id, consumer_name)` unique로 재claim·재발행을 idempotent하게 만든다.
+- local publisher의 상태이며 원격 broker나 개인정보 payload를 저장하지 않는다.
 
 ## 8. finapp_audit
 

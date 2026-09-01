@@ -1,7 +1,7 @@
 # 이슈와 누락 Register
 
 - 마지막 갱신: 2026-09-02
-- 다음 ISSUE ID: `ISSUE-0012`
+- 다음 ISSUE ID: `ISSUE-0013`
 - 다음 GAP ID: `GAP-0009`
 
 이 문서는 defect, blocker, 위험과 불가피한 누락을 삭제하지 않고 추적한다.
@@ -100,6 +100,19 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 검증: clean local volume에서 `make acceptance-test`를 실행해 `npm ci`, root 168 tests/build, migration/seed, actual Keycloak OIDC, raw/processing/wealth/simulation, FILLED/REJECTED/UNKNOWN→FILLED, 동일 key replay와 DB execution/ledger/position/audit 증거, production image audit 0을 통과했다. 최종 JSON은 `acceptance=passed`, `scenarioSteps=12`, `remoteResourcesUsed=false`를 기록했다.
 
 ## Resolved History
+
+### ISSUE-0012 — `make smoke-test`가 stale host build 실행
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 최초 발견: 2026-09-02
+- 마지막 갱신: 2026-09-02
+- 발견 DEV: BE-0012 local Compose smoke
+- 원래 영향 Milestone: 6A local hardening acceptance
+- 원래 내용: `make infra-up`의 Docker image build가 host `dist`를 갱신하지 않아, 별도로 실행한 `make smoke-test`가 이전 platform build를 시작하고 새 outbox 완료를 기다리다 timeout됐다.
+- 해결 DEV: BE-0012
+- 해결 내용: `smoke-test` entrypoint가 host platform build를 명시적으로 선행하도록 변경했다.
+- 검증: 재실행에서 OIDC와 12단계 business smoke가 통과하고 processed outbox/delivery 각 3건, `remoteResourcesUsed:false`를 확인했다.
 
 ### ISSUE-0011 — `make infra-up` readiness race
 

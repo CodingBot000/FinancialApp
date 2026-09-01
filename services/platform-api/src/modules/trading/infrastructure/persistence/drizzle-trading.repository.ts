@@ -14,6 +14,8 @@ import {
   finappHolding,
   finappInstrument,
   finappOrderExecution,
+  finappOutboxDelivery,
+  finappOutboxEvent,
   finappPosition,
   finappQuote,
   finappReconciliationJob,
@@ -26,6 +28,7 @@ import type {
   OrderRequest,
   OrderPage,
   OrderView,
+  OutboxClaim,
   QuoteRequest,
   QuoteView,
   ReconciliationClaim,
@@ -39,6 +42,8 @@ const schema = {
   finappHolding,
   finappInstrument,
   finappOrderExecution,
+  finappOutboxDelivery,
+  finappOutboxEvent,
   finappPosition,
   finappQuote,
   finappReconciliationJob,
@@ -801,6 +806,7 @@ export class DrizzleTradingRepository implements TradingRepository {
             now,
           });
         }
+        await this.insertSettlementOutbox(client, orderId, result.status, now);
       }
       if (reconciliationJobId !== undefined) {
         await client.query(
@@ -980,6 +986,12 @@ export class DrizzleTradingRepository implements TradingRepository {
           traceId: `reconciliation:${claim.jobId}`,
           now: new Date(),
         });
+        await this.insertSettlementOutbox(
+          client,
+          claim.orderId,
+          'FAILED',
+          new Date(),
+        );
       }
       await client.query('COMMIT');
     } catch (error) {
@@ -988,6 +1000,129 @@ export class DrizzleTradingRepository implements TradingRepository {
     } finally {
       client.release();
     }
+  }
+
+  async claimOutbox(
+    workerId: string,
+    now: Date,
+    staleBefore: Date,
+  ): Promise<OutboxClaim | undefined> {
+    await this.pool.query(
+      `
+      UPDATE finapp_trading.finapp_outbox_event
+      SET status = 'PENDING', locked_at = NULL, locked_by = NULL,
+          last_error_code = 'OUTBOX_LEASE_EXPIRED'
+      WHERE status = 'PROCESSING' AND locked_at < $1
+    `,
+      [staleBefore],
+    );
+    const result = await this.pool.query<{
+      aggregate_id: string;
+      aggregate_type: 'TRADE_ORDER';
+      attempt: number;
+      event_id: string;
+      event_type: 'ORDER_SETTLED';
+      payload: OutboxClaim['payload'];
+    }>(
+      `
+      WITH candidate AS (
+        SELECT id FROM finapp_trading.finapp_outbox_event
+        WHERE status = 'PENDING' AND available_at <= $1
+        ORDER BY available_at, created_at
+        FOR UPDATE SKIP LOCKED
+        LIMIT 1
+      )
+      UPDATE finapp_trading.finapp_outbox_event e
+      SET status = 'PROCESSING', attempt = attempt + 1,
+          locked_at = $1, locked_by = $2
+      FROM candidate c
+      WHERE e.id = c.id
+      RETURNING e.id AS event_id, e.aggregate_type, e.aggregate_id,
+                e.event_type, e.payload, e.attempt
+    `,
+      [now, workerId],
+    );
+    const row = result.rows[0];
+    return row === undefined
+      ? undefined
+      : {
+          eventId: row.event_id,
+          aggregateType: row.aggregate_type,
+          aggregateId: row.aggregate_id,
+          eventType: row.event_type,
+          payload: row.payload,
+          attempt: row.attempt,
+          workerId,
+        };
+  }
+
+  async recordOutboxDelivery(
+    claim: OutboxClaim,
+    consumerName: string,
+  ): Promise<'DELIVERED' | 'DUPLICATE'> {
+    const delivered = await this.pool.query(
+      `
+      INSERT INTO finapp_trading.finapp_outbox_delivery (
+        id, event_id, consumer_name, delivered_at
+      )
+      SELECT $1, e.id, $3, now()
+      FROM finapp_trading.finapp_outbox_event e
+      WHERE e.id = $2 AND e.status = 'PROCESSING' AND e.locked_by = $4
+      ON CONFLICT (event_id, consumer_name) DO NOTHING
+    `,
+      [randomUUID(), claim.eventId, consumerName, claim.workerId],
+    );
+    if ((delivered.rowCount ?? 0) === 1) return 'DELIVERED';
+    const ownership = await this.pool.query(
+      `
+      SELECT 1 FROM finapp_trading.finapp_outbox_event
+      WHERE id = $1 AND status = 'PROCESSING' AND locked_by = $2
+    `,
+      [claim.eventId, claim.workerId],
+    );
+    if ((ownership.rowCount ?? 0) !== 1) {
+      throw new Error('Outbox claim lease is no longer owned by this worker.');
+    }
+    return 'DUPLICATE';
+  }
+
+  async completeOutbox(claim: OutboxClaim, processedAt: Date): Promise<void> {
+    const result = await this.pool.query(
+      `
+      UPDATE finapp_trading.finapp_outbox_event
+      SET status = 'PROCESSED', processed_at = $3,
+          locked_at = NULL, locked_by = NULL, last_error_code = NULL
+      WHERE id = $1 AND status = 'PROCESSING' AND locked_by = $2
+    `,
+      [claim.eventId, claim.workerId, processedAt],
+    );
+    if ((result.rowCount ?? 0) !== 1) {
+      throw new Error('Outbox claim could not be completed by this worker.');
+    }
+  }
+
+  async rescheduleOutbox(
+    claim: OutboxClaim,
+    reasonCode: string,
+    retryAt: Date,
+    maxAttempts: number,
+  ): Promise<void> {
+    await this.pool.query(
+      `
+      UPDATE finapp_trading.finapp_outbox_event
+      SET status = CASE WHEN attempt >= $4 THEN 'FAILED' ELSE 'PENDING' END,
+          available_at = $3, last_error_code = $5,
+          locked_at = NULL, locked_by = NULL
+      WHERE id = $1 AND status = 'PROCESSING' AND locked_by = $2
+    `,
+      [
+        claim.eventId,
+        claim.workerId,
+        retryAt,
+        maxAttempts,
+        reasonCode.slice(0, 80),
+      ],
+    );
   }
 
   private async findOrderById(orderId: string): Promise<OrderView | undefined> {
@@ -1036,6 +1171,31 @@ export class DrizzleTradingRepository implements TradingRepository {
         event.reasonCode ?? null,
         event.traceId.slice(0, 100),
         JSON.stringify({ syntheticData: true }),
+      ],
+    );
+  }
+
+  private async insertSettlementOutbox(
+    client: {
+      query: (text: string, values?: readonly unknown[]) => Promise<unknown>;
+    },
+    orderId: string,
+    outcome: 'FILLED' | 'REJECTED' | 'FAILED',
+    now: Date,
+  ): Promise<void> {
+    await client.query(
+      `
+      INSERT INTO finapp_trading.finapp_outbox_event (
+        id, aggregate_type, aggregate_id, event_type, payload,
+        status, attempt, available_at, created_at
+      ) VALUES ($1,'TRADE_ORDER',$2,'ORDER_SETTLED',$3::jsonb,'PENDING',0,$4,$4)
+      ON CONFLICT (aggregate_type, aggregate_id, event_type) DO NOTHING
+    `,
+      [
+        randomUUID(),
+        orderId,
+        JSON.stringify({ outcome, syntheticData: true }),
+        now,
       ],
     );
   }

@@ -2,7 +2,7 @@
 
 - 기록 방식: append-only
 - 마지막 DEV ID: `DEV-0011`
-- 다음 영역 ID: `BE-0012`
+- 다음 영역 ID: `BE-0013`
 
 모든 integration/shared commit은 하나의 `DEV-####`와 연결한다. frontend와 backend 영역 commit은 각각 `FE-####`, `BE-####`와 workstream 개발 로그를 사용한다. DEV-0006 이후에는 단일 main에서 작업하되 영역별 ID namespace와 기록은 유지한다. commit subject에도 같은 ID를 넣어 Git history와 문서 기록을 상호 추적할 수 있게 한다.
 
@@ -669,6 +669,25 @@
 ### 다음 작업
 
 - `FE-0013`: BUY order와 UNKNOWN recovery mobile vertical slice
+
+## BE-0012 — Settlement Transactional Outbox
+
+- 날짜: 2026-09-02
+- Milestone: 6A local hardening
+- 상태: COMPLETED
+- 예정 commit: `feat(be): add transactional settlement outbox [BE-0012]`
+
+### 완료와 검증
+
+- terminal settlement와 같은 transaction에서 redacted outbox event를 기록하고, PostgreSQL lease worker와 durable delivery receipt 기반 local idempotent publisher를 구현했다.
+- migration `0007_finapp_outbox`, prefix/권한, 동시 claim, stale lease/crash-window duplicate, retry/max-attempt unit·Testcontainers 검증을 통과했다.
+- actual Compose forward migration 뒤 OIDC/business smoke가 outbox event/delivery 각 3건을 확인했다. 원격 자원은 사용하지 않았다.
+- root verify는 mobile 95/simulator 12/platform 64 총 171 tests와 두 backend build를 통과했다.
+
+### 이슈와 다음 작업
+
+- `ISSUE-0012`, `BE-ISSUE-0004`, `BE-ISSUE-0005` RESOLVED.
+- 다음은 `BE-0013` local DataKeyProvider/AWS KMS 경계와 wrong AAD test다.
 
 ## FE-0013 — Biometric BUY와 Recovery Mobile 통합
 

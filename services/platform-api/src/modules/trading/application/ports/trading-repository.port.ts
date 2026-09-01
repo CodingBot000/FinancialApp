@@ -4,6 +4,7 @@ import type {
   OrderRequest,
   OrderPage,
   OrderView,
+  OutboxClaim,
   PreparedOrder,
   QuoteRequest,
   QuoteView,
@@ -64,6 +65,22 @@ export interface TradingRepository {
   ): Promise<ReconciliationClaim | undefined>;
   rescheduleReconciliation(
     claim: ReconciliationClaim,
+    reasonCode: string,
+    retryAt: Date,
+    maxAttempts: number,
+  ): Promise<void>;
+  claimOutbox(
+    workerId: string,
+    now: Date,
+    staleBefore: Date,
+  ): Promise<OutboxClaim | undefined>;
+  recordOutboxDelivery(
+    claim: OutboxClaim,
+    consumerName: string,
+  ): Promise<'DELIVERED' | 'DUPLICATE'>;
+  completeOutbox(claim: OutboxClaim, processedAt: Date): Promise<void>;
+  rescheduleOutbox(
+    claim: OutboxClaim,
     reasonCode: string,
     retryAt: Date,
     maxAttempts: number,

@@ -40,6 +40,8 @@ const platform = spawn('node', ['services/platform-api/dist/main.js'], {
     ORDER_RECONCILIATION_BACKOFF_MS: '50',
     ORDER_RECONCILIATION_ENABLED: 'true',
     ORDER_RECONCILIATION_TICK_MS: '50',
+    OUTBOX_PUBLISHER_ENABLED: 'true',
+    OUTBOX_PUBLISHER_TICK_MS: '50',
     PLATFORM_API_PORT: '18081',
     PLATFORM_DATABASE_URL: platformDatabaseUrl,
   },
@@ -263,22 +265,27 @@ try {
   });
   let persistence;
   try {
-    persistence = await pool.query(
-      `SELECT
+    persistence = await waitFor(async () => {
+      const result = await pool.query(
+        `SELECT
       (SELECT count(*) FROM finapp_mydata.finapp_raw_record)::int AS raw_records,
       (SELECT count(*) FROM finapp_mydata.finapp_raw_processing_result WHERE status = 'PROCESSED')::int AS processed_records,
       (SELECT count(*) FROM finapp_trading.finapp_trade_order WHERE id = $1)::int AS normal_orders,
       (SELECT count(*) FROM finapp_trading.finapp_order_execution WHERE order_id IN ($1, $2))::int AS executions,
       (SELECT count(*) FROM finapp_trading.finapp_cash_ledger_entry WHERE order_id IN ($1, $2, $3))::int AS ledger_entries,
       (SELECT count(*) FROM finapp_trading.finapp_position WHERE account_id = $4)::int AS positions,
-      (SELECT count(*) FROM finapp_audit.finapp_audit_event WHERE resource_id IN ($1, $2, $3))::int AS audit_events`,
-      [
-        normal.order.orderId,
-        unknown.order.orderId,
-        rejected.order.orderId,
-        accountId,
-      ],
-    );
+      (SELECT count(*) FROM finapp_audit.finapp_audit_event WHERE resource_id IN ($1, $2, $3))::int AS audit_events,
+      (SELECT count(*) FROM finapp_trading.finapp_outbox_event WHERE aggregate_id IN ($1, $2, $3) AND status = 'PROCESSED')::int AS outbox_events,
+      (SELECT count(*) FROM finapp_trading.finapp_outbox_delivery d JOIN finapp_trading.finapp_outbox_event e ON e.id = d.event_id WHERE e.aggregate_id IN ($1, $2, $3))::int AS outbox_deliveries`,
+        [
+          normal.order.orderId,
+          unknown.order.orderId,
+          rejected.order.orderId,
+          accountId,
+        ],
+      );
+      return result.rows[0]?.outbox_events === 3 ? result : undefined;
+    });
   } finally {
     await pool.end();
   }
@@ -291,7 +298,9 @@ try {
     evidence.executions < 2 ||
     evidence.ledger_entries < 3 ||
     evidence.positions < 1 ||
-    evidence.audit_events < 3
+    evidence.audit_events < 3 ||
+    evidence.outbox_events !== 3 ||
+    evidence.outbox_deliveries !== 3
   ) {
     throw new Error(
       `Persistence evidence missing: ${JSON.stringify(evidence)}`,
@@ -299,7 +308,7 @@ try {
   }
   await request('/api/v1/dev/dataset/reset', { method: 'POST' }, 200);
   process.stdout.write(
-    `${JSON.stringify({ acceptanceSteps: 12, accounts: accounts.items.length, auditEvents: evidence.audit_events, executions: evidence.executions, historyPoints: history.points.length, idempotentReplay: true, normal: normal.order.status, processedRecords: evidence.processed_records, rawRecords: evidence.raw_records, rejected: rejected.order.status, reconciled: reconciled.status, simulationPoints: persistedSimulation.series.length, syntheticData: true, transactions: transactions.items.length })}\n`,
+    `${JSON.stringify({ acceptanceSteps: 12, accounts: accounts.items.length, auditEvents: evidence.audit_events, executions: evidence.executions, historyPoints: history.points.length, idempotentReplay: true, normal: normal.order.status, outboxDeliveries: evidence.outbox_deliveries, outboxEvents: evidence.outbox_events, processedRecords: evidence.processed_records, rawRecords: evidence.raw_records, rejected: rejected.order.status, reconciled: reconciled.status, simulationPoints: persistedSimulation.series.length, syntheticData: true, transactions: transactions.items.length })}\n`,
   );
 } finally {
   platform.kill('SIGTERM');

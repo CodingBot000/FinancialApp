@@ -71,6 +71,12 @@ services:
       ORDER_RECONCILIATION_LEASE_MS: '30000'
       ORDER_RECONCILIATION_MAX_ATTEMPTS: '3'
       ORDER_RECONCILIATION_TICK_MS: '5000'
+      OUTBOX_PUBLISHER_BACKOFF_MS: '5000'
+      OUTBOX_PUBLISHER_BATCH_SIZE: '10'
+      OUTBOX_PUBLISHER_ENABLED: 'true'
+      OUTBOX_PUBLISHER_LEASE_MS: '30000'
+      OUTBOX_PUBLISHER_MAX_ATTEMPTS: '5'
+      OUTBOX_PUBLISHER_TICK_MS: '5000'
       OIDC_AUDIENCE: finapp-platform-api
       OIDC_ISSUER: http://localhost:8083/realms/finapp
       OIDC_JWKS_URI: http://keycloak:8080/realms/finapp/protocol/openid-connect/certs

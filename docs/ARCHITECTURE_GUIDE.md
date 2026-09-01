@@ -254,6 +254,8 @@ module composition ───────────────> api/applicatio
 - 복수 instance에서는 `FOR UPDATE SKIP LOCKED` 또는 동등한 원자적 claim query를 사용한다.
 - 외부 HTTP 호출 동안 DB transaction이나 row lock을 유지하지 않는다.
 - process restart 후에도 job 상태로 복구할 수 있어야 한다.
+- settlement는 order/cash/position/audit과 같은 transaction에 최소 `outcome`만 담은 outbox event를 쓴다.
+- outbox publisher는 짧은 `SKIP LOCKED` claim 뒤 transaction 밖에서 동작하고, 영속 delivery receipt로 publish 성공/complete 실패 재실행을 중복 없이 완료한다.
 
 ## 6. Institution Simulator 아키텍처
 

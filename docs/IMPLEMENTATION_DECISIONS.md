@@ -55,6 +55,7 @@
 | D-044 | ACCEPTED | DEV-0007 이후 `INTEGRATED_DEVELOPMENT_PLAN.md`를 단일 `main`의 활성 실행 순서로 사용한다. 기존 분리 branch는 이력으로 보존하고 FE/BE ID와 lane log는 영역별 추적을 위해 main에서도 유지한다. |
 | D-045 | ACCEPTED | 이번 연속 개발 실행은 Milestone 6 local hardening까지 진행하고 원격 DB 사전점검·접속·migration/seed와 원격 배포 직전에 반드시 멈춘다. 원격 단계는 과거 승인과 무관하게 사용자가 향후 별도 실행으로 명시적으로 재개해야 한다. |
 | D-046 | ACCEPTED | local Keycloak mobile client는 PKCE S256 public client, `basic` subject default scope와 `offline_access` optional scope를 사용한다. 합성 test user password는 실행 환경변수로만 주입하고 source/fixture/log에 저장하지 않는다. |
+| D-047 | ACCEPTED | settlement는 같은 DB transaction에 redacted `ORDER_SETTLED` outbox를 기록한다. local publisher는 `SKIP LOCKED` lease와 `(event_id, consumer_name)` durable receipt로 crash-window 중복을 억제하며 Kafka나 원격 broker를 도입하지 않는다. |
 
 ## 정정 이력
 

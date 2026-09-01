@@ -66,6 +66,7 @@ reset-demo:
 	npm run reset:local-demo
 
 smoke-test:
+	npm run build -w @finapp/platform-api
 	COMPOSE_ENV_FILE=$(COMPOSE_ENV_FILE) npm run smoke:local-mvp
 
 acceptance-test:

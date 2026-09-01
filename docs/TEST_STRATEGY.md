@@ -54,10 +54,13 @@ Testcontainers for Node.js PostgreSQL 사용:
 - duplicate idempotency concurrency
 - settlement duplicate execution
 - reconciliation job claim
+- outbox concurrent claim, stale lease와 durable duplicate delivery suppression
 - audit append-only 권한
 - DB role isolation
 
 BE-0010 자동 DB suite는 정상 fill, reject, UNKNOWN worker 두 개의 단일 claim, duplicate settlement, max-attempt 환불, execution/position/ledger/cash 보존과 audit/ledger UPDATE·DELETE 거부를 PostgreSQL 17.6에서 검증한다.
+
+BE-0012는 terminal settlement 4건과 outbox 4건의 원자적 생성을 확인한다. 두 worker의 동시 claim은 서로 다른 event를 가져가야 하며, delivery 기록 뒤 complete 전에 lease가 만료된 event는 재claim되어 `DUPLICATE`로 처리되고 receipt는 한 건만 남아야 한다. 실패 publisher는 같은 tick에서 inline retry하지 않고 backoff 상태로 되돌린다.
 
 ### External integration
 
@@ -71,7 +74,7 @@ platform-api와 실제 institution-simulator를 실행한다.
 - ORDER_UNKNOWN_THEN_FILLED
 - duplicate clientOrderId
 
-`npm run smoke:local-order`는 clean local Compose migration/seed 뒤 합성 local JWT로 platform process를 시작해 sync→NORMAL FILLED→ORDER_REJECT→UNKNOWN reconciliation FILLED→reset을 실제 HTTP로 검증한다. 이 명령은 원격 endpoint나 credential을 사용하지 않는다.
+`npm run smoke:local-order`는 clean local Compose migration/seed 뒤 합성 local JWT로 platform process를 시작해 sync→NORMAL FILLED→ORDER_REJECT→UNKNOWN reconciliation FILLED→outbox processed/delivery 3건→reset을 실제 HTTP로 검증한다. 이 명령은 원격 endpoint나 credential을 사용하지 않는다. `make smoke-test`는 stale host build를 피하기 위해 platform build를 먼저 수행한다.
 
 HTTP adapter mock은 세부 client unit test에 사용할 수 있지만 이 suite를 대체하지 않는다.
 

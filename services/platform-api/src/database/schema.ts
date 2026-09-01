@@ -1102,6 +1102,78 @@ export const finappReconciliationJob = finappTradingSchema.table(
   ],
 );
 
+export const finappOutboxEvent = finappTradingSchema.table(
+  'finapp_outbox_event',
+  {
+    id: uuid('id').notNull(),
+    aggregateType: varchar('aggregate_type', { length: 50 }).notNull(),
+    aggregateId: uuid('aggregate_id').notNull(),
+    eventType: varchar('event_type', { length: 80 }).notNull(),
+    payload: jsonb('payload').notNull(),
+    status: varchar('status', { length: 20 }).notNull().default('PENDING'),
+    attempt: integer('attempt').notNull().default(0),
+    availableAt: timestamp('available_at', {
+      withTimezone: true,
+      mode: 'date',
+    }).notNull(),
+    lockedAt: timestamp('locked_at', { withTimezone: true, mode: 'date' }),
+    lockedBy: varchar('locked_by', { length: 100 }),
+    lastErrorCode: varchar('last_error_code', { length: 80 }),
+    processedAt: timestamp('processed_at', {
+      withTimezone: true,
+      mode: 'date',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_outbox_event', columns: [table.id] }),
+    unique('finapp_uq_outbox_aggregate_event').on(
+      table.aggregateType,
+      table.aggregateId,
+      table.eventType,
+    ),
+    check('finapp_ck_outbox_attempt', sql`${table.attempt} >= 0`),
+    check(
+      'finapp_ck_outbox_status',
+      sql`${table.status} IN ('PENDING', 'PROCESSING', 'PROCESSED', 'FAILED')`,
+    ),
+    index('finapp_idx_outbox_status_available').on(
+      table.status,
+      table.availableAt,
+      table.createdAt,
+    ),
+  ],
+);
+
+export const finappOutboxDelivery = finappTradingSchema.table(
+  'finapp_outbox_delivery',
+  {
+    id: uuid('id').notNull(),
+    eventId: uuid('event_id').notNull(),
+    consumerName: varchar('consumer_name', { length: 100 }).notNull(),
+    deliveredAt: timestamp('delivered_at', {
+      withTimezone: true,
+      mode: 'date',
+    })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_outbox_delivery', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_outbox_delivery_event',
+      columns: [table.eventId],
+      foreignColumns: [finappOutboxEvent.id],
+    }).onDelete('restrict'),
+    unique('finapp_uq_outbox_delivery_event_consumer').on(
+      table.eventId,
+      table.consumerName,
+    ),
+  ],
+);
+
 export const finappAuditEvent = finappAuditSchema.table(
   'finapp_audit_event',
   {

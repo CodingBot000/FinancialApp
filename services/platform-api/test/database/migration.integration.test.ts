@@ -87,7 +87,7 @@ describe('platform Drizzle migration', () => {
         SELECT count(*)::text AS count
         FROM finapp_meta.finapp_platform_drizzle_migrations
       `);
-      expect(history.rows[0]?.count).toBe('7');
+      expect(history.rows[0]?.count).toBe('8');
     } finally {
       await client.end();
     }
@@ -1050,23 +1050,123 @@ describe('platform Drizzle migration', () => {
         position_quantity: '3.00000000',
         reconciliation_completed: '1',
       });
+      const outboxBeforePublish = await pool.query<{
+        count: string;
+        redacted: boolean;
+      }>(
+        `
+        SELECT count(*)::text AS count,
+               bool_and(payload ? 'outcome' AND payload ? 'syntheticData'
+                 AND payload - 'outcome' - 'syntheticData' = '{}'::jsonb) AS redacted
+        FROM finapp_trading.finapp_outbox_event
+        WHERE aggregate_id = ANY($1::uuid[])
+      `,
+        [pagedOrderIds],
+      );
+      expect(outboxBeforePublish.rows[0]).toEqual({
+        count: '4',
+        redacted: true,
+      });
+
+      const simultaneousClaims = await Promise.all([
+        repository.claimOutbox('outbox-worker-a', new Date(), new Date(0)),
+        repository.claimOutbox('outbox-worker-b', new Date(), new Date(0)),
+      ]);
+      expect(simultaneousClaims.every(Boolean)).toBe(true);
+      expect(
+        new Set(simultaneousClaims.map((item) => item?.eventId)).size,
+      ).toBe(2);
+      const crashWindowClaim = simultaneousClaims[0]!;
+      const completedClaim = simultaneousClaims[1]!;
+      await expect(
+        repository.recordOutboxDelivery(
+          crashWindowClaim,
+          'finapp-local-settlement-v1',
+        ),
+      ).resolves.toBe('DELIVERED');
+      await repository.recordOutboxDelivery(
+        completedClaim,
+        'finapp-local-settlement-v1',
+      );
+      await repository.completeOutbox(completedClaim, new Date());
+
+      await pool.query(
+        `UPDATE finapp_trading.finapp_outbox_event
+         SET locked_at = '2000-01-01T00:00:00.000Z'
+         WHERE id = $1`,
+        [crashWindowClaim.eventId],
+      );
+      const reclaimed = await repository.claimOutbox(
+        'outbox-worker-c',
+        new Date(),
+        new Date(),
+      );
+      expect(reclaimed?.eventId).toBe(crashWindowClaim.eventId);
+      await expect(
+        repository.recordOutboxDelivery(
+          reclaimed!,
+          'finapp-local-settlement-v1',
+        ),
+      ).resolves.toBe('DUPLICATE');
+      await repository.completeOutbox(reclaimed!, new Date());
+
+      for (;;) {
+        const next = await repository.claimOutbox(
+          'outbox-worker-d',
+          new Date(),
+          new Date(0),
+        );
+        if (next === undefined) break;
+        await repository.recordOutboxDelivery(
+          next,
+          'finapp-local-settlement-v1',
+        );
+        await repository.completeOutbox(next, new Date());
+      }
+      const outboxAfterPublish = await pool.query<{
+        deliveries: string;
+        processed: string;
+      }>(
+        `
+        SELECT
+          (SELECT count(*) FROM finapp_trading.finapp_outbox_delivery d
+           JOIN finapp_trading.finapp_outbox_event e ON e.id = d.event_id
+           WHERE e.aggregate_id = ANY($1::uuid[]))::text AS deliveries,
+          (SELECT count(*) FROM finapp_trading.finapp_outbox_event
+           WHERE aggregate_id = ANY($1::uuid[]) AND status = 'PROCESSED')::text AS processed
+      `,
+        [pagedOrderIds],
+      );
+      expect(outboxAfterPublish.rows[0]).toEqual({
+        deliveries: '4',
+        processed: '4',
+      });
       const privileges = await pool.query<{
         audit_delete: boolean;
         audit_update: boolean;
         ledger_delete: boolean;
         ledger_update: boolean;
+        outbox_delivery_delete: boolean;
+        outbox_delivery_update: boolean;
+        outbox_event_delete: boolean;
       }>(`
         SELECT
           has_table_privilege(current_user, 'finapp_audit.finapp_audit_event', 'UPDATE') AS audit_update,
           has_table_privilege(current_user, 'finapp_audit.finapp_audit_event', 'DELETE') AS audit_delete,
           has_table_privilege(current_user, 'finapp_trading.finapp_cash_ledger_entry', 'UPDATE') AS ledger_update,
-          has_table_privilege(current_user, 'finapp_trading.finapp_cash_ledger_entry', 'DELETE') AS ledger_delete
+          has_table_privilege(current_user, 'finapp_trading.finapp_cash_ledger_entry', 'DELETE') AS ledger_delete,
+          has_table_privilege(current_user, 'finapp_trading.finapp_outbox_event', 'DELETE') AS outbox_event_delete,
+          has_table_privilege(current_user, 'finapp_trading.finapp_outbox_delivery', 'UPDATE') AS outbox_delivery_update,
+          has_table_privilege(current_user, 'finapp_trading.finapp_outbox_delivery', 'DELETE') AS outbox_delivery_delete
       `);
       expect(privileges.rows[0]).toEqual({
         audit_delete: false,
         audit_update: false,
         ledger_delete: false,
         ledger_update: false,
+        outbox_delivery_delete: false,
+        outbox_delivery_update: false,
+        outbox_event_delete: false,
       });
     } finally {
       await pool.end();

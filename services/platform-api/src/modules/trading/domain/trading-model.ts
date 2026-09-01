@@ -74,3 +74,16 @@ export interface ReconciliationClaim {
   readonly quantity: string;
   readonly attempt: number;
 }
+
+export interface OutboxClaim {
+  readonly eventId: string;
+  readonly aggregateType: 'TRADE_ORDER';
+  readonly aggregateId: string;
+  readonly eventType: 'ORDER_SETTLED';
+  readonly payload: Readonly<{
+    outcome: 'FILLED' | 'REJECTED' | 'FAILED';
+    syntheticData: true;
+  }>;
+  readonly attempt: number;
+  readonly workerId: string;
+}
