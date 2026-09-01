@@ -3,7 +3,7 @@
 - 다음 ISSUE ID: `FE-ISSUE-0002`
 - 다음 GAP ID: `FE-GAP-0002`
 - active issue: `FE-ISSUE-0001`
-- active gap: `FE-GAP-0001`
+- active gap: 없음
 
 frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한다. backend·계약·milestone 완료에도 영향을 주면 handoff와 중앙 `ISSUE_REGISTER.md`에 연결한다.
 
@@ -26,17 +26,21 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 
 ## Active Gap
 
+현재 등록된 active gap 없음.
+
+## Resolved Gap History
+
 ### FE-GAP-0001 — React 19 mobile component test harness
 
-- 상태: UNVERIFIED
+- 상태: RESOLVED
 - 심각도: MEDIUM
 - 발견 FE: FE-0002
 - 누락/연기 이유: `react-test-renderer 19.2.3` 기반 smoke test는 deprecated 경고와 React act 환경 불일치를 발생시켜 기준선에서 제거했다. 경고를 숨기거나 deprecated renderer를 고정하지 않고 React Native Testing Library 14와 Vitest의 호환 설정을 검증해야 한다.
-- 현재 영향: API adapter, Query cache, native lifecycle과 pure view-state는 자동 검증되지만 health 화면의 loading/ready/error 렌더링은 아직 component test로 검증되지 않았다.
+- 현재 영향: 없음. FE-0003에서 health loading/ready/error component test가 추가됐다.
 - 목표 Milestone: 1
 - 재확인 조건: React 19.2.3/React Native 0.86.3에서 경고 없이 실행되는 RNTL component suite와 lint/typecheck/web export 통과
-- 해결 FE:
-- 검증: FE-0002에서 deprecated renderer 실험은 commit 전에 제거했고 최종 mobile suite 6 files/14 tests는 통과
+- 해결 FE: FE-0003
+- 검증: RNTL 14.0.1과 modern test-renderer 1.2.0, Vitest optimizer와 test-only RN host shim 조합에서 loading → ready와 retryable error/accessibility button component test 통과. 전체 mobile suite 7 files/16 tests, lint, strict typecheck와 web export 통과
 
 ## Issue Template
 
