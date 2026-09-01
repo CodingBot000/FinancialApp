@@ -1,7 +1,7 @@
 # Frontend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `FE-0002`
+- 다음 ID: `FE-0003`
 - branch/worktree: `codex/frontend` / `/Users/switch/Development/Web/FinancialApp-frontend`
 - base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
 - contract revision: `platform-v1` at base commit (blob `8942e08342cd78f7e251f09b8a3005c9e797d93f`)
@@ -96,3 +96,58 @@ frontend session은 `apps/mobile/**` 변경을 commit 단위로 기록한다. �
 ### 다음 작업
 
 - FE-0002: TanStack Query 기반 server-state provider, AppState/online adapter와 health query component test foundation
+
+## FE-0002 — Mobile server-state와 native lifecycle 기반
+
+- 날짜: 2026-09-01
+- Milestone: 1
+- 상태: COMPLETED
+- base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
+- contract revision: `platform-v1` at base commit (blob `8942e08342cd78f7e251f09b8a3005c9e797d93f`)
+- commit: `feat(fe): add mobile query lifecycle foundation [FE-0002]`
+
+### 완료
+
+- TanStack Query v5 provider와 QueryClient factory를 추가하고 server state의 단일 소유권을 Query cache로 고정
+- GET query는 명시적으로 retryable인 `PlatformApiError`만 최대 2회 retry하고 mutation은 기본 retry를 금지
+- React Native AppState를 `focusManager`, Expo Network를 `onlineManager`에 연결하고 listener cleanup/초기 상태 race를 분리된 adapter로 구현
+- health 호출을 feature-owned query key/options와 `useQuery`로 전환하고 mock response가 Query cache에 저장되는 integration test 추가
+- Expo SDK 57 공식 호환 `expo-network ~57.0.1`과 `@tanstack/react-query 5.102.8`을 mobile manifest에 추가
+
+### 변경 파일
+
+- `apps/mobile/package.json`
+- `apps/mobile/src/app/_layout.tsx`
+- `apps/mobile/src/features/health/api/**`
+- `apps/mobile/src/features/health/hooks/use-platform-health.ts`
+- `apps/mobile/src/shared/query/**`
+- `apps/mobile/vitest.config.ts`
+- `docs/workstreams/frontend/DEVELOPMENT_LOG.md`
+- `docs/workstreams/frontend/ISSUE_REGISTER.md`
+
+### 검증
+
+- 명령: `npm install --package-lock=false --ignore-scripts`
+- 결과: branch-local dependency 설치 성공, root lockfile 미변경, audit moderate 13/high 0/critical 0 유지
+- 명령: `npm run architecture:check -w @finapp/mobile`
+- 결과: 22 source files boundary/cycle check 통과
+- 명령: `npm run lint -w @finapp/mobile`
+- 결과: 통과
+- 명령: `npm run typecheck -w @finapp/mobile`
+- 결과: TypeScript strict 통과
+- 명령: `npm run test -w @finapp/mobile`
+- 결과: 6 files, 14 tests 통과
+- 명령: `npm run dependency:check -w @finapp/mobile`
+- 결과: Expo dependency 호환성 통과
+- 명령: `npx expo export --platform web --output-dir /tmp/financialapp-fe0002-web`
+- 결과: Expo Router entry 839 modules bundle 성공
+
+### 이슈·누락·Handoff
+
+- FE-GAP-0001: React 19에서 deprecated된 `react-test-renderer`는 채택하지 않았다. RNTL 14/Vitest 호환 harness로 loading/ready/error component test를 추가해야 한다.
+- INTEGRATION_HANDOFF: `apps/mobile/package.json`의 신규 dependency를 main에 통합할 때 integration owner가 root `package-lock.json`을 package manager로 재생성하고 clean install을 검증해야 한다.
+- CONTRACT_CHANGE_REQUEST: FE-0001과 동일하게 health 이후 API consumer 계약을 기다리며, Query foundation 자체는 계약 변경 없이 독립 완료했다.
+
+### 다음 작업
+
+- FE-0003: React 19/RN 0.86 호환 component test harness와 health loading/ready/error rendering test

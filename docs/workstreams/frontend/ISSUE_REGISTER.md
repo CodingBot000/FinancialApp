@@ -1,9 +1,9 @@
 # Frontend Workstream Issue와 Gap Register
 
 - 다음 ISSUE ID: `FE-ISSUE-0002`
-- 다음 GAP ID: `FE-GAP-0001`
+- 다음 GAP ID: `FE-GAP-0002`
 - active issue: `FE-ISSUE-0001`
-- active gap: 없음
+- active gap: `FE-GAP-0001`
 
 frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한다. backend·계약·milestone 완료에도 영향을 주면 handoff와 중앙 `ISSUE_REGISTER.md`에 연결한다.
 
@@ -23,6 +23,20 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 목표 FE: Milestone 6 preview/demo release gate 전 호환 patch 상태 재확인
 - 해결 FE:
 - 검증: FE-0001에서 `npm view expo@57 version --json`과 Expo 공식 SDK 57 문서를 확인한 결과 stable 최신 patch는 `57.0.18`이며 현재 manifest와 동일하다. `expo install --check`는 통과했다. `npm audit --json`은 moderate 13/high 0/critical 0으로 DEV-0005와 동일하고 제안된 강제 fix는 Expo 46 또는 Expo Router 5로의 비호환 downgrade다. Expo Doctor와 native Development Build는 후속 Milestone 1 검증에 포함한다.
+
+## Active Gap
+
+### FE-GAP-0001 — React 19 mobile component test harness
+
+- 상태: UNVERIFIED
+- 심각도: MEDIUM
+- 발견 FE: FE-0002
+- 누락/연기 이유: `react-test-renderer 19.2.3` 기반 smoke test는 deprecated 경고와 React act 환경 불일치를 발생시켜 기준선에서 제거했다. 경고를 숨기거나 deprecated renderer를 고정하지 않고 React Native Testing Library 14와 Vitest의 호환 설정을 검증해야 한다.
+- 현재 영향: API adapter, Query cache, native lifecycle과 pure view-state는 자동 검증되지만 health 화면의 loading/ready/error 렌더링은 아직 component test로 검증되지 않았다.
+- 목표 Milestone: 1
+- 재확인 조건: React 19.2.3/React Native 0.86.3에서 경고 없이 실행되는 RNTL component suite와 lint/typecheck/web export 통과
+- 해결 FE:
+- 검증: FE-0002에서 deprecated renderer 실험은 commit 전에 제거했고 최종 mobile suite 6 files/14 tests는 통과
 
 ## Issue Template
 

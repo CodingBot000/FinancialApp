@@ -1,37 +1,31 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { usePlatformApi } from '../../../shared/api';
+import { healthQueryOptions } from '../api/health-query';
 import { healthErrorDetails, type HealthState } from '../model/health-state';
 
 export function usePlatformHealth() {
   const api = usePlatformApi();
-  const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState<HealthState>({ status: 'loading' });
+  const query = useQuery(healthQueryOptions(api));
+  let state: HealthState = { status: 'loading' };
 
-  useEffect(() => {
-    const controller = new AbortController();
-    setState({ status: 'loading' });
-
-    void api
-      .getHealth({ signal: controller.signal })
-      .then((health) => {
-        setState({ checkedAt: new Date(), health, status: 'ready' });
-      })
-      .catch((error: unknown) => {
-        const details = healthErrorDetails(error);
-        if (details !== undefined) {
-          setState({ ...details, status: 'error' });
-        }
-      });
-
-    return () => {
-      controller.abort();
+  if (query.data !== undefined) {
+    state = {
+      checkedAt: new Date(query.dataUpdatedAt),
+      health: query.data,
+      status: 'ready',
     };
-  }, [api, attempt]);
+  } else if (query.error !== null) {
+    const details = healthErrorDetails(query.error);
+    if (details !== undefined) {
+      state = { ...details, status: 'error' };
+    }
+  }
 
-  const retry = useCallback(() => {
-    setAttempt((current) => current + 1);
-  }, []);
-
-  return { retry, state };
+  return {
+    retry: () => {
+      void query.refetch();
+    },
+    state,
+  };
 }
