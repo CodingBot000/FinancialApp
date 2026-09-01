@@ -1,7 +1,7 @@
 # Frontend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `FE-0008`
+- 다음 ID: `FE-0009`
 - branch/worktree: `codex/frontend` / `/Users/switch/Development/Web/FinancialApp-frontend`
 - base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
 - contract revision: `platform-v1` at base commit (blob `8942e08342cd78f7e251f09b8a3005c9e797d93f`)
@@ -452,3 +452,63 @@ frontend session은 `apps/mobile/**` 변경을 commit 단위로 기록한다. �
 ### 다음 작업
 
 - FE-0008: session-aware Login Boundary와 OIDC configured/missing/opening/cancel/error UI; live login success는 FE-GAP-0003 조건 충족 후 연결 검증
+
+## FE-0008 — Session-aware OIDC Login Boundary
+
+- 날짜: 2026-09-02
+- Milestone: 2
+- 상태: COMPLETED
+- base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
+- contract revision: `platform-v1` at base commit (blob `8942e08342cd78f7e251f09b8a3005c9e797d93f`)
+- commit: `feat(fe): add session-aware OIDC login UI [FE-0008]`
+
+### 완료
+
+- secure session이 `absent`일 때만 OIDC login을 노출하고 `unknown/unavailable/active`는 FE-0006의 fail-closed 검사와 App Lock으로 전달하는 `LoginBoundary` 구현
+- 승인된 OIDC config가 없으면 env 변수 이름만 안내하고 browser/token 요청을 시작하지 않는 설정 누락 화면 구현
+- 설정 완료 시 시스템 브라우저 로그인, opening progress, cancel/dismiss, generic provider error와 retry 가능한 UI 상태 구현
+- OIDC 성공은 FE-0007 `OidcLoginService`가 session을 establish하도록 연결해 session active 전에는 보호 화면이 렌더링되지 않도록 root provider 순서 구성
+- Expo web callback popup completion을 등록하고 direct native dependency로 `expo-web-browser ~57.0.2` 고정
+- client secret 부재, PKCE S256, access token memory 보관과 Synthetic Financial Data 경계를 로그인 화면에 명시
+
+### 변경 파일
+
+- `apps/mobile/package.json`
+- `apps/mobile/src/app/_layout.tsx`
+- `apps/mobile/src/features/login/index.ts`
+- `apps/mobile/src/features/login/ui/**`
+- `docs/workstreams/frontend/DEVELOPMENT_LOG.md`
+- `docs/workstreams/frontend/ISSUE_REGISTER.md`
+
+### 검증
+
+- 명령: `npm run architecture:check -w @finapp/mobile`
+- 결과: 61 source files boundary/cycle check 통과
+- 명령: `npm run lint -w @finapp/mobile`
+- 결과: 통과
+- 명령: `npm run typecheck -w @finapp/mobile`
+- 결과: TypeScript strict 통과
+- 명령: `npm run test -w @finapp/mobile`
+- 결과: 19 files, 55 tests 통과; browser opening/cancel, redacted error와 config missing no-action UI 포함
+- 명령: `npm run dependency:check -w @finapp/mobile`
+- 결과: local Expo SDK dependency map 기준 호환성 통과
+- 명령: `npm run security:secrets`
+- 결과: source/env template token/secret scan 통과
+- 명령: `npx expo export --platform android --output-dir /tmp/financialapp-fe0008-android.UVyl7R`
+- 결과: AuthSession/WebBrowser Login Boundary를 포함한 2,461 modules, Hermes bundle 5.2MB 성공
+- 명령: `npx expo export --platform web --output-dir /tmp/financialapp-fe0008-web.9R8TfR`
+- 결과: OIDC popup completion을 포함한 896 modules, 1.3MB bundle 성공
+- 명령: 임시 mobile 복제본에서 `npx expo prebuild --platform android --no-install` 후 `./android/gradlew -p android -PreactNativeArchitectures=x86_64 assembleDebug`
+- 결과: `expo-web-browser 57.0.2`, Expo Crypto/Application autolinking, `wealthsandbox` intent scheme과 Gradle 670-task x86_64 Debug APK build 성공
+
+### 이슈·누락·Handoff
+
+- FE-GAP-0003: config missing UI가 승인되지 않은 provider 호출을 막고 있으며, 실제 issuer/client가 없으므로 login success → App Lock → `/me` 흐름은 계속 UNVERIFIED다.
+- FE-ISSUE-0001: OPEN 유지. AuthSession/WebBrowser 추가 후 audit moderate 13/high 0/critical 0으로 변화가 없다.
+- CONTRACT_CHANGE_REQUEST: FE-0007과 동일하게 issuer/public client/redirect 등록, refresh 정책과 canonical `/api/v1/me`/authentication problem 계약 확정이 필요하다.
+- INTEGRATION_HANDOFF: integration owner는 Expo AuthSession/WebBrowser/Crypto/Application dependency와 `wealthsandbox` Android intent/iOS URL scheme을 root lockfile 및 clean Development Build에서 확인해야 한다.
+- browser/provider 오류 원문과 authorization code/token은 UI, log와 Zustand에 저장하지 않는다.
+
+### 다음 작업
+
+- FE-0009: authenticated fetch의 memory Bearer 주입, 401 refresh single-flight/replay-once와 logout Query cache clear foundation; endpoint는 canonical 계약 외에 추가하지 않음

@@ -14,7 +14,7 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 상태: OPEN
 - 심각도: MEDIUM
 - 발견 FE: DEV-0005 공통 scaffold
-- 마지막 갱신: 2026-09-02, FE-0006
+- 마지막 갱신: 2026-09-02, FE-0008
 - 관련 contract revision: `platform-v1`
 - 중앙 연결: `ISSUE-0002`
 - 내용: 공식 Expo SDK 57.0.18 dependency tree에서 `npm audit` moderate 13건이 보고된다.
@@ -22,7 +22,7 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 해결 조건: 중앙 `ISSUE-0002`의 해결 조건 충족
 - 목표 FE: Milestone 6 preview/demo release gate 전 호환 patch 상태 재확인
 - 해결 FE:
-- 검증: FE-0001에서 `npm view expo@57 version --json`과 Expo 공식 SDK 57 문서를 확인한 결과 stable 최신 patch는 `57.0.18`이며 현재 manifest와 동일하다. FE-0006의 LocalAuthentication/Zustand 추가 후에도 `expo install --check`는 통과하고 `npm audit --json`은 moderate 13/high 0/critical 0으로 유지됐다. 제안된 강제 fix는 Expo 46 또는 Expo Router 5로의 비호환 downgrade다. Android API 31 Development Build chart runtime smoke는 FE-0004, LocalAuthentication autolink/compile은 FE-0006에서 통과했다.
+- 검증: FE-0001에서 `npm view expo@57 version --json`과 Expo 공식 SDK 57 문서를 확인한 결과 stable 최신 patch는 `57.0.18`이며 현재 manifest와 동일하다. FE-0008의 AuthSession/WebBrowser까지 추가한 뒤에도 `expo install --check`는 통과하고 `npm audit --json`은 moderate 13/high 0/critical 0으로 유지됐다. 제안된 강제 fix는 Expo 46 또는 Expo Router 5로의 비호환 downgrade다. Android API 31 Development Build chart runtime smoke는 FE-0004, LocalAuthentication과 OIDC browser native compile은 FE-0006/FE-0008에서 통과했다.
 
 ## Active Gap
 
@@ -48,7 +48,7 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 목표 Milestone: 2
 - 재확인 조건: 승인된 IdP 설정과 additive `/me` 계약으로 실제 Development Build에서 login → process restart → refresh single-flight → `/me`, refresh 실패 → local clear/재로그인 흐름 통과
 - 해결 FE:
-- 검증: FE-0005에서 SecureStore/session single-flight 11 files/27 tests를 통과했다. FE-0007에서 public config validator, OIDC discovery + Authorization Code/PKCE S256, browser cancel, code exchange의 필수 refresh token, refresh rotation과 secure session establish를 포함해 mobile 전체 18 files/52 tests, Expo dependency check, Android Hermes와 web bundle을 통과했다. Live provider와 `/me`는 여전히 미검증이다.
+- 검증: FE-0005에서 SecureStore/session single-flight 11 files/27 tests를 통과했다. FE-0007에서 public config validator, OIDC discovery + Authorization Code/PKCE S256, browser cancel, code exchange의 필수 refresh token, refresh rotation과 secure session establish를 구현했다. FE-0008에서는 session-aware configured/missing/opening/cancel/error UI, Android redirect intent와 WebBrowser native build까지 mobile 전체 19 files/55 tests로 통과했다. Live provider와 `/me`는 여전히 미검증이다.
 
 ### FE-GAP-0004 — 실제 기기 LocalAuthentication과 background App Lock 검증
 
