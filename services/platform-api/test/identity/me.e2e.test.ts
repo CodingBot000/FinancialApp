@@ -12,6 +12,7 @@ import { INSTITUTION_PORT } from '../../src/modules/mydata/application/ports/ins
 import { MYDATA_REPOSITORY } from '../../src/modules/mydata/application/ports/mydata-repository.port.js';
 import { SENSITIVE_DATA_PORT } from '../../src/modules/mydata/application/ports/sensitive-data.port.js';
 import { SIMULATION_REPOSITORY } from '../../src/modules/simulation/application/ports/simulation-repository.port.js';
+import { TRADING_REPOSITORY } from '../../src/modules/trading/application/ports/trading-repository.port.js';
 import { WEALTH_REPOSITORY } from '../../src/modules/wealth/application/ports/wealth-repository.port.js';
 
 describe('GET /api/v1/me OIDC boundary', () => {
@@ -115,6 +116,19 @@ describe('GET /api/v1/me OIDC boundary', () => {
     }),
     findByUser: vi.fn(),
   };
+  const tradingRepository = {
+    createQuote: vi.fn().mockResolvedValue({
+      quoteId: 'd228553f-f10a-47ad-89f6-77be8e034324',
+      side: 'BUY',
+      quantity: '3.00000000',
+      unitPrice: '125000.0000',
+      estimatedAmount: '375000.0000',
+      fee: '0.0000',
+      currency: 'KRW',
+      expiresAt: '2026-09-02T00:01:00.000Z',
+      syntheticQuote: true,
+    }),
+  };
   let app: NestFastifyApplication;
   let issuer: string;
   let privateKey: CryptoKey;
@@ -166,6 +180,8 @@ describe('GET /api/v1/me OIDC boundary', () => {
       .useValue(wealthRepository)
       .overrideProvider(SIMULATION_REPOSITORY)
       .useValue(simulationRepository)
+      .overrideProvider(TRADING_REPOSITORY)
+      .useValue(tradingRepository)
       .compile();
     app = moduleRef.createNestApplication<NestFastifyApplication>(
       createFastifyAdapter(),
@@ -372,6 +388,45 @@ describe('GET /api/v1/me OIDC boundary', () => {
       engineVersion: '1.0.0',
       assumptionSetVersion: 'SYNTHETIC_V1',
       goalProbability: 0.71,
+    });
+  });
+
+  it('enforces order.execute and returns a synthetic quote preview', async () => {
+    const payload = {
+      accountId: '688c601b-ab70-4683-9dd4-6a1174550653',
+      instrumentId: 'c805563c-148c-4451-8a9a-4808da7b32ae',
+      side: 'BUY',
+      quantity: '3.00000000',
+    };
+    const forbidden = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: { authorization: `Bearer ${await accessToken()}` },
+        method: 'POST',
+        url: '/api/v1/orders/preview',
+        payload,
+      });
+    expect(forbidden.statusCode).toBe(403);
+
+    const response = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: {
+          authorization: `Bearer ${await accessToken({ scope: 'order.execute' })}`,
+        },
+        method: 'POST',
+        url: '/api/v1/orders/preview',
+        payload,
+      });
+    expect(response.statusCode).toBe(201);
+    expect(response.json()).toMatchObject({
+      side: 'BUY',
+      quantity: '3.00000000',
+      unitPrice: '125000.0000',
+      estimatedAmount: '375000.0000',
+      syntheticQuote: true,
     });
   });
 });

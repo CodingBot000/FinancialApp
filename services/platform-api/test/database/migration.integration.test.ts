@@ -9,6 +9,7 @@ import { DrizzleMyDataRepository } from '../../src/modules/mydata/infrastructure
 import { runSimulation } from '../../src/modules/simulation/domain/simulation-engine.js';
 import { SIMULATION_ENGINE_VERSION } from '../../src/modules/simulation/domain/simulation-model.js';
 import { DrizzleSimulationRepository } from '../../src/modules/simulation/infrastructure/persistence/drizzle-simulation.repository.js';
+import { DrizzleTradingRepository } from '../../src/modules/trading/infrastructure/persistence/drizzle-trading.repository.js';
 import { DrizzleWealthRepository } from '../../src/modules/wealth/infrastructure/persistence/drizzle-wealth.repository.js';
 
 const POSTGRES_IMAGE =
@@ -83,7 +84,7 @@ describe('platform Drizzle migration', () => {
         SELECT count(*)::text AS count
         FROM finapp_meta.finapp_platform_drizzle_migrations
       `);
-      expect(history.rows[0]?.count).toBe('4');
+      expect(history.rows[0]?.count).toBe('5');
     } finally {
       await client.end();
     }
@@ -545,6 +546,76 @@ describe('platform Drizzle migration', () => {
         SELECT
           has_table_privilege(current_user, 'finapp_simulation.finapp_simulation_run', 'UPDATE') AS can_update,
           has_table_privilege(current_user, 'finapp_simulation.finapp_simulation_run', 'DELETE') AS can_delete
+      `);
+      expect(privileges.rows[0]).toEqual({
+        can_delete: false,
+        can_update: false,
+      });
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('persists an immutable owner-scoped quote with exact decimal calculation', async () => {
+    const platformUrl = new URL(connectionString);
+    platformUrl.username = 'financial_platform_app';
+    platformUrl.password = 'example-platform-test-only';
+    const pool = new Pool({ connectionString: platformUrl.toString(), max: 2 });
+    const identity = new DrizzleIdentityRepository(pool);
+    const repository = new DrizzleTradingRepository(pool);
+
+    try {
+      const owner = await identity.provisionFromOidc(
+        'https://issuer.example/realms/finapp',
+        'sync-user-a',
+      );
+      const resources = await pool.query<{
+        account_id: string;
+        instrument_id: string;
+      }>(
+        `
+        SELECT a.id AS account_id, i.id AS instrument_id
+        FROM finapp_wealth.finapp_financial_account a
+        JOIN finapp_wealth.finapp_holding h ON h.account_id = a.id
+        JOIN finapp_wealth.finapp_instrument i ON i.id = h.instrument_id
+        WHERE a.user_id = $1
+        LIMIT 1
+      `,
+        [owner.userId],
+      );
+      const resource = resources.rows[0];
+      expect(resource).toBeDefined();
+      const quote = await repository.createQuote(owner.userId, {
+        accountId: resource?.account_id ?? '',
+        instrumentId: resource?.instrument_id ?? '',
+        side: 'BUY',
+        quantity: '3.00000000',
+      });
+
+      expect(quote).toMatchObject({
+        side: 'BUY',
+        quantity: '3.00000000',
+        unitPrice: '125000.0000',
+        estimatedAmount: '375000.0000',
+        fee: '0.0000',
+        currency: 'KRW',
+        syntheticQuote: true,
+      });
+      expect(
+        await repository.createQuote('00000000-0000-4000-8000-000000000099', {
+          accountId: resource?.account_id ?? '',
+          instrumentId: resource?.instrument_id ?? '',
+          side: 'BUY',
+          quantity: '1.00000000',
+        }),
+      ).toBeUndefined();
+      const privileges = await pool.query<{
+        can_delete: boolean;
+        can_update: boolean;
+      }>(`
+        SELECT
+          has_table_privilege(current_user, 'finapp_trading.finapp_quote', 'UPDATE') AS can_update,
+          has_table_privilege(current_user, 'finapp_trading.finapp_quote', 'DELETE') AS can_delete
       `);
       expect(privileges.rows[0]).toEqual({
         can_delete: false,

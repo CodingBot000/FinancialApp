@@ -1,10 +1,10 @@
 # Backend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `BE-0007`
+- 다음 ID: `BE-0008`
 - branch/worktree: `codex/backend` / `/Users/switch/Development/Web/FinancialApp-backend`
 - base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
-- contract revision: `platform-v1` at BE-0006, `institution-simulator-v1` at BE-0003
+- contract revision: `platform-v1` at BE-0007, `institution-simulator-v1` at BE-0003
 - migration owner: backend session 또는 integration owner가 작업마다 기록
 
 backend session은 `services/**`, `infra/**`, OpenAPI와 migration 변경을 commit 단위로 기록한다. 중앙 `DEVELOPMENT_LOG.md`는 integration owner 역할로 통합할 때만 수정한다.
@@ -365,6 +365,62 @@ backend session은 `services/**`, `infra/**`, OpenAPI와 migration 변경을 com
 ### 다음 작업
 
 - BE-0007: quote 조회, 주문 idempotency와 cash reservation을 포함하는 거래 vertical slice 구현
+
+## BE-0007 — 소유권 보호 합성 BUY quote preview
+
+- 날짜: 2026-09-02
+- Milestone: 5
+- 상태: COMPLETED
+- base commit: `f4effb4` (`BE-0006`)
+- contract revision: `platform-v1` (`POST /api/v1/orders/preview`와 quote model 추가)
+- migration owner: backend session; local Compose/Testcontainers만 적용
+- commit: `feat(be): persist synthetic buy quotes [BE-0007]`
+
+### 완료
+
+- `finapp_trading.finapp_quote` Drizzle schema와 forward-only migration을 추가하고 PK/FK/check/index를 명시적인 `finapp_` 이름으로 생성했다.
+- quote runtime 권한을 SELECT/INSERT로 제한하고 UPDATE/DELETE를 명시적으로 revoke해 preview 결과를 immutable하게 유지했다.
+- `POST /api/v1/orders/preview`가 `order.execute` scope를 검사하고 검증된 OIDC subject를 내부 user로 매핑한다.
+- account, holding과 instrument를 user ownership 조건으로 함께 조회해 다른 사용자 또는 유효하지 않은 조합은 동일한 404로 감춘다.
+- MVP `BUY`, UUID, 0보다 큰 최대 8자리 소수 quantity와 금액 범위를 검증한다.
+- 합성 동기화 holding의 단가로 60초 quote를 만들고 quantity × unit price를 BigInt fixed-decimal로 계산해 부동소수점 오차를 제거했다.
+- API에는 명시적 quote view만 반환하며 `syntheticQuote: true`와 canonical 4/8자리 decimal 형식을 보장한다.
+
+### 변경 파일
+
+- `services/platform-api/src/modules/trading/**`
+- `services/platform-api/src/database/schema.ts`, `src/app.module.ts`
+- `services/platform-api/drizzle/0004_finapp_quote.sql`, migration journal
+- `services/platform-api/test/database/**`, `test/identity/**`, `test/trading/**`
+- `contracts/openapi/platform-v1.yaml`
+- `docs/workstreams/backend/**`
+
+### 검증
+
+- 명령: platform lint, strict typecheck, dependency-cruiser, Vitest, Nest build
+- 결과: 8 test files / 43 tests 통과. invalid quantity/SELL, ownership 404, JWT scope, exact decimal, PostgreSQL 저장과 immutable 권한을 포함한다.
+- 명령: root `npm run verify` (Node 24.19.0, Colima socket 명시)
+- 결과: formatter, OpenAPI/fixture, Expo dependency, secret scan, 전체 lint/typecheck/test/build 통과; 전체 12 test files / 52 tests 통과
+- 명령: platform production Docker image build 및 workspace runtime audit
+- 결과: Node 24.19.0 image build 성공, production dependency vulnerability 0
+- 명령: clean Compose migration, runtime-role quote create와 catalog/role query
+- 결과: platform history 5, quote 1행, `3.00000000 × 125000.0000 = 375000.0000`, prefix 위반 relation/constraint 0, 미검증 constraint 0, quote UPDATE/DELETE 모두 false
+
+### 원격 DB
+
+- 사용 여부: 사용하지 않음
+- migration commit/dataset version: local/Testcontainers `0004_finapp_quote` / `FINANCIAL_APP_DATASET_V1`
+- 결과: Lightsail 연결, migration과 seed 모두 미실행
+
+### 이슈·누락·Handoff
+
+- `BE-ISSUE-0001`: 변화 없음. build-time only이며 platform production workspace audit은 0이다.
+- `BE-GAP-0002`: 주문 idempotency, row-lock cash reservation과 external submission은 quote와 transaction 경계를 분리하기 위해 BE-0008로 이동했다.
+- Handoff: frontend는 BE-0007 `platform-v1`의 immutable synthetic quote preview를 소비할 수 있다. quote는 60초 후 만료된다.
+
+### 다음 작업
+
+- BE-0008: idempotency record, trade order와 row-lock cash reservation transaction 구현
 
 ## 새 기록 Template
 

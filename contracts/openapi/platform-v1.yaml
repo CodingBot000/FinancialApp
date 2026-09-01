@@ -376,6 +376,35 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/orders/preview:
+    post:
+      operationId: previewBuyOrder
+      summary: Create an immutable synthetic BUY quote
+      description: Requires `order.execute`; non-owned account/instrument combinations return 404.
+      security:
+        - BearerAuth: []
+      tags: [Trading]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuoteRequest'
+      responses:
+        '201':
+          description: Synthetic quote valid for 60 seconds.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   securitySchemes:
     BearerAuth:
@@ -822,6 +851,61 @@ components:
           $ref: '#/components/schemas/Money'
         p90:
           $ref: '#/components/schemas/Money'
+    CreateQuoteRequest:
+      type: object
+      additionalProperties: false
+      required: [accountId, instrumentId, side, quantity]
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        instrumentId:
+          type: string
+          format: uuid
+        side:
+          type: string
+          const: BUY
+        quantity:
+          type: string
+          pattern: '^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,8})?$'
+    Quote:
+      type: object
+      additionalProperties: false
+      required:
+        - quoteId
+        - side
+        - quantity
+        - unitPrice
+        - estimatedAmount
+        - fee
+        - currency
+        - expiresAt
+        - syntheticQuote
+      properties:
+        quoteId:
+          type: string
+          format: uuid
+        side:
+          type: string
+          const: BUY
+        quantity:
+          type: string
+          pattern: '^[0-9]+\.[0-9]{8}$'
+        unitPrice:
+          $ref: '#/components/schemas/Money'
+        estimatedAmount:
+          $ref: '#/components/schemas/Money'
+        fee:
+          $ref: '#/components/schemas/Money'
+        currency:
+          type: string
+          const: KRW
+        expiresAt:
+          type: string
+          format: date-time
+        syntheticQuote:
+          type: boolean
+          const: true
     MeResponse:
       type: object
       additionalProperties: false

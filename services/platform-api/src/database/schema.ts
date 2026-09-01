@@ -738,3 +738,53 @@ export const finappSimulationResultPoint = finappSimulationSchema.table(
     ),
   ],
 );
+
+export const finappQuote = finappTradingSchema.table(
+  'finapp_quote',
+  {
+    id: uuid('id').notNull(),
+    userId: uuid('user_id').notNull(),
+    accountId: uuid('account_id').notNull(),
+    instrumentId: uuid('instrument_id').notNull(),
+    side: varchar('side', { length: 10 }).notNull().default('BUY'),
+    quantity: numeric('quantity', { precision: 19, scale: 8 }).notNull(),
+    unitPrice: numeric('unit_price', { precision: 19, scale: 4 }).notNull(),
+    estimatedAmount: numeric('estimated_amount', {
+      precision: 19,
+      scale: 4,
+    }).notNull(),
+    fee: numeric('fee', { precision: 19, scale: 4 }).notNull().default('0'),
+    currency: varchar('currency', { length: 3 }).notNull().default('KRW'),
+    expiresAt: timestamp('expires_at', {
+      withTimezone: true,
+      mode: 'date',
+    }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_quote', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_quote_user',
+      columns: [table.userId],
+      foreignColumns: [finappAppUser.id],
+    }).onDelete('restrict'),
+    foreignKey({
+      name: 'finapp_fk_quote_account',
+      columns: [table.accountId],
+      foreignColumns: [finappFinancialAccount.id],
+    }).onDelete('restrict'),
+    foreignKey({
+      name: 'finapp_fk_quote_instrument',
+      columns: [table.instrumentId],
+      foreignColumns: [finappInstrument.id],
+    }).onDelete('restrict'),
+    check('finapp_ck_quote_side', sql`${table.side} = 'BUY'`),
+    check(
+      'finapp_ck_quote_values',
+      sql`${table.quantity} > 0 AND ${table.unitPrice} > 0 AND ${table.estimatedAmount} > 0 AND ${table.fee} >= 0`,
+    ),
+    index('finapp_idx_quote_user_expires').on(table.userId, table.expiresAt),
+  ],
+);
