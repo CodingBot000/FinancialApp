@@ -11,18 +11,18 @@
 
 | Query | Endpoint/job | 사용 index | Node 요약 | Execution |
 |---|---|---|---|---:|
-| latest asset snapshots | `GET /assets/summary`, history 기반 | `finapp_idx_asset_snapshot_user_date` | Limit → Index Scan | 0.228ms |
-| owner account holdings | `GET /holdings?accountId=` | `finapp_uq_holding_account_instrument`, `finapp_pk_instrument` | Sort → Nested Loop → Index Scan | 0.329ms |
-| owner order page | `GET /orders` | `finapp_idx_order_user_created`, `finapp_uq_execution_order` | Limit → Nested Loop → Index Scan | 1.524ms |
-| reconciliation claim | background UNKNOWN recovery | `finapp_idx_reconcile_claim` | Limit → LockRows → Sort → Index Scan | 0.347ms |
+| latest asset snapshots | `GET /assets/summary`, history 기반 | `finapp_idx_asset_snapshot_user_date` | Limit → Index Scan | 0.213ms |
+| owner account holdings | `GET /holdings?accountId=` | `finapp_uq_holding_account_instrument`, `finapp_pk_instrument` | Sort → Nested Loop → Index Scan | 0.308ms |
+| owner order page | `GET /orders` | `finapp_idx_order_user_created`, `finapp_uq_execution_order` | Limit → Nested Loop → Index Scan | 0.357ms |
+| reconciliation claim | background UNKNOWN recovery | `finapp_idx_reconcile_claim` | Limit → LockRows → Sort → Index Scan | 0.348ms |
 
-모든 수치는 같은 `make performance-test` 실행의 `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` 결과다. 네 query 모두 runtime role로 실행됐고 `remoteResourcesUsed:false`를 반환했다.
+모든 수치는 DEV-0014 clean `make acceptance-test` 안의 같은 `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` 실행 결과다. 네 query 모두 runtime role로 실행됐고 `remoteResourcesUsed:false`를 반환했다.
 
 ## 발견과 수정
 
 수정 전 owner order page는 `finapp_idx_order_user_created(user_id, created_at DESC)` 뒤 UUID tie-breaker를 incremental sort했다. local 측정은 1.458ms였지만 repository의 실제 keyset 정렬 `(created_at DESC, id DESC)`과 index가 완전히 일치하지 않았다.
 
-`0009_finapp_order_list_index`는 같은 prefix-compliant index를 `(user_id, created_at DESC, id DESC)`로 재생성했다. 수정 직후 plan은 `Incremental Sort` 없이 1.126ms였고 최종 검증 run은 1.524ms, shared hit 37이었다. migration은 빈 Testcontainers PostgreSQL과 보존 Compose에 forward 적용했다.
+`0009_finapp_order_list_index`는 같은 prefix-compliant index를 `(user_id, created_at DESC, id DESC)`로 재생성했다. 수정 직후 plan은 `Incremental Sort` 없이 1.126ms였고 DEV-0014 clean 검증 run은 0.357ms, shared hit 8이었다. migration은 빈 Testcontainers PostgreSQL과 보존 Compose에 forward 적용했다.
 
 ## 해석과 제한
 

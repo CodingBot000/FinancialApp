@@ -19,6 +19,10 @@
    - `SECURITY_MODEL.md`
    - `TEST_STRATEGY.md`
    - `PERFORMANCE_EVIDENCE.md`
+   - `PORTFOLIO_ARCHITECTURE.md`
+   - `LIMITATIONS.md`
+   - `REQUIREMENTS_TRACEABILITY.md`
+   - `DEMO_SCRIPT.md`
    - `ENVIRONMENT_MATRIX.md`
 10. 관련 `adr/ADR-*.md`
 11. `CODEX_IMPLEMENTATION_PLAN.md` — 최초 milestone과 병렬 개발 전 실행 기준선

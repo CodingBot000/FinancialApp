@@ -55,6 +55,7 @@ make acceptance-test
 5. PKCE S256 login→JWT→`/me`→refresh restart→logout
 6. sync→raw/processing→Dashboard API→simulation→BUY settlement
 7. 동일 idempotency key replay 단일 주문과 UNKNOWN GET reconciliation
+8. runtime DB role의 핵심 query plan/index·100ms local ceiling 검증
 
 성공 시 마지막에 `{"acceptance":"passed","scenarioSteps":12,"remoteResourcesUsed":false}`가 출력된다. 보존된 local stack에서 smoke만 재실행할 때는 `make smoke-test`, 서비스를 정지할 때는 `make infra-down`을 사용한다.
 
@@ -75,6 +76,7 @@ make infra-down         local services stop; volume 보존
 make seed               deterministic simulator seed
 make reset-demo         local simulator scenario/data reset
 make smoke-test         live OIDC + 12-step business smoke
+make performance-test   runtime role actual PostgreSQL query-plan gate
 make verify             complete code quality gate
 make acceptance-test    destructive clean local acceptance
 ```

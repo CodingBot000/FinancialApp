@@ -32,7 +32,7 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 영향: local scaffold, contract mock, typecheck, test와 build는 성공한다. 그러나 원격 preview/demo release 전에 upstream patch 또는 안전한 override 가능 여부를 다시 확인해야 한다.
 - 임시 우회: 공식 Expo SDK 57 template 조합을 exact/compatible range로 고정하고 `npm audit fix --force`를 실행하지 않는다. 실제 개인정보를 사용하지 않고 untrusted deep-link 입력 처리는 frontend security test에 포함한다.
 - 해결 조건: Expo SDK 57 호환 patch로 advisory가 해소되거나, 공식 호환성이 확인된 override 후 Expo Doctor·native build·전체 test를 통과하거나, 사용자가 잔여 위험을 명시적으로 수용한다.
-- 목표 DEV: 늦어도 Milestone 6 release gate 전 해결
+- 목표 DEV: 단계 11 원격 preview release gate 전 재판정
 - 해결 DEV:
 - 검증: DEV-0013에서 Expo `~57.0.19`, Expo Router `~57.0.18`이 registry current stable과 일치하고 `expo install --check`가 통과함을 재확인했다. root audit은 Expo 경로 moderate 14를 포함해 총 moderate 18/high 0/critical 0이며 제안 fix는 Expo 46/Router 5 등 비호환 downgrade이므로 적용하지 않았다. local release gate는 조건부 통과, 향후 원격 preview는 upstream 해소 또는 사용자 위험 수용 전 security-clean 판정하지 않는다.
 
@@ -48,7 +48,7 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 영향: schema generation과 migration 개발 도구에만 존재한다. platform/simulator production image의 workspace-scoped runtime audit은 각각 0이다.
 - 임시 우회: exact version을 lock하고 production image에서 devDependency를 제외한다. beta downgrade/upgrade나 전역 esbuild override를 강제하지 않는다.
 - 해결 조건: 안전한 stable Drizzle Kit 갱신 후 schema generation, migration, Testcontainers, lint, typecheck와 build가 모두 통과한다.
-- 목표 DEV: 늦어도 Milestone 6 release gate 전 해결
+- 목표 DEV: 단계 11 원격 preview release gate 전 재판정
 - 해결 DEV:
 - 검증: DEV-0013에서 registry current stable이 Drizzle Kit `0.31.10`, ORM `0.45.2`로 현재 pin과 같음을 확인했다. root audit은 Drizzle build-time 경로 moderate 4건을 유지하고 두 production backend image workspace audit은 vulnerability 0이다. local release gate는 조건부 통과하며 강제 downgrade/override는 적용하지 않았다.
 
@@ -97,7 +97,7 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 목표 Milestone: 2~5 local MVP / DEV-0011
 - 재확인 조건: clean 환경에서 문서화된 단일 명령 집합으로 migration/seed/service를 기동하고 `MVP_SCOPE.md` 12단계 정상·UNKNOWN 시나리오, 전체 verify와 smoke가 통과
 - 해결 DEV: DEV-0011
-- 검증: clean local volume에서 `make acceptance-test`를 실행해 `npm ci`, root 168 tests/build, migration/seed, actual Keycloak OIDC, raw/processing/wealth/simulation, FILLED/REJECTED/UNKNOWN→FILLED, 동일 key replay와 DB execution/ledger/position/audit 증거, production image audit 0을 통과했다. 최종 JSON은 `acceptance=passed`, `scenarioSteps=12`, `remoteResourcesUsed=false`를 기록했다.
+- 검증: DEV-0011 clean local volume에서 최초 인수를 통과했다. DEV-0014에서 migration history 10개, root 189 tests/build, actual OIDC/risk-profile, 12단계 business smoke, runtime-role query plan과 production image audit 0까지 재검증했다. 최종 JSON은 `acceptance=passed`, `clean=true`, `scenarioSteps=12`, `remoteResourcesUsed=false`를 기록했다.
 
 ## Resolved History
 

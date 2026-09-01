@@ -1,10 +1,10 @@
 # 구현 상태
 
-- 현재 Milestone: 6A — 로컬 하드닝
-- 전체 상태: IN_PROGRESS
+- 현재 Milestone: 6A — 로컬 하드닝 완료 / 단계 11 STOP
+- 전체 상태: DONE
 - 마지막 갱신: 2026-09-02
-- 마지막 완료 ID: DEV-0013
-- 다음 작업 ID: DEV-0014
+- 마지막 완료 ID: DEV-0014
+- 다음 작업 ID: 없음 — 단계 11은 새 사용자 승인 필요
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
@@ -38,7 +38,7 @@
 | 3. 동기화와 Dashboard | DONE | backend sync/raw/derived/조회·audit와 frontend connection/sync polling, Dashboard/Accounts/detail/chart, 부분 오류 UX 및 local actual API smoke 완료 |
 | 4. 서버 시뮬레이션 | DONE | deterministic server 저장/조회, frontend draft validation·persisted result·p10/p50/p90 chart와 local actual API smoke 완료 |
 | 5. BUY 주문과 복구 | DONE | quote/biometric/idempotent mobile BUY, backend reservation/simulator/settlement/reconciliation/audit, UNKNOWN GET recovery와 actual local smoke 완료; clean 전체 인수는 DEV-0011 |
-| 6A. 로컬 하드닝 | IN_PROGRESS | DEV-0011 local MVP, BE-0012 outbox, BE-0013 crypto, BE-0014 security/log isolation, BE-0015 readiness/metrics/resilience, DEV-0012 profile과 DEV-0013 성능/dependency 완료; 최종 포트폴리오 문서 진행 |
+| 6A. 로컬 하드닝 | DONE | outbox, envelope crypto/KMS 경계, security/log, readiness/metrics/resilience, profile, query/dependency gate, 최종 문서와 clean acceptance 완료 |
 | 6B. 원격 데모 | CURRENT_RUN_EXCLUDED | Lightsail migration, 실제 AWS KMS, HTTPS/EAS와 원격 rollback은 향후 별도 실행 |
 
 ## DEV-0010 계약 Gate
@@ -152,6 +152,18 @@
 - [x] local release 조건부 통과; `ISSUE-0002`/`ISSUE-0003`은 원격 preview 전 해소 또는 사용자 위험 수용 필요
 - [x] `GAP-0009` 해결, 원격 DB/endpoint/credential/catalog/migration/seed/deploy 미사용
 
+## DEV-0014 최종 로컬 하드닝과 포트폴리오 인수
+
+- [x] architecture/sequence/security/limitations/requirements traceability/3분 demo 문서 완성
+- [x] clean acceptance에 runtime-role query plan gate 포함
+- [x] 전용 local Compose volume 제거 후 `npm ci`, root verify, 두 production image build
+- [x] 빈 PostgreSQL platform migration history 10개, simulator migration과 deterministic seed 2회
+- [x] actual PKCE/JWT/refresh/logout/risk-profile와 12단계 sync/simulation/order/reconciliation smoke
+- [x] clean plan 0.213/0.308/0.357/0.348ms, expected `finapp_` index와 100ms ceiling 통과
+- [x] mobile 97/simulator 12/platform 80 총 189 tests, 두 backend build/runtime audit 0
+- [x] 최종 `acceptance=passed`, `clean=true`, `scenarioSteps=12`, `remoteResourcesUsed=false`
+- [x] 원격 DB/endpoint/credential/catalog/migration/seed/deploy 미사용
+
 ## FE-0010 Live OIDC와 `/me`
 
 - [x] config missing/mock/HTTP가 동일 `PlatformApi` port를 구현하고 `/me` strict mapper/fixture/component test 통과
@@ -257,7 +269,7 @@
 
 ## 외부 조건
 
-다음은 Milestone 2~5와 단계 10까지의 local 개발을 막지 않는다.
+다음은 완료된 Milestone 2~5와 단계 10 local 결과의 외부 미검증 범위다.
 
 - Lightsail DB 정보: 미제공
 - AWS KMS 권한: 미제공
@@ -265,7 +277,7 @@
 - Apple Developer/Google Play credential: 미확인
 - 최신 iOS toolchain과 실제 생체인증 기기: 미확인
 
-이번 실행에서는 원격 DB 사전 설정 검토, endpoint/credential 요청, 연결, catalog 조회, migration, seed와 배포를 모두 제외한다. 단계 10 완료 후 원격 작업 직전에 반드시 멈춘다. 자동 test는 local/Testcontainers PostgreSQL을 사용한다.
+이번 실행에서는 원격 DB 사전 설정 검토, endpoint/credential 요청, 연결, catalog 조회, migration, seed와 배포를 모두 제외했다. 단계 10 완료 commit/push 뒤 여기서 멈추며, 자동 test는 local/Testcontainers PostgreSQL만 사용했다.
 
 ## Active Issue와 Gap
 
@@ -278,6 +290,6 @@
 
 ## 다음 작업
 
-1. `DEV-0014`: architecture/sequence/security/limitations/requirements/demo 문서 완성
-2. clean local acceptance와 performance/dependency evidence 최종 재검증
-3. 단계 10 완료 결과를 commit/push하고 Milestone 6B 원격 단계 전에 STOP
+1. 현재 실행은 단계 10 완료 commit/push 후 종료한다.
+2. 단계 11 원격 DB·KMS·HTTPS/EAS 작업은 새 사용자 요청과 당시의 별도 승인 계획 없이는 시작하지 않는다.
+3. 과거 원격 migration 승인은 재사용하지 않는다.

@@ -140,3 +140,5 @@ Milestone 6 재확정: 별도 onboarding wizard와 규칙 기반 portfolio recom
 - `IMPLEMENTATION_STATUS.md`가 실제 결과와 일치
 
 DEV-0011에서 `make acceptance-test`로 빈 local Compose volume부터 위 12단계를 재현했다. 결과는 PKCE/`/me`/refresh/logout, raw 3건·processed 3건, 계좌/transaction/history, 13-point persisted simulation, FILLED/REJECTED/UNKNOWN→FILLED, 동일 key replay 단일 주문, execution 2건·audit 10건과 production image runtime audit 0을 포함했다. 자동 인수가 대체하지 않는 iOS·물리 biometric 검증은 별도 gap으로 남겨두었다.
+
+DEV-0014에서 같은 clean 인수를 migration history 10개, mobile 97/simulator 12/platform 80 총 189 tests와 runtime-role query plan gate까지 확장해 재검증했다. 최종 결과는 `acceptance=passed`, `clean=true`, `scenarioSteps=12`, `remoteResourcesUsed=false`다.

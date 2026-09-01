@@ -791,6 +791,31 @@
 - `GAP-0009` RESOLVED.
 - 다음은 `DEV-0014` 최종 portfolio documentation과 clean local acceptance다.
 
+## DEV-0014 — 최종 로컬 하드닝과 포트폴리오 인수
+
+- 날짜: 2026-09-02
+- Milestone: 6A local hardening
+- 상태: COMPLETED
+- 예정 commit: `chore(dev): finalize local hardening acceptance [DEV-0014]`
+
+### 완료와 검증
+
+- architecture/sequence/security, limitations, requirements traceability와 3분 demo 문서를 최종 구현 증거에 맞춰 작성했다.
+- `make acceptance-test`에 runtime application role의 네 query plan gate를 포함했다.
+- local 전용 Compose volume을 제거하고 clean `npm ci`, root contract/secret/architecture/lint/typecheck/test/build를 재현했다.
+- mobile 97, simulator 12, platform 80 총 189 tests와 두 production image build를 통과했다.
+- 빈 PostgreSQL에 platform migration 10개와 simulator migration, deterministic seed 2회를 적용했다.
+- actual PKCE/JWT/refresh/logout/risk-profile, 12단계 sync/simulation/FILLED/REJECTED/UNKNOWN→FILLED, outbox 3건을 통과했다.
+- clean query plan은 0.213/0.308/0.357/0.348ms로 expected index와 100ms ceiling을 통과했고 두 image runtime audit은 0이었다.
+- 최종 JSON은 `acceptance=passed`, `clean=true`, `scenarioSteps=12`, `remoteResourcesUsed=false`다.
+
+### 이슈와 종료선
+
+- 신규 defect/gap은 발견되지 않았다.
+- `ISSUE-0002`/`ISSUE-0003`, `GAP-0002`/`GAP-0003`은 삭제하지 않고 원격 preview/실기기 재확인 대상으로 유지한다.
+- 원격 DB·endpoint/credential·catalog·migration/seed·deploy는 사용하지 않았다.
+- 단계 10을 완료했으므로 `origin/main` push 뒤 단계 11 전에 STOP한다.
+
 ## FE-0013 — Biometric BUY와 Recovery Mobile 통합
 
 - 날짜: 2026-09-02

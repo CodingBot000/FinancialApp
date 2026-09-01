@@ -107,6 +107,10 @@ await run('npm', ['run', 'smoke:local-mvp'], {
   ...process.env,
   COMPOSE_ENV_FILE: environmentFile,
 });
+await run('node', ['scripts/verify-local-query-plans.mjs'], {
+  ...process.env,
+  COMPOSE_ENV_FILE: environmentFile,
+});
 await run('docker', [...compose, 'ps']);
 await run('docker', [
   'run',
