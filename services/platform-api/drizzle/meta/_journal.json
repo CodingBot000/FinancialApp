@@ -22,6 +22,13 @@
       "when": 1788364800000,
       "tag": "0002_finapp_mydata_wealth",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788451200000,
+      "tag": "0003_finapp_simulation",
+      "breakpoints": true
     }
   ]
 }

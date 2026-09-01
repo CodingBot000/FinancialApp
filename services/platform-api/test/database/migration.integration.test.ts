@@ -6,6 +6,9 @@ import { migratePlatformDatabase } from '../../src/database/migrate.js';
 import { DrizzleIdentityRepository } from '../../src/modules/identity/infrastructure/persistence/drizzle-identity.repository.js';
 import { AesSensitiveDataAdapter } from '../../src/modules/mydata/infrastructure/crypto/aes-sensitive-data.adapter.js';
 import { DrizzleMyDataRepository } from '../../src/modules/mydata/infrastructure/persistence/drizzle-mydata.repository.js';
+import { runSimulation } from '../../src/modules/simulation/domain/simulation-engine.js';
+import { SIMULATION_ENGINE_VERSION } from '../../src/modules/simulation/domain/simulation-model.js';
+import { DrizzleSimulationRepository } from '../../src/modules/simulation/infrastructure/persistence/drizzle-simulation.repository.js';
 import { DrizzleWealthRepository } from '../../src/modules/wealth/infrastructure/persistence/drizzle-wealth.repository.js';
 
 const POSTGRES_IMAGE =
@@ -80,7 +83,7 @@ describe('platform Drizzle migration', () => {
         SELECT count(*)::text AS count
         FROM finapp_meta.finapp_platform_drizzle_migrations
       `);
-      expect(history.rows[0]?.count).toBe('3');
+      expect(history.rows[0]?.count).toBe('4');
     } finally {
       await client.end();
     }
@@ -465,6 +468,89 @@ describe('platform Drizzle migration', () => {
       } else {
         process.env.FINAPP_MYDATA_ENCRYPTION_KEY_VERSION = previousVersion;
       }
+      await pool.end();
+    }
+  });
+
+  it('persists immutable deterministic simulation results with ownership', async () => {
+    const platformUrl = new URL(connectionString);
+    platformUrl.username = 'financial_platform_app';
+    platformUrl.password = 'example-platform-test-only';
+    const pool = new Pool({ connectionString: platformUrl.toString(), max: 2 });
+    const identity = new DrizzleIdentityRepository(pool);
+    const repository = new DrizzleSimulationRepository(pool);
+
+    try {
+      const owner = await identity.provisionFromOidc(
+        'https://issuer.example/realms/finapp',
+        'simulation-owner',
+      );
+      const other = await identity.provisionFromOidc(
+        'https://issuer.example/realms/finapp',
+        'simulation-other',
+      );
+      const assumption = await repository.activeAssumption();
+      expect(assumption.version).toBe('SYNTHETIC_V1');
+      const snapshot = {
+        initialAssets: '185400000.0000',
+        monthlyContribution: '1500000.0000',
+        durationMonths: 12,
+        targetAmount: '220000000.0000',
+        allocation: [
+          { assetClass: 'CASH' as const, weight: 0.1 },
+          { assetClass: 'BOND' as const, weight: 0.3 },
+          { assetClass: 'EQUITY' as const, weight: 0.6 },
+        ],
+      };
+      const result = runSimulation(
+        {
+          initialAssets: Number(snapshot.initialAssets),
+          monthlyContribution: Number(snapshot.monthlyContribution),
+          durationMonths: snapshot.durationMonths,
+          targetAmount: Number(snapshot.targetAmount),
+          allocation: snapshot.allocation,
+        },
+        assumption,
+        999n,
+        100,
+      );
+      const saved = await repository.save({
+        userId: owner.userId,
+        assumption,
+        input: snapshot,
+        seed: 999n,
+        pathCount: 100,
+        engineVersion: SIMULATION_ENGINE_VERSION,
+        result,
+      });
+
+      expect(saved.series).toHaveLength(13);
+      expect(
+        saved.series.every(
+          (point) =>
+            Number(point.p10) <= Number(point.p50) &&
+            Number(point.p50) <= Number(point.p90),
+        ),
+      ).toBe(true);
+      expect(
+        await repository.findByUser(owner.userId, saved.simulationId),
+      ).toEqual(saved);
+      expect(
+        await repository.findByUser(other.userId, saved.simulationId),
+      ).toBeUndefined();
+      const privileges = await pool.query<{
+        can_delete: boolean;
+        can_update: boolean;
+      }>(`
+        SELECT
+          has_table_privilege(current_user, 'finapp_simulation.finapp_simulation_run', 'UPDATE') AS can_update,
+          has_table_privilege(current_user, 'finapp_simulation.finapp_simulation_run', 'DELETE') AS can_delete
+      `);
+      expect(privileges.rows[0]).toEqual({
+        can_delete: false,
+        can_update: false,
+      });
+    } finally {
       await pool.end();
     }
   });

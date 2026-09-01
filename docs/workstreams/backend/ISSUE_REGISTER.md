@@ -41,6 +41,7 @@ backend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한�
 - BE-0003 (2026-09-02): `BE-ISSUE-0001` 변화 없음. 신규 issue/gap 없음. clean PostgreSQL migration과 seed 2회, prefix/권한 catalog 검사, 전체 `npm run verify`, simulator runtime audit 0으로 확인했다.
 - BE-0004 (2026-09-02): `BE-ISSUE-0001` 변화 없음. `BE-GAP-0001`을 등록했다. clean PostgreSQL에서 실제 simulator HTTP sync 2회, raw immutable 권한, derived dedup, prefix/role catalog, 전체 `npm run verify`, platform runtime audit 0을 확인했다.
 - BE-0005 (2026-09-02): `BE-ISSUE-0001` 변화 없음. `BE-GAP-0001`을 RESOLVED 처리했다. concurrency/retry/lease 자동 테스트, scheduled Compose sync, 실제 simulator outage backoff 복구, 전체 `npm run verify`를 확인했다. 신규 issue/gap 없음.
+- BE-0006 (2026-09-02): `BE-ISSUE-0001` 변화 없음. versioned synthetic assumption, deterministic engine, ownership, PostgreSQL immutable 결과 저장, clean migration/prefix/role catalog, 전체 `npm run verify`와 platform runtime audit 0을 확인했다. 신규 issue/gap 없음.
 
 ## Issue Template
 

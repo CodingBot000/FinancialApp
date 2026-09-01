@@ -612,3 +612,129 @@ export const finappAssetSnapshotAllocation = finappWealthSchema.table(
     ),
   ],
 );
+
+export const finappAssumptionSet = finappSimulationSchema.table(
+  'finapp_assumption_set',
+  {
+    id: uuid('id').notNull(),
+    versionName: varchar('version_name', { length: 50 }).notNull(),
+    status: varchar('status', { length: 20 }).notNull().default('ACTIVE'),
+    assetAssumptions: jsonb('asset_assumptions').notNull(),
+    correlationMatrix: jsonb('correlation_matrix').notNull(),
+    effectiveFrom: date('effective_from').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_assumption_set', columns: [table.id] }),
+    unique('finapp_uq_assumption_set_version').on(table.versionName),
+    check(
+      'finapp_ck_assumption_set_status',
+      sql`${table.status} IN ('ACTIVE', 'RETIRED')`,
+    ),
+  ],
+);
+
+export const finappSimulationRun = finappSimulationSchema.table(
+  'finapp_simulation_run',
+  {
+    id: uuid('id').notNull(),
+    userId: uuid('user_id').notNull(),
+    assumptionSetId: uuid('assumption_set_id').notNull(),
+    engineVersion: varchar('engine_version', { length: 30 }).notNull(),
+    inputSnapshot: jsonb('input_snapshot').notNull(),
+    seed: bigint('seed', { mode: 'bigint' }).notNull(),
+    pathCount: integer('path_count').notNull().default(1000),
+    durationMonths: integer('duration_months').notNull(),
+    status: varchar('status', { length: 20 }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+    completedAt: timestamp('completed_at', {
+      withTimezone: true,
+      mode: 'date',
+    }),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_simulation_run', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_simulation_run_user',
+      columns: [table.userId],
+      foreignColumns: [finappAppUser.id],
+    }).onDelete('restrict'),
+    foreignKey({
+      name: 'finapp_fk_simulation_run_assumption',
+      columns: [table.assumptionSetId],
+      foreignColumns: [finappAssumptionSet.id],
+    }).onDelete('restrict'),
+    check(
+      'finapp_ck_simulation_run_values',
+      sql`${table.pathCount} > 0 AND ${table.durationMonths} BETWEEN 1 AND 600`,
+    ),
+    check(
+      'finapp_ck_simulation_run_status',
+      sql`${table.status} IN ('RUNNING', 'COMPLETED', 'FAILED')`,
+    ),
+    index('finapp_idx_simulation_run_user_created').on(
+      table.userId,
+      table.createdAt,
+    ),
+  ],
+);
+
+export const finappSimulationResultSummary = finappSimulationSchema.table(
+  'finapp_simulation_result_summary',
+  {
+    simulationRunId: uuid('simulation_run_id').notNull(),
+    goalProbability: numeric('goal_probability', {
+      precision: 12,
+      scale: 8,
+    }).notNull(),
+    finalP10: numeric('final_p10', { precision: 19, scale: 4 }).notNull(),
+    finalP50: numeric('final_p50', { precision: 19, scale: 4 }).notNull(),
+    finalP90: numeric('final_p90', { precision: 19, scale: 4 }).notNull(),
+    currency: varchar('currency', { length: 3 }).notNull().default('KRW'),
+  },
+  (table) => [
+    primaryKey({
+      name: 'finapp_pk_simulation_result_summary',
+      columns: [table.simulationRunId],
+    }),
+    foreignKey({
+      name: 'finapp_fk_simulation_summary_run',
+      columns: [table.simulationRunId],
+      foreignColumns: [finappSimulationRun.id],
+    }).onDelete('cascade'),
+    check(
+      'finapp_ck_sim_summary_percentiles',
+      sql`${table.goalProbability} BETWEEN 0 AND 1 AND ${table.finalP10} >= 0 AND ${table.finalP10} <= ${table.finalP50} AND ${table.finalP50} <= ${table.finalP90}`,
+    ),
+  ],
+);
+
+export const finappSimulationResultPoint = finappSimulationSchema.table(
+  'finapp_simulation_result_point',
+  {
+    simulationRunId: uuid('simulation_run_id').notNull(),
+    month: integer('month').notNull(),
+    p10: numeric('p10', { precision: 19, scale: 4 }).notNull(),
+    p50: numeric('p50', { precision: 19, scale: 4 }).notNull(),
+    p90: numeric('p90', { precision: 19, scale: 4 }).notNull(),
+  },
+  (table) => [
+    primaryKey({
+      name: 'finapp_pk_simulation_result_point',
+      columns: [table.simulationRunId, table.month],
+    }),
+    foreignKey({
+      name: 'finapp_fk_simulation_point_run',
+      columns: [table.simulationRunId],
+      foreignColumns: [finappSimulationRun.id],
+    }).onDelete('cascade'),
+    check(
+      'finapp_ck_sim_point_percentiles',
+      sql`${table.month} BETWEEN 0 AND 600 AND ${table.p10} >= 0 AND ${table.p10} <= ${table.p50} AND ${table.p50} <= ${table.p90}`,
+    ),
+  ],
+);

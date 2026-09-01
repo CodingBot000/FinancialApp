@@ -1,10 +1,10 @@
 # Backend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `BE-0006`
+- 다음 ID: `BE-0007`
 - branch/worktree: `codex/backend` / `/Users/switch/Development/Web/FinancialApp-backend`
 - base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
-- contract revision: `platform-v1` at BE-0004, `institution-simulator-v1` at BE-0003
+- contract revision: `platform-v1` at BE-0006, `institution-simulator-v1` at BE-0003
 - migration owner: backend session 또는 integration owner가 작업마다 기록
 
 backend session은 `services/**`, `infra/**`, OpenAPI와 migration 변경을 commit 단위로 기록한다. 중앙 `DEVELOPMENT_LOG.md`는 integration owner 역할로 통합할 때만 수정한다.
@@ -304,6 +304,67 @@ backend session은 `services/**`, `infra/**`, OpenAPI와 migration 변경을 com
 ### 다음 작업
 
 - BE-0006: versioned assumption set과 deterministic Monte Carlo simulation API 구현
+
+## BE-0006 — 버전 고정 합성 Monte Carlo 시뮬레이션
+
+- 날짜: 2026-09-02
+- Milestone: 4
+- 상태: COMPLETED
+- base commit: `462f6f8` (`BE-0005`)
+- contract revision: `platform-v1` (simulation 실행/조회와 결과 model 추가)
+- migration owner: backend session; local Compose/Testcontainers만 적용
+- commit: `feat(be): persist deterministic simulations [BE-0006]`
+
+### 완료
+
+- `finapp_simulation`에 assumption set, simulation run, result summary와 monthly result point Drizzle schema 및 forward-only migration을 추가했다.
+- 모든 table/index/PK/FK/unique/check와 migration history의 `finapp_` 접두사를 유지하고 assumption/run/result runtime UPDATE/DELETE 권한을 제거했다.
+- migration에 immutable `SYNTHETIC_V1` 가정 세트를 고정 UUID와 유효일로 저장하고 CASH/BOND/EQUITY 수익률·변동성·수수료·상관행렬을 버전 관리한다.
+- engine `1.0.0`에서 seeded PRNG, Box-Muller 정규분포와 Cholesky 상관 변환을 사용해 같은 input/seed/assumption/path count의 결과를 재현한다.
+- 월별 재조정 수익률과 contribution을 1~600개월에 적용하고 p10/p50/p90 series와 최종 목표 달성 확률을 계산한다.
+- client seed 주입을 금지하고 서버 seed, input snapshot, engine/assumption version, path count와 전체 결과를 transaction으로 보존한다.
+- 금액 상한, allocation 자산군/중복/weight 합, duration과 path count를 검증하며 사용자 소유 simulation만 조회한다.
+- `POST /api/v1/simulations`, `GET /api/v1/simulations/{simulationId}`에 `simulation.execute` scope, stable validation/not-found problem과 기술 시연 disclaimer를 적용했다.
+- 합성 가정, 계산식, 재현성 규칙과 알려진 한계를 backend 소유 `SIMULATION_MODEL.md`에 기록했다.
+
+### 변경 파일
+
+- `services/platform-api/src/modules/simulation/**`
+- `services/platform-api/src/database/schema.ts`, `src/app.module.ts`
+- `services/platform-api/drizzle/0003_finapp_simulation.sql`, migration journal
+- `services/platform-api/test/database/**`, `test/identity/**`, `test/simulation/**`
+- `contracts/openapi/platform-v1.yaml`
+- `docs/workstreams/backend/**`
+
+### 검증
+
+- 명령: platform lint, strict typecheck, dependency-cruiser, Vitest, Nest build
+- 결과: 7 test files / 34 tests 통과. 결정성, percentile 순서, contribution/target 성질, 입력 검증, ownership, JWT scope와 PostgreSQL persistence/immutable 권한을 포함한다.
+- 명령: engine 최대 허용 기간 benchmark와 performance test
+- 결과: 1,000 paths × 600개월 계산 602ms, 601 points와 전체 percentile 순서 정상; 자동 성능 기준 3초 이내 통과
+- 명령: root `npm run verify` (Node 24.19.0, Colima socket 명시)
+- 결과: formatter, OpenAPI/fixture, Expo dependency, secret scan, 전체 lint/typecheck/test/build 통과; 전체 11 test files / 43 tests 통과
+- 명령: platform production Docker image build 및 workspace runtime audit
+- 결과: Node 24.19.0 image build 성공, platform production dependency vulnerability 0
+- 명령: clean Compose platform migration, 실제 repository create/get와 catalog/role query
+- 결과: platform history 4, simulation table 4, assumption/run/summary 각 1행, monthly point 121행, engine `1.0.0`/assumption `SYNTHETIC_V1`, prefix 위반 relation/constraint 0, 미검증 constraint 0, assumption/run UPDATE/DELETE 모두 false
+
+### 원격 DB
+
+- 사용 여부: 사용하지 않음
+- migration commit/dataset version: local/Testcontainers `0003_finapp_simulation` / `SYNTHETIC_V1`
+- 결과: Lightsail 연결, migration과 seed 모두 미실행
+
+### 이슈·누락·Handoff
+
+- `BE-ISSUE-0001`: 변화 없음. build-time only이며 platform production workspace audit은 0이다.
+- 신규 backend issue/gap: 없음.
+- Handoff: frontend는 BE-0006 `platform-v1`의 simulation 실행/조회 계약을 소비할 수 있다. 결과는 기술 시연용 합성 계산이며 disclaimer를 함께 표시해야 한다.
+- Handoff: integration owner는 필요하면 backend 소유 `docs/workstreams/backend/SIMULATION_MODEL.md`를 canonical `docs/SIMULATION_MODEL.md`로 승격할 수 있다.
+
+### 다음 작업
+
+- BE-0007: quote 조회, 주문 idempotency와 cash reservation을 포함하는 거래 vertical slice 구현
 
 ## 새 기록 Template
 

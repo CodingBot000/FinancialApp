@@ -11,6 +11,7 @@ import { IDENTITY_REPOSITORY } from '../../src/modules/identity/application/port
 import { INSTITUTION_PORT } from '../../src/modules/mydata/application/ports/institution.port.js';
 import { MYDATA_REPOSITORY } from '../../src/modules/mydata/application/ports/mydata-repository.port.js';
 import { SENSITIVE_DATA_PORT } from '../../src/modules/mydata/application/ports/sensitive-data.port.js';
+import { SIMULATION_REPOSITORY } from '../../src/modules/simulation/application/ports/simulation-repository.port.js';
 import { WEALTH_REPOSITORY } from '../../src/modules/wealth/application/ports/wealth-repository.port.js';
 
 describe('GET /api/v1/me OIDC boundary', () => {
@@ -63,6 +64,57 @@ describe('GET /api/v1/me OIDC boundary', () => {
     transactions: vi.fn(),
     history: vi.fn(),
   };
+  const simulationRepository = {
+    activeAssumption: vi.fn().mockResolvedValue({
+      id: '60000000-0000-4000-8000-000000000001',
+      version: 'SYNTHETIC_V1',
+      assets: {
+        CASH: {
+          expectedAnnualReturn: 0.025,
+          annualVolatility: 0.005,
+          annualFee: 0.001,
+        },
+        BOND: {
+          expectedAnnualReturn: 0.04,
+          annualVolatility: 0.08,
+          annualFee: 0.002,
+        },
+        EQUITY: {
+          expectedAnnualReturn: 0.07,
+          annualVolatility: 0.18,
+          annualFee: 0.004,
+        },
+      },
+      correlation: [
+        [1, 0.15, 0.05],
+        [0.15, 1, 0.25],
+        [0.05, 0.25, 1],
+      ],
+    }),
+    save: vi.fn().mockResolvedValue({
+      simulationId: 'df4ee3a2-df76-454e-9627-57fcafda7f8d',
+      engineVersion: '1.0.0',
+      assumptionSetVersion: 'SYNTHETIC_V1',
+      currency: 'KRW',
+      goalProbability: 0.71,
+      finalValue: {
+        p10: '338200000.0000',
+        p50: '426300000.0000',
+        p90: '548100000.0000',
+      },
+      series: [
+        {
+          month: 0,
+          p10: '185400000.0000',
+          p50: '185400000.0000',
+          p90: '185400000.0000',
+        },
+      ],
+      disclaimer:
+        'Synthetic financial simulation for technical demonstration only.',
+    }),
+    findByUser: vi.fn(),
+  };
   let app: NestFastifyApplication;
   let issuer: string;
   let privateKey: CryptoKey;
@@ -97,6 +149,7 @@ describe('GET /api/v1/me OIDC boundary', () => {
     process.env.OIDC_ISSUER = issuer;
     process.env.OIDC_AUDIENCE = 'finapp-platform-api';
     process.env.OIDC_JWKS_URI = `http://127.0.0.1:${address.port}/jwks`;
+    process.env.SIMULATION_PATH_COUNT = '20';
 
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
@@ -111,6 +164,8 @@ describe('GET /api/v1/me OIDC boundary', () => {
       .useValue(sensitiveData)
       .overrideProvider(WEALTH_REPOSITORY)
       .useValue(wealthRepository)
+      .overrideProvider(SIMULATION_REPOSITORY)
+      .useValue(simulationRepository)
       .compile();
     app = moduleRef.createNestApplication<NestFastifyApplication>(
       createFastifyAdapter(),
@@ -129,6 +184,7 @@ describe('GET /api/v1/me OIDC boundary', () => {
     delete process.env.OIDC_ISSUER;
     delete process.env.OIDC_AUDIENCE;
     delete process.env.OIDC_JWKS_URI;
+    delete process.env.SIMULATION_PATH_COUNT;
   });
 
   async function accessToken(options?: {
@@ -274,6 +330,48 @@ describe('GET /api/v1/me OIDC boundary', () => {
       totalAssets: '185400000.0000',
       cash: '15400000.0000',
       investments: '170000000.0000',
+    });
+  });
+
+  it('enforces simulation.execute and returns a server simulation result', async () => {
+    const payload = {
+      initialAssets: '185400000.0000',
+      monthlyContribution: '1500000.0000',
+      durationMonths: 12,
+      targetAmount: '220000000.0000',
+      allocation: [
+        { assetClass: 'CASH', weight: 0.1 },
+        { assetClass: 'BOND', weight: 0.3 },
+        { assetClass: 'EQUITY', weight: 0.6 },
+      ],
+    };
+    const forbidden = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: { authorization: `Bearer ${await accessToken()}` },
+        method: 'POST',
+        url: '/api/v1/simulations',
+        payload,
+      });
+    expect(forbidden.statusCode).toBe(403);
+
+    const response = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: {
+          authorization: `Bearer ${await accessToken({ scope: 'simulation.execute' })}`,
+        },
+        method: 'POST',
+        url: '/api/v1/simulations',
+        payload,
+      });
+    expect(response.statusCode).toBe(201);
+    expect(response.json()).toMatchObject({
+      engineVersion: '1.0.0',
+      assumptionSetVersion: 'SYNTHETIC_V1',
+      goalProbability: 0.71,
     });
   });
 });
