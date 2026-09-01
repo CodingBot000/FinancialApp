@@ -632,3 +632,31 @@
 ### 다음 작업
 
 - `FE-0013`: BUY order와 UNKNOWN recovery mobile vertical slice
+
+## BE-0011 — FE-0013 Contract Entry Repair
+
+- 날짜: 2026-09-02
+- Milestone: 5
+- 상태: COMPLETED
+- 예정 commit: `fix(be): expose order instrument identity [BE-0011]`
+
+### 완료
+
+- Holding에 order preview용 opaque `instrumentId`를 additive로 노출하고 backend/provider/mobile contract를 동기화
+- Drizzle wrapped PostgreSQL unique conflict를 domain error로 변환해 duplicate MyData connection 500을 canonical 409로 복구
+- repeatable smoke의 existing connection과 사용자 action별 idempotency key 수명주기를 보강
+
+### 검증
+
+- contract gate, provider 13 tests와 PostgreSQL Testcontainers 8 tests 통과
+- actual local duplicate connection 409와 full sync/simulation/order smoke 통과
+- Colima socket을 명시한 root `npm run verify`: mobile 82/simulator 12/platform 61 총 155 tests와 두 backend build 통과
+
+### 이슈와 누락
+
+- `GAP-0008`, `ISSUE-0009` RESOLVED
+- 원격 DB와 배포 작업은 실행하지 않음
+
+### 다음 작업
+
+- `FE-0013`: BUY order와 UNKNOWN recovery mobile vertical slice

@@ -3,7 +3,7 @@
 - 현재 Milestone: 2~5 — 단일 Main 로컬 MVP 통합
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-02
-- 마지막 완료 ID: FE-0012
+- 마지막 완료 ID: BE-0011
 - 다음 작업 ID: FE-0013
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
@@ -111,6 +111,13 @@
 - [x] local actual create/get에서 12개월 13 points 재조회와 전체 wealth/order smoke 통과
 - [x] root `npm run verify`: mobile 82/simulator 12/platform 61, 총 155 tests와 두 backend build 통과
 
+## BE-0011 FE-0013 Contract Entry Repair
+
+- [x] canonical Holding에 주문용 opaque UUID `instrumentId`를 additive로 추가
+- [x] PostgreSQL wealth repository/provider fixture/mobile strict guard를 같은 contract로 갱신
+- [x] Drizzle wrapped unique violation을 bounded cause-chain에서 식별해 duplicate connection 500을 canonical 409로 복구
+- [x] Testcontainers duplicate conflict/instrument mapping과 actual local 409/sync/simulation/order smoke 통과
+
 ## 완료된 통합 기준선
 
 - [x] root npm workspace와 통합 `package-lock.json`
@@ -158,7 +165,6 @@
 
 - `ISSUE-0002`: 통합 Expo dependency tree의 moderate advisory 14건
 - `ISSUE-0003`: Drizzle Kit build-time dependency의 moderate advisory 4건
-- `ISSUE-0009`: duplicate MyData connection이 canonical 409 대신 500 반환
 - `GAP-0002`: iOS Development Build runtime 검증
 - `GAP-0003`: 실제 기기 biometric/background App Lock 검증
 - `GAP-0007`: 실제 전체 서비스 E2E와 fresh-clone 인수 명령 미완료

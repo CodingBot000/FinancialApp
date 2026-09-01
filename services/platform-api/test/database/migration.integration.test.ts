@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { migratePlatformDatabase } from '../../src/database/migrate.js';
 import { DrizzleIdentityRepository } from '../../src/modules/identity/infrastructure/persistence/drizzle-identity.repository.js';
 import { AesSensitiveDataAdapter } from '../../src/modules/mydata/infrastructure/crypto/aes-sensitive-data.adapter.js';
+import { MyDataConnectionConflictError } from '../../src/modules/mydata/domain/mydata-errors.js';
 import { DrizzleMyDataRepository } from '../../src/modules/mydata/infrastructure/persistence/drizzle-mydata.repository.js';
 import { runSimulation } from '../../src/modules/simulation/domain/simulation-engine.js';
 import { SIMULATION_ENGINE_VERSION } from '../../src/modules/simulation/domain/simulation-model.js';
@@ -257,6 +258,17 @@ describe('platform Drizzle migration', () => {
         maskedExternalCustomerId: 'SYNTH-****-A',
         consentExpiresAt: new Date('2027-09-01T00:00:00.000Z'),
       });
+      await expect(
+        repository.createConnection({
+          userId: user.userId,
+          institutionCode: 'SYNTH_WEALTH_001',
+          externalCustomerIdHash: cipher.lookupHash('SYNTH-CUSTOMER-A'),
+          externalCustomerIdCiphertext: encrypted.ciphertext,
+          encryptionKeyVersion: encrypted.keyVersion,
+          maskedExternalCustomerId: 'SYNTH-****-A',
+          consentExpiresAt: new Date('2027-09-01T00:00:00.000Z'),
+        }),
+      ).rejects.toBeInstanceOf(MyDataConnectionConflictError);
       const dataset = {
         accounts: {
           schemaVersion: 'simulator-v1' as const,
@@ -426,7 +438,13 @@ describe('platform Drizzle migration', () => {
         investments: '170000000.0000',
       });
       expect(await wealth.accounts(user.userId)).toHaveLength(1);
-      expect(await wealth.holdings(user.userId)).toHaveLength(1);
+      expect(await wealth.holdings(user.userId)).toMatchObject([
+        {
+          holdingId: expect.any(String),
+          instrumentId: expect.any(String),
+          instrumentCode: 'SYNTH-EQUITY-001',
+        },
+      ]);
       expect(await wealth.transactions(user.userId)).toHaveLength(1);
       expect(await wealth.history(user.userId, 'ALL')).toHaveLength(1);
 

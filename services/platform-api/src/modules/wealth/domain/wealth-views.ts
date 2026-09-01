@@ -26,6 +26,7 @@ export interface AccountView {
 export interface HoldingView {
   readonly holdingId: string;
   readonly accountId: string;
+  readonly instrumentId: string;
   readonly instrumentCode: string;
   readonly displayName: string;
   readonly assetClass: string;

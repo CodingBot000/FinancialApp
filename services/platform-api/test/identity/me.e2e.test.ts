@@ -111,6 +111,7 @@ describe('GET /api/v1/me OIDC boundary', () => {
       {
         holdingId: '788c601b-ab70-4683-9dd4-6a1174550653',
         accountId: '688c601b-ab70-4683-9dd4-6a1174550653',
+        instrumentId: 'c805563c-148c-4451-8a9a-4808da7b32ae',
         instrumentCode: 'SYNTH-EQUITY-001',
         displayName: 'Synthetic Equity Fund',
         assetClass: 'EQUITY',

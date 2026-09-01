@@ -83,12 +83,13 @@ const ACTIVE_SYNC_STATUSES = [
 const PROCESSOR_VERSION = 'NORMALIZER_V1';
 
 function isUniqueViolation(error: unknown): error is PostgreSqlError {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === '23505'
-  );
+  let current = error;
+  for (let depth = 0; depth < 4; depth += 1) {
+    if (typeof current !== 'object' || current === null) return false;
+    if ('code' in current && current.code === '23505') return true;
+    current = 'cause' in current ? current.cause : undefined;
+  }
+  return false;
 }
 
 function connectionView(row: {

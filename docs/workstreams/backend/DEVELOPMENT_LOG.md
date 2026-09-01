@@ -1,7 +1,7 @@
 # Backend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `BE-0011` (통합 순서상 다음은 `FE-0010`)
+- 다음 ID: `BE-0012` (통합 순서상 다음은 `FE-0013`)
 - 운영 상태: `codex/backend`는 DEV-0006 통합 이력으로 보존, 신규 BE commit은 단일 `main`에서 수행
 - 활성 worktree: `/Users/switch/Development/Web/FinancialApp`
 - 통합 검토 기준: `main` at `2574ad0`, `platform-v1` at BE-0008, `institution-simulator-v1` at BE-0003
@@ -616,6 +616,47 @@
 ### 다음 작업
 
 - 통합 순서 `FE-0010`: live OIDC `/me` mobile adapter; 다음 backend ID는 Milestone 6A의 `BE-0011`
+
+## BE-0011 — FE-0013 주문 진입 계약 보강
+
+- 날짜: 2026-09-02
+- Milestone: 5
+- 상태: COMPLETED
+- base commit: `43634b2f37bca2630622ab34dc1e454c30527710`
+- contract revision: additive `platform-v1` Holding instrument ID
+- migration owner: schema/migration 변경 없음
+- 예정 commit: `fix(be): expose order instrument identity [BE-0011]`
+
+### 완료
+
+- mobile이 DB를 추측하지 않고 BUY preview 요청을 만들 수 있도록 Holding response에 불투명 UUID `instrumentId`를 additive required property로 추가
+- PostgreSQL wealth repository, domain view, canonical OpenAPI/fixture/provider mock과 mobile strict consumer fixture를 동기화
+- Drizzle query wrapper 내부의 PostgreSQL `23505`를 bounded cause-chain으로 식별해 duplicate connection을 domain conflict와 canonical 409로 복구
+- repeatable local smoke가 existing connection을 재사용하고 각 사용자 주문 action마다 새 UUID idempotency key를 사용하도록 보강
+
+### 검증
+
+- canonical 31 operations/34 fixtures/controller/provider/consumer/compatibility gate 통과
+- provider Fastify E2E 13 tests 통과
+- PostgreSQL 17.6 Testcontainers 8 tests: duplicate connection domain conflict와 holding instrument UUID 포함
+- 실제 보존 local DB duplicate POST 409 `MYDATA_CONNECTION_ALREADY_EXISTS`, sync/simulation/FILLED/REJECTED/UNKNOWN→FILLED smoke 통과
+- Colima socket을 명시한 root `npm run verify`: formatter, 31 operation/34 fixture 계약, architecture, lint, strict typecheck, mobile 82/simulator 12/platform 61 총 155 tests와 두 backend build 통과
+
+### 원격 DB
+
+- 사용 여부: 사용하지 않음
+- migration commit/dataset version: DB 변경 없음 / `FINANCIAL_APP_DATASET_V1`
+- 결과: 원격 DB 사전 검토, endpoint/credential 요청, 연결, catalog, migration, seed와 배포 모두 미실행
+
+### 이슈·누락·Handoff
+
+- 중앙 `GAP-0008`: RESOLVED
+- 중앙 `ISSUE-0009`: RESOLVED
+- FE-0013은 holding의 `instrumentId`를 그대로 preview/order payload에 사용하고 code→ID 추측을 금지한다.
+
+### 다음 작업
+
+- 통합 순서 `FE-0013`: BUY order와 UNKNOWN recovery mobile vertical slice
 
 ## 새 기록 Template
 

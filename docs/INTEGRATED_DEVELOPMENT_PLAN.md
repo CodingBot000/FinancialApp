@@ -7,7 +7,7 @@
 - 활성 branch/worktree: `main` / `/Users/switch/Development/Web/FinancialApp`
 - 현재 실행 종료선: 단계 10 로컬 하드닝 완료 후 STOP
 - 현재 실행 제외: 원격 DB 접속·사전점검·migration/seed와 원격 배포
-- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`, 단계 3 `BE-0010`, 단계 4 `FE-0010`, 단계 5 `FE-0011`, 단계 6 `FE-0012`
+- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`, 단계 3 `BE-0010`, 단계 4 `FE-0010`, 단계 5 `FE-0011`, 단계 6 `FE-0012`, FE-0013 진입 보강 `BE-0011`
 - 다음 작업 ID: `FE-0013`
 
 ## 1. 목적과 문서 권한
@@ -268,6 +268,12 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - 실제 local Platform API에서 12개월 simulation을 생성·재조회해 13개 persisted point와 version을 확인했다.
 
 ### 단계 7 — Order와 복구 Vertical Slice (`FE-0013`)
+
+진입 보강 (`BE-0011`) 완료:
+
+- Holding response에 주문 preview가 요구하는 opaque `instrumentId`를 additive로 연결하고 provider/consumer fixture를 동기화했다.
+- duplicate MyData connection의 Drizzle wrapped `23505`가 500으로 누출되던 `ISSUE-0009`를 canonical 409로 복구했다.
+- DB schema/migration 변경 없이 Testcontainers와 actual local repeat smoke를 통과했다.
 
 목표:
 

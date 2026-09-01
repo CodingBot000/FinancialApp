@@ -202,6 +202,7 @@ export class DrizzleWealthRepository implements WealthRepository {
       .select({
         holdingId: finappHolding.id,
         accountId: finappHolding.accountId,
+        instrumentId: finappInstrument.id,
         instrumentCode: finappInstrument.instrumentCode,
         displayName: finappInstrument.displayName,
         assetClass: finappInstrument.assetClass,

@@ -160,6 +160,19 @@ try {
       },
       201,
     ));
+  const duplicateConnection = await request(
+    '/api/v1/mydata/connections',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        institutionCode: 'SYNTH_WEALTH_001',
+        consentExpiresAt: '2027-09-01T00:00:00.000Z',
+      }),
+    },
+    409,
+  );
+  if (duplicateConnection.code !== 'MYDATA_CONNECTION_ALREADY_EXISTS')
+    throw new Error('Duplicate connection did not return canonical conflict.');
   const sync = await request(
     '/api/v1/mydata/syncs',
     {

@@ -202,6 +202,7 @@ export function isHolding(value: unknown): value is Holding {
     exact(item, [
       'holdingId',
       'accountId',
+      'instrumentId',
       'instrumentCode',
       'displayName',
       'assetClass',
@@ -212,6 +213,7 @@ export function isHolding(value: unknown): value is Holding {
     ]) &&
     uuid(item.holdingId) &&
     uuid(item.accountId) &&
+    uuid(item.instrumentId) &&
     text(item.instrumentCode) &&
     text(item.displayName) &&
     text(item.assetClass) &&

@@ -810,6 +810,7 @@ components:
       required:
         - holdingId
         - accountId
+        - instrumentId
         - instrumentCode
         - displayName
         - assetClass
@@ -822,6 +823,9 @@ components:
           type: string
           format: uuid
         accountId:
+          type: string
+          format: uuid
+        instrumentId:
           type: string
           format: uuid
         instrumentCode:

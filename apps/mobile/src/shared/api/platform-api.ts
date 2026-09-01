@@ -82,6 +82,7 @@ export interface Holding {
   readonly averagePrice: Money;
   readonly displayName: string;
   readonly holdingId: string;
+  readonly instrumentId: string;
   readonly instrumentCode: string;
   readonly marketValue: Money;
   readonly quantity: string;

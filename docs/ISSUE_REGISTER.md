@@ -2,7 +2,7 @@
 
 - 마지막 갱신: 2026-09-02
 - 다음 ISSUE ID: `ISSUE-0010`
-- 다음 GAP ID: `GAP-0008`
+- 다음 GAP ID: `GAP-0009`
 
 이 문서는 defect, blocker, 위험과 불가피한 누락을 삭제하지 않고 추적한다.
 
@@ -19,22 +19,6 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - `ACCEPTED_RISK`: 사용자가 잔여 위험을 명시적으로 수용함
 
 ## Active Issue
-
-### ISSUE-0009 — Duplicate MyData connection이 canonical 409 대신 500 반환
-
-- 상태: OPEN
-- 심각도: MEDIUM
-- 최초 발견: 2026-09-02
-- 마지막 갱신: 2026-09-02
-- 발견 DEV: FE-0012 repeatable local smoke
-- 영향 Milestone: 3 local API robustness / DEV-0011 acceptance
-- 내용: 동일 사용자·기관의 active connection이 이미 있는 로컬 PostgreSQL에서 `POST /api/v1/mydata/connections`를 다시 호출하면 repository unique conflict가 controller의 `MYDATA_CONNECTION_ALREADY_EXISTS` 409로 변환되지 않고 500이 반환됐다.
-- 영향: 정상 mobile UI는 목록 결과가 있을 때 생성 action을 숨겨 사용자 흐름을 막지 않지만, 중복 요청의 canonical error 경계가 깨져 있다.
-- 임시 우회: local smoke와 mobile은 먼저 connection 목록을 조회하고 없을 때만 생성한다. 오류를 숨기거나 test를 비활성화하지 않았다.
-- 해결 조건: 실제 PostgreSQL duplicate insert의 Drizzle error cause를 안전하게 식별해 canonical 409 ProblemDetails로 변환하고 provider/integration/repeat smoke를 통과할 것.
-- 목표 DEV: DEV-0011 이전 backend defect slice
-- 해결 DEV:
-- 검증: FE-0012 local smoke 첫 재실행에서 500을 재현했고 목록 우선 smoke로 이후 simulation/order 검증은 계속 진행했다.
 
 ### ISSUE-0002 — Expo 57 transitive dependency moderate advisory
 
@@ -116,6 +100,34 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 검증: DEV-0007에서 mobile feature가 health/login/app-lock에 한정되고 Makefile은 bootstrap/build/contract/format/lint/test/typecheck/verify target만 제공함을 확인했다.
 
 ## Resolved History
+
+### GAP-0008 — Mobile 주문에 필요한 instrument UUID 조회 계약 누락
+
+- 상태: RESOLVED
+- 심각도: HIGH
+- 최초 발견: 2026-09-02
+- 마지막 갱신: 2026-09-02
+- 발견 DEV: FE-0013 contract entry review
+- 원래 요구사항: mobile holding 선택에서 `POST /orders/preview`의 불투명 `instrumentId`를 구성할 수 있어야 한다.
+- 누락/연기 이유: canonical Holding은 표시용 `instrumentCode`만 반환했지만 주문 요청은 DB UUID `instrumentId`를 요구해 API만으로 요청을 만들 수 없었다.
+- 현재 영향: 없음. BE-0011 additive Holding 계약으로 해결했다.
+- 목표 Milestone: 5 / FE-0013
+- 재확인 조건: provider fixture/schema, PostgreSQL repository와 mobile strict adapter가 같은 instrument UUID를 반환하고 client가 code를 ID로 추측하지 않을 것.
+- 해결 DEV: BE-0011
+- 검증: Holding에 additive required `instrumentId`를 추가하고 contract 31 operations/34 fixtures, provider E2E와 PostgreSQL integration을 통과했다.
+
+### ISSUE-0009 — Duplicate MyData connection이 canonical 409 대신 500 반환
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 최초 발견: 2026-09-02
+- 마지막 갱신: 2026-09-02
+- 발견 DEV: FE-0012 repeatable local smoke
+- 원래 영향 Milestone: 3 local API robustness / DEV-0011 acceptance
+- 원래 내용: 동일 사용자·기관 active connection의 PostgreSQL unique error가 Drizzle wrapper 안에 있어 controller의 `MYDATA_CONNECTION_ALREADY_EXISTS` 409로 변환되지 않고 500이 반환됐다.
+- 해결 DEV: BE-0011
+- 해결 내용: bounded cause-chain에서 PostgreSQL `23505`를 식별해 기존 domain conflict로 변환하도록 repository 경계를 수정했다.
+- 검증: Testcontainers duplicate repository test와 보존된 local DB actual duplicate POST의 409 `MYDATA_CONNECTION_ALREADY_EXISTS`, 이후 전체 smoke를 통과했다.
 
 ### ISSUE-0008 — Local Keycloak access token subject/offline scope 누락
 

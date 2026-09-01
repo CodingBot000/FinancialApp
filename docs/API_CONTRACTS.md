@@ -259,6 +259,8 @@ QUEUED → FETCHING → RAW_STORED → NORMALIZING → COMPLETED
 
 ### `GET /api/v1/holdings?accountId=&cursor=&limit=50`
 
+각 holding은 표시용 `instrumentCode`와 주문 preview에 사용할 불투명 UUID `instrumentId`를 함께 반환한다. client는 code를 ID로 추측하거나 DB를 직접 조회하지 않는다.
+
 필요 scope: `financial.read`와 ownership
 
 ### `GET /api/v1/assets/history?range=1M|3M|1Y|ALL`
