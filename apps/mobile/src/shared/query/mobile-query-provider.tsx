@@ -7,14 +7,26 @@ import {
 } from '@tanstack/react-query';
 import * as Network from 'expo-network';
 
+import { useAuthSession } from '../auth';
 import { createMobileQueryClient } from './query-client';
 import {
   createOnlineEventListener,
   installAppFocusListener,
 } from './native-query-lifecycle';
+import { installSessionCacheClear } from './session-cache-lifecycle';
 
 export function MobileQueryProvider({ children }: PropsWithChildren) {
+  const session = useAuthSession();
   const [queryClient] = useState(createMobileQueryClient);
+
+  useEffect(
+    () =>
+      installSessionCacheClear({
+        clear: () => queryClient.clear(),
+        session,
+      }),
+    [queryClient, session],
+  );
 
   useEffect(
     () =>

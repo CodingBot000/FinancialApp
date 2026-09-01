@@ -18,6 +18,8 @@ export class RefreshCoordinator {
     private readonly accessTokenStore: AccessTokenStore,
     private readonly refreshTokenStore: RefreshTokenStore,
     private readonly tokenRefresh: TokenRefreshPort,
+    private readonly onSessionExpired: () => void | Promise<void> = () =>
+      undefined,
   ) {}
 
   refreshAccessToken() {
@@ -59,6 +61,7 @@ export class RefreshCoordinator {
       return accessToken;
     } catch (cause) {
       await this.clearLocalSession();
+      await this.onSessionExpired();
       if (cause instanceof SessionExpiredError) {
         throw cause;
       }

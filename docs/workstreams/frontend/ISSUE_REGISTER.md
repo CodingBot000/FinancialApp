@@ -48,7 +48,7 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 목표 Milestone: 2
 - 재확인 조건: 승인된 IdP 설정과 additive `/me` 계약으로 실제 Development Build에서 login → process restart → refresh single-flight → `/me`, refresh 실패 → local clear/재로그인 흐름 통과
 - 해결 FE:
-- 검증: FE-0005에서 SecureStore/session single-flight 11 files/27 tests를 통과했다. FE-0007에서 public config validator, OIDC discovery + Authorization Code/PKCE S256, browser cancel, code exchange의 필수 refresh token, refresh rotation과 secure session establish를 구현했다. FE-0008에서는 session-aware configured/missing/opening/cancel/error UI, Android redirect intent와 WebBrowser native build까지 mobile 전체 19 files/55 tests로 통과했다. Live provider와 `/me`는 여전히 미검증이다.
+- 검증: FE-0005에서 SecureStore/session single-flight를 구현했고 FE-0007에서 public config validator, OIDC discovery + Authorization Code/PKCE S256, browser cancel, code exchange의 필수 refresh token과 refresh rotation을 추가했다. FE-0008에서는 session-aware login UI, Android redirect intent와 WebBrowser native build를 통과했다. FE-0009에서 memory Bearer, concurrent 401 single-flight, GET replay-once, POST no-replay, second 401/refresh failure fail-closed와 Query cache clear까지 mobile 전체 21 files/60 tests로 통과했다. Live provider와 `/me`는 여전히 미검증이다.
 
 ### FE-GAP-0004 — 실제 기기 LocalAuthentication과 background App Lock 검증
 

@@ -1,7 +1,7 @@
 # Frontend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `FE-0009`
+- 다음 ID: `FE-0010`
 - branch/worktree: `codex/frontend` / `/Users/switch/Development/Web/FinancialApp-frontend`
 - base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
 - contract revision: `platform-v1` at base commit (blob `8942e08342cd78f7e251f09b8a3005c9e797d93f`)
@@ -512,3 +512,60 @@ frontend session은 `apps/mobile/**` 변경을 commit 단위로 기록한다. �
 ### 다음 작업
 
 - FE-0009: authenticated fetch의 memory Bearer 주입, 401 refresh single-flight/replay-once와 logout Query cache clear foundation; endpoint는 canonical 계약 외에 추가하지 않음
+
+## FE-0009 — Authenticated request와 session cache lifecycle
+
+- 날짜: 2026-09-02
+- Milestone: 2
+- 상태: COMPLETED
+- base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
+- contract revision: `platform-v1` at base commit (blob `8942e08342cd78f7e251f09b8a3005c9e797d93f`)
+- commit: `feat(fe): add authenticated request lifecycle [FE-0009]`
+
+### 완료
+
+- FE-0005 memory access token만 `Authorization: Bearer`로 주입하고 일반 storage/cache에서 token을 읽지 않는 endpoint-agnostic `AuthenticatedFetch` 구현
+- process restart로 access token이 없으면 SecureStore refresh credential을 통한 single-flight refresh 후 최초 요청을 한 번만 전송
+- 동시 GET 401이 하나의 refresh promise를 공유하고 새 access token으로 각 요청을 정확히 1회만 replay하도록 구성
+- 자동 replay는 GET/HEAD/OPTIONS로 제한하고 POST 등 mutation의 401은 refresh 후 원 요청 response를 반환해 주문 POST 자동 재전송을 금지
+- replay된 조회가 다시 401이면 local credential을 지우고 `SessionExpiredError` 및 session `absent`를 발행해 Login Boundary로 fail closed
+- refresh 실패도 manager session presence에 `absent`를 발행하도록 FE-0005 coordinator와 manager composition 연결
+- session `absent` 전이 시 TanStack Query의 사용자별 cache를 즉시 clear하는 lifecycle listener를 MobileQueryProvider에 연결
+- canonical OpenAPI에 인증 endpoint가 없으므로 transport에 임의 `/me`나 업무 endpoint를 추가하지 않음
+
+### 변경 파일
+
+- `apps/mobile/src/features/login/model/create-oidc-session-composition.ts`
+- `apps/mobile/src/shared/api/**`
+- `apps/mobile/src/shared/auth/**`
+- `apps/mobile/src/shared/query/**`
+- `docs/workstreams/frontend/DEVELOPMENT_LOG.md`
+- `docs/workstreams/frontend/ISSUE_REGISTER.md`
+
+### 검증
+
+- 명령: `npm run architecture:check -w @finapp/mobile`
+- 결과: 65 source files boundary/cycle check 통과
+- 명령: `npm run lint -w @finapp/mobile`
+- 결과: 통과
+- 명령: `npm run typecheck -w @finapp/mobile`
+- 결과: TypeScript strict 통과
+- 명령: `npm run test -w @finapp/mobile`
+- 결과: 21 files, 60 tests 통과; concurrent 401 single-flight, GET replay-once, POST no replay, second 401/refresh failure fail-closed와 session cache clear 포함
+- 명령: `npm run security:secrets`
+- 결과: source token/secret scan 통과
+- 명령: `npx expo export --platform android --output-dir /tmp/financialapp-fe0009-android.cnbJxJ`
+- 결과: session cache listener를 포함한 2,463 modules, Hermes bundle 5.3MB 성공
+- 명령: `npx expo export --platform web --output-dir /tmp/financialapp-fe0009-web.sQU8el`
+- 결과: 898 modules, 1.3MB bundle 성공
+
+### 이슈·누락·Handoff
+
+- FE-GAP-0003: 401/refresh/logout client lifecycle은 자동 검증됐지만 실제 `/me`와 IdP가 없어 live access token으로의 첫 요청, 실제 401과 refresh rotation은 계속 UNVERIFIED다.
+- CONTRACT_CHANGE_REQUEST: integration owner가 additive `/api/v1/me`, bearer authentication problem response와 IdP 값을 제공하면 `AuthenticatedFetch`를 generated/contract endpoint adapter에 조합한다.
+- mutation 401은 의도적으로 자동 replay하지 않는다. 주문은 사용자가 명시적으로 다시 확인하거나 업무별 idempotency flow가 처리해야 한다.
+- session absent 시 QueryClient가 clear되며 token/server response는 Zustand에 복제하지 않는다.
+
+### 다음 작업
+
+- FE-0010: 승인된 OIDC provider 설정과 additive `/api/v1/me` 계약 통합. 현재 base contract에는 health 외 endpoint가 없어 FE-GAP-0003 외부 조건 충족 전에는 contract-driven Milestone 2 완료와 Milestone 3 API 화면 개발을 진행하지 않는다.

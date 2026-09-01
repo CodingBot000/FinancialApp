@@ -1,5 +1,9 @@
 import type { AccessTokenStore } from './access-token-store';
 import type { RefreshTokenStore } from './refresh-token-store';
+import {
+  RefreshCoordinator,
+  type TokenRefreshPort,
+} from './refresh-coordinator';
 import { requireToken, SessionPersistenceError } from './session-errors';
 
 export type EstablishedSession = Readonly<{
@@ -46,6 +50,15 @@ export class AuthSessionManager {
 
   getAccessToken() {
     return this.accessTokenStore.read();
+  }
+
+  createRefreshCoordinator(tokenRefresh: TokenRefreshPort) {
+    return new RefreshCoordinator(
+      this.accessTokenStore,
+      this.refreshTokenStore,
+      tokenRefresh,
+      () => this.setSessionPresence('absent'),
+    );
   }
 
   getSessionPresence = () => this.sessionPresence;

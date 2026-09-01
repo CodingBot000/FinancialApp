@@ -1,6 +1,6 @@
 import type {
   AuthSessionManager,
-  TokenRefreshPort,
+  RefreshCoordinator,
 } from '../../../shared/auth';
 import { ExpoOidcClient } from '../../../shared/auth/expo-oidc-client';
 import { readOidcPublicConfig } from '../../../shared/config';
@@ -16,7 +16,7 @@ export type OidcSessionComposition =
     }>
   | Readonly<{
       login: OidcLoginService;
-      refresh: TokenRefreshPort;
+      refreshCoordinator: RefreshCoordinator;
       status: 'configured';
     }>;
 
@@ -32,7 +32,7 @@ export function createOidcSessionComposition(
   const client = new ExpoOidcClient(configState.config);
   return {
     login: new OidcLoginService(client, manager),
-    refresh: client,
+    refreshCoordinator: manager.createRefreshCoordinator(client),
     status: 'configured',
   };
 }
