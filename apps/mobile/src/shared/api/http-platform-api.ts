@@ -3,6 +3,7 @@ import {
   type Account,
   type AssetHistoryPoint,
   type AssetSummary,
+  type CreateSimulationInput,
   type CurrentUserResponse,
   type Holding,
   type MyDataConnection,
@@ -11,6 +12,7 @@ import {
   type PlatformApi,
   type PlatformHealthResponse,
   type PlatformRequestOptions,
+  type Simulation,
   type Transaction,
 } from './platform-api';
 import {
@@ -22,6 +24,7 @@ import {
   isHistory,
   isHoldingPage,
   isPlatformHealth,
+  isSimulation,
   isSummary,
   isSync,
   isTransactionPage,
@@ -56,6 +59,19 @@ export class HttpPlatformApi implements PlatformApi {
     this.baseUrl = options.baseUrl.replace(/\/$/, '');
     this.fetch = options.fetch ?? globalThis.fetch;
     this.requestId = options.requestId ?? defaultRequestId;
+  }
+
+  createSimulation(
+    input: CreateSimulationInput,
+    options: PlatformRequestOptions = {},
+  ): Promise<Simulation> {
+    return this.requestJson(
+      '/api/v1/simulations',
+      isSimulation,
+      options,
+      this.authenticatedFetch,
+      input,
+    );
   }
 
   createMyDataConnection(
@@ -152,6 +168,18 @@ export class HttpPlatformApi implements PlatformApi {
     );
   }
 
+  getSimulation(
+    simulationId: string,
+    options: PlatformRequestOptions = {},
+  ): Promise<Simulation> {
+    return this.requestJson(
+      `/api/v1/simulations/${encodeURIComponent(simulationId)}`,
+      isSimulation,
+      options,
+      this.authenticatedFetch,
+    );
+  }
+
   listAccounts(options: PlatformRequestOptions = {}): Promise<Page<Account>> {
     return this.requestJson(
       '/api/v1/accounts',
@@ -204,7 +232,7 @@ export class HttpPlatformApi implements PlatformApi {
     validate: (value: unknown) => value is T,
     options: PlatformRequestOptions,
     fetch: FetchLike,
-    body?: Readonly<Record<string, unknown>>,
+    body?: unknown,
   ): Promise<T> {
     let response: Response;
 
@@ -232,10 +260,29 @@ export class HttpPlatformApi implements PlatformApi {
     }
 
     if (!response.ok) {
+      let problem: unknown;
+      try {
+        problem = await response.json();
+      } catch {
+        // A non-JSON error still maps to the HTTP status below.
+      }
+      const problemRecord =
+        typeof problem === 'object' && problem !== null
+          ? (problem as Record<string, unknown>)
+          : undefined;
       throw new PlatformApiError({
+        ...(typeof problemRecord?.code === 'string'
+          ? { code: problemRecord.code }
+          : {}),
         kind: 'http',
-        message: 'Platform API가 요청을 처리하지 못했습니다.',
-        retryable: response.status === 429 || response.status >= 500,
+        message:
+          typeof problemRecord?.detail === 'string'
+            ? problemRecord.detail
+            : 'Platform API가 요청을 처리하지 못했습니다.',
+        retryable:
+          typeof problemRecord?.retryable === 'boolean'
+            ? problemRecord.retryable
+            : response.status === 429 || response.status >= 500,
         status: response.status,
       });
     }

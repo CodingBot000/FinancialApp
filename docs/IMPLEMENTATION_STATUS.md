@@ -3,8 +3,8 @@
 - 현재 Milestone: 2~5 — 단일 Main 로컬 MVP 통합
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-02
-- 마지막 완료 ID: FE-0011
-- 다음 작업 ID: FE-0012
+- 마지막 완료 ID: FE-0012
+- 다음 작업 ID: FE-0013
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
@@ -36,7 +36,7 @@
 | 1. 실행 가능한 골격 | DONE | Expo, 두 NestJS/Fastify 서비스, Compose, PostgreSQL/Keycloak, health, CI 완료 |
 | 2. OIDC와 App Lock | DONE | Android Development Build에서 live PKCE→App Lock→`/me`, process restart refresh와 logout/cache clear 완료; iOS·물리 기기 edge case는 GAP-0002/0003으로 분리 |
 | 3. 동기화와 Dashboard | DONE | backend sync/raw/derived/조회·audit와 frontend connection/sync polling, Dashboard/Accounts/detail/chart, 부분 오류 UX 및 local actual API smoke 완료 |
-| 4. 서버 시뮬레이션 | IN_PROGRESS | deterministic server simulation 완료; frontend 입력·결과 화면 남음 |
+| 4. 서버 시뮬레이션 | DONE | deterministic server 저장/조회, frontend draft validation·persisted result·p10/p50/p90 chart와 local actual API smoke 완료 |
 | 5. BUY 주문과 복구 | IN_PROGRESS | backend quote/reservation/simulator/settlement/reconciliation/audit 완료; frontend 주문 화면과 전체 E2E 남음 |
 | 6A. 로컬 하드닝 | NOT_STARTED | outbox, local KMS adapter 경계, security event/관측성, 최종 포트폴리오 문서 |
 | 6B. 원격 데모 | CURRENT_RUN_EXCLUDED | Lightsail migration, 실제 AWS KMS, HTTPS/EAS와 원격 rollback은 향후 별도 실행 |
@@ -101,6 +101,16 @@
 - [x] mobile 26 files/75 tests와 local actual sync/wealth/order smoke 통과
 - [x] Colima socket을 명시한 root `npm run verify`: mobile 75/simulator 12/platform 61, 총 148 tests와 두 backend build 통과
 
+## FE-0012 Simulation
+
+- [x] pre-submit draft만 Zustand에 보존하고 create mutation→persisted GET Query로 server result 표시
+- [x] canonical money/duration/allocation validation과 ProblemDetails code 보존
+- [x] strict simulation mapper의 exact version, 2~601 points와 p10≤p50≤p90 검증
+- [x] goal probability/final p50, engine/assumption version, synthetic disclaimer 표시
+- [x] p10/p50/p90 chart의 접근 가능한 month tooltip, 48px interaction과 Reduce Motion 설명
+- [x] local actual create/get에서 12개월 13 points 재조회와 전체 wealth/order smoke 통과
+- [x] root `npm run verify`: mobile 82/simulator 12/platform 61, 총 155 tests와 두 backend build 통과
+
 ## 완료된 통합 기준선
 
 - [x] root npm workspace와 통합 `package-lock.json`
@@ -148,6 +158,7 @@
 
 - `ISSUE-0002`: 통합 Expo dependency tree의 moderate advisory 14건
 - `ISSUE-0003`: Drizzle Kit build-time dependency의 moderate advisory 4건
+- `ISSUE-0009`: duplicate MyData connection이 canonical 409 대신 500 반환
 - `GAP-0002`: iOS Development Build runtime 검증
 - `GAP-0003`: 실제 기기 biometric/background App Lock 검증
 - `GAP-0007`: 실제 전체 서비스 E2E와 fresh-clone 인수 명령 미완료
@@ -156,6 +167,6 @@
 
 ## 다음 작업
 
-1. `FE-0012`~`FE-0014`: simulation, order, Settings/developer scenario
+1. `FE-0013`~`FE-0014`: order, Settings/developer scenario
 2. `DEV-0011`: local full-stack E2E와 fresh-clone 인수 후 Milestone 6A local hardening 진행
 3. 단계 10 local hardening 완료 결과를 commit/push하고 Milestone 6B 원격 단계 전에 STOP

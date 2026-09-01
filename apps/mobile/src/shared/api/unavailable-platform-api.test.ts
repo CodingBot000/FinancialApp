@@ -18,5 +18,14 @@ describe('UnavailablePlatformApi', () => {
       kind: 'configuration',
       retryable: false,
     });
+    await expect(
+      api.createSimulation({
+        allocation: [{ assetClass: 'CASH', weight: 1 }],
+        durationMonths: 1,
+        initialAssets: '0',
+        monthlyContribution: '0',
+        targetAmount: '0',
+      }),
+    ).rejects.toMatchObject({ kind: 'configuration' });
   });
 });

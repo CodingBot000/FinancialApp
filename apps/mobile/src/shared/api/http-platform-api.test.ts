@@ -3,8 +3,64 @@ import { describe, expect, it, vi } from 'vitest';
 import { HttpPlatformApi } from './http-platform-api';
 import type { PlatformApiError } from './platform-api';
 import wealthFixture from './mock/fixtures/wealth-dashboard.success.json';
+import simulationFixture from './mock/fixtures/simulation.success.json';
 
 describe('HttpPlatformApi', () => {
+  it('creates and reads only canonical persisted simulation results', async () => {
+    const authenticatedFetch = vi.fn(async () =>
+      Response.json(simulationFixture, { status: 201 }),
+    );
+    const api = new HttpPlatformApi({
+      authenticatedFetch,
+      baseUrl: 'https://platform.example',
+    });
+    const input = {
+      allocation: [
+        { assetClass: 'CASH' as const, weight: 0.1 },
+        { assetClass: 'BOND' as const, weight: 0.3 },
+        { assetClass: 'EQUITY' as const, weight: 0.6 },
+      ],
+      durationMonths: 120,
+      initialAssets: '185400000.0000',
+      monthlyContribution: '1500000.0000',
+      targetAmount: '450000000.0000',
+    };
+
+    await expect(api.createSimulation(input)).resolves.toMatchObject({
+      engineVersion: '1.0.0',
+    });
+    await expect(
+      api.getSimulation(simulationFixture.simulationId),
+    ).resolves.toMatchObject({ assumptionSetVersion: 'SYNTHETIC_V1' });
+    expect(authenticatedFetch).toHaveBeenNthCalledWith(
+      1,
+      'https://platform.example/api/v1/simulations',
+      expect.objectContaining({ body: JSON.stringify(input), method: 'POST' }),
+    );
+  });
+
+  it('preserves canonical problem codes for field-error UX', async () => {
+    const api = new HttpPlatformApi({
+      authenticatedFetch: async () =>
+        Response.json(
+          {
+            code: 'VALIDATION_FAILED',
+            detail: 'Simulation request is invalid.',
+            retryable: false,
+          },
+          { status: 400 },
+        ),
+      baseUrl: 'https://platform.example',
+    });
+
+    await expect(api.getSimulation('bad')).rejects.toMatchObject({
+      code: 'VALIDATION_FAILED',
+      message: 'Simulation request is invalid.',
+      retryable: false,
+      status: 400,
+    });
+  });
+
   it('maps every FE-0011 wealth operation and POST body', async () => {
     const authenticatedFetch = vi.fn(
       async (url: string, init?: RequestInit) => {

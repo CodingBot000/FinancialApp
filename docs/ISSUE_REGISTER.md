@@ -1,7 +1,7 @@
 # 이슈와 누락 Register
 
 - 마지막 갱신: 2026-09-02
-- 다음 ISSUE ID: `ISSUE-0009`
+- 다음 ISSUE ID: `ISSUE-0010`
 - 다음 GAP ID: `GAP-0008`
 
 이 문서는 defect, blocker, 위험과 불가피한 누락을 삭제하지 않고 추적한다.
@@ -19,6 +19,22 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - `ACCEPTED_RISK`: 사용자가 잔여 위험을 명시적으로 수용함
 
 ## Active Issue
+
+### ISSUE-0009 — Duplicate MyData connection이 canonical 409 대신 500 반환
+
+- 상태: OPEN
+- 심각도: MEDIUM
+- 최초 발견: 2026-09-02
+- 마지막 갱신: 2026-09-02
+- 발견 DEV: FE-0012 repeatable local smoke
+- 영향 Milestone: 3 local API robustness / DEV-0011 acceptance
+- 내용: 동일 사용자·기관의 active connection이 이미 있는 로컬 PostgreSQL에서 `POST /api/v1/mydata/connections`를 다시 호출하면 repository unique conflict가 controller의 `MYDATA_CONNECTION_ALREADY_EXISTS` 409로 변환되지 않고 500이 반환됐다.
+- 영향: 정상 mobile UI는 목록 결과가 있을 때 생성 action을 숨겨 사용자 흐름을 막지 않지만, 중복 요청의 canonical error 경계가 깨져 있다.
+- 임시 우회: local smoke와 mobile은 먼저 connection 목록을 조회하고 없을 때만 생성한다. 오류를 숨기거나 test를 비활성화하지 않았다.
+- 해결 조건: 실제 PostgreSQL duplicate insert의 Drizzle error cause를 안전하게 식별해 canonical 409 ProblemDetails로 변환하고 provider/integration/repeat smoke를 통과할 것.
+- 목표 DEV: DEV-0011 이전 backend defect slice
+- 해결 DEV:
+- 검증: FE-0012 local smoke 첫 재실행에서 500을 재현했고 목록 우선 smoke로 이후 simulation/order 검증은 계속 진행했다.
 
 ### ISSUE-0002 — Expo 57 transitive dependency moderate advisory
 

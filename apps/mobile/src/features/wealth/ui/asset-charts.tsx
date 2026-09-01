@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import type { Allocation, AssetHistoryPoint } from '../../../shared/api';
-import { formatCompactWon } from '../model/wealth-format';
+import { formatCompactWon } from '../../../shared/format/finance-format';
 
 export function AssetCharts({
   allocation,

@@ -1,7 +1,7 @@
 # Frontend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `FE-0012`
+- 다음 ID: `FE-0013`
 - 운영 상태: `codex/frontend`는 DEV-0006 통합 이력으로 보존, 신규 FE commit은 단일 `main`에서 수행
 - 활성 worktree: `/Users/switch/Development/Web/FinancialApp`
 - 통합 검토 기준: `main` at `2574ad0`, `platform-v1` at DEV-0006
@@ -666,3 +666,38 @@
 ### 다음 작업
 
 - FE-0012: server simulation 입력/실행/결과와 percentile chart vertical slice
+
+## FE-0012 — Server Simulation Mobile 통합
+
+- 날짜: 2026-09-02
+- Milestone: 4
+- 상태: COMPLETED
+- base commit: `4e40d20842e0d13da5ea1d0fa4b5fe85a9535a3a`
+- contract revision: `platform-v1` at base commit
+- 예정 commit: `feat(fe): add persisted simulation flow [FE-0012]`
+
+### 완료
+
+- 네 개 pre-submit draft만 Zustand에 두고 create mutation이 반환한 ID로 저장 결과를 Query 재조회해 server result만 표시
+- canonical simulation request/response types, strict exact guard와 config/mock/HTTP adapter를 구현하고 operation coverage 2개를 implemented로 전환
+- 입력 money precision과 1~600개월 검증, canonical Problem code 보존과 error UX 구현
+- goal probability, final p50, engine/assumption version, synthetic disclaimer와 p10/p50/p90 chart·month tooltip·Reduce Motion 접근성 구현
+- app shell에 자산/시뮬레이션 48px tab을 추가하고 formatter를 shared 계층으로 승격
+
+### 검증
+
+- mobile architecture 91 files, lint, strict typecheck와 28 files/82 tests 통과
+- actual local API: 12개월 simulation create/get, 13 persisted points, `1.0.0`/`SYNTHETIC_V1` 확인
+- 반복 smoke에서 connection 500과 고정 idempotency key 409를 발견해 `ISSUE-0009`/`FE-ISSUE-0008`로 기록; 목록 재사용과 action별 UUID로 smoke 재실행 통과
+- 첫 root verify의 feature→feature formatter import 차단을 shared formatter 승격으로 해결하고 동일 gate 재실행
+- Colima socket을 명시한 root `npm run verify`: mobile 82/simulator 12/platform 61 총 155 tests와 두 backend build 통과
+
+### 이슈·누락·Handoff
+
+- `FE-ISSUE-0008`: repeatable smoke 생성값 충돌 RESOLVED
+- 중앙 `ISSUE-0009`: duplicate MyData connection의 비정상 500은 OPEN, 정상 mobile flow는 목록 우선으로 영향 없음
+- 원격 DB·credential·migration·deploy는 실행하지 않음
+
+### 다음 작업
+
+- FE-0013: quote/biometric/idempotent BUY, order status/history와 UNKNOWN recovery

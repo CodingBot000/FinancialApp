@@ -16,6 +16,20 @@ describe('ContractMockPlatformApi', () => {
     ).resolves.toMatchObject({ maskedAccountNumber: '***-**-0001' });
     await expect(api.getAssetHistory()).resolves.toHaveLength(2);
   });
+  it('creates and reloads the canonical persisted simulation fixture', async () => {
+    const api = new ContractMockPlatformApi({ latencyMs: 0 });
+    const created = await api.createSimulation({
+      allocation: [{ assetClass: 'EQUITY', weight: 1 }],
+      durationMonths: 12,
+      initialAssets: '1',
+      monthlyContribution: '1',
+      targetAmount: '2',
+    });
+
+    await expect(api.getSimulation(created.simulationId)).resolves.toEqual(
+      created,
+    );
+  });
   it('returns the canonical synthetic current user fixture', async () => {
     const api = new ContractMockPlatformApi({ latencyMs: 0 });
 

@@ -6,6 +6,7 @@ export type {
   Allocation,
   AssetHistoryPoint,
   AssetSummary,
+  CreateSimulationInput,
   CurrentUserResponse,
   Holding,
   Money,
@@ -15,6 +16,10 @@ export type {
   PlatformApi,
   PlatformHealthResponse,
   PlatformRequestOptions,
+  Simulation,
+  SimulationAssetClass,
+  SimulationPercentiles,
+  SimulationPoint,
   SyncStatus,
   Transaction,
 } from './platform-api';

@@ -108,7 +108,45 @@ export interface Page<T> {
   readonly nextCursor: null;
 }
 
+export type SimulationAssetClass = 'BOND' | 'CASH' | 'EQUITY';
+
+export interface CreateSimulationInput {
+  readonly allocation: readonly Readonly<{
+    assetClass: SimulationAssetClass;
+    weight: number;
+  }>[];
+  readonly durationMonths: number;
+  readonly initialAssets: string;
+  readonly monthlyContribution: string;
+  readonly targetAmount: string;
+}
+
+export interface SimulationPercentiles {
+  readonly p10: Money;
+  readonly p50: Money;
+  readonly p90: Money;
+}
+
+export interface SimulationPoint extends SimulationPercentiles {
+  readonly month: number;
+}
+
+export interface Simulation {
+  readonly assumptionSetVersion: 'SYNTHETIC_V1';
+  readonly currency: 'KRW';
+  readonly disclaimer: 'Synthetic financial simulation for technical demonstration only.';
+  readonly engineVersion: '1.0.0';
+  readonly finalValue: SimulationPercentiles;
+  readonly goalProbability: number;
+  readonly series: readonly SimulationPoint[];
+  readonly simulationId: string;
+}
+
 export interface PlatformApi {
+  createSimulation(
+    input: CreateSimulationInput,
+    options?: PlatformRequestOptions,
+  ): Promise<Simulation>;
   createMyDataConnection(
     consentExpiresAt: string,
     options?: PlatformRequestOptions,
@@ -134,6 +172,10 @@ export interface PlatformApi {
     syncId: string,
     options?: PlatformRequestOptions,
   ): Promise<MyDataSync>;
+  getSimulation(
+    simulationId: string,
+    options?: PlatformRequestOptions,
+  ): Promise<Simulation>;
   listAccounts(options?: PlatformRequestOptions): Promise<Page<Account>>;
   listHoldings(
     accountId?: string,
@@ -151,18 +193,21 @@ export type PlatformApiErrorKind =
   'configuration' | 'contract' | 'http' | 'network' | 'timeout';
 
 export class PlatformApiError extends Error {
+  readonly code: string | undefined;
   readonly kind: PlatformApiErrorKind;
   readonly retryable: boolean;
   readonly status: number | undefined;
 
   constructor({
     cause,
+    code,
     kind,
     message,
     retryable,
     status,
   }: {
     readonly cause?: unknown;
+    readonly code?: string;
     readonly kind: PlatformApiErrorKind;
     readonly message: string;
     readonly retryable: boolean;
@@ -170,6 +215,7 @@ export class PlatformApiError extends Error {
   }) {
     super(message, { cause });
     this.name = 'PlatformApiError';
+    this.code = code;
     this.kind = kind;
     this.retryable = retryable;
     this.status = status;

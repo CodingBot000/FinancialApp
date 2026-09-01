@@ -4,6 +4,7 @@ import {
   type AssetHistoryPoint,
   type AssetSummary,
   type CurrentUserResponse,
+  type CreateSimulationInput,
   type Holding,
   type MyDataConnection,
   type MyDataSync,
@@ -11,14 +12,17 @@ import {
   type PlatformApi,
   type PlatformHealthResponse,
   type PlatformRequestOptions,
+  type Simulation,
   type Transaction,
 } from '../platform-api';
 import currentUserFixture from './fixtures/current-user.success.json';
 import fixture from './fixtures/platform-health.success.json';
 import wealthFixture from './fixtures/wealth-dashboard.success.json';
+import simulationFixture from './fixtures/simulation.success.json';
 
 const platformHealthFixture = fixture as PlatformHealthResponse;
 const currentUser = currentUserFixture as CurrentUserResponse;
+const simulation = simulationFixture as Simulation;
 const wealth = wealthFixture as unknown as {
   accounts: readonly Account[];
   connection: MyDataConnection;
@@ -67,6 +71,14 @@ export class ContractMockPlatformApi implements PlatformApi {
   constructor(options: ContractMockPlatformApiOptions = {}) {
     this.latencyMs = options.latencyMs ?? 250;
     this.scenario = options.scenario ?? 'success';
+  }
+
+  async createSimulation(
+    _input: CreateSimulationInput,
+    options: PlatformRequestOptions = {},
+  ) {
+    await waitForMockLatency(this.latencyMs, options.signal);
+    return structuredClone(simulation);
   }
 
   async createMyDataConnection(
@@ -149,6 +161,21 @@ export class ContractMockPlatformApi implements PlatformApi {
   async getMyDataSync(_syncId: string, options: PlatformRequestOptions = {}) {
     await waitForMockLatency(this.latencyMs, options.signal);
     return structuredClone(wealth.sync);
+  }
+
+  async getSimulation(
+    simulationId: string,
+    options: PlatformRequestOptions = {},
+  ) {
+    await waitForMockLatency(this.latencyMs, options.signal);
+    if (simulationId !== simulation.simulationId)
+      throw new PlatformApiError({
+        kind: 'http',
+        message: '시뮬레이션을 찾을 수 없습니다.',
+        retryable: false,
+        status: 404,
+      });
+    return structuredClone(simulation);
   }
 
   async listAccounts(

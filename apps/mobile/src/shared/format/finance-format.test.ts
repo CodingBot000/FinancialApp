@@ -5,7 +5,7 @@ import {
   formatQuantity,
   formatWon,
   isMaskedAccountIdentifier,
-} from './wealth-format';
+} from './finance-format';
 
 describe('wealth contract formatters', () => {
   it('maps canonical decimal strings without floating-point display artifacts', () => {

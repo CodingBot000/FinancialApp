@@ -16,6 +16,7 @@ export const AppState = {
 export const SafeAreaView = createNativeTestComponent('SafeAreaView');
 export const ScrollView = createNativeTestComponent('ScrollView');
 export const Text = createNativeTestComponent('Text');
+export const TextInput = createNativeTestComponent('TextInput');
 export const View = createNativeTestComponent('View');
 
 export const Pressable = forwardRef(function Pressable(

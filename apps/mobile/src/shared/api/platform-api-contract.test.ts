@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import fixture from './mock/fixtures/wealth-dashboard.success.json';
+import simulationFixture from './mock/fixtures/simulation.success.json';
 import {
   isAccount,
   isAccountPage,
@@ -8,6 +9,7 @@ import {
   isHistory,
   isHoldingPage,
   isSummary,
+  isSimulation,
   isSync,
   isTransactionPage,
 } from './platform-api-contract';
@@ -27,6 +29,7 @@ describe('platform-v1 wealth response guards', () => {
       isTransactionPage({ items: fixture.transactions, nextCursor: null }),
     ).toBe(true);
     expect(isHistory({ points: fixture.history })).toBe(true);
+    expect(isSimulation(simulationFixture)).toBe(true);
   });
 
   it('rejects non-canonical money, cursors, extra keys, and raw identifiers', () => {
@@ -37,6 +40,12 @@ describe('platform-v1 wealth response guards', () => {
       isAccountPage({ items: fixture.accounts, nextCursor: 'opaque' }),
     ).toBe(false);
     expect(isSync({ ...fixture.sync, unexpected: true })).toBe(false);
+    expect(
+      isSimulation({
+        ...simulationFixture,
+        finalValue: { ...simulationFixture.finalValue, p10: '999999999.0000' },
+      }),
+    ).toBe(false);
     expect(
       isAccount({
         ...fixture.accounts[0],

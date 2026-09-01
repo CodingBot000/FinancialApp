@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { createServer } from 'node:http';
 
 import { exportJWK, generateKeyPair, SignJWT } from 'jose';
@@ -106,7 +107,7 @@ async function setScenario(mode) {
   );
 }
 
-async function createOrder(accountId, instrumentId, sequence, expectedStatus) {
+async function createOrder(accountId, instrumentId, expectedStatus) {
   const quote = await request(
     '/api/v1/orders/preview',
     {
@@ -126,7 +127,7 @@ async function createOrder(accountId, instrumentId, sequence, expectedStatus) {
     {
       method: 'POST',
       headers: {
-        'idempotency-key': `92000000-0000-4000-8000-${String(sequence).padStart(12, '0')}`,
+        'idempotency-key': randomUUID(),
       },
       body: JSON.stringify({
         quoteId: quote.quoteId,
@@ -145,17 +146,20 @@ async function createOrder(accountId, instrumentId, sequence, expectedStatus) {
 
 try {
   await waitFor(async () => (await fetch(`${platformBase}/api/v1/health`)).ok);
-  const connection = await request(
-    '/api/v1/mydata/connections',
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        institutionCode: 'SYNTH_WEALTH_001',
-        consentExpiresAt: '2027-09-01T00:00:00.000Z',
-      }),
-    },
-    201,
-  );
+  const existingConnections = await request('/api/v1/mydata/connections');
+  const connection =
+    existingConnections[0] ??
+    (await request(
+      '/api/v1/mydata/connections',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          institutionCode: 'SYNTH_WEALTH_001',
+          consentExpiresAt: '2027-09-01T00:00:00.000Z',
+        }),
+      },
+      201,
+    ));
   const sync = await request(
     '/api/v1/mydata/syncs',
     {
@@ -174,6 +178,27 @@ try {
   const holdings = await request('/api/v1/holdings');
   const transactions = await request('/api/v1/transactions');
   const history = await request('/api/v1/assets/history?range=1Y');
+  const simulation = await request(
+    '/api/v1/simulations',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        allocation: [
+          { assetClass: 'CASH', weight: 0.1 },
+          { assetClass: 'BOND', weight: 0.3 },
+          { assetClass: 'EQUITY', weight: 0.6 },
+        ],
+        durationMonths: 12,
+        initialAssets: '185400000.0000',
+        monthlyContribution: '1500000.0000',
+        targetAmount: '220000000.0000',
+      }),
+    },
+    201,
+  );
+  const persistedSimulation = await request(
+    `/api/v1/simulations/${simulation.simulationId}`,
+  );
   const accountId = accounts.items[0]?.accountId;
   const holdingId = holdings.items[0]?.holdingId;
   const resource = await fetch(`${platformBase}/api/v1/accounts/${accountId}`, {
@@ -186,7 +211,10 @@ try {
     connections.length !== 1 ||
     summary.currency !== 'KRW' ||
     transactions.items.length === 0 ||
-    history.points.length === 0
+    history.points.length === 0 ||
+    persistedSimulation.engineVersion !== '1.0.0' ||
+    persistedSimulation.assumptionSetVersion !== 'SYNTHETIC_V1' ||
+    persistedSimulation.series.length !== 13
   )
     throw new Error('Synced resources missing.');
   const database = await import('pg');
@@ -202,18 +230,18 @@ try {
   if (!instrumentId) throw new Error('Instrument missing.');
 
   await setScenario('NORMAL');
-  await createOrder(accountId, instrumentId, 1, 'FILLED');
+  await createOrder(accountId, instrumentId, 'FILLED');
   await setScenario('ORDER_REJECT');
-  await createOrder(accountId, instrumentId, 2, 'REJECTED');
+  await createOrder(accountId, instrumentId, 'REJECTED');
   await setScenario('ORDER_UNKNOWN_THEN_FILLED');
-  const unknown = await createOrder(accountId, instrumentId, 3, 'UNKNOWN');
+  const unknown = await createOrder(accountId, instrumentId, 'UNKNOWN');
   const reconciled = await waitFor(async () => {
     const current = await request(`/api/v1/orders/${unknown.orderId}`);
     return current.status === 'FILLED' ? current : undefined;
   });
   await request('/api/v1/dev/dataset/reset', { method: 'POST' }, 200);
   process.stdout.write(
-    `${JSON.stringify({ accounts: accounts.items.length, historyPoints: history.points.length, normal: 'FILLED', rejected: 'REJECTED', reconciled: reconciled.status, syntheticData: true, transactions: transactions.items.length })}\n`,
+    `${JSON.stringify({ accounts: accounts.items.length, historyPoints: history.points.length, normal: 'FILLED', rejected: 'REJECTED', reconciled: reconciled.status, simulationPoints: persistedSimulation.series.length, syntheticData: true, transactions: transactions.items.length })}\n`,
   );
 } finally {
   platform.kill('SIGTERM');

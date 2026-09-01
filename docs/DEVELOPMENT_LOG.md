@@ -602,3 +602,33 @@
 ### 다음 작업
 
 - `FE-0012`: Simulation vertical slice
+
+## FE-0012 — Persisted Simulation Mobile 통합
+
+- 날짜: 2026-09-02
+- Milestone: 4
+- 상태: COMPLETED
+- 예정 commit: `feat(fe): add persisted simulation flow [FE-0012]`
+
+### 완료
+
+- pre-submit Zustand draft와 TanStack create/get server state를 분리하고 저장된 simulation result만 화면에 표시
+- canonical validation/problem code, strict version/percentile mapper와 p10/p50/p90 interactive chart 구현
+- engine/assumption version, goal probability와 synthetic disclaimer를 노출하고 actual local create/get 13-point 결과 확인
+
+### 검증
+
+- mobile architecture 91 files, lint, strict typecheck와 28 files/82 tests 통과
+- local actual sync/wealth/simulation/order smoke 통과
+- feature 간 formatter import architecture 실패는 shared 계층 승격 후 해소
+- root `npm run verify`: mobile 82/simulator 12/platform 61 총 155 tests와 두 backend build 통과
+
+### 이슈와 누락
+
+- `FE-ISSUE-0008` repeat smoke 충돌 RESOLVED
+- `ISSUE-0009` duplicate connection 500 OPEN; DEV-0011 전 backend defect slice에서 해결
+- 원격 DB와 배포 작업은 실행하지 않음
+
+### 다음 작업
+
+- `FE-0013`: BUY order와 UNKNOWN recovery mobile vertical slice

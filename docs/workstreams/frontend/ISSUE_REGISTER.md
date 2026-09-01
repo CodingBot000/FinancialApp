@@ -1,6 +1,6 @@
 # Frontend Workstream Issue와 Gap Register
 
-- 다음 ISSUE ID: `FE-ISSUE-0008`
+- 다음 ISSUE ID: `FE-ISSUE-0009`
 - 다음 GAP ID: `FE-GAP-0005`
 - active issue: `FE-ISSUE-0001`
 - active gap: `FE-GAP-0002`, `FE-GAP-0004`
@@ -51,6 +51,19 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 검증: FE-0006 자동/native build에 더해 FE-0010 Android API 36 Development Build에서 fingerprint enrollment, OS prompt, unlock, process restart 뒤 재인증과 실제 `/me` 복구를 통과했다. UI는 생체인증을 server MFA로 표현하지 않는다.
 
 ## Resolved History
+
+### FE-ISSUE-0008 — Local smoke 고정 생성값의 재실행 충돌
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 발견 FE: FE-0012 local actual API smoke
+- 관련 contract revision: `platform-v1` at `4e40d20842e0d13da5ea1d0fa4b5fe85a9535a3a`
+- 내용: 기존 smoke가 매번 connection POST와 동일한 세 idempotency key를 사용해, 데이터를 보존한 로컬 PostgreSQL에서 재실행하면 connection 500 또는 주문 `IDEMPOTENCY_CONFLICT` 409로 중단됐다.
+- 영향: fresh environment 첫 실행은 통과하지만 vertical slice별 반복 검증이 재현 가능하지 않았다. duplicate connection의 비정상 500은 중앙 `ISSUE-0009`로 별도 추적한다.
+- 해결 조건: existing connection을 재사용하고 매 실행의 서로 다른 사용자 action에는 새 UUID idempotency key를 사용해 반복 smoke가 끝까지 통과할 것.
+- 목표 FE: FE-0012
+- 해결 FE: FE-0012
+- 검증: 수정 후 보존된 local DB에서 sync, 13-point persisted simulation, FILLED/REJECTED/UNKNOWN→FILLED와 reset smoke를 통과했다.
 
 ### FE-ISSUE-0007 — Connection GET/POST test double 응답 혼용
 

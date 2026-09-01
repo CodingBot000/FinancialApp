@@ -168,7 +168,12 @@ contracts:
             create,
           ]
         providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
-        consumer: { status: planned, target: FE-0012 }
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-0012,
+          }
       getSimulation:
         implementation:
           [
@@ -176,7 +181,12 @@ contracts:
             get,
           ]
         providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
-        consumer: { status: planned, target: FE-0012 }
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-0012,
+          }
       previewBuyOrder:
         implementation:
           [

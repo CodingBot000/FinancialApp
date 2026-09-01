@@ -8,6 +8,7 @@ import type {
   MyDataSync,
   Page,
   PlatformHealthResponse,
+  Simulation,
   Transaction,
 } from './platform-api';
 
@@ -282,5 +283,59 @@ export function isHistory(
         money(point.investments)
       );
     })
+  );
+}
+
+function isPercentiles(value: unknown) {
+  const item = record(value);
+  return (
+    !!item &&
+    exact(item, ['p10', 'p50', 'p90']) &&
+    money(item.p10) &&
+    money(item.p50) &&
+    money(item.p90) &&
+    Number(item.p10) <= Number(item.p50) &&
+    Number(item.p50) <= Number(item.p90)
+  );
+}
+
+export function isSimulation(value: unknown): value is Simulation {
+  const item = record(value);
+  return (
+    !!item &&
+    exact(item, [
+      'simulationId',
+      'engineVersion',
+      'assumptionSetVersion',
+      'currency',
+      'goalProbability',
+      'finalValue',
+      'series',
+      'disclaimer',
+    ]) &&
+    uuid(item.simulationId) &&
+    item.engineVersion === '1.0.0' &&
+    item.assumptionSetVersion === 'SYNTHETIC_V1' &&
+    item.currency === 'KRW' &&
+    typeof item.goalProbability === 'number' &&
+    item.goalProbability >= 0 &&
+    item.goalProbability <= 1 &&
+    isPercentiles(item.finalValue) &&
+    Array.isArray(item.series) &&
+    item.series.length >= 2 &&
+    item.series.length <= 601 &&
+    item.series.every((value) => {
+      const point = record(value);
+      return (
+        !!point &&
+        exact(point, ['month', 'p10', 'p50', 'p90']) &&
+        Number.isInteger(point.month) &&
+        Number(point.month) >= 0 &&
+        Number(point.month) <= 600 &&
+        isPercentiles({ p10: point.p10, p50: point.p50, p90: point.p90 })
+      );
+    }) &&
+    item.disclaimer ===
+      'Synthetic financial simulation for technical demonstration only.'
   );
 }

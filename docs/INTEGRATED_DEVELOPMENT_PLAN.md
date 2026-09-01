@@ -7,8 +7,8 @@
 - 활성 branch/worktree: `main` / `/Users/switch/Development/Web/FinancialApp`
 - 현재 실행 종료선: 단계 10 로컬 하드닝 완료 후 STOP
 - 현재 실행 제외: 원격 DB 접속·사전점검·migration/seed와 원격 배포
-- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`, 단계 3 `BE-0010`, 단계 4 `FE-0010`, 단계 5 `FE-0011`
-- 다음 작업 ID: `FE-0012`
+- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`, 단계 3 `BE-0010`, 단계 4 `FE-0010`, 단계 5 `FE-0011`, 단계 6 `FE-0012`
+- 다음 작업 ID: `FE-0013`
 
 ## 1. 목적과 문서 권한
 
@@ -44,7 +44,7 @@
 | Milestone 0~1 | workspace, Expo, 두 NestJS/Fastify 서비스, PostgreSQL/Keycloak Compose, CI/architecture gate | fresh-clone 명령 계약 보강 | 기능 기준선 DONE |
 | Milestone 2 | backend JWT와 `/me`, mobile PKCE/session/App Lock/401 lifecycle | 실제 local Keycloak 로그인, `/me`, restart refresh, 실기기 항목 | IN_PROGRESS |
 | Milestone 3 | simulator 원천 데이터, manual/scheduled sync, raw/derived, 자산 조회, 최소 audit, mobile Dashboard/Accounts/sync UX | local actual API smoke 완료 | DONE |
-| Milestone 4 | deterministic simulation engine와 저장/조회 | mobile 입력, 결과 차트와 disclaimer | IN_PROGRESS |
+| Milestone 4 | deterministic simulation engine와 저장/조회, mobile 입력·저장결과·백분위 chart와 disclaimer | local actual API smoke 완료 | DONE |
 | Milestone 5 | quote, reservation, simulator brokerage/scenario, settlement/reconciliation/ledger/position/execution/audit와 주문 조회 | mobile 주문 흐름과 full-stack E2E | IN_PROGRESS |
 | Simulator MVP | 계좌/보유/거래/시세/주문/status, 6개 장애 scenario, deterministic reset/reseed와 platform developer proxy | mobile 포함 전체 E2E에서 재검증 | DONE (local service boundary) |
 | Contract 품질 | OpenAPI 2개, 현재 operation 31개 controller/provider/fixture/consumer 추적과 호환성 gate | 이후 operation 추가 시 같은 coverage와 provider schema 검증 유지 | DONE (current surface) |
@@ -246,7 +246,7 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - loading, empty, stale, partial error/retry, mutation error와 48px 이상 touch target, synthetic disclaimer, Reduce Motion chart 접근성을 구현했다.
 - 로컬 PostgreSQL/Compose simulator와 실제 Platform API에서 sync 뒤 account/holding/transaction/summary/history를 읽고 기존 주문 정상·거절·UNKNOWN reconciliation까지 smoke를 통과했다.
 
-### 단계 6 — Simulation Vertical Slice (`FE-0012`)
+### 단계 6 — Simulation Vertical Slice (`FE-0012`) ✅ 완료
 
 목표:
 
@@ -258,6 +258,14 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - 화면은 server result만 표시하고 `engineVersion`, `assumptionSetVersion`과 disclaimer를 노출한다.
 - loading/error/retry와 validation error code UX가 있다.
 - percentile chart, tooltip/interaction과 Reduce Motion test가 통과한다.
+
+완료 증거:
+
+- Zustand에는 네 입력 문자열만 보존하고 mutation 응답 ID로 persisted GET Query를 실행해 화면은 server result만 표시한다.
+- canonical money/duration/allocation 입력 검증과 ProblemDetails `VALIDATION_FAILED` code UX를 구현했다.
+- goal probability, p10/p50/p90, `engineVersion`/`assumptionSetVersion`, synthetic disclaimer와 선택형 chart tooltip/Reduce Motion 설명을 표시한다.
+- strict response guard가 exact key, version, point count/range와 모든 시점의 `p10 <= p50 <= p90`를 검증한다.
+- 실제 local Platform API에서 12개월 simulation을 생성·재조회해 13개 persisted point와 version을 확인했다.
 
 ### 단계 7 — Order와 복구 Vertical Slice (`FE-0013`)
 

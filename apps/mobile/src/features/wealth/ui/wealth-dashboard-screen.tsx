@@ -10,13 +10,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PlatformApiError, type Account } from '../../../shared/api';
-import { AssetCharts } from './asset-charts';
-import { useWealthDashboard } from '../hooks/use-wealth-dashboard';
 import {
   formatQuantity,
   formatWon,
   isMaskedAccountIdentifier,
-} from '../model/wealth-format';
+} from '../../../shared/format/finance-format';
+import { useWealthDashboard } from '../hooks/use-wealth-dashboard';
+import { AssetCharts } from './asset-charts';
 
 function Action({
   label,

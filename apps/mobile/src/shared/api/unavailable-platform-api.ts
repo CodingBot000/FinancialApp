@@ -3,6 +3,7 @@ import {
   type Account,
   type AssetHistoryPoint,
   type AssetSummary,
+  type CreateSimulationInput,
   type CurrentUserResponse,
   type Holding,
   type MyDataConnection,
@@ -10,11 +11,17 @@ import {
   type Page,
   type PlatformApi,
   type PlatformHealthResponse,
+  type Simulation,
   type Transaction,
 } from './platform-api';
 
 export class UnavailablePlatformApi implements PlatformApi {
   constructor(private readonly reason: string) {}
+
+  createSimulation(input: CreateSimulationInput): Promise<Simulation> {
+    void input;
+    return this.reject();
+  }
 
   createMyDataConnection(): Promise<MyDataConnection> {
     return this.reject();
@@ -41,6 +48,9 @@ export class UnavailablePlatformApi implements PlatformApi {
   }
 
   getMyDataSync(): Promise<MyDataSync> {
+    return this.reject();
+  }
+  getSimulation(): Promise<Simulation> {
     return this.reject();
   }
   listAccounts(): Promise<Page<Account>> {
