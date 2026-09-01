@@ -1,5 +1,5 @@
 const services = [
-  ['platform-api', 'http://127.0.0.1:8081/api/v1/health'],
+  ['platform-api', 'http://127.0.0.1:8081/api/v1/health/ready'],
   ['institution-simulator', 'http://127.0.0.1:8082/sim/v1/health'],
   [
     'keycloak',

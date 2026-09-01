@@ -31,6 +31,43 @@ paths:
                 $ref: '#/components/schemas/HealthResponse'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+  /api/v1/health/ready:
+    get:
+      operationId: getPlatformReadiness
+      summary: Probe platform database readiness
+      security: []
+      tags: [Health]
+      responses:
+        '200':
+          description: Platform dependencies are ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+        '503':
+          description: At least one required dependency is not ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/health/metrics:
+    get:
+      operationId: getPlatformMetrics
+      summary: Read bounded local platform metrics
+      description: Private monitoring ingress only; never expose through the public demo proxy.
+      security: []
+      tags: [Health]
+      responses:
+        '200':
+          description: In-process counters and database pool gauges.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
   /api/v1/me:
     get:
       operationId: getCurrentUser
@@ -405,6 +442,12 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '503':
+          description: Synthetic market circuit is temporarily open.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /api/v1/orders:
     get:
       operationId: listOrders
@@ -1275,3 +1318,62 @@ components:
         datasetVersion:
           type: string
           minLength: 1
+    ReadinessResponse:
+      type: object
+      additionalProperties: false
+      required: [status, service, datasetVersion, checks]
+      properties:
+        status:
+          type: string
+          enum: [ready, not_ready]
+        service:
+          type: string
+          const: platform-api
+        datasetVersion:
+          type: string
+          minLength: 1
+        checks:
+          type: object
+          additionalProperties: false
+          required: [database]
+          properties:
+            database:
+              type: string
+              enum: [up, down]
+    MetricsResponse:
+      type: object
+      additionalProperties: false
+      required: [service, datasetVersion, uptimeSeconds, databasePool, counters]
+      properties:
+        service:
+          type: string
+          const: platform-api
+        datasetVersion:
+          type: string
+          minLength: 1
+        uptimeSeconds:
+          type: integer
+          minimum: 0
+        databasePool:
+          type: object
+          additionalProperties: false
+          required: [total, idle, waiting]
+          properties:
+            total: { type: integer, minimum: 0 }
+            idle: { type: integer, minimum: 0 }
+            waiting: { type: integer, minimum: 0 }
+        counters:
+          type: object
+          additionalProperties: false
+          required:
+            - httpRequestsTotal
+            - httpResponses5xxTotal
+            - externalRequestFailuresTotal
+            - circuitRejectedTotal
+            - circuitOpenedTotal
+          properties:
+            httpRequestsTotal: { type: integer, minimum: 0 }
+            httpResponses5xxTotal: { type: integer, minimum: 0 }
+            externalRequestFailuresTotal: { type: integer, minimum: 0 }
+            circuitRejectedTotal: { type: integer, minimum: 0 }
+            circuitOpenedTotal: { type: integer, minimum: 0 }

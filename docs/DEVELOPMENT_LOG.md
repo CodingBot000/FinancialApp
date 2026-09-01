@@ -2,7 +2,7 @@
 
 - 기록 방식: append-only
 - 마지막 DEV ID: `DEV-0011`
-- 다음 영역 ID: `BE-0015`
+- 다음 영역 ID: `DEV-0012`
 
 모든 integration/shared commit은 하나의 `DEV-####`와 연결한다. frontend와 backend 영역 commit은 각각 `FE-####`, `BE-####`와 workstream 개발 로그를 사용한다. DEV-0006 이후에는 단일 main에서 작업하되 영역별 ID namespace와 기록은 유지한다. commit subject에도 같은 ID를 넣어 Git history와 문서 기록을 상호 추적할 수 있게 한다.
 
@@ -726,6 +726,26 @@
 
 - `BE-ISSUE-0007` RESOLVED.
 - 다음은 `BE-0015` readiness/metrics와 external HTTP circuit breaker다.
+
+## BE-0015 — Readiness, Metrics와 External Circuit Breaker
+
+- 날짜: 2026-09-02
+- Milestone: 6A local hardening
+- 상태: COMPLETED
+- 예정 commit: `feat(be): harden readiness and external resilience [BE-0015]`
+
+### 완료와 검증
+
+- DB timeout readiness, private bounded metrics와 MyData/market/brokerage closed/open/half-open circuit breaker를 구현했다.
+- canonical 계약을 33 operations/36 fixtures로 확장하고 actual Fastify provider 200/503, loopback HTTP no-order-POST와 platform 77 tests를 검증했다.
+- root verify는 mobile 95/simulator 12/platform 77 총 184 tests와 두 backend build를 통과했다.
+- actual Compose rebuild에서 DB readiness와 metrics를 확인하고 OIDC 포함 12단계 smoke, outbox event/delivery 3/3을 재검증했다.
+- 주문 POST 자동 retry, 장시간 DB transaction, 원격 DB·credential·catalog·migration/seed·deploy는 사용하지 않았다.
+
+### 이슈와 다음 작업
+
+- `BE-ISSUE-0008` RESOLVED.
+- 다음은 `DEV-0012` 제품 범위 재확정 및 선택 항목 구현이다.
 
 ## FE-0013 — Biometric BUY와 Recovery Mobile 통합
 

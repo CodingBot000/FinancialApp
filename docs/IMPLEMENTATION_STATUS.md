@@ -3,8 +3,8 @@
 - 현재 Milestone: 6A — 로컬 하드닝
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-02
-- 마지막 완료 ID: BE-0014
-- 다음 작업 ID: BE-0015
+- 마지막 완료 ID: BE-0015
+- 다음 작업 ID: DEV-0012
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
@@ -38,7 +38,7 @@
 | 3. 동기화와 Dashboard | DONE | backend sync/raw/derived/조회·audit와 frontend connection/sync polling, Dashboard/Accounts/detail/chart, 부분 오류 UX 및 local actual API smoke 완료 |
 | 4. 서버 시뮬레이션 | DONE | deterministic server 저장/조회, frontend draft validation·persisted result·p10/p50/p90 chart와 local actual API smoke 완료 |
 | 5. BUY 주문과 복구 | DONE | quote/biometric/idempotent mobile BUY, backend reservation/simulator/settlement/reconciliation/audit, UNKNOWN GET recovery와 actual local smoke 완료; clean 전체 인수는 DEV-0011 |
-| 6A. 로컬 하드닝 | IN_PROGRESS | DEV-0011 local MVP, BE-0012 outbox, BE-0013 crypto와 BE-0014 security event/log/production isolation 완료; readiness/metrics/resilience, 최종 포트폴리오 문서 진행 |
+| 6A. 로컬 하드닝 | IN_PROGRESS | DEV-0011 local MVP, BE-0012 outbox, BE-0013 crypto, BE-0014 security/log isolation과 BE-0015 readiness/metrics/resilience 완료; 제품 범위, 성능·dependency와 최종 포트폴리오 문서 진행 |
 | 6B. 원격 데모 | CURRENT_RUN_EXCLUDED | Lightsail migration, 실제 AWS KMS, HTTPS/EAS와 원격 rollback은 향후 별도 실행 |
 
 ## DEV-0010 계약 Gate
@@ -113,6 +113,20 @@
 - [x] Testcontainers migration 9 tests와 local Compose security event 1건/structured logs/12단계 smoke 통과
 - [x] root verify: mobile 95/simulator 12/platform 71 총 178 tests와 두 backend build 통과
 - [x] 원격 DB/credential/deploy 미사용
+
+## BE-0015 Readiness, Metrics와 Circuit Breaker
+
+- [x] bounded DB `SELECT 1` readiness와 stable canonical 200/503 response
+- [x] private monitoring ingress 전용 고정 JSON HTTP/circuit counter와 DB pool gauge
+- [x] MyData/market/brokerage simulator adapter closed/open/half-open circuit breaker
+- [x] open circuit의 quote preview canonical `503 UPSTREAM_CIRCUIT_OPEN`
+- [x] brokerage order POST 자동 retry·open 상태 전송 금지 request-count 검증
+- [x] canonical 계약 33 operations·36 fixtures/provider/consumer/compatibility gate 통과
+- [x] platform architecture/lint/typecheck와 16 files/77 tests 통과
+- [x] root verify: mobile 95/simulator 12/platform 77 총 184 tests와 두 backend build 통과
+- [x] actual Compose DB readiness/metrics와 OIDC 포함 12단계 smoke 통과
+- [x] `BE-ISSUE-0008` readonly counter type defect 해결·재검증
+- [x] DB migration과 원격 DB/endpoint/credential/deploy 미사용
 
 ## FE-0010 Live OIDC와 `/me`
 

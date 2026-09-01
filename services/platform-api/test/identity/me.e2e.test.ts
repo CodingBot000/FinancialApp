@@ -11,6 +11,7 @@ import {
 } from '../../../../contracts/testing/openapi-response-validator.mjs';
 import { AppModule } from '../../src/app.module.js';
 import { createFastifyAdapter } from '../../src/core/http/create-fastify-adapter.js';
+import { CircuitOpenError } from '../../src/core/resilience/circuit-breaker.js';
 import { IDENTITY_REPOSITORY } from '../../src/modules/identity/application/ports/identity-repository.port.js';
 import { INSTITUTION_PORT } from '../../src/modules/mydata/application/ports/institution.port.js';
 import { MYDATA_REPOSITORY } from '../../src/modules/mydata/application/ports/mydata-repository.port.js';
@@ -314,6 +315,7 @@ describe('GET /api/v1/me OIDC boundary', () => {
     }),
     find: vi.fn(),
   };
+  const marketPrice = { price: vi.fn().mockResolvedValue('125000.0000') };
   const audit = { record: vi.fn().mockResolvedValue(undefined) };
   const securityEvents = { recordSafely: vi.fn().mockResolvedValue(undefined) };
   let app: NestFastifyApplication;
@@ -379,7 +381,7 @@ describe('GET /api/v1/me OIDC boundary', () => {
       .overrideProvider(BROKERAGE_PORT)
       .useValue(brokerage)
       .overrideProvider(MARKET_PRICE_PORT)
-      .useValue({ price: vi.fn().mockResolvedValue('125000.0000') })
+      .useValue(marketPrice)
       .overrideProvider(AuditService)
       .useValue(audit)
       .overrideProvider(SecurityEventService)
@@ -665,6 +667,31 @@ describe('GET /api/v1/me OIDC boundary', () => {
       estimatedAmount: '375000.0000',
       syntheticQuote: true,
     });
+  });
+
+  it('returns canonical 503 when the synthetic market circuit is open', async () => {
+    marketPrice.price.mockRejectedValueOnce(
+      new CircuitOpenError('simulator-market-price'),
+    );
+    const response = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: {
+          authorization: `Bearer ${await accessToken({ scope: 'order.execute' })}`,
+        },
+        method: 'POST',
+        url: '/api/v1/orders/preview',
+        payload: {
+          accountId: '688c601b-ab70-4683-9dd4-6a1174550653',
+          instrumentId: 'c805563c-148c-4451-8a9a-4808da7b32ae',
+          side: 'BUY',
+          quantity: '3.00000000',
+        },
+      });
+    expect(response.statusCode).toBe(503);
+    expect(response.json().code).toBe('UPSTREAM_CIRCUIT_OPEN');
+    contract.validate('previewBuyOrder', 503, response.json());
   });
 
   it('requires an idempotency key and prepares one cash-reserved order', async () => {

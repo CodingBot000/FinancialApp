@@ -4,6 +4,10 @@ contracts:
     operations:
       getPlatformHealth:
         { method: GET, path: /api/v1/health, statuses: [200, 429] }
+      getPlatformReadiness:
+        { method: GET, path: /api/v1/health/ready, statuses: [200, 429, 503] }
+      getPlatformMetrics:
+        { method: GET, path: /api/v1/health/metrics, statuses: [200, 429] }
       getCurrentUser:
         { method: GET, path: /api/v1/me, statuses: [200, 401, 403] }
       createMyDataConnection:
@@ -66,7 +70,7 @@ contracts:
         {
           method: POST,
           path: /api/v1/orders/preview,
-          statuses: [201, 400, 401, 403, 404],
+          statuses: [201, 400, 401, 403, 404, 503],
         }
       prepareBuyOrder:
         {
@@ -296,6 +300,14 @@ contracts:
         }
       HealthResponse:
         { type: object, properties: [datasetVersion, service, status] }
+      ReadinessResponse:
+        { type: object, properties: [checks, datasetVersion, service, status] }
+      MetricsResponse:
+        {
+          type: object,
+          properties:
+            [counters, databasePool, datasetVersion, service, uptimeSeconds],
+        }
   institution-simulator-v1:
     operations:
       getInstitutionSimulatorHealth:

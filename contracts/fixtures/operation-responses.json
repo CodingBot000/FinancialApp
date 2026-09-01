@@ -11,6 +11,35 @@
   },
   {
     "contract": "platform-v1",
+    "operationId": "getPlatformReadiness",
+    "status": 200,
+    "body": {
+      "status": "ready",
+      "service": "platform-api",
+      "datasetVersion": "FINANCIAL_APP_DATASET_V1",
+      "checks": { "database": "up" }
+    }
+  },
+  {
+    "contract": "platform-v1",
+    "operationId": "getPlatformMetrics",
+    "status": 200,
+    "body": {
+      "service": "platform-api",
+      "datasetVersion": "FINANCIAL_APP_DATASET_V1",
+      "uptimeSeconds": 10,
+      "databasePool": { "total": 2, "idle": 1, "waiting": 0 },
+      "counters": {
+        "httpRequestsTotal": 12,
+        "httpResponses5xxTotal": 0,
+        "externalRequestFailuresTotal": 1,
+        "circuitRejectedTotal": 0,
+        "circuitOpenedTotal": 0
+      }
+    }
+  },
+  {
+    "contract": "platform-v1",
     "operationId": "getCurrentUser",
     "status": 200,
     "body": {

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { Injectable } from '@nestjs/common';
 
+import { CircuitBreaker } from '../../../../core/resilience/circuit-breaker.js';
 import type { InstitutionPort } from '../../application/ports/institution.port.js';
 import type {
   InstitutionAccount,
@@ -65,6 +66,8 @@ function transaction(value: unknown): InstitutionTransaction {
 
 @Injectable()
 export class SimulatorInstitutionAdapter implements InstitutionPort {
+  private readonly circuit = new CircuitBreaker('simulator-mydata');
+
   async fetchDataset(externalCustomerId: string): Promise<InstitutionDataset> {
     const customerPath = encodeURIComponent(externalCustomerId);
     const [accounts, holdings, transactions] = await Promise.all([
@@ -86,6 +89,15 @@ export class SimulatorInstitutionAdapter implements InstitutionPort {
   }
 
   private async fetchPage<T>(
+    path: string,
+    parseItem: (value: unknown) => T,
+  ): Promise<InstitutionPage<T>> {
+    return this.circuit.execute(() =>
+      this.fetchPageWithoutRetry(path, parseItem),
+    );
+  }
+
+  private async fetchPageWithoutRetry<T>(
     path: string,
     parseItem: (value: unknown) => T,
   ): Promise<InstitutionPage<T>> {

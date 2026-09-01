@@ -262,6 +262,16 @@ module composition ───────────────> api/applicatio
 - request logger는 allowlist 구조체만 만들고 URL query, headers와 body를 API로 받지 않는다.
 - security persistence 오류는 authorization 결과를 완화하지 않으며 요청은 원래 401/403으로 fail-closed한다.
 
+### 5.5.3 Readiness, metrics와 외부 circuit breaker
+
+- liveness health는 process 응답 여부만 나타내고 readiness는 application runtime role로 `SELECT 1`을 bounded timeout 안에 실행한다.
+- readiness는 필수 local DB만 판정한다. IdP와 simulator의 일시 장애를 pod/service readiness와 강결합하지 않고 보호 API와 adapter의 정상 오류 경계로 처리한다.
+- metrics endpoint는 인증 없는 public API가 아니라 private monitoring ingress 전용이다. process-local counter와 pool gauge는 운영 관측 보조 수단이며 business/settlement source of truth가 아니다.
+- metric label 또는 field는 고정 allowlist만 사용한다. token, subject, raw IP, URL query, account/order ID와 다른 high-cardinality·민감 값을 포함하지 않는다.
+- simulator HTTP adapter는 closed/open/half-open circuit breaker로 연속 실패를 제한하고 open 동안 외부 호출 전에 빠르게 거절한다. half-open에서는 한 요청만 probe한다.
+- circuit breaker는 retry가 아니다. 특히 brokerage 주문 POST는 한 번만 전송하며 open circuit이면 전송 자체를 하지 않는다. status GET을 통한 UNKNOWN reconciliation이 유일한 복구 경로다.
+- circuit state는 process-local 보호 장치이고 주문/동기화 상태는 계속 PostgreSQL job과 domain state가 소유한다.
+
 ### 5.6 Background job
 
 - MyData sync, reconciliation과 outbox 상태는 PostgreSQL job table이 소유한다.

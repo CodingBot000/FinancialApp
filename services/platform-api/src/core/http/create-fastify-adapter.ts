@@ -4,6 +4,7 @@ import type { IncomingMessage } from 'node:http';
 import { FastifyAdapter } from '@nestjs/platform-fastify';
 
 import { createStructuredHttpLog } from './structured-http-log.js';
+import { platformMetrics } from '../observability/metrics-registry.js';
 
 const MAX_TRACE_HEADER_LENGTH = 128;
 const SAFE_TRACE_HEADER = /^[A-Za-z0-9._:-]+$/;
@@ -46,6 +47,9 @@ export function createFastifyAdapter(): FastifyAdapter {
   });
 
   adapter.getInstance().addHook('onResponse', (request, reply, done) => {
+    platformMetrics.increment('httpRequestsTotal');
+    if (reply.statusCode >= 500)
+      platformMetrics.increment('httpResponses5xxTotal');
     if (process.env.STRUCTURED_HTTP_LOG_ENABLED === 'true') {
       const event = createStructuredHttpLog({
         requestId: String(request.id),

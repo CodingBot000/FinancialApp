@@ -66,6 +66,8 @@ BE-0013은 local provider envelope roundtrip, plaintext 비노출, wrong owner A
 
 BE-0014는 auth guard의 missing/invalid token과 missing scope가 token/subject 없이 security recorder로 전달되는지 검증한다. PostgreSQL에서는 source IP가 64자리 HMAC이고 raw IP가 없으며 metadata allowlist와 runtime UPDATE/DELETE 거부를 확인한다. Structured log unit test는 query에 token/full ID가 있어도 query-free path와 allowlist field만 직렬화하는지 확인한다. Production `AppModule`을 실제 init해 developer route 404와 route tree 미등록을 검증한다.
 
+BE-0015는 실제 Fastify readiness의 DB success/exception을 canonical 200/503 schema로, metrics의 고정 counter/pool field를 canonical 200 schema로 검증한다. circuit unit test는 failure threshold, open fast rejection, single half-open probe와 recovery를 검사한다. 실제 loopback brokerage HTTP test는 circuit이 열린 뒤 주문 POST가 전송도 retry도 되지 않음을 request count로 검증하고, quote provider E2E는 open circuit을 canonical `503 UPSTREAM_CIRCUIT_OPEN`으로 검증한다. Compose에서는 실제 PostgreSQL readiness와 bounded metrics JSON, 기존 12단계 smoke를 재검증한다.
+
 ### External integration
 
 platform-api와 실제 institution-simulator를 실행한다.

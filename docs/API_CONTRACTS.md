@@ -23,6 +23,14 @@
 - Simulator API: `/sim/v1`
 - Developer API: `/api/v1/dev`
 
+### Health와 private monitoring
+
+- `GET /api/v1/health`는 process liveness를 반환한다.
+- `GET /api/v1/health/ready`는 application DB probe가 timeout 안에 성공하면 `200 ready`, 실패하면 stable body의 `503 not_ready`를 반환한다.
+- `GET /api/v1/health/metrics`는 process-local HTTP/external circuit counter와 PostgreSQL pool gauge만 반환한다. 이 endpoint는 private monitoring ingress 전용이며 public demo proxy나 mobile consumer에 노출하지 않는다.
+- readiness와 metrics는 인증하지 않으므로 응답에 token, subject, IP, query, resource ID나 business amount를 포함하지 않는다.
+- quote preview에서 synthetic market circuit이 open이면 canonical `503 UPSTREAM_CIRCUIT_OPEN`을 반환한다. 주문 POST는 circuit breaker를 이유로 자동 retry하지 않는다.
+
 ### 인증
 
 - Platform API는 health를 제외하고 Bearer access token이 필요하다.

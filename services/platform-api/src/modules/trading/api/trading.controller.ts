@@ -11,6 +11,7 @@ import {
   Post,
   Query,
   Res,
+  ServiceUnavailableException,
   UseGuards,
 } from '@nestjs/common';
 import type { FastifyReply } from 'fastify';
@@ -19,6 +20,7 @@ import type { AuthenticatedPrincipal } from '../../../core/auth/authenticated-pr
 import { CurrentPrincipal } from '../../../core/auth/current-principal.decorator.js';
 import { OidcJwtGuard } from '../../../core/auth/oidc-jwt.guard.js';
 import { RequiredScopes } from '../../../core/auth/required-scopes.decorator.js';
+import { CircuitOpenError } from '../../../core/resilience/circuit-breaker.js';
 import {
   IdempotencyConflictError,
   InsufficientFundsError,
@@ -75,6 +77,15 @@ export class TradingController {
       if (error instanceof QuoteResourceNotFoundError) {
         throw new NotFoundException(
           problem(404, 'RESOURCE_NOT_FOUND', 'The resource was not found.'),
+        );
+      }
+      if (error instanceof CircuitOpenError) {
+        throw new ServiceUnavailableException(
+          problem(
+            503,
+            'UPSTREAM_CIRCUIT_OPEN',
+            'The synthetic market provider is temporarily unavailable.',
+          ),
         );
       }
       throw error;

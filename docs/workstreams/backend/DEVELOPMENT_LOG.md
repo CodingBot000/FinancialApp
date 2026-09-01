@@ -1,7 +1,7 @@
 # Backend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `BE-0015`
+- 다음 ID: `BE-0016`
 - 운영 상태: `codex/backend`는 DEV-0006 통합 이력으로 보존, 신규 BE commit은 단일 `main`에서 수행
 - 활성 worktree: `/Users/switch/Development/Web/FinancialApp`
 - 통합 검토 기준: `main` at `2574ad0`, `platform-v1` at BE-0008, `institution-simulator-v1` at BE-0003
@@ -773,6 +773,42 @@
 ### 다음 작업
 
 - `BE-0015`: readiness/metrics와 external HTTP circuit breaker
+
+## BE-0015 — Readiness, Metrics와 External Circuit Breaker
+
+- 날짜: 2026-09-02
+- Milestone: 6A local hardening
+- 상태: COMPLETED
+- base commit: `f0f3abef80d9739d94b2ad78ddb3ca2b03010535`
+- contract revision: additive health readiness/metrics와 quote 503 / DB migration 없음
+- migration owner: single main, schema 변경 없음, local/Testcontainers only
+- 예정 commit: `feat(be): harden readiness and external resilience [BE-0015]`
+
+### 완료
+
+- application runtime DB `SELECT 1`에 bounded timeout을 둔 readiness 200/503와 private monitoring용 process-local metrics를 추가했다.
+- HTTP/5xx/external failure/circuit open·reject counter와 PostgreSQL pool gauge를 고정 JSON allowlist로 노출했다.
+- MyData, market price와 brokerage simulator adapter에 closed/open/half-open circuit breaker와 single half-open probe를 추가했다.
+- market circuit open은 quote preview의 canonical 503으로 변환하고 brokerage 주문 POST는 retry하지 않으며 open 상태에서 전송하지 않는다.
+- canonical OpenAPI, operation coverage, success fixture와 compatibility baseline을 additive하게 갱신했다.
+
+### 검증
+
+- contract 33 operations/36 fixtures, platform architecture/lint/strict typecheck 통과
+- Colima Testcontainers PostgreSQL을 포함한 platform 16 files/77 tests 통과
+- root verify: mobile 95/simulator 12/platform 77 총 184 tests와 두 backend build 통과
+- actual Compose rebuild/migration/seed 뒤 readiness `200 ready`, bounded metrics와 OIDC 포함 12단계 smoke 통과
+- smoke 결과 FILLED/REJECTED/UNKNOWN→FILLED, outbox event/delivery 3/3 유지
+- 원격 DB 사전점검·endpoint/credential·catalog·migration/seed·deploy 미실행
+
+### 이슈·누락·Handoff
+
+- `BE-ISSUE-0008` RESOLVED: readonly API snapshot과 mutable counter 저장소 type을 분리하고 전체 gate로 재검증했다.
+- 실제 monitoring collector와 distributed circuit state는 현재 local 범위 밖이다. process-local metrics/circuit은 business source of truth가 아니다.
+
+### 다음 작업
+
+- `DEV-0012`: onboarding/risk profile 편집과 규칙 기반 portfolio recommendation 범위 재확정 및 선택 범위 구현
 
 ## 새 기록 Template
 

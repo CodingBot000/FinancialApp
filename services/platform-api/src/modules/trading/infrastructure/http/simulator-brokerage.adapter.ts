@@ -3,6 +3,10 @@ import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 
 import {
+  CircuitBreaker,
+  CircuitOpenError,
+} from '../../../../core/resilience/circuit-breaker.js';
+import {
   BrokerageTransportError,
   type BrokeragePort,
 } from '../../application/ports/brokerage.port.js';
@@ -56,6 +60,8 @@ function timeoutMilliseconds(): number {
 
 @Injectable()
 export class SimulatorBrokerageAdapter implements BrokeragePort {
+  private readonly circuit = new CircuitBreaker('simulator-brokerage');
+
   async submit(input: {
     readonly clientOrderId: string;
     readonly accountId: string;
@@ -76,6 +82,21 @@ export class SimulatorBrokerageAdapter implements BrokeragePort {
   }
 
   private async request(
+    path: string,
+    init: RequestInit,
+  ): Promise<ExternalOrderResult> {
+    try {
+      return await this.circuit.execute(() =>
+        this.requestWithoutRetry(path, init),
+      );
+    } catch (error) {
+      if (error instanceof CircuitOpenError)
+        throw new BrokerageTransportError('CIRCUIT_OPEN');
+      throw error;
+    }
+  }
+
+  private async requestWithoutRetry(
     path: string,
     init: RequestInit,
   ): Promise<ExternalOrderResult> {

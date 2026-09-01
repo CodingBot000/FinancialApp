@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { Injectable } from '@nestjs/common';
 
+import { CircuitBreaker } from '../../../../core/resilience/circuit-breaker.js';
 import type { MarketPricePort } from '../../application/ports/market-price.port.js';
 
 type JsonRecord = Record<string, unknown>;
@@ -12,7 +13,13 @@ function isRecord(value: unknown): value is JsonRecord {
 
 @Injectable()
 export class SimulatorMarketPriceAdapter implements MarketPricePort {
+  private readonly circuit = new CircuitBreaker('simulator-market-price');
+
   async price(instrumentCode: string): Promise<string> {
+    return this.circuit.execute(() => this.fetchPrice(instrumentCode));
+  }
+
+  private async fetchPrice(instrumentCode: string): Promise<string> {
     const baseUrl =
       process.env.INSTITUTION_SIMULATOR_BASE_URL ??
       'http://institution-simulator:8080';
