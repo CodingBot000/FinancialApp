@@ -1,8 +1,8 @@
 # 개발 로그
 
 - 기록 방식: append-only
-- 마지막 DEV ID: `DEV-0007`
-- 다음 DEV ID: `DEV-0008`
+- 마지막 DEV ID: `DEV-0008`
+- 다음 DEV ID: `DEV-0009`
 
 모든 integration/shared commit은 하나의 `DEV-####`와 연결한다. frontend와 backend 영역 commit은 각각 `FE-####`, `BE-####`와 workstream 개발 로그를 사용한다. DEV-0006 이후에는 단일 main에서 작업하되 영역별 ID namespace와 기록은 유지한다. commit subject에도 같은 ID를 넣어 Git history와 문서 기록을 상호 추적할 수 있게 한다.
 
@@ -383,8 +383,45 @@
 
 ### 다음 작업
 
-- `DEV-0008`: canonical OpenAPI 전체 operation의 provider/consumer 계약 추적과 CI gate 구현
-- 이후 `BE-0009`, `BE-0010`, `FE-0010`~`FE-0014`, `DEV-0009` 순으로 local MVP 완성
+- `DEV-0009`: canonical OpenAPI 전체 operation의 provider/consumer 계약 추적과 CI gate 구현
+- 이후 `BE-0009`, `BE-0010`, `FE-0010`~`FE-0014`, `DEV-0010` 순으로 local MVP 완성
+
+## DEV-0008 — 병렬 개발 Worktree 정리
+
+- 날짜: 2026-09-02
+- Milestone: 통합 workspace 정리
+- 상태: COMPLETED
+- 예정 commit: `chore(integration): remove historical worktrees [DEV-0008]`
+
+### 완료
+
+- `/Users/switch/Development/Web/FinancialApp-frontend`의 `codex/frontend`가 clean이고 `origin/codex/frontend`와 일치함을 확인
+- `/Users/switch/Development/Web/FinancialApp-backend`의 `codex/backend`가 clean이고 `origin/codex/backend`와 일치함을 확인
+- Git `worktree remove`로 두 보조 directory와 연결 metadata를 제거
+- 활성 workspace를 `/Users/switch/Development/Web/FinancialApp`의 `main` 하나로 정리
+- local/remote `codex/frontend`, `codex/backend` branch는 복구 가능한 분리 개발 이력으로 보존
+
+### 변경 파일
+
+- workspace: 병렬 보조 worktree directory 2개 제거, branch 삭제 없음
+- docs: `INTEGRATED_DEVELOPMENT_PLAN.md`, `README.md`, `PARALLEL_DEVELOPMENT_GUIDE.md`, `IMPLEMENTATION_STATUS.md`, `ISSUE_REGISTER.md`, `DEVELOPMENT_LOG.md`
+
+### 검증
+
+- `git worktree list --porcelain`: `FinancialApp` main worktree 하나만 존재
+- 상위 directory 검사: `FinancialApp-frontend`, `FinancialApp-backend`가 존재하지 않음
+- branch 검사: local/remote `codex/frontend`와 `codex/backend` 유지
+- `main`과 `origin/main` 일치, working tree clean
+- 문서 format과 `git diff --check` 통과
+
+### 이슈와 누락
+
+- 신규 issue/gap 없음
+- 보조 directory는 제거됐지만 두 remote branch에서 필요 시 새 worktree를 다시 만들 수 있다.
+
+### 다음 작업
+
+- `DEV-0009`: canonical OpenAPI 전체 operation의 provider/consumer 계약 추적과 CI gate
 
 ## 새 기록 Template
 

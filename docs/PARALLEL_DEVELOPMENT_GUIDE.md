@@ -8,6 +8,7 @@
 
 - `codex/backend`의 BE-0001~BE-0008과 `codex/frontend`의 FE-0001~FE-0009는 2026-09-02 DEV-0006에서 `main`에 통합했다.
 - 두 branch는 `origin/codex/backend`, `origin/codex/frontend`에 이력으로 보존한다.
+- 로컬 보조 worktree directory는 변경사항이 없는 것을 확인한 뒤 DEV-0008에서 제거했다.
 - 이후 신규 개발은 사용자의 결정에 따라 단일 `main` 작업 흐름에서 직렬 진행한다.
 - 현재 활성 순서와 완료 조건은 `INTEGRATED_DEVELOPMENT_PLAN.md`를 따른다.
 - 이 문서의 worktree/session 규칙은 향후 다시 병렬화할 때만 적용한다. 별도 결정 없이 기존 worktree branch에서 신규 commit을 만들지 않는다.

@@ -44,7 +44,7 @@ MVP_SCOPE
 - 구조 또는 기술 선택 변경은 ADR이나 `IMPLEMENTATION_DECISIONS.md`에 이유를 기록한다.
 - 앱·서버 코드는 `ARCHITECTURE_GUIDE.md`의 module, dependency와 상태 소유권 규칙을 따르며 CI에서 자동 검증한다.
 - DEV-0007 이후 신규 개발은 `INTEGRATED_DEVELOPMENT_PLAN.md`에 따라 단일 `main`에서 직렬 진행한다.
-- 기존 분리 branch/worktree는 이력으로 보존하며 재분리를 명시적으로 결정할 때만 `PARALLEL_DEVELOPMENT_GUIDE.md`를 다시 적용한다.
+- 기존 `codex/frontend`, `codex/backend` branch는 복구 이력으로 보존한다. 보조 worktree directory는 DEV-0008에서 제거했으며 재분리를 명시적으로 결정할 때만 `PARALLEL_DEVELOPMENT_GUIDE.md`를 다시 적용한다.
 - API와 DB 변경은 계약 문서와 구현을 같은 변경에서 갱신한다.
 - 모든 애플리케이션 소유 테이블과 DB 객체는 `TABLE_DEFINITIONS.md`의 `finapp_` prefix 규칙을 따른다.
 - 작업 완료 여부는 테스트 결과를 확인한 후 `IMPLEMENTATION_STATUS.md`에 기록한다.

@@ -5,7 +5,7 @@
 - 적용 시작: `DEV-0007`
 - 검토 기준 commit: `2574ad0be71c1c71e44c862ab37f395ac498f449`
 - 활성 branch/worktree: `main` / `/Users/switch/Development/Web/FinancialApp`
-- 다음 작업 ID: `DEV-0008`, `BE-0009`, `FE-0010`
+- 다음 작업 ID: `DEV-0009`, `BE-0009`, `FE-0010`
 
 ## 1. 목적과 문서 권한
 
@@ -27,6 +27,7 @@
 검토 대상은 공통 base `5ffc23e`, backend `BE-0001`~`BE-0008` head `0753110`, frontend `FE-0001`~`FE-0009` head `dfc3547`, 통합 commit `2574ad0`이다.
 
 - 두 분리 branch의 약속된 commit은 모두 `main`과 원격 보존 branch에 존재한다. Git 이력 유실은 없다.
+- 병렬 개발용 `FinancialApp-frontend`, `FinancialApp-backend` worktree는 통합 후 변경사항이 없는 것을 재확인하고 `DEV-0008`에서 제거했다. local/remote `codex/frontend`, `codex/backend` branch는 복구 이력으로 유지한다.
 - root lockfile, 환경변수, Keycloak redirect, architecture gate와 Docker build context 충돌은 `DEV-0006`에서 해소됐다.
 - backend는 Milestone 2~5의 API와 영속화 대부분을 frontend보다 먼저 구현했다.
 - frontend는 OIDC/App Lock/Query/transport 기반까지 완료했지만 분리 당시 고정한 health 계약 때문에 현재 backend의 업무 API를 아직 소비하지 않는다.
@@ -64,7 +65,7 @@
 ### 4.1 Branch와 작업 소유권
 
 - 모든 신규 작업은 현재 workspace의 `main`에서 직렬 진행한다.
-- `codex/frontend`와 `codex/backend` branch/worktree는 `DEV-0006` 이력으로만 보존하며 새 commit을 만들지 않는다.
+- `codex/frontend`와 `codex/backend` branch는 `DEV-0006` 복구 이력으로만 보존하며 새 commit을 만들지 않는다. 보조 worktree directory는 `DEV-0008`에서 제거했다.
 - mobile 중심 commit은 `FE-####`, backend/infra/contract 중심 commit은 `BE-####`, 공통 품질·통합·문서 commit은 `DEV-####`를 계속 사용한다.
 - 같은 commit에서 frontend와 backend 구현을 무리하게 섞지 않는다. 단, 하나의 실제 E2E 인수 단계와 필수 공통 문서 갱신은 `DEV-####`로 묶을 수 있다.
 - migration은 한 commit에서 한 명의 migration owner만 생성하며, 모든 애플리케이션 소유 DB 객체에 `finapp_` prefix를 적용한다.
@@ -118,7 +119,7 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - 문서 인덱스, 우선순위, 상태, 결정, issue/gap와 개발 로그가 같은 다음 작업을 가리킨다.
 - 문서 format과 link/path 참조가 유효하다.
 
-### 단계 1 — 계약 추적과 통합 Test Harness (`DEV-0008`)
+### 단계 1 — 계약 추적과 통합 Test Harness (`DEV-0009`)
 
 목표:
 
@@ -241,7 +242,7 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - production build/config에는 dev route 진입점이 없다.
 - 핵심 화면의 접근성, Reduce Motion과 민감정보 가리기 검토가 완료된다.
 
-### 단계 9 — 로컬 MVP 전체 인수 (`DEV-0009`)
+### 단계 9 — 로컬 MVP 전체 인수 (`DEV-0010`)
 
 목표:
 

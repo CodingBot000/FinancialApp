@@ -3,8 +3,8 @@
 - 현재 Milestone: 2~5 — 단일 Main 로컬 MVP 통합
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-02
-- 마지막 DEV ID: DEV-0007
-- 다음 DEV ID: DEV-0008
+- 마지막 DEV ID: DEV-0008
+- 다음 DEV ID: DEV-0009
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 
 ## 상태 표기
@@ -23,6 +23,7 @@
 - frontend merge commit: `2926278`
 - 운영 방식: 병렬 worktree 단계 종료, 이후 작업은 `main` 한 곳에서 직렬 진행
 - 원격 보존 branch: `origin/codex/backend`, `origin/codex/frontend`
+- 보조 worktree: DEV-0008에서 제거, 활성 directory는 `/Users/switch/Development/Web/FinancialApp` 하나
 - 통합 계획 검토 기준: `2574ad0`; 분리 commit 유실 없음
 
 ## Milestone 요약
@@ -96,9 +97,9 @@
 
 ## 다음 작업
 
-1. `DEV-0008`: 모든 canonical operation의 provider/consumer 계약 추적과 CI gate
+1. `DEV-0009`: 모든 canonical operation의 provider/consumer 계약 추적과 CI gate
 2. `BE-0009`: simulator 시세·brokerage·scenario·reset/reseed 경계
 3. `BE-0010`: platform external submit, settlement, reconciliation, order 조회와 최소 audit
 4. `FE-0010`: 현재 OpenAPI 기준 live OIDC `/me`와 authenticated adapter 통합
 5. `FE-0011`~`FE-0014`: Dashboard/MyData, simulation, order, Settings/developer scenario
-6. `DEV-0009`: local full-stack E2E와 fresh-clone 인수 후 Milestone 6 진행
+6. `DEV-0010`: local full-stack E2E와 fresh-clone 인수 후 Milestone 6 진행
