@@ -1,7 +1,7 @@
 # 이슈와 누락 Register
 
 - 마지막 갱신: 2026-09-02
-- 다음 ISSUE ID: `ISSUE-0004`
+- 다음 ISSUE ID: `ISSUE-0005`
 - 다음 GAP ID: `GAP-0008`
 
 이 문서는 defect, blocker, 위험과 불가피한 누락을 삭제하지 않고 추적한다.
@@ -99,21 +99,6 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 해결 DEV:
 - 검증: frontend `FE-GAP-0004` 참조
 
-### GAP-0005 — Simulator 로컬 MVP API와 장애 Scenario
-
-- 상태: DEFERRED
-- 심각도: HIGH
-- 최초 발견: 2026-09-02
-- 마지막 갱신: 2026-09-02
-- 발견 DEV: DEV-0007
-- 원래 요구사항: simulator 시세, brokerage submit/status, `clientOrderId` 중복 방지, NORMAL/TIMEOUT/HTTP_500/MALFORMED_RESPONSE/ORDER_REJECT/ORDER_UNKNOWN_THEN_FILLED와 reset/reseed
-- 누락/연기 이유: BE-0003은 MyData account/holding/transaction source와 seed에 집중했고 이후 platform 기능이 먼저 진행됐다. 현재 simulator OpenAPI와 controller에는 세 MyData 조회와 health만 있다.
-- 현재 영향: MyData adapter fault는 mock으로 검증되지만 실제 simulator container로 거래와 장애 복구를 증명할 수 없어 Milestone 5와 로컬 MVP E2E를 완료할 수 없다.
-- 목표 Milestone: 5 / BE-0009
-- 재확인 조건: 실제 simulator HTTP에서 시세와 order submit/status, scenario 격리, duplicate clientOrderId, reset/reseed 멱등성과 production/public 차단을 자동 검증
-- 해결 DEV:
-- 검증: DEV-0007 기준 `institution-simulator-v1.yaml`은 health와 MyData 조회 3개 operation, simulator source는 account/health module만 포함한다.
-
 ### GAP-0006 — 로컬 MVP 최소 Audit Event
 
 - 상태: DEFERRED
@@ -145,6 +130,34 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 검증: DEV-0007에서 mobile feature가 health/login/app-lock에 한정되고 Makefile은 bootstrap/build/contract/format/lint/test/typecheck/verify target만 제공함을 확인했다.
 
 ## Resolved History
+
+### ISSUE-0004 — Expo SDK 57 patch compatibility drift
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 최초 발견: 2026-09-02
+- 마지막 갱신: 2026-09-02
+- 발견 DEV: BE-0009 root verification
+- 원래 영향 Milestone: 1 dependency gate, 2 mobile runtime
+- 원래 내용: BE-0009 전체 `npm run verify`에서 Expo SDK 57의 expected patch가 갱신되어 `expo install --check`가 8개 package를 outdated로 판정했다.
+- 해결 DEV: BE-0009
+- 해결 내용: Node 24 workspace context에서 Expo가 요구한 SDK 57 compatible patch를 적용하고 `expo-secure-store` config plugin을 명시했다. `npm audit fix --force`는 사용하지 않았다.
+- 검증: `expo install --check`와 root `npm run verify`가 통과했다. mobile 60, simulator 12, platform 51로 총 123 tests와 두 backend build가 성공했다. 첫 자동 수정 시도는 app directory가 시스템 Node 20.15를 선택해 engine guard에서 안전하게 실패했으며, root Node 24.19 workspace 명령으로 재실행했다.
+
+### GAP-0005 — Simulator 로컬 MVP API와 장애 Scenario
+
+- 상태: RESOLVED
+- 심각도: HIGH
+- 최초 발견: 2026-09-02
+- 마지막 갱신: 2026-09-02
+- 발견 DEV: DEV-0007
+- 원래 요구사항: simulator 시세, brokerage submit/status, `clientOrderId` 중복 방지, NORMAL/TIMEOUT/HTTP_500/MALFORMED_RESPONSE/ORDER_REJECT/ORDER_UNKNOWN_THEN_FILLED와 reset/reseed
+- 누락/연기 이유: BE-0003은 MyData account/holding/transaction source와 seed에 집중했고 이후 platform 기능이 먼저 진행됐다.
+- 현재 영향: 없음. platform settlement/reconciliation과 developer proxy는 BE-0010 범위에서 이 provider 계약을 소비한다.
+- 목표 Milestone: 5 / BE-0009
+- 재확인 조건: 실제 simulator HTTP에서 시세와 order submit/status, scenario 격리, duplicate clientOrderId, reset/reseed 멱등성과 production/public 차단을 자동 검증
+- 해결 DEV: BE-0009
+- 검증: canonical simulator operation 7개 추가, 실제 Fastify scenario E2E, production admin 404/no-mutation, PostgreSQL 10-way idempotency와 conflict/UNKNOWN→FILLED, clean Compose migration·seed 2회·400/201/200 replay·reset smoke를 통과했다.
 
 ### GAP-0004 — Controller·OpenAPI·Consumer 전체 계약 추적
 

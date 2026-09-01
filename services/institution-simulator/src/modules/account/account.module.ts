@@ -6,6 +6,7 @@ import { AccountRepository } from './account.repository.js';
 
 @Module({
   controllers: [AccountController],
+  exports: [AccountRepository],
   imports: [DatabaseModule],
   providers: [AccountRepository],
 })

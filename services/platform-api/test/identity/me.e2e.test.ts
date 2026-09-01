@@ -16,6 +16,7 @@ import { INSTITUTION_PORT } from '../../src/modules/mydata/application/ports/ins
 import { MYDATA_REPOSITORY } from '../../src/modules/mydata/application/ports/mydata-repository.port.js';
 import { SENSITIVE_DATA_PORT } from '../../src/modules/mydata/application/ports/sensitive-data.port.js';
 import { SIMULATION_REPOSITORY } from '../../src/modules/simulation/application/ports/simulation-repository.port.js';
+import { MARKET_PRICE_PORT } from '../../src/modules/trading/application/ports/market-price.port.js';
 import { TRADING_REPOSITORY } from '../../src/modules/trading/application/ports/trading-repository.port.js';
 import { WEALTH_REPOSITORY } from '../../src/modules/wealth/application/ports/wealth-repository.port.js';
 
@@ -221,6 +222,7 @@ describe('GET /api/v1/me OIDC boundary', () => {
     }),
   };
   const tradingRepository = {
+    quoteInstrument: vi.fn().mockResolvedValue('SYNTH-EQUITY-001'),
     createQuote: vi.fn().mockResolvedValue({
       quoteId: 'd228553f-f10a-47ad-89f6-77be8e034324',
       side: 'BUY',
@@ -310,6 +312,8 @@ describe('GET /api/v1/me OIDC boundary', () => {
       .useValue(simulationRepository)
       .overrideProvider(TRADING_REPOSITORY)
       .useValue(tradingRepository)
+      .overrideProvider(MARKET_PRICE_PORT)
+      .useValue({ price: vi.fn().mockResolvedValue('125000.0000') })
       .compile();
     app = moduleRef.createNestApplication<NestFastifyApplication>(
       createFastifyAdapter(),

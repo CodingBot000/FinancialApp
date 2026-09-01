@@ -17,6 +17,7 @@ describe('TradingService quote preview', () => {
   const identity = {
     provisionFromOidc: vi.fn().mockResolvedValue({ userId: 'user-a' }),
   };
+  const market = { price: vi.fn().mockResolvedValue('125000.0000') };
 
   it.each([
     {},
@@ -45,8 +46,12 @@ describe('TradingService quote preview', () => {
       quantity: '1.000000001',
     },
   ])('rejects an invalid request %#', async (request) => {
-    const repository = { createQuote: vi.fn(), prepareOrder: vi.fn() };
-    const service = new TradingService(identity, repository);
+    const repository = {
+      quoteInstrument: vi.fn(),
+      createQuote: vi.fn(),
+      prepareOrder: vi.fn(),
+    };
+    const service = new TradingService(identity, repository, market);
 
     await expect(service.preview(principal, request)).rejects.toBeInstanceOf(
       QuoteInputError,
@@ -56,10 +61,11 @@ describe('TradingService quote preview', () => {
 
   it('does not reveal a quote resource owned by another user', async () => {
     const repository = {
+      quoteInstrument: vi.fn().mockResolvedValue(undefined),
       createQuote: vi.fn().mockResolvedValue(undefined),
       prepareOrder: vi.fn(),
     };
-    const service = new TradingService(identity, repository);
+    const service = new TradingService(identity, repository, market);
 
     await expect(
       service.preview(principal, {
@@ -84,10 +90,11 @@ describe('TradingService quote preview', () => {
       syntheticQuote: true as const,
     };
     const repository = {
+      quoteInstrument: vi.fn().mockResolvedValue('SYNTH-EQUITY-001'),
       createQuote: vi.fn().mockResolvedValue(quote),
       prepareOrder: vi.fn(),
     };
-    const service = new TradingService(identity, repository);
+    const service = new TradingService(identity, repository, market);
 
     await expect(
       service.preview(principal, {
@@ -97,6 +104,12 @@ describe('TradingService quote preview', () => {
         quantity: '3',
       }),
     ).resolves.toEqual(quote);
+    expect(market.price).toHaveBeenCalledWith('SYNTH-EQUITY-001');
+    expect(repository.createQuote).toHaveBeenCalledWith(
+      'user-a',
+      expect.objectContaining({ quantity: '3' }),
+      '125000.0000',
+    );
   });
 
   it('normalizes the order quantity before hashing and preparing', async () => {
@@ -112,13 +125,14 @@ describe('TradingService quote preview', () => {
       statusRefreshRecommendedAfterMs: 2000 as const,
     };
     const repository = {
+      quoteInstrument: vi.fn(),
       createQuote: vi.fn(),
       prepareOrder: vi.fn().mockResolvedValue({
         kind: 'prepared',
         value: { created: true, order },
       }),
     };
-    const service = new TradingService(identity, repository);
+    const service = new TradingService(identity, repository, market);
     await expect(
       service.prepareOrder(principal, '90000000-0000-4000-8000-000000000001', {
         quoteId: 'd228553f-f10a-47ad-89f6-77be8e034324',
@@ -138,10 +152,11 @@ describe('TradingService quote preview', () => {
 
   it('maps repository idempotency conflicts to a domain error', async () => {
     const repository = {
+      quoteInstrument: vi.fn(),
       createQuote: vi.fn(),
       prepareOrder: vi.fn().mockResolvedValue({ kind: 'idempotency_conflict' }),
     };
-    const service = new TradingService(identity, repository);
+    const service = new TradingService(identity, repository, market);
     await expect(
       service.prepareOrder(principal, '90000000-0000-4000-8000-000000000001', {
         quoteId: 'd228553f-f10a-47ad-89f6-77be8e034324',

@@ -82,8 +82,161 @@ paths:
                 $ref: '#/components/schemas/TransactionPage'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+  /sim/v1/market/instruments:
+    get:
+      operationId: getSimulatorInstruments
+      summary: List deterministic synthetic instruments
+      security: []
+      tags: [Market]
+      responses:
+        '200':
+          description: Synthetic instrument catalog.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InstrumentPage' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '500': { $ref: '#/components/responses/InternalError' }
+  /sim/v1/market/prices:
+    get:
+      operationId: getSimulatorPrices
+      summary: Read latest deterministic synthetic prices
+      security: []
+      tags: [Market]
+      parameters:
+        - name: instrumentIds
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+      responses:
+        '200':
+          description: Latest price page.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketPricePage' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '500': { $ref: '#/components/responses/InternalError' }
+  /sim/v1/market/history:
+    get:
+      operationId: getSimulatorMarketHistory
+      summary: Read deterministic synthetic price history
+      security: []
+      tags: [Market]
+      parameters:
+        - name: instrumentId
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+        - name: range
+          in: query
+          required: false
+          schema: { type: string, enum: [1M, 3M, 1Y, ALL], default: 1M }
+      responses:
+        '200':
+          description: Deterministic price history.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketHistory' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '500': { $ref: '#/components/responses/InternalError' }
+  /sim/v1/brokerage/orders:
+    post:
+      operationId: submitSimulatorOrder
+      summary: Submit an idempotent synthetic BUY market order
+      security: []
+      tags: [Brokerage]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateBrokerageOrderRequest' }
+      responses:
+        '201':
+          description: New synthetic order accepted with a terminal or unknown result.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BrokerageOrder' }
+        '200':
+          description: Existing result for the same clientOrderId and payload.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BrokerageOrder' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '500': { $ref: '#/components/responses/InternalError' }
+  /sim/v1/brokerage/orders/by-client-order-id/{clientOrderId}:
+    get:
+      operationId: getSimulatorOrder
+      summary: Reconcile a synthetic order by platform clientOrderId
+      security: []
+      tags: [Brokerage]
+      parameters:
+        - name: clientOrderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Current synthetic order status.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BrokerageOrder' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /sim/v1/admin/scenario:
+    put:
+      operationId: setSimulatorScenario
+      summary: Select a local or demo deterministic failure scenario
+      security: []
+      tags: [Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SetScenarioRequest' }
+      responses:
+        '200':
+          description: Scenario changed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScenarioResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /sim/v1/admin/reset:
+    post:
+      operationId: resetSimulatorDataset
+      summary: Reset local or demo simulator state and reseed the synthetic dataset
+      security: []
+      tags: [Admin]
+      responses:
+        '200':
+          description: Dataset reset and scenario restored to NORMAL.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ResetResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
 components:
   responses:
+    BadRequest:
+      description: Simulator request validation failed.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    Conflict:
+      description: The clientOrderId was reused with another payload.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    InternalError:
+      description: Synthetic HTTP_500 scenario response.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    NotFound:
+      description: Resource is absent or an admin route is disabled.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
     TooManyRequests:
       description: The internal caller exceeded the configured request rate.
       content:
@@ -135,6 +288,126 @@ components:
               field: { type: string }
               code: { type: string }
               message: { type: string }
+    InstrumentPage:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, items]
+      properties:
+        schemaVersion: { type: string, const: simulator-v1 }
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [instrumentId, displayName, assetClass, currency, status]
+            properties:
+              instrumentId: { type: string }
+              displayName: { type: string }
+              assetClass: { type: string }
+              currency: { type: string, const: KRW }
+              status: { type: string, const: ACTIVE }
+    MarketPricePage:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, items]
+      properties:
+        schemaVersion: { type: string, const: simulator-v1 }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/MarketPrice' }
+    MarketPrice:
+      type: object
+      additionalProperties: false
+      required: [instrumentId, price, currency, asOfAt]
+      properties:
+        instrumentId: { type: string }
+        price: { type: string, pattern: '^[0-9]+\.[0-9]{4}$' }
+        currency: { type: string, const: KRW }
+        asOfAt: { type: string, format: date-time }
+    MarketHistory:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, instrumentId, range, points]
+      properties:
+        schemaVersion: { type: string, const: simulator-v1 }
+        instrumentId: { type: string }
+        range: { type: string, enum: [1M, 3M, 1Y, ALL] }
+        points:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [price, currency, asOfAt]
+            properties:
+              price: { type: string, pattern: '^[0-9]+\.[0-9]{4}$' }
+              currency: { type: string, const: KRW }
+              asOfAt: { type: string, format: date-time }
+    CreateBrokerageOrderRequest:
+      type: object
+      additionalProperties: false
+      required: [clientOrderId, accountId, instrumentId, side, quantity]
+      properties:
+        clientOrderId: { type: string, format: uuid }
+        accountId: { type: string }
+        instrumentId: { type: string }
+        side: { type: string, const: BUY }
+        quantity:
+          { type: string, pattern: '^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,8})?$' }
+    BrokerageOrder:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          clientOrderId,
+          externalOrderId,
+          status,
+          side,
+          quantity,
+          unitPrice,
+          filledAmount,
+          executedAt,
+        ]
+      properties:
+        clientOrderId: { type: string, format: uuid }
+        externalOrderId: { type: string }
+        status: { type: string, enum: [FILLED, REJECTED, UNKNOWN] }
+        side: { type: string, const: BUY }
+        quantity: { type: string, pattern: '^[0-9]+\.[0-9]{8}$' }
+        unitPrice: { type: [string, 'null'], pattern: '^[0-9]+\.[0-9]{4}$' }
+        filledAmount: { type: [string, 'null'], pattern: '^[0-9]+\.[0-9]{4}$' }
+        executedAt: { type: [string, 'null'], format: date-time }
+    SetScenarioRequest:
+      type: object
+      additionalProperties: false
+      required: [mode]
+      properties:
+        mode: { $ref: '#/components/schemas/ScenarioMode' }
+    ScenarioResponse:
+      type: object
+      additionalProperties: false
+      required: [mode, scope]
+      properties:
+        mode: { $ref: '#/components/schemas/ScenarioMode' }
+        scope: { type: string, const: GLOBAL }
+    ScenarioMode:
+      type: string
+      enum:
+        [
+          NORMAL,
+          TIMEOUT,
+          HTTP_500,
+          MALFORMED_RESPONSE,
+          ORDER_REJECT,
+          ORDER_UNKNOWN_THEN_FILLED,
+        ]
+    ResetResponse:
+      type: object
+      additionalProperties: false
+      required: [datasetVersion, scenarioMode, syntheticData]
+      properties:
+        datasetVersion: { type: string }
+        scenarioMode: { type: string, const: NORMAL }
+        syntheticData: { type: boolean, const: true }
     AccountPage:
       type: object
       additionalProperties: false

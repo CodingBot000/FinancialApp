@@ -7,8 +7,8 @@
 - 활성 branch/worktree: `main` / `/Users/switch/Development/Web/FinancialApp`
 - 현재 실행 종료선: 단계 10 로컬 하드닝 완료 후 STOP
 - 현재 실행 제외: 원격 DB 접속·사전점검·migration/seed와 원격 배포
-- 완료 단계: 단계 1 `DEV-0010`
-- 다음 작업 ID: `BE-0009`, `BE-0010`, `FE-0010`
+- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`
+- 다음 작업 ID: `BE-0010`, `FE-0010`
 
 ## 1. 목적과 문서 권한
 
@@ -45,9 +45,9 @@
 | Milestone 2 | backend JWT와 `/me`, mobile PKCE/session/App Lock/401 lifecycle | 실제 local Keycloak 로그인, `/me`, restart refresh, 실기기 항목 | IN_PROGRESS |
 | Milestone 3 | simulator 원천 데이터, manual/scheduled sync, raw/derived, 자산 조회 | mobile Dashboard/Accounts/sync UX, audit event | IN_PROGRESS |
 | Milestone 4 | deterministic simulation engine와 저장/조회 | mobile 입력, 결과 차트와 disclaimer | IN_PROGRESS |
-| Milestone 5 | quote, idempotency, row-lock cash reservation | simulator brokerage, settlement, reconciliation, ledger/position/execution/audit, 주문 조회와 mobile 주문 흐름 | IN_PROGRESS |
-| Simulator MVP | 계좌/보유/거래 조회와 deterministic seed | 시세, 주문, status, 장애 scenario, reset/reseed | IN_PROGRESS |
-| Contract 품질 | OpenAPI 2개, 현재 operation 20개 controller/provider/fixture/consumer 추적과 호환성 gate | 이후 operation 추가 시 같은 coverage와 provider schema 검증 유지 | DONE (current surface) |
+| Milestone 5 | quote, idempotency, row-lock cash reservation, simulator brokerage/scenario | platform settlement, reconciliation, ledger/position/execution/audit, 주문 조회와 mobile 주문 흐름 | IN_PROGRESS |
+| Simulator MVP | 계좌/보유/거래/시세/주문/status, 6개 장애 scenario와 deterministic reset/reseed | platform developer proxy와 전체 E2E에서 재검증 | DONE (provider boundary) |
+| Contract 품질 | OpenAPI 2개, 현재 operation 27개 controller/provider/fixture/consumer 추적과 호환성 gate | 이후 operation 추가 시 같은 coverage와 provider schema 검증 유지 | DONE (current surface) |
 | Local E2E | 서비스별 test와 수동 Compose smoke | mobile→IdP→platform→simulator→DB 전체 인수 시나리오 | NOT_STARTED |
 | Milestone 6A local | 일부 scheduled sync를 선행 구현 | outbox, local KMS adapter 경계, security event, 관측성 보강과 포트폴리오 문서 | NOT_STARTED |
 | Milestone 6B remote | 없음 | Lightsail DB migration, AWS KMS, HTTPS/EAS와 원격 rollback | CURRENT_RUN_EXCLUDED |
@@ -57,7 +57,7 @@
 다음 항목은 새 기능 제안이 아니라 기존 승인 문서의 요구사항을 실제 구현 상태와 대조해 발견한 보강 대상이다.
 
 1. `GAP-0004`: `DEV-0010`에서 controller, canonical OpenAPI, provider test와 consumer fixture/adapter 상태의 전체 추적 및 호환성 gate를 구현해 해결했다.
-2. `GAP-0005`: simulator의 시세·brokerage·장애 scenario·reset/reseed가 없다.
+2. `GAP-0005`: `BE-0009`에서 simulator 시세·brokerage·장애 scenario·reset/reseed와 실제 HTTP 검증을 구현해 해결했다.
 3. `GAP-0006`: 로컬 MVP가 요구한 append-only 최소 audit event가 없다.
 4. `GAP-0007`: 실제 서비스 전체를 연결한 자동 E2E와 fresh-clone 인수 명령이 없다.
 5. frontend M3~M5 화면은 누락이라기보다 계획된 미구현 상태이며 `FE-0011` 이후 단계에서 화면과 API를 한 vertical slice로 연결한다.
@@ -148,7 +148,7 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - 실제 NestJS/Fastify provider E2E가 현재 20개 operation 성공 응답과 platform의 주요 400/401/403 응답을 canonical schema에 대조한다.
 - `contract:check`가 controller route drift, 누락 operation/provider/fixture, response schema 누락과 compatibility baseline의 path/status/schema 제거를 실패 처리한다.
 
-### 단계 2 — Simulator 거래·Scenario 경계 (`BE-0009`)
+### 단계 2 — Simulator 거래·Scenario 경계 (`BE-0009`, DONE)
 
 목표:
 
@@ -164,6 +164,13 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - scenario가 테스트 간 격리되고 UNKNOWN 이후 status 조회로 결정적 FILLED를 반환한다.
 - clean migration, seed 2회 멱등성, prefix와 role isolation이 통과한다.
 - `GAP-0005`의 simulator 측 조건이 해결된다.
+
+완료 증거:
+
+- canonical simulator OpenAPI에 시세 3개, brokerage 2개, admin 2개 operation을 추가하고 전체 27개 operation·30개 fixture 계약 gate를 통과했다.
+- PostgreSQL advisory lock으로 같은 `clientOrderId` 10개 동시 제출 중 주문 하나만 생성하며 payload conflict와 UNKNOWN→FILLED 전이를 Testcontainers에서 검증했다.
+- clean Compose에서 migration, seed 2회, actual HTTP의 400/201/200 replay, reconciliation과 reset→NORMAL을 검증했다.
+- simulator production image build와 runtime dependency audit 0을 확인했고 platform 시세 adapter는 timeout/no-retry 및 transaction 밖 호출 경계를 유지한다.
 
 ### 단계 3 — Platform Settlement·Reconciliation·Audit (`BE-0010`)
 

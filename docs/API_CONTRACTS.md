@@ -466,6 +466,10 @@ POST /sim/v1/admin/reset
 
 주문 submit 요청에는 platform의 `clientOrderId`가 필수다. simulator는 동일 clientOrderId와 동일 payload에는 기존 결과를 반환하고, 다른 payload에는 conflict를 반환한다.
 
+시세는 deterministic seed의 latest price를 반환하며 platform quote adapter는 GET만 timeout 범위 안에서 호출한다. 주문 POST는 자동 retry하지 않는다. `ORDER_UNKNOWN_THEN_FILLED`는 최초 submit에서 `UNKNOWN`, client order status 조회에서 동일 external order를 `FILLED`로 결정적으로 전이한다.
+
+admin scenario는 `NORMAL`, `TIMEOUT`, `HTTP_500`, `MALFORMED_RESPONSE`, `ORDER_REJECT`, `ORDER_UNKNOWN_THEN_FILLED`만 허용한다. reset은 주문과 scenario/시세 상태를 합성 기준선으로 되돌린다. production에서는 admin 요청이 404이고 상태를 변경하지 않으며 simulator API 자체는 public internet에 노출하지 않는다.
+
 ## 10. 안정적인 오류 코드
 
 최소 오류 코드:

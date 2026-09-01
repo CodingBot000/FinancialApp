@@ -377,5 +377,101 @@
       "retryable": true,
       "fieldErrors": []
     }
+  },
+  {
+    "contract": "institution-simulator-v1",
+    "operationId": "getSimulatorInstruments",
+    "status": 200,
+    "body": {
+      "schemaVersion": "simulator-v1",
+      "items": [
+        {
+          "instrumentId": "SYNTH-EQUITY-001",
+          "displayName": "가상 성장형 펀드",
+          "assetClass": "EQUITY",
+          "currency": "KRW",
+          "status": "ACTIVE"
+        }
+      ]
+    }
+  },
+  {
+    "contract": "institution-simulator-v1",
+    "operationId": "getSimulatorPrices",
+    "status": 200,
+    "body": {
+      "schemaVersion": "simulator-v1",
+      "items": [
+        {
+          "instrumentId": "SYNTH-EQUITY-001",
+          "price": "125000.0000",
+          "currency": "KRW",
+          "asOfAt": "2026-09-01T00:00:00.000Z"
+        }
+      ]
+    }
+  },
+  {
+    "contract": "institution-simulator-v1",
+    "operationId": "getSimulatorMarketHistory",
+    "status": 200,
+    "body": {
+      "schemaVersion": "simulator-v1",
+      "instrumentId": "SYNTH-EQUITY-001",
+      "range": "1M",
+      "points": [
+        {
+          "price": "125000.0000",
+          "currency": "KRW",
+          "asOfAt": "2026-09-01T00:00:00.000Z"
+        }
+      ]
+    }
+  },
+  {
+    "contract": "institution-simulator-v1",
+    "operationId": "submitSimulatorOrder",
+    "status": 201,
+    "body": {
+      "clientOrderId": "91000000-0000-4000-8000-000000000001",
+      "externalOrderId": "SIM-91000000-0000-4000-8000-000000000001",
+      "status": "FILLED",
+      "side": "BUY",
+      "quantity": "3.00000000",
+      "unitPrice": "125000.0000",
+      "filledAmount": "375000.0000",
+      "executedAt": "2026-09-02T00:00:00.000Z"
+    }
+  },
+  {
+    "contract": "institution-simulator-v1",
+    "operationId": "getSimulatorOrder",
+    "status": 200,
+    "body": {
+      "clientOrderId": "91000000-0000-4000-8000-000000000001",
+      "externalOrderId": "SIM-91000000-0000-4000-8000-000000000001",
+      "status": "FILLED",
+      "side": "BUY",
+      "quantity": "3.00000000",
+      "unitPrice": "125000.0000",
+      "filledAmount": "375000.0000",
+      "executedAt": "2026-09-02T00:00:00.000Z"
+    }
+  },
+  {
+    "contract": "institution-simulator-v1",
+    "operationId": "setSimulatorScenario",
+    "status": 200,
+    "body": { "mode": "NORMAL", "scope": "GLOBAL" }
+  },
+  {
+    "contract": "institution-simulator-v1",
+    "operationId": "resetSimulatorDataset",
+    "status": 200,
+    "body": {
+      "datasetVersion": "FINANCIAL_APP_DATASET_V1",
+      "scenarioMode": "NORMAL",
+      "syntheticData": true
+    }
   }
 ]

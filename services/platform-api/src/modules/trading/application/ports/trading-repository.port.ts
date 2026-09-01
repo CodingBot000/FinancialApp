@@ -8,9 +8,14 @@ import type {
 export const TRADING_REPOSITORY = Symbol('TRADING_REPOSITORY');
 
 export interface TradingRepository {
+  quoteInstrument(
+    userId: string,
+    request: QuoteRequest,
+  ): Promise<string | undefined>;
   createQuote(
     userId: string,
     request: QuoteRequest,
+    unitPrice: string,
   ): Promise<QuoteView | undefined>;
   prepareOrder(
     userId: string,

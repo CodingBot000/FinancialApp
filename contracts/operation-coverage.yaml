@@ -192,3 +192,71 @@ contracts:
             adapter: services/platform-api/src/modules/mydata/infrastructure/http/simulator-institution.adapter.ts,
             target: BE-0004,
           }
+      getSimulatorInstruments:
+        implementation:
+          [
+            services/institution-simulator/src/modules/market/market.controller.ts,
+            instruments,
+          ]
+        providerTests:
+          [services/institution-simulator/test/trading/trading.e2e.test.ts]
+        consumer: { status: planned, target: FE-0014 }
+      getSimulatorPrices:
+        implementation:
+          [
+            services/institution-simulator/src/modules/market/market.controller.ts,
+            prices,
+          ]
+        providerTests:
+          [services/institution-simulator/test/trading/trading.e2e.test.ts]
+        consumer:
+          {
+            status: implemented,
+            adapter: services/platform-api/src/modules/trading/infrastructure/http/simulator-market-price.adapter.ts,
+            target: BE-0009,
+          }
+      getSimulatorMarketHistory:
+        implementation:
+          [
+            services/institution-simulator/src/modules/market/market.controller.ts,
+            history,
+          ]
+        providerTests:
+          [services/institution-simulator/test/trading/trading.e2e.test.ts]
+        consumer: { status: not-applicable, target: simulator-contract }
+      submitSimulatorOrder:
+        implementation:
+          [
+            services/institution-simulator/src/modules/trading/brokerage.controller.ts,
+            submit,
+          ]
+        providerTests:
+          [services/institution-simulator/test/trading/trading.e2e.test.ts]
+        consumer: { status: planned, target: BE-0010 }
+      getSimulatorOrder:
+        implementation:
+          [
+            services/institution-simulator/src/modules/trading/brokerage.controller.ts,
+            find,
+          ]
+        providerTests:
+          [services/institution-simulator/test/trading/trading.e2e.test.ts]
+        consumer: { status: planned, target: BE-0010 }
+      setSimulatorScenario:
+        implementation:
+          [
+            services/institution-simulator/src/modules/scenario/scenario.controller.ts,
+            setScenario,
+          ]
+        providerTests:
+          [services/institution-simulator/test/trading/trading.e2e.test.ts]
+        consumer: { status: planned, target: BE-0010 }
+      resetSimulatorDataset:
+        implementation:
+          [
+            services/institution-simulator/src/modules/scenario/scenario.controller.ts,
+            reset,
+          ]
+        providerTests:
+          [services/institution-simulator/test/trading/trading.e2e.test.ts]
+        consumer: { status: planned, target: BE-0010 }

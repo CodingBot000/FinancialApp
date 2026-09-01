@@ -1,7 +1,7 @@
 # Backend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `BE-0009`
+- 다음 ID: `BE-0010`
 - 운영 상태: `codex/backend`는 DEV-0006 통합 이력으로 보존, 신규 BE commit은 단일 `main`에서 수행
 - 활성 worktree: `/Users/switch/Development/Web/FinancialApp`
 - 통합 검토 기준: `main` at `2574ad0`, `platform-v1` at BE-0008, `institution-simulator-v1` at BE-0003
@@ -482,6 +482,73 @@
 ### 다음 작업
 
 - BE-0009: simulator brokerage submit, FILLED/REJECTED settlement와 UNKNOWN reconciliation 구현
+
+## BE-0009 — Simulator 거래·Scenario 경계
+
+- 날짜: 2026-09-02
+- Milestone: 5
+- 상태: COMPLETED
+- base commit: `a8ee092` (`DEV-0010`)
+- contract revision: `institution-simulator-v1` (market 3, brokerage 2, admin 2 operation 추가), `platform-v1` quote provider 구현 변경 없음
+- migration owner: 단일 main backend session; local Compose/Testcontainers만 적용
+- commit: `feat(be): add simulator brokerage scenarios [BE-0009]`
+
+### 완료
+
+- `finapp_simulator`에 market price, brokerage order와 global scenario Drizzle schema 및 forward-only `0002_finapp_simulator_trading` migration을 추가했다.
+- deterministic market/history와 NORMAL/TIMEOUT/HTTP_500/MALFORMED_RESPONSE/ORDER_REJECT/ORDER_UNKNOWN_THEN_FILLED를 실제 Fastify route로 구현했다.
+- brokerage POST는 PostgreSQL advisory lock과 request hash로 같은 `clientOrderId`/payload를 단일 주문으로 만들고 다른 payload를 conflict로 거절한다.
+- UNKNOWN 주문은 client order status 첫 조회에서 동일 external order의 FILLED 결과로 전이하며 fixed-decimal amount를 저장한다.
+- local/test admin reset은 주문을 지우고 계좌·시세·scenario를 합성 기준선으로 reseed한다. production admin 요청은 404이고 repository 상태를 변경하지 않는다.
+- platform quote preview에 simulator market price HTTP adapter를 연결했다. GET timeout만 적용하고 자동 retry하지 않으며 HTTP 호출은 quote insert와 DB transaction 밖에서 끝난다.
+- canonical OpenAPI, operation coverage, compatibility baseline과 success fixture를 7개 operation에 맞춰 함께 갱신했다.
+
+### 변경 파일
+
+- `services/institution-simulator/src/modules/{market,scenario,trading}/**`, `src/database/**`
+- `services/institution-simulator/drizzle/0002_finapp_simulator_trading.sql`, migration journal
+- `services/institution-simulator/test/{database,trading}/**`
+- `services/platform-api/src/modules/trading/**`, `services/platform-api/test/{database,identity,trading}/**`
+- `contracts/openapi/institution-simulator-v1.yaml`, `contracts/{operation-coverage,fixtures,openapi/compatibility-baseline}*`
+- `apps/mobile/{package.json,app.json}`, root `package-lock.json` (resolved `ISSUE-0004` Expo compatible patch)
+- 중앙 상태·계획·issue와 backend workstream 문서
+
+### 검증
+
+- 명령: 두 backend lint, strict typecheck, dependency-cruiser와 Nest build
+- 결과: simulator 42 modules/93 dependencies, platform 69 modules/174 dependencies, 위반 0; 두 build 통과
+- 명령: canonical `contract:check`
+- 결과: OpenAPI lint와 27 operations/30 fixtures/controller/provider/consumer/compatibility gate 통과
+- 명령: PostgreSQL 17.6 Testcontainers 전체 service test
+- 결과: simulator 4 files/12 tests, platform 9 files/51 tests 통과. seed 2회, prefix/role, 10-way idempotency, payload conflict, UNKNOWN→FILLED와 HTTP timeout/malformed/500을 포함한다.
+- 명령: simulator production Docker image build
+- 결과: Node 24.19.0 build 성공, runtime 144 package audit vulnerability 0
+- 명령: clean Compose simulator migration, seed 2회와 actual HTTP smoke
+- 결과: market price, canonical 400, 신규 201 UNKNOWN, status FILLED, 동일 payload 200 replay, reset NORMAL 통과. 검증용 container/network/volume은 종료 후 제거했다.
+- 명령: root `npm audit --json`
+- 결과: 기존 등록 항목 moderate 18, high 0, critical 0; Expo 14와 Drizzle 개발도구 4이며 신규 advisory 없음
+- 명령: root `npm run verify` 최초 실행
+- 결과: Expo expected patch drift로 dependency gate가 실패해 중앙 `ISSUE-0004`를 등록했다. Node 24 workspace에서 SDK 57 compatible patch 8개와 SecureStore config plugin을 적용했고 강제 audit fix는 사용하지 않았다.
+- 명령: local Colima socket을 명시한 최종 root `npm run verify`
+- 결과: formatter, 27-operation contract, Expo dependency, secret, architecture, lint, typecheck, mobile 60 + simulator 12 + platform 51 = 총 123 tests와 두 backend build 통과
+
+### 원격 DB
+
+- 사용 여부: 사용하지 않음
+- migration commit/dataset version: local/Testcontainers `0002_finapp_simulator_trading` / `FINANCIAL_APP_DATASET_V1`
+- 결과: 원격 endpoint/credential 검토, 연결, catalog, migration, seed와 배포 모두 미실행
+
+### 이슈·누락·Handoff
+
+- `BE-ISSUE-0001`: 변화 없음. Drizzle Kit build-time only이며 simulator production runtime audit은 0이다.
+- 중앙 `GAP-0005`: RESOLVED. simulator provider boundary와 actual HTTP 복구 조건을 자동·Compose 검증했다.
+- 중앙 `ISSUE-0004`: RESOLVED. Expo SDK 57 patch 호환성 gate를 복구했다.
+- 신규 backend issue/gap: 없음.
+- Handoff: BE-0010은 market GET과 brokerage POST/status를 DB transaction 밖에서 호출하고 POST 자동 retry를 금지한다. frontend consumer는 BE-0010/FE-0014에서 연결한다.
+
+### 다음 작업
+
+- BE-0010: platform external submit, settlement, reconciliation, order 조회와 append-only 최소 audit 구현
 
 ## 새 기록 Template
 

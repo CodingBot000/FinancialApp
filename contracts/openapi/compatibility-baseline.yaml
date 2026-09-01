@@ -288,6 +288,32 @@ contracts:
           path: '/sim/v1/mydata/customers/{externalCustomerId}/transactions',
           statuses: [200, 429],
         }
+      getSimulatorInstruments:
+        {
+          method: GET,
+          path: /sim/v1/market/instruments,
+          statuses: [200, 429, 500],
+        }
+      getSimulatorPrices:
+        { method: GET, path: /sim/v1/market/prices, statuses: [200, 400, 500] }
+      getSimulatorMarketHistory:
+        { method: GET, path: /sim/v1/market/history, statuses: [200, 400, 500] }
+      submitSimulatorOrder:
+        {
+          method: POST,
+          path: /sim/v1/brokerage/orders,
+          statuses: [200, 201, 400, 404, 409, 500],
+        }
+      getSimulatorOrder:
+        {
+          method: GET,
+          path: '/sim/v1/brokerage/orders/by-client-order-id/{clientOrderId}',
+          statuses: [200, 400, 404],
+        }
+      setSimulatorScenario:
+        { method: PUT, path: /sim/v1/admin/scenario, statuses: [200, 400, 404] }
+      resetSimulatorDataset:
+        { method: POST, path: /sim/v1/admin/reset, statuses: [200, 404] }
     schemas:
       ProblemDetails:
         {
@@ -350,6 +376,43 @@ contracts:
               occurredAt,
               transactionType,
             ],
+        }
+      InstrumentPage: { type: object, properties: [items, schemaVersion] }
+      MarketPricePage: { type: object, properties: [items, schemaVersion] }
+      MarketPrice:
+        { type: object, properties: [asOfAt, currency, instrumentId, price] }
+      MarketHistory:
+        {
+          type: object,
+          properties: [instrumentId, points, range, schemaVersion],
+        }
+      CreateBrokerageOrderRequest:
+        {
+          type: object,
+          properties: [accountId, clientOrderId, instrumentId, quantity, side],
+        }
+      BrokerageOrder:
+        {
+          type: object,
+          properties:
+            [
+              clientOrderId,
+              executedAt,
+              externalOrderId,
+              filledAmount,
+              quantity,
+              side,
+              status,
+              unitPrice,
+            ],
+        }
+      SetScenarioRequest: { type: object, properties: [mode] }
+      ScenarioResponse: { type: object, properties: [mode, scope] }
+      ScenarioMode: { type: string }
+      ResetResponse:
+        {
+          type: object,
+          properties: [datasetVersion, scenarioMode, syntheticData],
         }
       HealthResponse:
         { type: object, properties: [datasetVersion, service, status] }

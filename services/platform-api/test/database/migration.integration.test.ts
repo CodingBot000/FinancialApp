@@ -587,12 +587,16 @@ describe('platform Drizzle migration', () => {
       );
       const resource = resources.rows[0];
       expect(resource).toBeDefined();
-      const quote = await repository.createQuote(owner.userId, {
-        accountId: resource?.account_id ?? '',
-        instrumentId: resource?.instrument_id ?? '',
-        side: 'BUY',
-        quantity: '3.00000000',
-      });
+      const quote = await repository.createQuote(
+        owner.userId,
+        {
+          accountId: resource?.account_id ?? '',
+          instrumentId: resource?.instrument_id ?? '',
+          side: 'BUY',
+          quantity: '3.00000000',
+        },
+        '125000.0000',
+      );
 
       expect(quote).toMatchObject({
         side: 'BUY',
@@ -604,12 +608,16 @@ describe('platform Drizzle migration', () => {
         syntheticQuote: true,
       });
       expect(
-        await repository.createQuote('00000000-0000-4000-8000-000000000099', {
-          accountId: resource?.account_id ?? '',
-          instrumentId: resource?.instrument_id ?? '',
-          side: 'BUY',
-          quantity: '1.00000000',
-        }),
+        await repository.createQuote(
+          '00000000-0000-4000-8000-000000000099',
+          {
+            accountId: resource?.account_id ?? '',
+            instrumentId: resource?.instrument_id ?? '',
+            side: 'BUY',
+            quantity: '1.00000000',
+          },
+          '125000.0000',
+        ),
       ).toBeUndefined();
       const privileges = await pool.query<{
         can_delete: boolean;
@@ -624,12 +632,16 @@ describe('platform Drizzle migration', () => {
         can_update: false,
       });
 
-      const concurrentQuote = await repository.createQuote(owner.userId, {
-        accountId: resource?.account_id ?? '',
-        instrumentId: resource?.instrument_id ?? '',
-        side: 'BUY',
-        quantity: '1.00000000',
-      });
+      const concurrentQuote = await repository.createQuote(
+        owner.userId,
+        {
+          accountId: resource?.account_id ?? '',
+          instrumentId: resource?.instrument_id ?? '',
+          side: 'BUY',
+          quantity: '1.00000000',
+        },
+        '125000.0000',
+      );
       expect(concurrentQuote).toBeDefined();
       const concurrentRequest = {
         quoteId: concurrentQuote?.quoteId ?? '',
@@ -661,18 +673,26 @@ describe('platform Drizzle migration', () => {
       );
 
       const largeQuotes = await Promise.all([
-        repository.createQuote(owner.userId, {
-          accountId: resource?.account_id ?? '',
-          instrumentId: resource?.instrument_id ?? '',
-          side: 'BUY',
-          quantity: '64.00000000',
-        }),
-        repository.createQuote(owner.userId, {
-          accountId: resource?.account_id ?? '',
-          instrumentId: resource?.instrument_id ?? '',
-          side: 'BUY',
-          quantity: '64.00000000',
-        }),
+        repository.createQuote(
+          owner.userId,
+          {
+            accountId: resource?.account_id ?? '',
+            instrumentId: resource?.instrument_id ?? '',
+            side: 'BUY',
+            quantity: '64.00000000',
+          },
+          '125000.0000',
+        ),
+        repository.createQuote(
+          owner.userId,
+          {
+            accountId: resource?.account_id ?? '',
+            instrumentId: resource?.instrument_id ?? '',
+            side: 'BUY',
+            quantity: '64.00000000',
+          },
+          '125000.0000',
+        ),
       ]);
       expect(largeQuotes.every((item) => item !== undefined)).toBe(true);
       const requests = largeQuotes.map((item) => ({

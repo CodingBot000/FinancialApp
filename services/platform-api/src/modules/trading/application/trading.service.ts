@@ -14,6 +14,10 @@ import type {
   QuoteView,
 } from '../domain/trading-model.js';
 import {
+  MARKET_PRICE_PORT,
+  type MarketPricePort,
+} from './ports/market-price.port.js';
+import {
   TRADING_REPOSITORY,
   type TradingRepository,
 } from './ports/trading-repository.port.js';
@@ -37,6 +41,8 @@ export class TradingService {
     private readonly identityRepository: IdentityRepository,
     @Inject(TRADING_REPOSITORY)
     private readonly repository: TradingRepository,
+    @Inject(MARKET_PRICE_PORT)
+    private readonly marketPrice: MarketPricePort,
   ) {}
 
   async preview(
@@ -48,7 +54,17 @@ export class TradingService {
       principal.issuer,
       principal.subject,
     );
-    const quote = await this.repository.createQuote(user.userId, input);
+    const instrumentCode = await this.repository.quoteInstrument(
+      user.userId,
+      input,
+    );
+    if (instrumentCode === undefined) throw new QuoteResourceNotFoundError();
+    const unitPrice = await this.marketPrice.price(instrumentCode);
+    const quote = await this.repository.createQuote(
+      user.userId,
+      input,
+      unitPrice,
+    );
     if (quote === undefined) throw new QuoteResourceNotFoundError();
     return quote;
   }

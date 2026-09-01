@@ -55,10 +55,10 @@ export class DrizzleTradingRepository implements TradingRepository {
   async createQuote(
     userId: string,
     request: QuoteRequest,
+    unitPrice: string,
   ): Promise<QuoteView | undefined> {
     const prices = await this.database
       .select({
-        unitPrice: finappHolding.averagePrice,
         currency: finappInstrument.currency,
       })
       .from(finappFinancialAccount)
@@ -85,11 +85,11 @@ export class DrizzleTradingRepository implements TradingRepository {
       )
       .limit(1);
     const price = prices[0];
-    if (price === undefined || scaled(price.unitPrice, 4) <= 0n) {
+    if (price === undefined || scaled(unitPrice, 4) <= 0n) {
       return undefined;
     }
     const quantity = scaled(request.quantity, 8);
-    const amount = (quantity * scaled(price.unitPrice, 4)) / 100_000_000n;
+    const amount = (quantity * scaled(unitPrice, 4)) / 100_000_000n;
     if (amount <= 0n || amount > 9_999_999_999_999_999_999n) {
       return undefined;
     }
@@ -97,7 +97,7 @@ export class DrizzleTradingRepository implements TradingRepository {
     const createdAt = new Date();
     const expiresAt = new Date(createdAt.getTime() + 60_000);
     const normalizedQuantity = format(quantity, 8);
-    const normalizedPrice = format(scaled(price.unitPrice, 4), 4);
+    const normalizedPrice = format(scaled(unitPrice, 4), 4);
     const estimatedAmount = format(amount, 4);
     await this.database.insert(finappQuote).values({
       id: quoteId,
@@ -124,6 +124,38 @@ export class DrizzleTradingRepository implements TradingRepository {
       expiresAt: expiresAt.toISOString(),
       syntheticQuote: true,
     };
+  }
+
+  async quoteInstrument(
+    userId: string,
+    request: QuoteRequest,
+  ): Promise<string | undefined> {
+    const rows = await this.database
+      .select({ instrumentCode: finappInstrument.instrumentCode })
+      .from(finappFinancialAccount)
+      .innerJoin(
+        finappHolding,
+        and(
+          eq(finappHolding.accountId, finappFinancialAccount.id),
+          eq(finappHolding.instrumentId, request.instrumentId),
+          eq(finappHolding.userId, userId),
+        ),
+      )
+      .innerJoin(
+        finappInstrument,
+        eq(finappInstrument.id, finappHolding.instrumentId),
+      )
+      .where(
+        and(
+          eq(finappFinancialAccount.id, request.accountId),
+          eq(finappFinancialAccount.userId, userId),
+          eq(finappFinancialAccount.status, 'ACTIVE'),
+          eq(finappInstrument.status, 'ACTIVE'),
+          eq(finappInstrument.currency, 'KRW'),
+        ),
+      )
+      .limit(1);
+    return rows[0]?.instrumentCode;
   }
 
   async prepareOrder(

@@ -12,7 +12,7 @@ import {
   finappSimTransaction,
 } from '../../database/schema.js';
 
-const BALANCED_WORKER = {
+export const BALANCED_WORKER_IDS = {
   customerId: '10000000-0000-4000-8000-000000000001',
   accountId: '20000000-0000-4000-8000-000000000001',
   instrumentId: '30000000-0000-4000-8000-000000000001',
@@ -35,7 +35,7 @@ export class AccountRepository {
       await transaction
         .insert(finappSimCustomer)
         .values({
-          id: BALANCED_WORKER.customerId,
+          id: BALANCED_WORKER_IDS.customerId,
           externalCustomerId: 'SYNTH-CUSTOMER-A',
           preset: 'BALANCED_WORKER',
           displayName: '테스트 사용자 A',
@@ -47,7 +47,7 @@ export class AccountRepository {
       await transaction
         .insert(finappSimInstrument)
         .values({
-          id: BALANCED_WORKER.instrumentId,
+          id: BALANCED_WORKER_IDS.instrumentId,
           instrumentCode: 'SYNTH-EQUITY-001',
           displayName: '가상 성장형 펀드',
           assetClass: 'EQUITY',
@@ -58,8 +58,8 @@ export class AccountRepository {
       await transaction
         .insert(finappSimAccount)
         .values({
-          id: BALANCED_WORKER.accountId,
-          customerId: BALANCED_WORKER.customerId,
+          id: BALANCED_WORKER_IDS.accountId,
+          customerId: BALANCED_WORKER_IDS.customerId,
           externalAccountId: 'SYNTH-ACCOUNT-A-001',
           maskedAccountNumber: 'SYNTH-****-0001',
           accountType: 'BROKERAGE',
@@ -73,9 +73,9 @@ export class AccountRepository {
       await transaction
         .insert(finappSimHolding)
         .values({
-          id: BALANCED_WORKER.holdingId,
-          accountId: BALANCED_WORKER.accountId,
-          instrumentId: BALANCED_WORKER.instrumentId,
+          id: BALANCED_WORKER_IDS.holdingId,
+          accountId: BALANCED_WORKER_IDS.accountId,
+          instrumentId: BALANCED_WORKER_IDS.instrumentId,
           externalHoldingId: 'SYNTH-HOLDING-A-001',
           quantity: '1360.00000000',
           averagePrice: '125000.0000',
@@ -85,8 +85,8 @@ export class AccountRepository {
       await transaction
         .insert(finappSimTransaction)
         .values({
-          id: BALANCED_WORKER.transactionId,
-          accountId: BALANCED_WORKER.accountId,
+          id: BALANCED_WORKER_IDS.transactionId,
+          accountId: BALANCED_WORKER_IDS.accountId,
           externalTransactionId: 'SYNTH-TX-A-001',
           transactionType: 'DEPOSIT',
           amount: '1500000.0000',
