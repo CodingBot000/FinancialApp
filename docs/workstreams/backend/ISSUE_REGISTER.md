@@ -3,7 +3,7 @@
 - 다음 ISSUE ID: `BE-ISSUE-0002`
 - 다음 GAP ID: `BE-GAP-0003`
 - active issue: `BE-ISSUE-0001`
-- active gap: `BE-GAP-0002`
+- active gap: 없음
 
 backend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한다. frontend·계약·milestone 완료에도 영향을 주면 handoff와 중앙 `ISSUE_REGISTER.md`에 연결한다.
 
@@ -38,15 +38,15 @@ backend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한�
 
 ### BE-GAP-0002 — 주문 idempotency와 row-lock cash reservation
 
-- 상태: DEFERRED
+- 상태: RESOLVED
 - 심각도: MEDIUM
 - 발견 BE: BE-0007
 - 누락/연기 이유: BE-0007은 ownership, exact decimal과 immutable quote preview를 독립 계약/migration slice로 확정했다. 주문 생성 transaction과 외부 submit을 quote 생성 transaction에 결합하지 않는다.
-- 현재 영향: quote preview는 가능하지만 `POST /api/v1/orders`는 아직 제공하지 않으며 현금 예약도 발생하지 않는다.
+- 현재 영향: 없음. external submit/settlement/reconciliation은 설계된 local transaction 다음 단계인 BE-0009 범위다.
 - 목표 Milestone: Milestone 5 / BE-0008
 - 재확인 조건: 동일 key/same payload 재사용, 다른 payload conflict, cash row lock과 100만 원/80만 원 동시 주문 하나만 성공, available/reserved 합계 보존을 PostgreSQL concurrency test로 검증한다.
-- 해결 BE:
-- 검증: BE-0007에서 quote ownership/immutable 저장까지만 자동·Compose 검증했다.
+- 해결 BE: BE-0008
+- 검증: 동일 key 20개 동시 요청에서 주문 하나와 동일 응답, 다른 hash conflict, 1,540만 원에서 800만 원 주문 두 개 중 하나만 예약됨을 PostgreSQL 17.6에서 확인했다. clean Compose 100만 원 계좌도 동일하게 one-winner와 balance 합계 보존을 통과했다.
 
 ## 단계별 검토 이력
 
@@ -55,6 +55,7 @@ backend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한�
 - BE-0005 (2026-09-02): `BE-ISSUE-0001` 변화 없음. `BE-GAP-0001`을 RESOLVED 처리했다. concurrency/retry/lease 자동 테스트, scheduled Compose sync, 실제 simulator outage backoff 복구, 전체 `npm run verify`를 확인했다. 신규 issue/gap 없음.
 - BE-0006 (2026-09-02): `BE-ISSUE-0001` 변화 없음. versioned synthetic assumption, deterministic engine, ownership, PostgreSQL immutable 결과 저장, clean migration/prefix/role catalog, 전체 `npm run verify`와 platform runtime audit 0을 확인했다. 신규 issue/gap 없음.
 - BE-0007 (2026-09-02): `BE-ISSUE-0001` 변화 없음. `BE-GAP-0002`를 등록했다. quote ownership, exact fixed-decimal, immutable privilege, clean migration/prefix/role catalog, 전체 `npm run verify`와 platform runtime audit 0을 확인했다.
+- BE-0008 (2026-09-02): `BE-ISSUE-0001` 변화 없음. `BE-GAP-0002`를 RESOLVED 처리했다. 20-way idempotency, cash row-lock oversubscription, balance conservation, clean migration/prefix/role catalog, 전체 `npm run verify`와 platform runtime audit 0을 확인했다. 신규 issue/gap 없음.
 
 ## Issue Template
 

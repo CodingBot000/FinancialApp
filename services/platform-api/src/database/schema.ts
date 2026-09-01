@@ -14,6 +14,7 @@ import {
   primaryKey,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -786,5 +787,150 @@ export const finappQuote = finappTradingSchema.table(
       sql`${table.quantity} > 0 AND ${table.unitPrice} > 0 AND ${table.estimatedAmount} > 0 AND ${table.fee} >= 0`,
     ),
     index('finapp_idx_quote_user_expires').on(table.userId, table.expiresAt),
+  ],
+);
+
+export const finappIdempotencyRecord = finappTradingSchema.table(
+  'finapp_idempotency_record',
+  {
+    id: uuid('id').notNull(),
+    userId: uuid('user_id').notNull(),
+    operation: varchar('operation', { length: 50 }).notNull(),
+    idempotencyKey: uuid('idempotency_key').notNull(),
+    requestHash: varchar('request_hash', { length: 64 }).notNull(),
+    resourceType: varchar('resource_type', { length: 40 }),
+    resourceId: uuid('resource_id'),
+    responseStatus: integer('response_status'),
+    responseSnapshot: jsonb('response_snapshot'),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+    expiresAt: timestamp('expires_at', {
+      withTimezone: true,
+      mode: 'date',
+    }).notNull(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_idempotency_record', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_idempotency_user',
+      columns: [table.userId],
+      foreignColumns: [finappAppUser.id],
+    }).onDelete('restrict'),
+    unique('finapp_uq_idempotency_user_operation_key').on(
+      table.userId,
+      table.operation,
+      table.idempotencyKey,
+    ),
+    check(
+      'finapp_ck_idempotency_response_status',
+      sql`${table.responseStatus} IS NULL OR ${table.responseStatus} BETWEEN 200 AND 599`,
+    ),
+  ],
+);
+
+export const finappTradeOrder = finappTradingSchema.table(
+  'finapp_trade_order',
+  {
+    id: uuid('id').notNull(),
+    userId: uuid('user_id').notNull(),
+    accountId: uuid('account_id').notNull(),
+    instrumentId: uuid('instrument_id').notNull(),
+    quoteId: uuid('quote_id').notNull(),
+    clientOrderId: uuid('client_order_id').notNull(),
+    side: varchar('side', { length: 10 }).notNull().default('BUY'),
+    quantity: numeric('quantity', { precision: 19, scale: 8 }).notNull(),
+    estimatedAmount: numeric('estimated_amount', {
+      precision: 19,
+      scale: 4,
+    }).notNull(),
+    currency: varchar('currency', { length: 3 }).notNull().default('KRW'),
+    status: varchar('status', { length: 30 })
+      .notNull()
+      .default('PENDING_SUBMISSION'),
+    externalOrderId: varchar('external_order_id', { length: 100 }),
+    version: bigint('version', { mode: 'bigint' }).notNull().default(0n),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_trade_order', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_order_user',
+      columns: [table.userId],
+      foreignColumns: [finappAppUser.id],
+    }).onDelete('restrict'),
+    foreignKey({
+      name: 'finapp_fk_order_account',
+      columns: [table.accountId],
+      foreignColumns: [finappFinancialAccount.id],
+    }).onDelete('restrict'),
+    foreignKey({
+      name: 'finapp_fk_order_instrument',
+      columns: [table.instrumentId],
+      foreignColumns: [finappInstrument.id],
+    }).onDelete('restrict'),
+    foreignKey({
+      name: 'finapp_fk_order_quote',
+      columns: [table.quoteId],
+      foreignColumns: [finappQuote.id],
+    }).onDelete('restrict'),
+    unique('finapp_uq_order_client_id').on(table.clientOrderId),
+    check('finapp_ck_order_side', sql`${table.side} = 'BUY'`),
+    check(
+      'finapp_ck_order_values',
+      sql`${table.quantity} > 0 AND ${table.estimatedAmount} > 0`,
+    ),
+    check(
+      'finapp_ck_order_status',
+      sql`${table.status} IN ('CREATED', 'FUNDS_RESERVED', 'PENDING_SUBMISSION', 'ACCEPTED', 'UNKNOWN', 'FILLED', 'REJECTED', 'FAILED', 'CANCELLED')`,
+    ),
+    index('finapp_idx_order_user_created').on(table.userId, table.createdAt),
+    index('finapp_idx_order_status_updated').on(table.status, table.updatedAt),
+  ],
+);
+
+export const finappFundReservation = finappTradingSchema.table(
+  'finapp_fund_reservation',
+  {
+    id: uuid('id').notNull(),
+    orderId: uuid('order_id').notNull(),
+    cashAccountId: uuid('cash_account_id').notNull(),
+    amount: numeric('amount', { precision: 19, scale: 4 }).notNull(),
+    status: varchar('status', { length: 20 }).notNull().default('ACTIVE'),
+    expiresAt: timestamp('expires_at', {
+      withTimezone: true,
+      mode: 'date',
+    }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+    releasedAt: timestamp('released_at', { withTimezone: true, mode: 'date' }),
+    settledAt: timestamp('settled_at', { withTimezone: true, mode: 'date' }),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_fund_reservation', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_reservation_order',
+      columns: [table.orderId],
+      foreignColumns: [finappTradeOrder.id],
+    }).onDelete('restrict'),
+    foreignKey({
+      name: 'finapp_fk_reservation_cash_account',
+      columns: [table.cashAccountId],
+      foreignColumns: [finappCashAccount.id],
+    }).onDelete('restrict'),
+    check('finapp_ck_reservation_amount', sql`${table.amount} > 0`),
+    check(
+      'finapp_ck_reservation_status',
+      sql`${table.status} IN ('ACTIVE', 'RELEASED', 'SETTLED', 'EXPIRED')`,
+    ),
+    uniqueIndex('finapp_uq_reservation_order_active')
+      .on(table.orderId)
+      .where(sql`${table.status} = 'ACTIVE'`),
   ],
 );

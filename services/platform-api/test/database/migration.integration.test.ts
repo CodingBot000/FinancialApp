@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { Client, Pool } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -84,7 +86,7 @@ describe('platform Drizzle migration', () => {
         SELECT count(*)::text AS count
         FROM finapp_meta.finapp_platform_drizzle_migrations
       `);
-      expect(history.rows[0]?.count).toBe('5');
+      expect(history.rows[0]?.count).toBe('6');
     } finally {
       await client.end();
     }
@@ -620,6 +622,141 @@ describe('platform Drizzle migration', () => {
       expect(privileges.rows[0]).toEqual({
         can_delete: false,
         can_update: false,
+      });
+
+      const concurrentQuote = await repository.createQuote(owner.userId, {
+        accountId: resource?.account_id ?? '',
+        instrumentId: resource?.instrument_id ?? '',
+        side: 'BUY',
+        quantity: '1.00000000',
+      });
+      expect(concurrentQuote).toBeDefined();
+      const concurrentRequest = {
+        quoteId: concurrentQuote?.quoteId ?? '',
+        accountId: resource?.account_id ?? '',
+        instrumentId: resource?.instrument_id ?? '',
+        side: 'BUY' as const,
+        quantity: '1.00000000',
+      };
+      const concurrentHash = createHash('sha256')
+        .update(JSON.stringify(concurrentRequest))
+        .digest('hex');
+      const concurrentResults = await Promise.all(
+        Array.from({ length: 20 }, () =>
+          repository.prepareOrder(
+            owner.userId,
+            '80000000-0000-4000-8000-000000000000',
+            concurrentHash,
+            concurrentRequest,
+          ),
+        ),
+      );
+      expect(
+        concurrentResults.filter(
+          (item) => item.kind === 'prepared' && item.value.created,
+        ),
+      ).toHaveLength(1);
+      expect(concurrentResults.every((item) => item.kind === 'prepared')).toBe(
+        true,
+      );
+
+      const largeQuotes = await Promise.all([
+        repository.createQuote(owner.userId, {
+          accountId: resource?.account_id ?? '',
+          instrumentId: resource?.instrument_id ?? '',
+          side: 'BUY',
+          quantity: '64.00000000',
+        }),
+        repository.createQuote(owner.userId, {
+          accountId: resource?.account_id ?? '',
+          instrumentId: resource?.instrument_id ?? '',
+          side: 'BUY',
+          quantity: '64.00000000',
+        }),
+      ]);
+      expect(largeQuotes.every((item) => item !== undefined)).toBe(true);
+      const requests = largeQuotes.map((item) => ({
+        quoteId: item?.quoteId ?? '',
+        accountId: resource?.account_id ?? '',
+        instrumentId: resource?.instrument_id ?? '',
+        side: 'BUY' as const,
+        quantity: '64.00000000',
+      }));
+      const hashes = requests.map((request) =>
+        createHash('sha256').update(JSON.stringify(request)).digest('hex'),
+      );
+      const prepared = await Promise.all([
+        repository.prepareOrder(
+          owner.userId,
+          '80000000-0000-4000-8000-000000000001',
+          hashes[0] ?? '',
+          requests[0]!,
+        ),
+        repository.prepareOrder(
+          owner.userId,
+          '80000000-0000-4000-8000-000000000002',
+          hashes[1] ?? '',
+          requests[1]!,
+        ),
+      ]);
+      expect(prepared.map((item) => item.kind).sort()).toEqual([
+        'insufficient_funds',
+        'prepared',
+      ]);
+      const winnerIndex = prepared.findIndex(
+        (item) => item.kind === 'prepared',
+      );
+      const winnerRequest = requests[winnerIndex]!;
+      const winnerHash = hashes[winnerIndex] ?? '';
+      const winnerKey = `80000000-0000-4000-8000-00000000000${winnerIndex + 1}`;
+      const replays = await Promise.all(
+        Array.from({ length: 20 }, () =>
+          repository.prepareOrder(
+            owner.userId,
+            winnerKey,
+            winnerHash,
+            winnerRequest,
+          ),
+        ),
+      );
+      expect(
+        replays.every(
+          (item) => item.kind === 'prepared' && item.value.created === false,
+        ),
+      ).toBe(true);
+      expect(
+        await repository.prepareOrder(
+          owner.userId,
+          winnerKey,
+          'f'.repeat(64),
+          winnerRequest,
+        ),
+      ).toEqual({ kind: 'idempotency_conflict' });
+      const invariants = await pool.query<{
+        available: string;
+        idempotency_records: string;
+        orders: string;
+        reservations: string;
+        reserved: string;
+      }>(
+        `
+        SELECT
+          c.available_balance::text AS available,
+          c.reserved_balance::text AS reserved,
+          (SELECT count(*) FROM finapp_trading.finapp_trade_order)::text AS orders,
+          (SELECT count(*) FROM finapp_trading.finapp_fund_reservation)::text AS reservations,
+          (SELECT count(*) FROM finapp_trading.finapp_idempotency_record)::text AS idempotency_records
+        FROM finapp_wealth.finapp_cash_account c
+        WHERE c.account_id = $1
+      `,
+        [resource?.account_id],
+      );
+      expect(invariants.rows[0]).toEqual({
+        available: '7275000.0000',
+        reserved: '8125000.0000',
+        orders: '2',
+        reservations: '2',
+        idempotency_records: '2',
       });
     } finally {
       await pool.end();

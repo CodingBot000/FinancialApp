@@ -128,6 +128,23 @@ describe('GET /api/v1/me OIDC boundary', () => {
       expiresAt: '2026-09-02T00:01:00.000Z',
       syntheticQuote: true,
     }),
+    prepareOrder: vi.fn().mockResolvedValue({
+      kind: 'prepared',
+      value: {
+        created: true,
+        order: {
+          orderId: '23df8759-92ef-45fc-8015-ef891e4e8757',
+          status: 'PENDING_SUBMISSION',
+          side: 'BUY',
+          quantity: '3.00000000',
+          estimatedAmount: '375000.0000',
+          filledAmount: null,
+          createdAt: '2026-09-02T00:00:20.000Z',
+          updatedAt: '2026-09-02T00:00:20.000Z',
+          statusRefreshRecommendedAfterMs: 2000,
+        },
+      },
+    }),
   };
   let app: NestFastifyApplication;
   let issuer: string;
@@ -427,6 +444,47 @@ describe('GET /api/v1/me OIDC boundary', () => {
       unitPrice: '125000.0000',
       estimatedAmount: '375000.0000',
       syntheticQuote: true,
+    });
+  });
+
+  it('requires an idempotency key and prepares one cash-reserved order', async () => {
+    const payload = {
+      quoteId: 'd228553f-f10a-47ad-89f6-77be8e034324',
+      accountId: '688c601b-ab70-4683-9dd4-6a1174550653',
+      instrumentId: 'c805563c-148c-4451-8a9a-4808da7b32ae',
+      side: 'BUY',
+      quantity: '3.00000000',
+    };
+    const missingKey = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: {
+          authorization: `Bearer ${await accessToken({ scope: 'order.execute' })}`,
+        },
+        method: 'POST',
+        url: '/api/v1/orders',
+        payload,
+      });
+    expect(missingKey.statusCode).toBe(400);
+
+    const response = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: {
+          authorization: `Bearer ${await accessToken({ scope: 'order.execute' })}`,
+          'idempotency-key': '90000000-0000-4000-8000-000000000001',
+        },
+        method: 'POST',
+        url: '/api/v1/orders',
+        payload,
+      });
+    expect(response.statusCode).toBe(202);
+    expect(response.json()).toMatchObject({
+      status: 'PENDING_SUBMISSION',
+      quantity: '3.00000000',
+      estimatedAmount: '375000.0000',
     });
   });
 });

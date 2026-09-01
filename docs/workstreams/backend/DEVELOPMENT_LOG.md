@@ -1,10 +1,10 @@
 # Backend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `BE-0008`
+- 다음 ID: `BE-0009`
 - branch/worktree: `codex/backend` / `/Users/switch/Development/Web/FinancialApp-backend`
 - base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
-- contract revision: `platform-v1` at BE-0007, `institution-simulator-v1` at BE-0003
+- contract revision: `platform-v1` at BE-0008, `institution-simulator-v1` at BE-0003
 - migration owner: backend session 또는 integration owner가 작업마다 기록
 
 backend session은 `services/**`, `infra/**`, OpenAPI와 migration 변경을 commit 단위로 기록한다. 중앙 `DEVELOPMENT_LOG.md`는 integration owner 역할로 통합할 때만 수정한다.
@@ -421,6 +421,67 @@ backend session은 `services/**`, `infra/**`, OpenAPI와 migration 변경을 com
 ### 다음 작업
 
 - BE-0008: idempotency record, trade order와 row-lock cash reservation transaction 구현
+
+## BE-0008 — 멱등 주문 준비와 row-lock 현금 예약
+
+- 날짜: 2026-09-02
+- Milestone: 5
+- 상태: COMPLETED
+- base commit: `04d22e1` (`BE-0007`)
+- contract revision: `platform-v1` (`POST /api/v1/orders` PENDING_SUBMISSION 준비 응답 추가)
+- migration owner: backend session; local Compose/Testcontainers만 적용
+- commit: `feat(be): reserve order funds idempotently [BE-0008]`
+
+### 완료
+
+- `finapp_trading`에 idempotency record, trade order와 fund reservation Drizzle schema 및 forward-only migration을 추가했다.
+- 모든 table/index/PK/FK/unique/check 이름을 `finapp_`로 생성하고 idempotency record의 UPDATE/DELETE와 order/reservation DELETE를 runtime role에서 제거했다.
+- `POST /api/v1/orders`가 필수 UUID `Idempotency-Key`, `order.execute`, ownership, quote payload 일치와 만료를 검증한다.
+- quantity를 canonical 8자리 decimal로 정규화한 ordered payload의 SHA-256 request hash를 저장한다.
+- 동일 사용자/operation/key에 PostgreSQL transaction advisory lock을 잡고 같은 hash는 기존 response snapshot을 `200`으로 반환하며 다른 hash는 `409 IDEMPOTENCY_CONFLICT`로 거절한다.
+- quote와 연결된 cash account를 `FOR UPDATE`로 잠그고 available balance를 검증한 뒤 available 감소, reserved 증가, order, active reservation과 idempotency response를 한 transaction으로 commit한다.
+- 부족한 현금은 `INSUFFICIENT_FUNDS`, 만료 quote는 `QUOTE_EXPIRED`, 다른 사용자 resource는 존재를 숨기는 404로 반환한다.
+- 주문은 `PENDING_SUBMISSION`과 `202`로 반환한다. simulator 외부 호출은 이 local transaction이 commit된 뒤 별도 BE 단계에서 수행해 DB lock 동안 HTTP를 호출하지 않는다.
+- idempotency retention은 24시간, active fund reservation 만료는 15분으로 고정했다.
+
+### 변경 파일
+
+- `services/platform-api/src/modules/trading/**`
+- `services/platform-api/src/database/schema.ts`
+- `services/platform-api/drizzle/0005_finapp_order_reservation.sql`, migration journal
+- `services/platform-api/test/database/**`, `test/identity/**`, `test/trading/**`
+- `contracts/openapi/platform-v1.yaml`
+- `docs/workstreams/backend/**`
+
+### 검증
+
+- 명령: platform lint, strict typecheck, dependency-cruiser, Vitest, Nest build
+- 결과: 8 test files / 46 tests 통과. canonical hash, domain error, HTTP key/scope와 실제 PostgreSQL idempotency/concurrency 불변조건을 포함한다.
+- 명령: PostgreSQL 17.6 Testcontainers concurrency
+- 결과: 동일 key 20개 동시 요청에서 created 1개/기존 결과 19개와 order/reservation/idempotency 각 1행; 1,540만 원에서 800만 원 주문 두 개 중 하나만 추가 예약되어 available `7275000.0000`, reserved `8125000.0000`, 합계 보존과 음수 잔액 없음
+- 명령: root `npm run verify` (Node 24.19.0, Colima socket 명시)
+- 결과: formatter, OpenAPI/fixture, Expo dependency, secret scan, 전체 lint/typecheck/test/build 통과; 전체 12 test files / 55 tests 통과
+- 명령: platform production Docker image build 및 workspace runtime audit
+- 결과: Node 24.19.0 image build 성공, production dependency vulnerability 0
+- 명령: clean Compose migration, runtime-role 100만 원 동시 주문과 catalog/role query
+- 결과: 80만 원 주문 두 개 중 prepared/insufficient 각 1개, 이어서 12.5만 원 동일 key 20개에서 주문 1개만 생성; 최종 available `75000.0000`, reserved `925000.0000`, order/reservation/idempotency 각 2행, history 6, prefix 위반 relation/constraint 0, 미검증 constraint 0, idempotency UPDATE/DELETE와 order DELETE false
+
+### 원격 DB
+
+- 사용 여부: 사용하지 않음
+- migration commit/dataset version: local/Testcontainers `0005_finapp_order_reservation` / `FINANCIAL_APP_DATASET_V1`
+- 결과: Lightsail 연결, migration과 seed 모두 미실행
+
+### 이슈·누락·Handoff
+
+- `BE-ISSUE-0001`: 변화 없음. build-time only이며 platform production workspace audit은 0이다.
+- `BE-GAP-0002`: RESOLVED. 멱등 재사용/충돌과 row-lock cash reservation concurrency 조건을 자동·Compose 검증했다.
+- 신규 backend issue/gap: 없음.
+- Handoff: frontend는 최초 주문 준비 `202 PENDING_SUBMISSION`, 동일 key replay `200`, `IDEMPOTENCY_CONFLICT`/`QUOTE_EXPIRED`/`INSUFFICIENT_FUNDS`를 BE-0008 contract로 처리해야 한다. 주문 POST는 자동 retry하지 않는다.
+
+### 다음 작업
+
+- BE-0009: simulator brokerage submit, FILLED/REJECTED settlement와 UNKNOWN reconciliation 구현
 
 ## 새 기록 Template
 

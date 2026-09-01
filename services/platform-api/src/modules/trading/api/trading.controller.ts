@@ -1,23 +1,30 @@
 import {
   BadRequestException,
   Body,
+  ConflictException,
   Controller,
+  Headers,
   Inject,
   NotFoundException,
   Post,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
 
 import type { AuthenticatedPrincipal } from '../../../core/auth/authenticated-principal.js';
 import { CurrentPrincipal } from '../../../core/auth/current-principal.decorator.js';
 import { OidcJwtGuard } from '../../../core/auth/oidc-jwt.guard.js';
 import { RequiredScopes } from '../../../core/auth/required-scopes.decorator.js';
 import {
+  IdempotencyConflictError,
+  InsufficientFundsError,
   QuoteInputError,
+  QuoteExpiredError,
   QuoteResourceNotFoundError,
   TradingService,
 } from '../application/trading.service.js';
-import type { QuoteView } from '../domain/trading-model.js';
+import type { OrderView, QuoteView } from '../domain/trading-model.js';
 
 function problem(status: number, code: string, detail: string) {
   return {
@@ -61,6 +68,56 @@ export class TradingController {
       if (error instanceof QuoteResourceNotFoundError) {
         throw new NotFoundException(
           problem(404, 'RESOURCE_NOT_FOUND', 'The resource was not found.'),
+        );
+      }
+      throw error;
+    }
+  }
+
+  @Post()
+  @RequiredScopes('order.execute')
+  async prepareOrder(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Headers('idempotency-key') idempotencyKey: string | undefined,
+    @Body() body: unknown,
+    @Res({ passthrough: true }) response: FastifyReply,
+  ): Promise<OrderView> {
+    try {
+      const result = await this.tradingService.prepareOrder(
+        principal,
+        idempotencyKey,
+        body,
+      );
+      response.code(result.created ? 202 : 200);
+      return result.order;
+    } catch (error: unknown) {
+      if (error instanceof QuoteInputError) {
+        throw new BadRequestException(
+          problem(400, 'VALIDATION_FAILED', 'Order request is invalid.'),
+        );
+      }
+      if (error instanceof QuoteResourceNotFoundError) {
+        throw new NotFoundException(
+          problem(404, 'RESOURCE_NOT_FOUND', 'The resource was not found.'),
+        );
+      }
+      if (error instanceof IdempotencyConflictError) {
+        throw new ConflictException(
+          problem(
+            409,
+            'IDEMPOTENCY_CONFLICT',
+            'The idempotency key was used with another request.',
+          ),
+        );
+      }
+      if (error instanceof QuoteExpiredError) {
+        throw new ConflictException(
+          problem(409, 'QUOTE_EXPIRED', 'The quote has expired.'),
+        );
+      }
+      if (error instanceof InsufficientFundsError) {
+        throw new ConflictException(
+          problem(409, 'INSUFFICIENT_FUNDS', 'Available cash is insufficient.'),
         );
       }
       throw error;

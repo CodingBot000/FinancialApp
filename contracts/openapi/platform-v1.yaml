@@ -405,6 +405,54 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/orders:
+    post:
+      operationId: prepareBuyOrder
+      summary: Idempotently create a BUY order and reserve cash
+      description: Requires `order.execute`. External submission occurs after this local transaction.
+      security:
+        - BearerAuth: []
+      tags: [Trading]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '200':
+          description: Existing result for the same key and canonical payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '202':
+          description: Cash reserved and order ready for external submission.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Idempotency conflict, expired quote, or insufficient funds.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
 components:
   securitySchemes:
     BearerAuth:
@@ -906,6 +954,65 @@ components:
         syntheticQuote:
           type: boolean
           const: true
+    CreateOrderRequest:
+      type: object
+      additionalProperties: false
+      required: [quoteId, accountId, instrumentId, side, quantity]
+      properties:
+        quoteId:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+        instrumentId:
+          type: string
+          format: uuid
+        side:
+          type: string
+          const: BUY
+        quantity:
+          type: string
+          pattern: '^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,8})?$'
+    Order:
+      type: object
+      additionalProperties: false
+      required:
+        - orderId
+        - status
+        - side
+        - quantity
+        - estimatedAmount
+        - filledAmount
+        - createdAt
+        - updatedAt
+        - statusRefreshRecommendedAfterMs
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          const: PENDING_SUBMISSION
+        side:
+          type: string
+          const: BUY
+        quantity:
+          type: string
+          pattern: '^[0-9]+\.[0-9]{8}$'
+        estimatedAmount:
+          $ref: '#/components/schemas/Money'
+        filledAmount:
+          type: 'null'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        statusRefreshRecommendedAfterMs:
+          type: integer
+          const: 2000
     MeResponse:
       type: object
       additionalProperties: false
