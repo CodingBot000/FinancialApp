@@ -1,10 +1,10 @@
 # 개발 로그
 
 - 기록 방식: append-only
-- 마지막 DEV ID: `DEV-0005`
-- 다음 DEV ID: `DEV-0006`
+- 마지막 DEV ID: `DEV-0006`
+- 다음 DEV ID: `DEV-0007`
 
-모든 integration/shared commit은 하나의 `DEV-####`와 연결한다. frontend와 backend lane commit은 각각 `FE-####`, `BE-####`와 workstream 개발 로그를 사용한다. commit subject에도 같은 ID를 넣어 Git history와 문서 기록을 상호 추적할 수 있게 한다.
+모든 integration/shared commit은 하나의 `DEV-####`와 연결한다. frontend와 backend 영역 commit은 각각 `FE-####`, `BE-####`와 workstream 개발 로그를 사용한다. DEV-0006 이후에는 단일 main에서 작업하되 영역별 ID namespace와 기록은 유지한다. commit subject에도 같은 ID를 넣어 Git history와 문서 기록을 상호 추적할 수 있게 한다.
 
 기존 항목의 사실 오류를 수정할 때는 원문을 삭제하지 않고 `정정` 또는 `추가 기록`을 남긴다.
 
@@ -279,6 +279,64 @@
 - 이 commit을 공통 base로 frontend와 backend worktree 생성
 - frontend `FE-0001`과 backend `BE-0001`을 별도 Codex session에서 병렬 시작
 - integration owner는 양쪽 첫 vertical slice 후 `DEV-0006` main 통합 수행
+
+## DEV-0006 — Frontend/Backend 단일 Main 통합
+
+- 날짜: 2026-09-02
+- Milestone: 1 완료, 2~5 통합 기준선
+- 상태: COMPLETED
+- 예정 commit: `chore(integration): unify parallel workstreams [DEV-0006]`
+
+### 완료
+
+- `codex/backend` BE-0001~BE-0008 head `0753110`을 `origin/codex/backend`에 push하고 merge commit `b927e3a`로 main에 통합
+- `codex/frontend` FE-0001~FE-0009 head `dfc3547`을 `origin/codex/frontend`에 push하고 merge commit `2926278`로 main에 통합
+- frontend/backend가 추가한 전체 manifest를 기준으로 root `package-lock.json` 재생성
+- npm install script를 exact version allow와 명시적 deny policy로 고정하고 pending package 0건 확인
+- mobile API/OIDC local 환경변수 이름을 실제 source와 일치시키고 Keycloak redirect를 `wealthsandbox://oauth/callback`으로 통일
+- mobile architecture boundary와 두 backend dependency-cruiser를 root `verify`와 CI 필수 gate에 연결
+- `.dockerignore`로 Docker context를 2.1GB local tree에서 190KB source context로 제한
+- backend Docker build를 service workspace + root build tool clean install로 제한하고 runtime image에서 devDependency 제거 유지
+- 중앙 상태, 결정, issue/gap와 병렬 단계 종료 문서를 현재 구현 상태로 갱신
+
+### 변경 파일
+
+- root/CI: `.dockerignore`, `.env.example`, `.github/workflows/ci.yml`, `package.json`, `package-lock.json`, `README.md`
+- mobile config: `apps/mobile/.env.example`
+- infra: `infra/keycloak/finapp-realm.json`, `infra/docker/platform-api.Dockerfile`, `infra/docker/institution-simulator.Dockerfile`
+- docs: `DEVELOPMENT_LOG.md`, `IMPLEMENTATION_DECISIONS.md`, `IMPLEMENTATION_STATUS.md`, `ISSUE_REGISTER.md`, `PARALLEL_DEVELOPMENT_GUIDE.md`
+
+### 검증
+
+- `npm ci`: 통합 lockfile clean install 성공, install script pending 0
+- `npm run verify` + Colima Testcontainers socket override: formatting, OpenAPI/fixture, Expo dependency, secret, 세 architecture gate, lint, strict typecheck, 113 tests와 두 Nest build 통과
+- `npm exec --yes expo-doctor@latest`: 21/21 checks 통과
+- architecture: mobile 65 modules, platform 67 modules/169 dependencies, simulator 26 modules/38 dependencies 위반 0
+- Vitest: mobile 21 files/60 tests, simulator 3 files/7 tests, platform 8 files/46 tests 통과
+- clean PostgreSQL 17.6 Compose: platform migration history 6, simulator history 2
+- DB catalog: `finapp_` relation/constraint prefix 위반 0, platform↔simulator schema privilege 모두 false
+- simulator seed 2회 실행 후 synthetic customer 1행 유지
+- runtime: platform/simulator health, Keycloak discovery와 imported mobile client redirect 확인
+- auth smoke: 무인증 `/api/v1/me`가 trace header와 canonical 401 ProblemDetails 반환
+- Docker: build context 190KB, 두 production image build 성공, runtime workspace audit 각각 vulnerability 0
+- `npm audit --json`: moderate 18, high 0, critical 0; Expo 관련 14와 Drizzle build-time 관련 4로 중앙 issue 분리
+- 검증용 Compose container/network/volume은 완료 후 제거
+
+### 이슈와 누락
+
+- `ISSUE-0002`: 통합 Expo dependency moderate advisory 14건 OPEN
+- `ISSUE-0003`: Drizzle Kit build-time dependency moderate advisory 4건 OPEN; backend runtime 영향 없음
+- `GAP-0001`: live OIDC login/refresh/`/me`와 native restart는 FE-0010에서 검증
+- `GAP-0002`: 현재 Xcode 제약으로 iOS Development Build runtime 미검증
+- `GAP-0003`: 실제 biometric 기기 prompt/background App Lock 미검증
+- 첫 Testcontainers 실행의 Colima host socket mount 오류는 `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock`로 환경 원인을 확인하고 전체 재검증 통과
+- 병렬 Docker build의 메모리 경합은 workspace-scoped install과 직렬 build로 해소했으며 application defect로 남지 않음
+
+### 다음 작업
+
+- `BE-0009`: simulator order submit, settlement와 reconciliation
+- `FE-0010`: 최종 backend OpenAPI 기준 OIDC `/me`와 authenticated API 통합
+- 이후 Milestone 3 Dashboard, Milestone 4 simulation UI, Milestone 5 order UI를 단일 main에서 직렬 진행
 
 ## 새 기록 Template
 

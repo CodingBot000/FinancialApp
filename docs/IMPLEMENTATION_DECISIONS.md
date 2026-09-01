@@ -1,7 +1,7 @@
 # 구현 결정 기록
 
 - 상태: 실행 기준선
-- 마지막 갱신: 2026-09-01
+- 마지막 갱신: 2026-09-02
 
 이 문서는 ADR보다 작은 구현 결정을 한곳에 기록한다. `PENDING` 항목은 해당 milestone 전에 해결해야 한다.
 
@@ -49,6 +49,9 @@
 | D-038 | ACCEPTED | frontend는 원격 DB에 연결하지 않는다. 원격 Lightsail migration은 backend의 단일 migration owner만 승인 후 수행하며 자동 test는 local/Testcontainers PostgreSQL을 사용한다. 합성 데이터는 destructive DB 작업의 허가 근거가 아니다. |
 | D-039 | ACCEPTED | 공통 scaffold는 NodeNext ESM과 TypeScript 6.0.3을 사용한다. TypeScript 7.0.2는 현재 typescript-eslint 8.69.0의 `<6.1.0` peer 범위를 벗어나므로 사용하지 않는다. |
 | D-040 | ACCEPTED | `contracts/openapi/platform-v1.yaml`과 simulator 계약을 canonical baseline으로 commit하고 Redocly lint와 JSON Schema fixture validation을 CI gate로 사용한다. |
+| D-041 | ACCEPTED | DEV-0006 이후 frontend/backend 병렬 worktree 단계는 종료하고 모든 신규 개발과 통합 책임을 단일 `main` 작업 흐름으로 전환한다. 기존 `codex/frontend`와 `codex/backend`는 원격에 보존한다. |
+| D-042 | ACCEPTED | mobile import boundary와 두 backend dependency-cruiser 검사를 root `verify`와 CI의 필수 gate로 실행한다. |
+| D-043 | ACCEPTED | npm install script는 version-pinned allow/deny policy로 관리한다. Docker build context는 `.dockerignore`로 제한하고 backend image build는 해당 workspace와 root build tool만 clean install한다. |
 
 ## 정정 이력
 
@@ -63,7 +66,7 @@
 | TypeScript | 6.0.3 | exact root devDependency와 lockfile |
 | NestJS | 12.0.1 | exact workspace dependency와 lockfile |
 | Fastify | 5.12.1 | `@nestjs/platform-fastify` 12.0.1 dependency |
-| Drizzle ORM/Kit | scaffold 시 current stable | exact dependency와 lockfile |
+| Drizzle ORM/Kit | 0.45.2 / 0.31.10 | exact dependency와 lockfile |
 | Vitest | 4.1.11 | exact root devDependency와 lockfile |
 | jose | scaffold 시 current stable | exact dependency와 lockfile |
 | Expo | 57.0.18 | workspace compatible range와 lockfile |
@@ -79,24 +82,24 @@
 
 - Node.js: `v24.19.0` — Node 24 LTS 기준 충족
 - npm: `11.17.0`
-- Docker: `29.7.2`
+- Docker: `29.5.2`
 
 ## Milestone 전에 확정할 항목
 
-### Milestone 1
+### Milestone 1 — 확정 완료
 
-- Victory Native, Skia, Reanimated 정확한 patch 조합
-- PostgreSQL 17 정확한 container patch/digest
-- Drizzle ORM/Kit 정확한 patch 조합
-- 로컬 port 충돌 여부
+- Victory Native 42.0.0, Skia 2.6.2, Reanimated 4.5.1, Worklets 0.10.1
+- PostgreSQL 17.6 Alpine digest와 Keycloak 26.7.3 digest
+- Drizzle ORM 0.45.2 / Kit 0.31.10
+- local ports: platform 8081, simulator 8082, Keycloak 8083, PostgreSQL 5433
 
 ### Milestone 2
 
-- Keycloak realm 이름
-- mobile client ID
-- API audience
+- Keycloak realm: `finapp`
+- mobile client ID: `finapp-mobile`
+- API audience: `finapp-platform-api`
 - access/refresh token TTL
-- redirect URI의 iOS/Android scheme
+- redirect URI: `wealthsandbox://oauth/callback`
 
 ### Milestone 6
 

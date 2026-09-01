@@ -1,8 +1,15 @@
 # 프론트엔드·백엔드 병렬 개발 운영 지침
 
-- 상태: 실행 기준선
+- 상태: DEV-0006에서 병렬 단계 종료, 이 문서는 이력/재분리 기준으로 보존
 - 작성일: 2026-09-01
 - 적용 대상: Codex frontend session, backend session과 integration owner
+
+## 0. 현재 운영 상태
+
+- `codex/backend`의 BE-0001~BE-0008과 `codex/frontend`의 FE-0001~FE-0009는 2026-09-02 DEV-0006에서 `main`에 통합했다.
+- 두 branch는 `origin/codex/backend`, `origin/codex/frontend`에 이력으로 보존한다.
+- 이후 신규 개발은 사용자의 결정에 따라 단일 `main` 작업 흐름에서 직렬 진행한다.
+- 이 문서의 worktree/session 규칙은 향후 다시 병렬화할 때만 적용한다. 별도 결정 없이 기존 worktree branch에서 신규 commit을 만들지 않는다.
 
 ## 1. 결론
 

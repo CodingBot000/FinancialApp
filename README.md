@@ -24,6 +24,7 @@ docs                               Scope, architecture and progress tracking
 ```bash
 npm ci
 npm run contract:check
+npm run architecture:check
 npm run lint
 npm run typecheck
 npm run test
@@ -33,9 +34,9 @@ npm run verify
 
 Mobile 개발 서버는 `npm run start -w @finapp/mobile`, backend 서비스는 각 workspace의 `start:dev` script로 실행한다.
 
-## Parallel development
+## Development workflow
 
-공통 scaffold가 main에 통합된 뒤 frontend와 backend를 별도 Git worktree에서 진행한다. 소유권, commit ID와 원격 DB 규칙은 `docs/PARALLEL_DEVELOPMENT_GUIDE.md`를 따른다. frontend는 PostgreSQL에 직접 연결하지 않고 canonical OpenAPI revision에 맞춘 contract mock을 사용한다.
+frontend FE-0001~~FE-0009와 backend BE-0001~~BE-0008의 병렬 단계는 DEV-0006에서 main에 통합됐다. 이후 신규 개발은 main 한 곳에서 직렬 진행하되 FE/BE/DEV commit ID와 개발 로그를 유지한다. 과거 소유권과 재분리 기준은 `docs/PARALLEL_DEVELOPMENT_GUIDE.md`를 따른다. frontend는 PostgreSQL에 직접 연결하지 않고 canonical OpenAPI와 backend HTTP API를 사용한다.
 
 ## Remote database
 

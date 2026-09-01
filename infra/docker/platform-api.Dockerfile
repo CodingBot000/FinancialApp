@@ -7,7 +7,7 @@ COPY package.json package-lock.json .npmrc ./
 COPY apps/mobile/package.json apps/mobile/package.json
 COPY services/platform-api/package.json services/platform-api/package.json
 COPY services/institution-simulator/package.json services/institution-simulator/package.json
-RUN npm ci
+RUN npm ci --workspace @finapp/platform-api --include-workspace-root
 
 COPY tsconfig.base.json ./
 COPY services/platform-api services/platform-api

@@ -34,6 +34,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - run: npm run architecture:check -w @finapp/mobile
       - run: npm run lint -w @finapp/mobile
       - run: npm run typecheck -w @finapp/mobile
       - run: npm run test -w @finapp/mobile
@@ -52,6 +53,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - run: npm run architecture -w ${{ matrix.workspace }}
       - run: npm run lint -w ${{ matrix.workspace }}
       - run: npm run typecheck -w ${{ matrix.workspace }}
       - run: npm run test -w ${{ matrix.workspace }}

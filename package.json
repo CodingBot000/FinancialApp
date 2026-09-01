@@ -20,6 +20,7 @@
     "react-native-worklets": "0.10.1"
   },
   "scripts": {
+    "architecture:check": "npm run architecture:check -w @finapp/mobile && npm run architecture -w @finapp/platform-api && npm run architecture -w @finapp/institution-simulator",
     "build": "npm run build --workspaces --if-present",
     "contract:check": "npm run contract:lint && node scripts/validate-contract-fixtures.mjs",
     "contract:lint": "redocly lint contracts/openapi/platform-v1.yaml contracts/openapi/institution-simulator-v1.yaml",
@@ -29,7 +30,7 @@
     "security:secrets": "node scripts/check-secrets.mjs",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "verify": "npm run format:check && npm run contract:check && npm run dependency:check -w @finapp/mobile && npm run security:secrets && npm run lint && npm run typecheck && npm run test && npm run build"
+    "verify": "npm run format:check && npm run contract:check && npm run dependency:check -w @finapp/mobile && npm run security:secrets && npm run architecture:check && npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -48,5 +49,15 @@
     "typescript-eslint": "8.69.0",
     "vitest": "4.1.11",
     "yaml": "2.9.0"
+  },
+  "allowScripts": {
+    "esbuild@0.18.20": true,
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true,
+    "@shopify/react-native-skia@2.6.2": true,
+    "cpu-features": false,
+    "protobufjs": false,
+    "ssh2": false,
+    "fsevents@2.3.3": true
   }
 }

@@ -75,7 +75,7 @@
         "order.execute",
         "finapp-api-audience"
       ],
-      "redirectUris": ["finapp://auth/*"],
+      "redirectUris": ["wealthsandbox://oauth/callback"],
       "webOrigins": ["+"],
       "attributes": {
         "pkce.code.challenge.method": "S256"

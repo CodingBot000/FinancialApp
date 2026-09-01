@@ -1,10 +1,10 @@
 # 구현 상태
 
-- 현재 Milestone: 0 — 저장소와 결정 기준선
+- 현재 Milestone: 2 — OIDC와 App Lock 통합
 - 전체 상태: IN_PROGRESS
-- 마지막 갱신: 2026-09-01
-- 마지막 DEV ID: DEV-0005
-- 다음 DEV ID: DEV-0006
+- 마지막 갱신: 2026-09-02
+- 마지막 DEV ID: DEV-0006
+- 다음 DEV ID: DEV-0007
 
 ## 상태 표기
 
@@ -13,82 +13,86 @@
 - `BLOCKED`: 외부 조건 없이는 진행 불가
 - `DONE`: 완료 조건과 검증 통과
 
+## 단일 Main 통합 상태
+
+- 공통 base: `5ffc23edf403c56b95d15656724a23f7a62546af`
+- backend 통합 범위: `BE-0001`~`BE-0008`, head `0753110889608042a0661fcd1283e0b513941ddf`
+- frontend 통합 범위: `FE-0001`~`FE-0009`, head `dfc3547fecc7e6f6d770bd5908d6ea5095e74f58`
+- backend merge commit: `b927e3a`
+- frontend merge commit: `2926278`
+- 운영 방식: 병렬 worktree 단계 종료, 이후 작업은 `main` 한 곳에서 직렬 진행
+- 원격 보존 branch: `origin/codex/backend`, `origin/codex/frontend`
+
 ## Milestone 요약
 
-| Milestone | 상태 | 완료 조건 요약 |
+| Milestone | 상태 | 현재 결과와 남은 완료 조건 |
 |---|---|---|
-| 0. 저장소와 결정 기준선 | IN_PROGRESS | 문서, Node.js 24, 구조, 기본 명령 |
-| 1. 실행 가능한 골격 | NOT_STARTED | Compose, 두 서비스, Expo, health, CI |
-| 2. OIDC와 App Lock | NOT_STARTED | PKCE, JWT 검증, refresh, biometric |
-| 3. 동기화와 Dashboard | NOT_STARTED | simulator HTTP, raw/derived, 자산 UI |
-| 4. 서버 시뮬레이션 | NOT_STARTED | deterministic p10/p50/p90 |
-| 5. BUY 주문과 복구 | NOT_STARTED | idempotency, reservation, reconciliation |
-| 6. 하드닝과 원격 데모 | NOT_STARTED | KMS, Lightsail, HTTPS, EAS, demo |
+| 0. 저장소와 결정 기준선 | DONE | 문서, Node.js 24, workspace, 공통 품질 gate 완료 |
+| 1. 실행 가능한 골격 | DONE | Expo, 두 NestJS/Fastify 서비스, Compose, PostgreSQL/Keycloak, health, CI 완료 |
+| 2. OIDC와 App Lock | IN_PROGRESS | backend JWT·`/me`, frontend PKCE/session/App Lock 완료; live OIDC·실기기 검증 남음 |
+| 3. 동기화와 Dashboard | IN_PROGRESS | backend sync/raw/derived/조회 완료; frontend Dashboard와 실제 API 소비 남음 |
+| 4. 서버 시뮬레이션 | IN_PROGRESS | deterministic server simulation 완료; frontend 입력·결과 화면 남음 |
+| 5. BUY 주문과 복구 | IN_PROGRESS | quote/idempotency/reservation 완료; BE-0009 settlement/reconciliation과 frontend 주문 화면 남음 |
+| 6. 하드닝과 원격 데모 | NOT_STARTED | KMS, Lightsail, HTTPS, EAS와 preview/demo release gate |
 
-## Milestone 0 체크리스트
+## 완료된 통합 기준선
 
-### 문서
+- [x] root npm workspace와 통합 `package-lock.json`
+- [x] Expo SDK 57 mobile architecture와 React Native component test
+- [x] NestJS 12 + Fastify platform/simulator architecture
+- [x] PostgreSQL 17.6, Drizzle versioned migration과 `finapp_` DB 객체 prefix
+- [x] platform/simulator/Keycloak/migration role과 schema 격리
+- [x] canonical OpenAPI 3.1 platform/simulator 계약
+- [x] OIDC JWT issuer/audience/JWKS/scope 검증과 `/api/v1/me`
+- [x] PKCE, access token memory, refresh token SecureStore, single-flight refresh
+- [x] LocalAuthentication App Lock와 background timeout foundation
+- [x] MyData sync/retry/lease/raw/normalization과 자산 조회 backend
+- [x] deterministic Monte Carlo backend
+- [x] BUY quote, idempotency와 row-lock fund reservation backend
+- [x] root/CI formatter, contract, secret, architecture, lint, typecheck, test와 build gate
+- [x] Docker build context와 backend workspace-scoped clean install
 
-- [x] 개발 문서 안내와 읽기 순서
-- [x] commit 단위 개발 로그
-- [x] 이슈·누락 register
-- [x] 실행 계획
-- [x] MVP 범위
-- [x] 구현 결정
-- [x] 환경 matrix
-- [x] API 계약 초안
-- [x] 데이터 모델 초안
-- [x] `finapp_` prefix 기반 물리 테이블 정의서
-- [x] 보안 모델
-- [x] 테스트 전략
-- [x] 시스템 경계 ADR
-- [x] IdP ADR
-- [x] DB 격리 ADR
-- [x] 비동기 작업 ADR
-- [x] 앱·서버 권장 아키텍처와 자동 품질 gate 기준
-- [x] frontend/backend 병렬 worktree, 소유권, contract와 통합 규칙
-- [x] frontend/backend별 개발 로그와 issue/gap tracker
+## DEV-0006 통합 검증
 
-### 환경과 scaffold
-
-- [x] 로컬 Node.js 24 LTS와 npm 실행 확인
-- [x] Node version/engines 파일
-- [x] `apps/mobile` scaffold
-- [x] root npm workspaces와 두 NestJS service scaffold
-- [ ] `infra` 디렉터리와 Compose scaffold
-- [x] `.env.example`
-- [x] Makefile
-- [x] root README
-- [x] secret scan 기준
-
-### Milestone 0 검증
-
-- [x] `git status`에 의도하지 않은 파일 없음
-- [x] TypeScript strict로 두 backend build 성공
-- [x] Expo dependency install과 Expo Doctor 21/21 성공
-- [x] 문서 참조 파일, code fence, trailing whitespace 검사 성공
+- [x] `npm ci` 통합 lockfile 재현
+- [x] `npm run verify`: architecture, lint, strict typecheck, 113 tests와 두 backend build 통과
+- [x] Expo Doctor 21/21 checks 통과
+- [x] PostgreSQL Testcontainers migration/history/prefix/role isolation 통과
+- [x] clean Compose platform history 6, simulator history 2
+- [x] DB relation/constraint `finapp_` prefix 위반 0
+- [x] platform↔simulator schema privilege 모두 false
+- [x] simulator seed 2회 실행 후 동일 dataset 유지
+- [x] platform/simulator health와 Keycloak discovery/PKCE redirect 확인
+- [x] 실제 `/api/v1/me` 무인증 401 ProblemDetails/trace header 확인
+- [x] production image build와 runtime dependency audit 0
 
 ## 외부 조건
 
-다음은 Milestone 0~5 로컬 개발을 막지 않는다.
+다음은 Milestone 2~5의 local/contract 개발을 막지 않는다.
 
 - Lightsail DB 정보: 미제공
 - AWS KMS 권한: 미제공
 - 배포 domain과 TLS: 미제공
 - Apple Developer/Google Play credential: 미확인
-- 실제 iOS/Android 생체인증 기기: 미확인
+- 최신 iOS toolchain과 실제 생체인증 기기: 미확인
 
-이 조건들은 local/contract mock 병렬 개발을 막지 않는다. Lightsail DB를 Milestone 6 전에 demo integration에 사용하려면 최초 원격 migration 전에 DB 정보와 명시적 승인을 확인한다. 나머지 배포 조건은 Milestone 6 시작 전에 확인한다. 실제 기기 생체인증은 Milestone 2 완료 보고에서 자동 테스트와 분리해 기록한다.
+원격 migration, seed, 배포 또는 유료 resource 생성은 별도 사용자 승인 전 실행하지 않는다. 자동 test는 local/Testcontainers PostgreSQL을 사용한다.
 
 ## Active Issue와 Gap
 
-- `ISSUE-0002`: Expo SDK 57 transitive dependency moderate advisory 13건. local 병렬 개발은 가능하나 preview/demo release 전 해소 필요
-- 현재 등록된 `GAP` 없음
+- `ISSUE-0002`: 통합 Expo dependency tree의 moderate advisory 14건
+- `ISSUE-0003`: Drizzle Kit build-time dependency의 moderate advisory 4건
+- `GAP-0001`: live OIDC 로그인→refresh→`/me`와 native restart 검증
+- `GAP-0002`: iOS Development Build runtime 검증
+- `GAP-0003`: 실제 기기 biometric/background App Lock 검증
+
+통합 `npm audit` 결과는 moderate 18, high 0, critical 0이다. 두 production backend image의 runtime workspace audit은 0이다.
 
 ## 다음 작업
 
-1. `DEV-0005` commit을 공통 base로 frontend/backend worktree와 branch 분리
-2. frontend `FE-0001`: mobile feature/import boundary, API client와 contract mock 확장 및 `ISSUE-0002` upstream 재확인
-3. backend `BE-0001`: Drizzle migration baseline, `finapp_` history와 PostgreSQL/Keycloak Compose 추가
-4. 각 lane에서 dependency-cruiser/ESLint architecture gate 강화
-5. integration owner가 root lockfile을 재생성하고 health vertical slice를 `DEV-0006`으로 main 통합 검증
+1. `BE-0009`: simulator brokerage submit, FILLED/REJECTED settlement와 UNKNOWN reconciliation
+2. `FE-0010`: 최종 OpenAPI 기준 OIDC `/me`와 authenticated API adapter 통합
+3. frontend Milestone 3 Dashboard/MyData sync 화면
+4. frontend Milestone 4 simulation 입력·percentile 결과 화면
+5. frontend Milestone 5 idempotent BUY 주문·상태 복구 화면
+6. local full-stack E2E 후 Milestone 6 외부 조건을 재확인
