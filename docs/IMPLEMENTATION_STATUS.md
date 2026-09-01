@@ -3,8 +3,8 @@
 - 현재 Milestone: 0 — 저장소와 결정 기준선
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-01
-- 마지막 DEV ID: DEV-0004
-- 다음 DEV ID: DEV-0005
+- 마지막 DEV ID: DEV-0005
+- 다음 DEV ID: DEV-0006
 
 ## 상태 표기
 
@@ -52,20 +52,20 @@
 ### 환경과 scaffold
 
 - [x] 로컬 Node.js 24 LTS와 npm 실행 확인
-- [ ] Node version/engines 파일
-- [ ] `apps/mobile` scaffold
-- [ ] root npm workspaces와 두 NestJS service scaffold
+- [x] Node version/engines 파일
+- [x] `apps/mobile` scaffold
+- [x] root npm workspaces와 두 NestJS service scaffold
 - [ ] `infra` 디렉터리와 Compose scaffold
-- [ ] `.env.example`
-- [ ] Makefile
-- [ ] root README
-- [ ] secret scan 기준
+- [x] `.env.example`
+- [x] Makefile
+- [x] root README
+- [x] secret scan 기준
 
 ### Milestone 0 검증
 
-- [ ] `git status`에 의도하지 않은 파일 없음
-- [ ] TypeScript strict로 두 backend build 성공
-- [ ] Expo dependency install 성공
+- [x] `git status`에 의도하지 않은 파일 없음
+- [x] TypeScript strict로 두 backend build 성공
+- [x] Expo dependency install과 Expo Doctor 21/21 성공
 - [x] 문서 참조 파일, code fence, trailing whitespace 검사 성공
 
 ## 외부 조건
@@ -82,16 +82,13 @@
 
 ## Active Issue와 Gap
 
-- 현재 active issue 없음 (`ISSUE-0001`은 backend 기술 기준 정정으로 `DEV-0003`에서 해소)
+- `ISSUE-0002`: Expo SDK 57 transitive dependency moderate advisory 13건. local 병렬 개발은 가능하나 preview/demo release 전 해소 필요
 - 현재 등록된 `GAP` 없음
 
 ## 다음 작업
 
-1. `DEV-0005`에서 root npm workspace, 디렉터리, 공통 lockfile과 OpenAPI/CI baseline을 직렬 scaffold
-2. 통합 scaffold commit을 공통 base로 frontend/backend worktree와 branch 분리
-3. frontend는 `FE-0001`, backend는 `BE-0001`부터 병렬 개발 시작
-4. NestJS 12 + Fastify platform/simulator와 Expo SDK 57 실행 골격 완성
-5. Drizzle migration baseline과 `finapp_` history 설정
-6. dependency-cruiser/ESLint와 mobile import boundary 기본 gate 추가
-7. Docker Compose에 PostgreSQL과 Keycloak 추가
-8. Milestone 1 health vertical slice를 main에서 통합 검증
+1. `DEV-0005` commit을 공통 base로 frontend/backend worktree와 branch 분리
+2. frontend `FE-0001`: mobile feature/import boundary, API client와 contract mock 확장 및 `ISSUE-0002` upstream 재확인
+3. backend `BE-0001`: Drizzle migration baseline, `finapp_` history와 PostgreSQL/Keycloak Compose 추가
+4. 각 lane에서 dependency-cruiser/ESLint architecture gate 강화
+5. integration owner가 root lockfile을 재생성하고 health vertical slice를 `DEV-0006`으로 main 통합 검증

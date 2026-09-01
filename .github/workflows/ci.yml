@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run contract:check
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint -w @finapp/mobile
+      - run: npm run typecheck -w @finapp/mobile
+      - run: npm run test -w @finapp/mobile
+
+  backend:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        workspace:
+          - '@finapp/platform-api'
+          - '@finapp/institution-simulator'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint -w ${{ matrix.workspace }}
+      - run: npm run typecheck -w ${{ matrix.workspace }}
+      - run: npm run test -w ${{ matrix.workspace }}
+      - run: npm run build -w ${{ matrix.workspace }}
+
+  integration:
+    needs:
+      - contracts
+      - frontend
+      - backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run verify

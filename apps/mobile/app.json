@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "Wealth Sandbox",
+    "slug": "wealth-sandbox",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "wealthsandbox",
+    "userInterfaceStyle": "automatic",
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {}
+  }
+}

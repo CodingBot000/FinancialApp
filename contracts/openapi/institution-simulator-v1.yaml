@@ -1,0 +1,47 @@
+openapi: 3.1.0
+info:
+  title: Wealth Sandbox Institution Simulator API
+  version: 1.0.0
+  description: Internal HTTP boundary between the platform and synthetic institution.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+servers:
+  - url: /
+    description: Current institution simulator origin
+paths:
+  /sim/v1/health:
+    get:
+      operationId: getInstitutionSimulatorHealth
+      summary: Read institution simulator health
+      security: []
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Institution simulator is ready to accept local requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '429':
+          description: Too many health requests.
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - service
+        - datasetVersion
+      properties:
+        status:
+          type: string
+          const: ok
+        service:
+          type: string
+          const: institution-simulator
+        datasetVersion:
+          type: string
+          minLength: 1

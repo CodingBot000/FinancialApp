@@ -1,7 +1,7 @@
 # 이슈와 누락 Register
 
 - 마지막 갱신: 2026-09-01
-- 다음 ISSUE ID: `ISSUE-0002`
+- 다음 ISSUE ID: `ISSUE-0003`
 - 다음 GAP ID: `GAP-0001`
 
 이 문서는 defect, blocker, 위험과 불가피한 누락을 삭제하지 않고 추적한다.
@@ -20,7 +20,21 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 
 ## Active Issue
 
-현재 active issue 없음.
+### ISSUE-0002 — Expo 57 transitive dependency moderate advisory
+
+- 상태: OPEN
+- 심각도: MEDIUM
+- 최초 발견: 2026-09-01
+- 마지막 갱신: 2026-09-01
+- 발견 DEV: DEV-0005
+- 영향 Milestone: 1 frontend dependency, 6 preview/demo release
+- 내용: 공식 Expo SDK 57.0.18 dependency tree에 대해 `npm audit`이 `expo`, `expo-router`, `query-string`, `decode-uri-component`, `xcode`와 `uuid` 경로의 moderate advisory 13건을 보고한다.
+- 영향: local scaffold, contract mock, typecheck, test와 build는 성공한다. 그러나 원격 preview/demo release 전에 upstream patch 또는 안전한 override 가능 여부를 다시 확인해야 한다.
+- 임시 우회: 공식 Expo SDK 57 template 조합을 exact/compatible range로 고정하고 `npm audit fix --force`를 실행하지 않는다. 실제 개인정보를 사용하지 않고 untrusted deep-link 입력 처리는 frontend security test에 포함한다.
+- 해결 조건: Expo SDK 57 호환 patch로 advisory가 해소되거나, 공식 호환성이 확인된 override 후 Expo Doctor·native build·전체 test를 통과하거나, 사용자가 잔여 위험을 명시적으로 수용한다.
+- 목표 DEV: `FE-0001`에서 최신 upstream 상태 재확인, 늦어도 Milestone 6 release gate 전 해결
+- 해결 DEV:
+- 검증: `npm audit --json`은 moderate 13, high 0, critical 0을 보고한다. 자동 fix 제안은 Expo 46.0.21과 Expo Router 5.1.11로의 비호환 major downgrade이므로 적용하지 않았다.
 
 ## Active Gap
 

@@ -1,0 +1,47 @@
+openapi: 3.1.0
+info:
+  title: Wealth Sandbox Platform API
+  version: 1.0.0
+  description: Canonical contract consumed by the mobile application.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+servers:
+  - url: /
+    description: Current platform API origin
+paths:
+  /api/v1/health:
+    get:
+      operationId: getPlatformHealth
+      summary: Read platform API health
+      security: []
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Platform API is ready to accept local requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '429':
+          description: Too many health requests.
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - service
+        - datasetVersion
+      properties:
+        status:
+          type: string
+          const: ok
+        service:
+          type: string
+          const: platform-api
+        datasetVersion:
+          type: string
+          minLength: 1

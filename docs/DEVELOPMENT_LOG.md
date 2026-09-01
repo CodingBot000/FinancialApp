@@ -1,8 +1,8 @@
 # 개발 로그
 
 - 기록 방식: append-only
-- 마지막 DEV ID: `DEV-0004`
-- 다음 DEV ID: `DEV-0005`
+- 마지막 DEV ID: `DEV-0005`
+- 다음 DEV ID: `DEV-0006`
 
 모든 integration/shared commit은 하나의 `DEV-####`와 연결한다. frontend와 backend lane commit은 각각 `FE-####`, `BE-####`와 workstream 개발 로그를 사용한다. commit subject에도 같은 ID를 넣어 Git history와 문서 기록을 상호 추적할 수 있게 한다.
 
@@ -223,6 +223,62 @@
 
 - `DEV-0005`: root npm workspace, 디렉터리, 공통 lockfile, OpenAPI/CI baseline을 통합 scaffold
 - 이후 frontend `FE-0001`과 backend `BE-0001` 병렬 시작
+
+## DEV-0005 — 병렬 분리용 공통 Workspace Scaffold
+
+- 날짜: 2026-09-01
+- Milestone: 0
+- 상태: COMPLETED
+- 예정 commit: `chore(m0): scaffold parallel workspace baseline [DEV-0005]`
+
+### 완료
+
+- Node.js 24.19.0/npm 11.17.0 기반 root npm workspaces와 단일 lockfile 생성
+- TypeScript 6.0.3 strict/NodeNext, ESLint 10, Prettier 3와 Vitest 4 공통 baseline 추가
+- TypeScript 7과 typescript-eslint peer 범위 충돌을 확인하고 호환되는 TypeScript 6.0.3 선택 근거 기록
+- Expo SDK 57.0.18, React 19.2.3, React Native 0.86.3과 Expo Router mobile scaffold 생성
+- 공식 Expo template의 Reanimated/Worklets/native dependency를 root override로 단일화하고 Expo Doctor 21/21 통과
+- frontend가 backend 없이 사용할 `PlatformApi` port, deterministic mock adapter와 schema-validated fixture 추가
+- NestJS 12.0.1 + Fastify 기반 platform-api와 institution-simulator feature module/health endpoint 생성
+- 실제 Fastify adapter를 사용하는 두 backend E2E test 추가
+- platform/mobile과 platform/simulator용 canonical OpenAPI 3.1 계약 추가
+- Redocly lint와 AJV fixture validation을 root/CI quality gate에 연결
+- frontend/backend/contracts/integration GitHub Actions job baseline 추가
+- `.nvmrc`, engines, `.env.example`, Makefile, root README와 infra ownership 문서 추가
+- 빌드된 두 backend process와 Expo web 첫 화면을 실제 실행해 smoke 검증
+
+### 변경 파일
+
+- root: `.env.example`, `.gitignore`, `.npmrc`, `.nvmrc`, `.prettierignore`, `.prettierrc.json`, `Makefile`, `README.md`, `eslint.config.mjs`, `package.json`, `package-lock.json`, `tsconfig.base.json`
+- CI/script: `.github/workflows/ci.yml`, `scripts/check-secrets.mjs`, `scripts/validate-contract-fixtures.mjs`
+- mobile: `apps/mobile/**`
+- backend: `services/platform-api/**`, `services/institution-simulator/**`
+- contracts/infra: `contracts/openapi/**`, `infra/README.md`
+- docs: `DEVELOPMENT_LOG.md`, `IMPLEMENTATION_DECISIONS.md`, `IMPLEMENTATION_STATUS.md`, `ISSUE_REGISTER.md`, `PARALLEL_DEVELOPMENT_GUIDE.md`, `workstreams/frontend/ISSUE_REGISTER.md`
+
+### 검증
+
+- `npm install`: workspace install과 lockfile 생성 성공
+- `npm run verify`: formatting, OpenAPI/fixture, Expo dependency, secret scan, lint, 세 workspace typecheck/test와 두 backend build 통과
+- Vitest: mobile 2, platform-api 1, institution-simulator 1 test 통과
+- `npm exec --yes expo-doctor@latest`: 21/21 checks 통과
+- runtime smoke: `GET :18081/api/v1/health`, `GET :18082/sim/v1/health`가 canonical JSON 응답 반환
+- rendered smoke: Expo web title/DOM/화면 확인, reload 후 화면 유지, browser console warning/error 0건
+- `npm audit --json`: moderate 13, high 0, critical 0; 비호환 downgrade 자동 fix는 적용하지 않음
+- Markdown/link/code fence, table prefix, secret pattern과 staged file 범위 검사
+
+### 이슈와 누락
+
+- `ISSUE-0002`/`FE-ISSUE-0001`: Expo 57 transitive moderate advisory. local 병렬 개발은 가능하며 frontend lane과 release gate에서 추적
+- Docker Compose, Drizzle와 architecture dependency gate는 backend `BE-0001`에서 구현
+- native iOS/Android Development Build는 frontend lane의 Milestone 1 검증으로 남김
+- 원격 Lightsail DB 정보와 migration 승인은 미제공이며 병렬 local 개발을 막지 않음
+
+### 다음 작업
+
+- 이 commit을 공통 base로 frontend와 backend worktree 생성
+- frontend `FE-0001`과 backend `BE-0001`을 별도 Codex session에서 병렬 시작
+- integration owner는 양쪽 첫 vertical slice 후 `DEV-0006` main 통합 수행
 
 ## 새 기록 Template
 

@@ -47,6 +47,8 @@
 | D-036 | ACCEPTED | frontend와 backend Codex session은 별도 Git worktree/branch와 `FE-####`/`BE-####` 추적 ID를 사용한다. backend session을 기본 integration owner로 두고 shared file, root lockfile과 main merge를 직렬 처리한다. |
 | D-037 | ACCEPTED | backend가 canonical OpenAPI artifact를 소유하고 frontend mock/API client는 특정 contract commit revision을 사용한다. mock payload는 schema validation과 deterministic dataset 기준을 통과해야 한다. |
 | D-038 | ACCEPTED | frontend는 원격 DB에 연결하지 않는다. 원격 Lightsail migration은 backend의 단일 migration owner만 승인 후 수행하며 자동 test는 local/Testcontainers PostgreSQL을 사용한다. 합성 데이터는 destructive DB 작업의 허가 근거가 아니다. |
+| D-039 | ACCEPTED | 공통 scaffold는 NodeNext ESM과 TypeScript 6.0.3을 사용한다. TypeScript 7.0.2는 현재 typescript-eslint 8.69.0의 `<6.1.0` peer 범위를 벗어나므로 사용하지 않는다. |
+| D-040 | ACCEPTED | `contracts/openapi/platform-v1.yaml`과 simulator 계약을 canonical baseline으로 commit하고 Redocly lint와 JSON Schema fixture validation을 CI gate로 사용한다. |
 
 ## 정정 이력
 
@@ -58,15 +60,16 @@
 |---|---|---|
 | Node.js | 24 LTS | `.nvmrc`, `engines`, CI와 container image |
 | npm | lockfile과 함께 사용 | `package-lock.json` |
-| TypeScript | scaffold 시 현재 NestJS 12 호환 stable | exact devDependency와 lockfile |
-| NestJS | 12 major | exact package version과 lockfile |
-| Fastify | NestJS 12 adapter 호환 version | `@nestjs/platform-fastify` dependency |
+| TypeScript | 6.0.3 | exact root devDependency와 lockfile |
+| NestJS | 12.0.1 | exact workspace dependency와 lockfile |
+| Fastify | 5.12.1 | `@nestjs/platform-fastify` 12.0.1 dependency |
 | Drizzle ORM/Kit | scaffold 시 current stable | exact dependency와 lockfile |
-| Vitest | NestJS 12 scaffold 호환 version | exact devDependency와 lockfile |
+| Vitest | 4.1.11 | exact root devDependency와 lockfile |
 | jose | scaffold 시 current stable | exact dependency와 lockfile |
-| Expo | SDK 57 stable | `package.json`과 lockfile |
-| React Native | Expo SDK 57 기본값 0.86 | Expo 관리 |
-| Reanimated | Expo SDK와 호환되는 4.x | `npx expo install` 후 lockfile |
+| Expo | 57.0.18 | workspace compatible range와 lockfile |
+| React | 19.2.3 | Expo SDK 57 template와 root override |
+| React Native | 0.86.3 | Expo SDK 57 template와 lockfile |
+| Reanimated/Worklets | 4.5.1 / 0.10.1 | Expo SDK 57 template와 root override |
 | Keycloak | 26.7.3 | container tag와 가능하면 digest |
 | PostgreSQL | 17 major | container patch/digest는 scaffold 시 고정 |
 
@@ -84,7 +87,7 @@
 
 - Victory Native, Skia, Reanimated 정확한 patch 조합
 - PostgreSQL 17 정확한 container patch/digest
-- NestJS/Fastify/Drizzle/Vitest 정확한 patch 조합
+- Drizzle ORM/Kit 정확한 patch 조합
 - 로컬 port 충돌 여부
 
 ### Milestone 2

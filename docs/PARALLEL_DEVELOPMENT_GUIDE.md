@@ -28,7 +28,7 @@
 - frontend mock adapter 위치와 deterministic fixture 규칙
 - CI의 frontend/backend/integration job 골격
 
-따라서 다음 `DEV-0005` scaffold까지는 통합 작업으로 진행하고, 그 commit을 두 session의 공통 base commit으로 사용한다. 공통 base가 없는 상태에서 각 session이 독립적으로 root workspace를 만들지 않는다.
+`DEV-0005`에서 이 공통 scaffold를 구현·검증한다. `DEV-0005` 완료 commit을 두 session의 공통 base commit으로 사용하며, 각 session은 시작 시 실제 commit SHA를 자신의 workstream 로그에 기록한다. 공통 base가 없는 상태에서 각 session이 독립적으로 root workspace를 만들지 않는다.
 
 worktree 생성 예시는 다음과 같다. 실제 branch 이름이 이미 존재하면 충돌하지 않는 이름을 사용한다.
 
