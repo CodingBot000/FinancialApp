@@ -10,6 +10,7 @@ import {
 
 import { PLATFORM_CONTRACT_VERSION } from '../../../shared/api';
 import { usePlatformHealth } from '../hooks/use-platform-health';
+import { ChartSmoke } from './chart-smoke';
 
 export function HealthScreen() {
   const { retry, state } = usePlatformHealth();
@@ -83,6 +84,14 @@ export function HealthScreen() {
           ) : null}
         </View>
 
+        <View style={styles.chartCard}>
+          <View style={styles.statusHeader}>
+            <Text style={styles.cardLabel}>CHART COMPATIBILITY</Text>
+            <Text style={styles.chartStack}>Victory · Skia · Reanimated</Text>
+          </View>
+          <ChartSmoke />
+        </View>
+
         <View style={styles.disclaimerCard}>
           <Text style={styles.disclaimerTitle}>SYNTHETIC FINANCIAL DATA</Text>
           <Text style={styles.disclaimerBody}>
@@ -108,6 +117,19 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 1.4,
+  },
+  chartCard: {
+    backgroundColor: '#0d1929',
+    borderColor: '#1c2b40',
+    borderRadius: 20,
+    borderWidth: 1,
+    marginTop: 16,
+    padding: 20,
+  },
+  chartStack: {
+    color: '#718198',
+    fontSize: 10,
+    fontWeight: '600',
   },
   content: {
     flexGrow: 1,

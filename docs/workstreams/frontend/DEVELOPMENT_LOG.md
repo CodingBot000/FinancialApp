@@ -1,7 +1,7 @@
 # Frontend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `FE-0004`
+- 다음 ID: `FE-0005`
 - branch/worktree: `codex/frontend` / `/Users/switch/Development/Web/FinancialApp-frontend`
 - base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
 - contract revision: `platform-v1` at base commit (blob `8942e08342cd78f7e251f09b8a3005c9e797d93f`)
@@ -80,6 +80,8 @@ frontend session은 `apps/mobile/**` 변경을 commit 단위로 기록한다. �
 - 결과: 3 files, 9 tests 통과
 - 명령: `npm run dependency:check -w @finapp/mobile`
 - 결과: Expo dependency 호환성 통과
+- 명령: `npm audit --json`
+- 결과: 기존 moderate 13/high 0/critical 0 유지; FE-ISSUE-0001의 비호환 major downgrade 외 자동 fix 없음
 - 명령: `npm run contract:check`
 - 결과: OpenAPI 2개 lint와 health fixture schema validation 통과
 - 명령: `npx expo export --platform web --output-dir /tmp/financialapp-fe0001-web` (`apps/mobile`에서 실행)
@@ -205,3 +207,67 @@ frontend session은 `apps/mobile/**` 변경을 commit 단위로 기록한다. �
 ### 다음 작업
 
 - FE-0004: Victory Native/Reanimated/Skia compatibility spike와 deterministic chart smoke UI
+
+## FE-0004 — Native chart compatibility spike와 Development Build smoke
+
+- 날짜: 2026-09-02
+- Milestone: 1
+- 상태: COMPLETED
+- base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
+- contract revision: `platform-v1` at base commit (blob `8942e08342cd78f7e251f09b8a3005c9e797d93f`)
+- commit: `feat(fe): add native chart compatibility spike [FE-0004]`
+
+### 완료
+
+- Expo SDK 57/RN 0.86 조합에 `victory-native 42.0.0`, `@shopify/react-native-skia 2.6.2`, `react-native-reanimated 4.5.1`, `react-native-worklets 0.10.1`, `expo-dev-client ~57.0.16`을 고정
+- 6개 합성 자산 포인트로 결정적 smoke series와 Victory `CartesianChart`/animated `Line`을 구현하고 reduced-motion 시 animation을 제거
+- native chart를 지원하지 않는 web에는 동일 데이터의 접근 가능한 deterministic bar fallback을 platform file로 분리
+- health 화면에 chart compatibility card를 추가하고 data/unit/component test를 17개로 확장
+- Android Development Build 런타임에서 발견한 `expo-splash-screen` native module 누락을 SDK 호환 `~57.0.8`로 보완
+- Android API 31 Development Build에서 health mock 상태, synthetic disclaimer와 Victory/Skia/Reanimated line chart의 실제 렌더링을 확인해 Milestone 1의 최소 1개 플랫폼 chart smoke 완료 조건을 충족
+
+### 변경 파일
+
+- `apps/mobile/package.json`
+- `apps/mobile/src/features/health/model/chart-smoke-data.ts`
+- `apps/mobile/src/features/health/model/chart-smoke-data.test.ts`
+- `apps/mobile/src/features/health/ui/chart-smoke.tsx`
+- `apps/mobile/src/features/health/ui/chart-smoke.web.tsx`
+- `apps/mobile/src/features/health/ui/health-screen.tsx`
+- `apps/mobile/src/features/health/ui/health-screen.test.tsx`
+- `docs/workstreams/frontend/DEVELOPMENT_LOG.md`
+- `docs/workstreams/frontend/ISSUE_REGISTER.md`
+
+### 검증
+
+- 명령: `npm run architecture:check -w @finapp/mobile`
+- 결과: 27 source files boundary/cycle check 통과
+- 명령: `npm run lint -w @finapp/mobile`
+- 결과: 통과
+- 명령: `npm run typecheck -w @finapp/mobile`
+- 결과: TypeScript strict 통과
+- 명령: `npm run test -w @finapp/mobile`
+- 결과: 8 files, 17 tests 통과; deterministic data와 health component test 포함
+- 명령: `npm run dependency:check -w @finapp/mobile`
+- 결과: Expo dependency 호환성 통과
+- 명령: `npx expo export --platform ios --output-dir /tmp/financialapp-fe0004-ios`
+- 결과: 2,312 modules, Hermes production bundle 4.9MB 성공
+- 명령: `npx expo export --platform android --output-dir /tmp/financialapp-fe0004-android`
+- 결과: 2,406 modules, Hermes production bundle 5.1MB 성공
+- 명령: `npx expo export --platform web --output-dir /tmp/financialapp-fe0004-web.lJxvUv`
+- 결과: platform-specific web fallback 841 modules bundle 성공
+- 명령: 임시 mobile 복제본에서 `npx expo prebuild --platform android --no-install` 후 `./android/gradlew -p android -PreactNativeArchitectures=x86_64 assembleDebug`
+- 결과: `expo-splash-screen`을 포함한 API 31 x86_64 Development Build APK 생성 성공, Gradle 670 tasks 통과
+- 명령: API 31 emulator에 Debug APK 설치, `adb reverse tcp:8081 tcp:8081`, Metro dev-client 실행과 화면 캡처
+- 결과: `MainActivity`에서 health ready 상태와 Victory/Skia line chart 실제 렌더링 확인; app process의 fatal/Skia/ReactNativeJS error 없음
+
+### 이슈·누락·Handoff
+
+- FE-GAP-0002: Android smoke는 완료했지만 현재 호스트 Xcode 16.2에는 Expo SDK 57이 요구하는 최신 iOS toolchain이 없어 iOS Development Build runtime smoke는 연기했다. Milestone 1 최소 조건에는 영향이 없고 preview/release 전 iOS 검증이 필요하다.
+- FE-ISSUE-0001: OPEN 유지. native dependency 추가 후에도 audit moderate 13/high 0/critical 0이며 안전한 호환 fix가 없다.
+- INTEGRATION_HANDOFF: `apps/mobile/package.json`에 추가한 Skia/Victory/dev-client/splash dependency를 통합할 때 integration owner가 root `package-lock.json`을 재생성하고 Skia postinstall 승인·prebuilt 복사, clean Android/iOS install을 확인해야 한다.
+- CONTRACT_CHANGE_REQUEST: chart는 deterministic local synthetic data와 기존 health mock만 사용하며 canonical OpenAPI를 확장하지 않았다. `/me`와 Milestone 2 계약 요청은 FE-0001 handoff와 동일하게 유지한다.
+
+### 다음 작업
+
+- FE-0005: OIDC와 App Lock의 contract-independent mobile port/session foundation; `/api/v1/me` 소비는 canonical additive contract 통합 후 연결

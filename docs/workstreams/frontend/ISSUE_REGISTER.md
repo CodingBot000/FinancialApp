@@ -1,9 +1,9 @@
 # Frontend Workstream Issue와 Gap Register
 
 - 다음 ISSUE ID: `FE-ISSUE-0002`
-- 다음 GAP ID: `FE-GAP-0002`
+- 다음 GAP ID: `FE-GAP-0003`
 - active issue: `FE-ISSUE-0001`
-- active gap: 없음
+- active gap: `FE-GAP-0002`
 
 frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한다. backend·계약·milestone 완료에도 영향을 주면 handoff와 중앙 `ISSUE_REGISTER.md`에 연결한다.
 
@@ -14,7 +14,7 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 상태: OPEN
 - 심각도: MEDIUM
 - 발견 FE: DEV-0005 공통 scaffold
-- 마지막 갱신: 2026-09-01, FE-0001
+- 마지막 갱신: 2026-09-02, FE-0004
 - 관련 contract revision: `platform-v1`
 - 중앙 연결: `ISSUE-0002`
 - 내용: 공식 Expo SDK 57.0.18 dependency tree에서 `npm audit` moderate 13건이 보고된다.
@@ -22,11 +22,21 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 해결 조건: 중앙 `ISSUE-0002`의 해결 조건 충족
 - 목표 FE: Milestone 6 preview/demo release gate 전 호환 patch 상태 재확인
 - 해결 FE:
-- 검증: FE-0001에서 `npm view expo@57 version --json`과 Expo 공식 SDK 57 문서를 확인한 결과 stable 최신 patch는 `57.0.18`이며 현재 manifest와 동일하다. `expo install --check`는 통과했다. `npm audit --json`은 moderate 13/high 0/critical 0으로 DEV-0005와 동일하고 제안된 강제 fix는 Expo 46 또는 Expo Router 5로의 비호환 downgrade다. Expo Doctor와 native Development Build는 후속 Milestone 1 검증에 포함한다.
+- 검증: FE-0001에서 `npm view expo@57 version --json`과 Expo 공식 SDK 57 문서를 확인한 결과 stable 최신 patch는 `57.0.18`이며 현재 manifest와 동일하다. FE-0004의 Skia/Victory/dev-client/splash 추가 후에도 `expo install --check`는 통과하고 `npm audit --json`은 moderate 13/high 0/critical 0으로 유지됐다. 제안된 강제 fix는 Expo 46 또는 Expo Router 5로의 비호환 downgrade다. Android API 31 Development Build와 chart runtime smoke는 FE-0004에서 통과했다.
 
 ## Active Gap
 
-현재 등록된 active gap 없음.
+### FE-GAP-0002 — iOS Development Build chart runtime 검증
+
+- 상태: UNVERIFIED
+- 심각도: LOW
+- 발견 FE: FE-0004
+- 누락/연기 이유: 현재 호스트의 Xcode 16.2와 설치된 iOS 17.5~18.1 Simulator runtime으로는 Expo SDK 57의 최신 iOS native toolchain 요구를 충족할 수 없다. frontend 소유 범위를 벗어난 Xcode 업그레이드를 수행하지 않았다.
+- 현재 영향: Android API 31 Development Build에서 Victory Native/Skia/Reanimated chart smoke가 성공해 Milestone 1의 최소 1개 플랫폼 완료 조건에는 영향이 없다. iOS preview/release confidence만 미검증 상태다.
+- 목표 Milestone: 6 preview/demo release gate 전
+- 재확인 조건: Expo SDK 57 지원 Xcode/iOS simulator 또는 실제 iOS 기기에서 clean Development Build, health screen chart 렌더링, fatal native/JS log 없음 확인
+- 해결 FE:
+- 검증: FE-0004에서 iOS Hermes production bundle 2,312 modules/4.9MB는 성공했다. Android에서는 x86_64 Debug APK build와 API 31 runtime chart render까지 성공했다.
 
 ## Resolved Gap History
 

@@ -1,6 +1,14 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react-native';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('react-native-reanimated', () => ({
+  useReducedMotion: () => false,
+}));
+vi.mock('victory-native', () => ({
+  CartesianChart: () => null,
+  Line: () => null,
+}));
 
 import { PlatformApiProvider } from '../../../shared/api';
 import { ContractMockPlatformApi } from '../../../shared/api/mock/contract-mock-platform-api';
