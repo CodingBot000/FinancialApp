@@ -7,8 +7,8 @@
 - 활성 branch/worktree: `main` / `/Users/switch/Development/Web/FinancialApp`
 - 현재 실행 종료선: 단계 10 로컬 하드닝 완료 후 STOP
 - 현재 실행 제외: 원격 DB 접속·사전점검·migration/seed와 원격 배포
-- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`
-- 다음 작업 ID: `BE-0010`, `FE-0010`
+- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`, 단계 3 `BE-0010`
+- 다음 작업 ID: `FE-0010`
 
 ## 1. 목적과 문서 권한
 
@@ -43,11 +43,11 @@
 |---|---|---|---|
 | Milestone 0~1 | workspace, Expo, 두 NestJS/Fastify 서비스, PostgreSQL/Keycloak Compose, CI/architecture gate | fresh-clone 명령 계약 보강 | 기능 기준선 DONE |
 | Milestone 2 | backend JWT와 `/me`, mobile PKCE/session/App Lock/401 lifecycle | 실제 local Keycloak 로그인, `/me`, restart refresh, 실기기 항목 | IN_PROGRESS |
-| Milestone 3 | simulator 원천 데이터, manual/scheduled sync, raw/derived, 자산 조회 | mobile Dashboard/Accounts/sync UX, audit event | IN_PROGRESS |
+| Milestone 3 | simulator 원천 데이터, manual/scheduled sync, raw/derived, 자산 조회, 최소 audit | mobile Dashboard/Accounts/sync UX | IN_PROGRESS |
 | Milestone 4 | deterministic simulation engine와 저장/조회 | mobile 입력, 결과 차트와 disclaimer | IN_PROGRESS |
-| Milestone 5 | quote, idempotency, row-lock cash reservation, simulator brokerage/scenario | platform settlement, reconciliation, ledger/position/execution/audit, 주문 조회와 mobile 주문 흐름 | IN_PROGRESS |
-| Simulator MVP | 계좌/보유/거래/시세/주문/status, 6개 장애 scenario와 deterministic reset/reseed | platform developer proxy와 전체 E2E에서 재검증 | DONE (provider boundary) |
-| Contract 품질 | OpenAPI 2개, 현재 operation 27개 controller/provider/fixture/consumer 추적과 호환성 gate | 이후 operation 추가 시 같은 coverage와 provider schema 검증 유지 | DONE (current surface) |
+| Milestone 5 | quote, reservation, simulator brokerage/scenario, settlement/reconciliation/ledger/position/execution/audit와 주문 조회 | mobile 주문 흐름과 full-stack E2E | IN_PROGRESS |
+| Simulator MVP | 계좌/보유/거래/시세/주문/status, 6개 장애 scenario, deterministic reset/reseed와 platform developer proxy | mobile 포함 전체 E2E에서 재검증 | DONE (local service boundary) |
+| Contract 품질 | OpenAPI 2개, 현재 operation 31개 controller/provider/fixture/consumer 추적과 호환성 gate | 이후 operation 추가 시 같은 coverage와 provider schema 검증 유지 | DONE (current surface) |
 | Local E2E | 서비스별 test와 수동 Compose smoke | mobile→IdP→platform→simulator→DB 전체 인수 시나리오 | NOT_STARTED |
 | Milestone 6A local | 일부 scheduled sync를 선행 구현 | outbox, local KMS adapter 경계, security event, 관측성 보강과 포트폴리오 문서 | NOT_STARTED |
 | Milestone 6B remote | 없음 | Lightsail DB migration, AWS KMS, HTTPS/EAS와 원격 rollback | CURRENT_RUN_EXCLUDED |
@@ -58,7 +58,7 @@
 
 1. `GAP-0004`: `DEV-0010`에서 controller, canonical OpenAPI, provider test와 consumer fixture/adapter 상태의 전체 추적 및 호환성 gate를 구현해 해결했다.
 2. `GAP-0005`: `BE-0009`에서 simulator 시세·brokerage·장애 scenario·reset/reseed와 실제 HTTP 검증을 구현해 해결했다.
-3. `GAP-0006`: 로컬 MVP가 요구한 append-only 최소 audit event가 없다.
+3. `GAP-0006`: `BE-0010`에서 로컬 MVP append-only audit table/action/권한과 redaction 경계를 구현해 해결했다.
 4. `GAP-0007`: 실제 서비스 전체를 연결한 자동 E2E와 fresh-clone 인수 명령이 없다.
 5. frontend M3~M5 화면은 누락이라기보다 계획된 미구현 상태이며 `FE-0011` 이후 단계에서 화면과 API를 한 vertical slice로 연결한다.
 6. onboarding/risk profile 편집과 규칙 기반 `portfolio` 추천은 상세 명세에는 있으나 승인된 로컬 MVP 항목에는 없다. 로컬 MVP 후 Milestone 6 진입 시 구현 여부와 완료 조건을 다시 확정한다.
@@ -172,7 +172,7 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - clean Compose에서 migration, seed 2회, actual HTTP의 400/201/200 replay, reconciliation과 reset→NORMAL을 검증했다.
 - simulator production image build와 runtime dependency audit 0을 확인했고 platform 시세 adapter는 timeout/no-retry 및 transaction 밖 호출 경계를 유지한다.
 
-### 단계 3 — Platform Settlement·Reconciliation·Audit (`BE-0010`)
+### 단계 3 — Platform Settlement·Reconciliation·Audit (`BE-0010`, DONE)
 
 목표:
 
@@ -190,6 +190,14 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - `ORDER_CREATED`, `ORDER_SUBMITTED`, `ORDER_RECONCILED`, `ORDER_FILLED` audit가 append-only로 저장된다.
 - `MYDATA_CONNECTION_CREATED`, `MYDATA_SYNC_STARTED/COMPLETED`, `SIMULATION_EXECUTED`도 같은 audit 경계로 기록된다.
 - `GAP-0006`과 Milestone 5 backend 완료 조건을 해결한다.
+
+완료 증거:
+
+- cash reservation 뒤 실제 simulator POST를 1회만 호출하고 FILLED/REJECTED settlement와 UNKNOWN claim/lease/backoff reconciliation을 구현했다.
+- PostgreSQL 17.6에서 worker 동시 claim 하나, duplicate settlement 하나, execution/position/ledger/cash 불변조건과 최대 실패 환불을 검증했다.
+- append-only `finapp_audit.finapp_audit_event`에 MyData/simulation/order/developer action을 allowlist metadata로 기록하고 runtime UPDATE/DELETE를 차단했다.
+- order 단건/목록과 local/demo developer proxy를 추가해 canonical surface 31 operation·34 fixture gate를 통과했고 production에서는 developer module이 등록되지 않는다.
+- clean Compose에서 실제 JWT platform process와 simulator를 연결해 sync, FILLED, REJECTED, UNKNOWN→FILLED, reset을 통과했다.
 
 ### 단계 4 — Live OIDC와 `/me` Mobile 통합 (`FE-0010`)
 

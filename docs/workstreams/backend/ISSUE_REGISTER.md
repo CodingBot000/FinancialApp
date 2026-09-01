@@ -1,6 +1,6 @@
 # Backend Workstream Issue와 Gap Register
 
-- 다음 ISSUE ID: `BE-ISSUE-0002`
+- 다음 ISSUE ID: `BE-ISSUE-0004`
 - 다음 GAP ID: `BE-GAP-0003`
 - active issue: `BE-ISSUE-0001`
 - active gap: 없음
@@ -21,6 +21,34 @@ backend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한�
 - 목표 BE: Milestone 1 통합 전 upstream 재확인, 늦어도 Milestone 6 release gate 전 해결
 - 해결 BE:
 - 검증: BE-0009 `npm audit --json` moderate 18/high 0/critical 0. simulator Docker runtime stage는 144 package, vulnerability 0을 보고했다.
+
+## Resolved Issue History
+
+### BE-ISSUE-0003 — Developer audit correlation ID 미전파
+
+- 상태: RESOLVED
+- 심각도: LOW
+- 발견 BE: BE-0010 final review
+- 관련 contract/migration revision: `platform-v1` developer routes / `0006_finapp_settlement_audit`
+- 내용: developer action audit이 요청 correlation ID 대신 고정 문자열을 기록했다.
+- 영향: 기능 결과에는 영향이 없지만 요청과 audit event의 추적 연결성이 약해졌다.
+- 해결 조건: Fastify가 정규화한 correlation ID가 service와 audit insert까지 전달되고 E2E에서 검증될 것.
+- 목표 BE: BE-0010
+- 해결 BE: BE-0010
+- 검증: scenario/reset actual Fastify 요청의 correlation ID를 audit mock에서 확인하고 platform/root 전체 gate를 통과했다.
+
+### BE-ISSUE-0002 — 동일 생성 시각 주문의 cursor pagination 누락
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 발견 BE: BE-0010 final review
+- 관련 contract/migration revision: `platform-v1` `listOrders`
+- 내용: `(created_at DESC, id DESC)` 정렬과 달리 cursor 조건이 `created_at`만 비교해 timestamp 동률 주문을 건너뛸 수 있었다.
+- 영향: 주문 목록 page 경계에서 일부 과거 주문이 표시되지 않을 수 있었다.
+- 해결 조건: 정렬과 cursor가 같은 복합 keyset을 사용하고 timestamp 동률 pagination test가 통과할 것.
+- 목표 BE: BE-0010
+- 해결 BE: BE-0010
+- 검증: 동일 `created_at` 네 주문을 2개씩 조회해 중복·누락 없는 PostgreSQL integration test와 전체 gate를 통과했다.
 
 ## Gap History
 
@@ -57,6 +85,7 @@ backend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한�
 - BE-0007 (2026-09-02): `BE-ISSUE-0001` 변화 없음. `BE-GAP-0002`를 등록했다. quote ownership, exact fixed-decimal, immutable privilege, clean migration/prefix/role catalog, 전체 `npm run verify`와 platform runtime audit 0을 확인했다.
 - BE-0008 (2026-09-02): `BE-ISSUE-0001` 변화 없음. `BE-GAP-0002`를 RESOLVED 처리했다. 20-way idempotency, cash row-lock oversubscription, balance conservation, clean migration/prefix/role catalog, 전체 `npm run verify`와 platform runtime audit 0을 확인했다. 신규 issue/gap 없음.
 - BE-0009 (2026-09-02): `BE-ISSUE-0001` 변화 없음. 중앙 `GAP-0005`를 RESOLVED 처리했다. simulator actual HTTP scenario, 10-way idempotency, clean migration/seed 2회, production admin 404/no-mutation, Compose smoke와 simulator runtime audit 0을 확인했다. 신규 backend issue/gap 없음.
+- BE-0010 (2026-09-02): `BE-ISSUE-0001` 변화 없음. 중앙 `GAP-0006`, `ISSUE-0005`~`ISSUE-0007`을 RESOLVED 처리했다. settlement/reconciliation concurrency, 동일 timestamp pagination, audit correlation/권한, production developer module 미등록, clean actual HTTP order flow와 두 runtime audit 0을 확인했다. 신규 active backend issue/gap 없음.
 
 ## Issue Template
 

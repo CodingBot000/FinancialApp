@@ -494,7 +494,7 @@ Unique: `finapp_uq_idempotency_user_operation_key`.
 | `quantity` | `numeric(19,8)` | N | - | 양수 |
 | `estimated_amount` | `numeric(19,4)` | N | - | 양수 |
 | `currency` | `varchar(3)` | N | `'KRW'` | |
-| `status` | `varchar(30)` | N | `'CREATED'` | order state machine |
+| `status` | `varchar(30)` | N | `'PENDING_SUBMISSION'` | order state machine |
 | `external_order_id` | `varchar(100)` | Y | - | simulator ID |
 | `version` | `bigint` | N | `0` | |
 | `created_at` | `timestamptz` | N | - | |

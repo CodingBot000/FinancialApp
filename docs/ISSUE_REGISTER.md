@@ -1,7 +1,7 @@
 # 이슈와 누락 Register
 
 - 마지막 갱신: 2026-09-02
-- 다음 ISSUE ID: `ISSUE-0005`
+- 다음 ISSUE ID: `ISSUE-0008`
 - 다음 GAP ID: `GAP-0008`
 
 이 문서는 defect, blocker, 위험과 불가피한 누락을 삭제하지 않고 추적한다.
@@ -99,21 +99,6 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 해결 DEV:
 - 검증: frontend `FE-GAP-0004` 참조
 
-### GAP-0006 — 로컬 MVP 최소 Audit Event
-
-- 상태: DEFERRED
-- 심각도: HIGH
-- 최초 발견: 2026-09-02
-- 마지막 갱신: 2026-09-02
-- 발견 DEV: DEV-0007
-- 원래 요구사항: MyData, simulation과 주문의 중요 행위를 trace ID와 allowlist metadata가 있는 append-only `finapp_audit.finapp_audit_event`로 기록
-- 누락/연기 이유: schema namespace와 테이블 정의만 만들고 BE-0002~BE-0008의 vertical slice에는 audit migration/module/event 기록을 포함하지 않았다.
-- 현재 영향: 기능 테스트는 가능하지만 로컬 MVP의 주문 체결 증거와 보안 추적 완료 조건을 충족하지 못한다.
-- 목표 Milestone: 5 / BE-0010
-- 재확인 조건: 최소 `ORDER_CREATED`, `ORDER_SUBMITTED`, `ORDER_RECONCILED`, `ORDER_FILLED`와 핵심 sync/simulation event가 append-only transaction으로 저장되고 runtime UPDATE/DELETE 거부 및 redaction test가 통과
-- 해결 DEV:
-- 검증: DEV-0007 기준 source에는 `finappAuditSchema` 선언만 있고 audit table, migration, module과 test가 없다.
-
 ### GAP-0007 — Local Full-stack E2E와 Fresh-clone 인수
 
 - 상태: DEFERRED
@@ -130,6 +115,60 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 검증: DEV-0007에서 mobile feature가 health/login/app-lock에 한정되고 Makefile은 bootstrap/build/contract/format/lint/test/typecheck/verify target만 제공함을 확인했다.
 
 ## Resolved History
+
+### ISSUE-0007 — Developer audit correlation ID 미전파
+
+- 상태: RESOLVED
+- 심각도: LOW
+- 최초 발견: 2026-09-02
+- 마지막 갱신: 2026-09-02
+- 발견 DEV: BE-0010 final review
+- 원래 영향 Milestone: 5 audit traceability
+- 원래 내용: developer scenario/reset 감사 이벤트가 Fastify가 정규화한 실제 correlation ID 대신 고정 문자열을 저장했다.
+- 해결 DEV: BE-0010
+- 해결 내용: controller의 `x-correlation-id`를 developer service와 append-only audit event까지 전달했다.
+- 검증: 실제 Fastify 요청에 지정한 scenario/reset correlation ID가 `DEV_SCENARIO_CHANGED` audit 호출에 그대로 전달되는 E2E assertion을 추가하고 platform/root 전체 gate를 통과했다.
+
+### ISSUE-0006 — 동일 생성 시각 주문의 cursor pagination 누락
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 최초 발견: 2026-09-02
+- 마지막 갱신: 2026-09-02
+- 발견 DEV: BE-0010 final review
+- 원래 영향 Milestone: 5 order history
+- 원래 내용: 주문 목록은 `(created_at DESC, id DESC)`로 정렬하지만 cursor 조건은 `created_at`만 비교해 같은 시각의 다음 주문을 건너뛸 수 있었다.
+- 해결 DEV: BE-0010
+- 해결 내용: cursor 조건도 `(created_at, id)` 복합 keyset 비교로 맞췄다.
+- 검증: PostgreSQL에서 네 주문의 `created_at`을 동일하게 만든 뒤 2개씩 두 page를 조회해 네 ID가 중복·누락 없이 반환되는 integration test와 전체 gate를 통과했다.
+
+### ISSUE-0005 — Body 없는 simulator reset POST의 JSON content-type
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 최초 발견: 2026-09-02
+- 마지막 갱신: 2026-09-02
+- 발견 DEV: BE-0010 clean Compose smoke
+- 원래 영향 Milestone: 5 developer reset
+- 원래 내용: platform simulator admin adapter가 body 없는 reset POST에도 `Content-Type: application/json`을 강제해 Fastify가 400을 반환하고 platform이 500으로 변환했다.
+- 해결 DEV: BE-0010
+- 해결 내용: body가 있을 때만 JSON content-type을 보내도록 admin adapter와 smoke helper를 수정했다.
+- 검증: actual HTTP adapter test가 bodyless header를 확인하고 clean Compose full flow의 마지막 platform `/api/v1/dev/dataset/reset` 200과 simulator NORMAL reset을 통과했다.
+
+### GAP-0006 — 로컬 MVP 최소 Audit Event
+
+- 상태: RESOLVED
+- 심각도: HIGH
+- 최초 발견: 2026-09-02
+- 마지막 갱신: 2026-09-02
+- 발견 DEV: DEV-0007
+- 원래 요구사항: MyData, simulation과 주문의 중요 행위를 trace ID와 allowlist metadata가 있는 append-only `finapp_audit.finapp_audit_event`로 기록
+- 누락/연기 이유: schema namespace와 테이블 정의만 만들고 BE-0002~BE-0008의 vertical slice에는 audit migration/module/event 기록을 포함하지 않았다.
+- 현재 영향: 없음. 추가 AUTH/security event 보강은 Milestone 6A 범위이며 로컬 MVP 주문 증거는 충족한다.
+- 목표 Milestone: 5 / BE-0010
+- 재확인 조건: 최소 `ORDER_CREATED`, `ORDER_SUBMITTED`, `ORDER_RECONCILED`, `ORDER_FILLED`와 핵심 sync/simulation event가 append-only transaction으로 저장되고 runtime UPDATE/DELETE 거부 및 redaction test가 통과
+- 해결 DEV: BE-0010
+- 검증: Testcontainers/Compose에서 MyData connection/sync, order created/submitted/reconciled/filled와 `DEV_SCENARIO_CHANGED` 4건을 확인했다. order audit은 settlement transaction에 포함되고 runtime audit/ledger UPDATE·DELETE는 모두 false다. metadata는 allowlist key만 허용한다.
 
 ### ISSUE-0004 — Expo SDK 57 patch compatibility drift
 

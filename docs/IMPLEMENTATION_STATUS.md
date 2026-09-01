@@ -3,8 +3,8 @@
 - 현재 Milestone: 2~5 — 단일 Main 로컬 MVP 통합
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-02
-- 마지막 완료 ID: BE-0009
-- 다음 작업 ID: BE-0010
+- 마지막 완료 ID: BE-0010
+- 다음 작업 ID: FE-0010
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
@@ -35,9 +35,9 @@
 | 0. 저장소와 결정 기준선 | DONE | 문서, Node.js 24, workspace, 공통 품질 gate 완료 |
 | 1. 실행 가능한 골격 | DONE | Expo, 두 NestJS/Fastify 서비스, Compose, PostgreSQL/Keycloak, health, CI 완료 |
 | 2. OIDC와 App Lock | IN_PROGRESS | backend JWT·`/me`, frontend PKCE/session/App Lock 완료; live OIDC `/me`·restart·실기기 검증 남음 |
-| 3. 동기화와 Dashboard | IN_PROGRESS | backend sync/raw/derived/조회 완료; frontend Dashboard/Accounts/sync UX와 최소 audit 남음 |
+| 3. 동기화와 Dashboard | IN_PROGRESS | backend sync/raw/derived/조회와 최소 audit 완료; frontend Dashboard/Accounts/sync UX 남음 |
 | 4. 서버 시뮬레이션 | IN_PROGRESS | deterministic server simulation 완료; frontend 입력·결과 화면 남음 |
-| 5. BUY 주문과 복구 | IN_PROGRESS | quote/idempotency/reservation과 simulator brokerage/scenario 완료; platform settlement/reconciliation/audit와 frontend 주문 화면 남음 |
+| 5. BUY 주문과 복구 | IN_PROGRESS | backend quote/reservation/simulator/settlement/reconciliation/audit 완료; frontend 주문 화면과 전체 E2E 남음 |
 | 6A. 로컬 하드닝 | NOT_STARTED | outbox, local KMS adapter 경계, security event/관측성, 최종 포트폴리오 문서 |
 | 6B. 원격 데모 | CURRENT_RUN_EXCLUDED | Lightsail migration, 실제 AWS KMS, HTTPS/EAS와 원격 rollback은 향후 별도 실행 |
 
@@ -64,6 +64,20 @@
 - [x] Testcontainers PostgreSQL 동시성, 실제 network timeout, clean Compose migration/seed/HTTP smoke 통과
 - [x] root verify 중 발견된 Expo SDK 57 patch drift를 `ISSUE-0004`로 기록·해결하고 dependency gate 복구
 - [x] local Colima socket을 명시한 최종 root `npm run verify`: 총 123 tests와 두 backend build 통과
+
+## BE-0010 Platform Settlement·Reconciliation·Audit
+
+- [x] cash reservation commit 뒤 simulator 주문 POST를 1회 호출하고 timeout/500/malformed는 UNKNOWN으로 전환
+- [x] FILLED/REJECTED의 cash, reservation, execution, position, ledger와 order를 단일 settlement transaction으로 반영
+- [x] UNKNOWN claim/lease/backoff/max-attempt worker와 중복 settlement 방지, 최대 실패 예약금 반환
+- [x] owner-scoped 주문 단건/목록 조회와 200 replay/201 final/202 UNKNOWN 계약
+- [x] append-only audit에 MyData, simulation, order와 developer scenario action 및 allowlist metadata 저장
+- [x] local/demo developer scenario/reset proxy와 production module 미등록 검증
+- [x] canonical 계약 31개 operation·34개 fixture/provider/consumer/compatibility gate 통과
+- [x] Testcontainers PostgreSQL settlement/concurrency/권한과 platform 61 tests 통과
+- [x] clean Compose actual flow: sync→NORMAL FILLED→REJECTED→UNKNOWN reconciliation FILLED→reset
+- [x] platform/simulator production image build와 runtime audit 0, catalog prefix 위반 0
+- [x] local Colima socket을 명시한 최종 root `npm run verify`: 총 133 tests와 두 backend build 통과
 
 ## 완료된 통합 기준선
 
@@ -115,15 +129,13 @@
 - `GAP-0001`: live OIDC 로그인→refresh→`/me`와 native restart 검증
 - `GAP-0002`: iOS Development Build runtime 검증
 - `GAP-0003`: 실제 기기 biometric/background App Lock 검증
-- `GAP-0006`: 로컬 MVP append-only 최소 audit event 미구현
 - `GAP-0007`: 실제 전체 서비스 E2E와 fresh-clone 인수 명령 미완료
 
 통합 `npm audit` 결과는 moderate 18, high 0, critical 0이다. 두 production backend image의 runtime workspace audit은 0이다.
 
 ## 다음 작업
 
-1. `BE-0010`: platform external submit, settlement, reconciliation, order 조회와 최소 audit
-2. `FE-0010`: 현재 OpenAPI 기준 live OIDC `/me`와 authenticated adapter 통합
-3. `FE-0011`~`FE-0014`: Dashboard/MyData, simulation, order, Settings/developer scenario
-4. `DEV-0011`: local full-stack E2E와 fresh-clone 인수 후 Milestone 6A local hardening 진행
-5. 단계 10 local hardening 완료 결과를 commit/push하고 Milestone 6B 원격 단계 전에 STOP
+1. `FE-0010`: 현재 OpenAPI 기준 live OIDC `/me`와 authenticated adapter 통합
+2. `FE-0011`~`FE-0014`: Dashboard/MyData, simulation, order, Settings/developer scenario
+3. `DEV-0011`: local full-stack E2E와 fresh-clone 인수 후 Milestone 6A local hardening 진행
+4. 단계 10 local hardening 완료 결과를 commit/push하고 Milestone 6B 원격 단계 전에 STOP

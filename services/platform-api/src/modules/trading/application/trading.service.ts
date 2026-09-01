@@ -8,11 +8,18 @@ import {
   type IdentityRepository,
 } from '../../identity/application/ports/identity-repository.port.js';
 import type {
+  OrderPage,
   OrderRequest,
+  OrderView,
   PreparedOrder,
   QuoteRequest,
   QuoteView,
 } from '../domain/trading-model.js';
+import {
+  BROKERAGE_PORT,
+  BrokerageTransportError,
+  type BrokeragePort,
+} from './ports/brokerage.port.js';
 import {
   MARKET_PRICE_PORT,
   type MarketPricePort,
@@ -43,6 +50,8 @@ export class TradingService {
     private readonly repository: TradingRepository,
     @Inject(MARKET_PRICE_PORT)
     private readonly marketPrice: MarketPricePort,
+    @Inject(BROKERAGE_PORT)
+    private readonly brokerage: BrokeragePort,
   ) {}
 
   async preview(
@@ -73,6 +82,7 @@ export class TradingService {
     principal: AuthenticatedPrincipal,
     idempotencyKey: unknown,
     request: unknown,
+    traceId = 'unavailable',
   ): Promise<PreparedOrder> {
     if (
       typeof idempotencyKey !== 'string' ||
@@ -95,8 +105,55 @@ export class TradingService {
       idempotencyKey,
       requestHash,
       input,
+      traceId,
     );
-    if (result.kind === 'prepared') return result.value;
+    if (result.kind === 'prepared') {
+      if (!result.value.created) {
+        return {
+          created: false,
+          order:
+            (await this.repository.findOrder(
+              user.userId,
+              result.value.order.orderId,
+            )) ?? result.value.order,
+        };
+      }
+      const submission = await this.repository.submission(
+        user.userId,
+        result.value.order.orderId,
+      );
+      if (submission === undefined) throw new QuoteResourceNotFoundError();
+      try {
+        const external = await this.brokerage.submit({
+          clientOrderId: submission.clientOrderId,
+          accountId: submission.accountId,
+          instrumentId: submission.instrumentId,
+          quantity: submission.quantity,
+        });
+        if (external.clientOrderId !== submission.clientOrderId) {
+          throw new BrokerageTransportError('INVALID_RESPONSE');
+        }
+        return {
+          created: true,
+          order: await this.repository.applyExternalResult(
+            submission.orderId,
+            external,
+            'SUBMISSION',
+            traceId,
+          ),
+        };
+      } catch (error) {
+        if (!(error instanceof BrokerageTransportError)) throw error;
+        return {
+          created: true,
+          order: await this.repository.markUnknown(
+            submission.orderId,
+            `BROKERAGE_${error.code}`,
+            traceId,
+          ),
+        };
+      }
+    }
     if (result.kind === 'idempotency_conflict') {
       throw new IdempotencyConflictError();
     }
@@ -105,6 +162,117 @@ export class TradingService {
       throw new InsufficientFundsError();
     }
     throw new QuoteResourceNotFoundError();
+  }
+
+  async getOrder(
+    principal: AuthenticatedPrincipal,
+    orderId: string,
+  ): Promise<OrderView> {
+    if (!this.uuid(orderId)) throw new QuoteInputError();
+    const user = await this.identityRepository.provisionFromOidc(
+      principal.issuer,
+      principal.subject,
+    );
+    const order = await this.repository.findOrder(user.userId, orderId);
+    if (order === undefined) throw new QuoteResourceNotFoundError();
+    return order;
+  }
+
+  async listOrders(
+    principal: AuthenticatedPrincipal,
+    cursor: unknown,
+    limit: unknown,
+  ): Promise<OrderPage> {
+    if (!(
+      cursor === undefined ||
+      (typeof cursor === 'string' && this.uuid(cursor))
+    )) {
+      throw new QuoteInputError();
+    }
+    const parsedLimit = limit === undefined ? 20 : Number(limit);
+    if (
+      !Number.isInteger(parsedLimit) ||
+      parsedLimit < 1 ||
+      parsedLimit > 100
+    ) {
+      throw new QuoteInputError();
+    }
+    const user = await this.identityRepository.provisionFromOidc(
+      principal.issuer,
+      principal.subject,
+    );
+    return this.repository.listOrders(user.userId, cursor, parsedLimit);
+  }
+
+  async reconcileOne(workerId: string, now = new Date()): Promise<boolean> {
+    const lease = this.positiveInteger('ORDER_RECONCILIATION_LEASE_MS', 30_000);
+    const claim = await this.repository.claimReconciliation(
+      workerId,
+      now,
+      new Date(now.getTime() - lease),
+    );
+    if (claim === undefined) return false;
+    try {
+      const external = await this.brokerage.find(claim.clientOrderId);
+      if (
+        external.clientOrderId !== claim.clientOrderId ||
+        external.quantity !== claim.quantity
+      ) {
+        throw new BrokerageTransportError('INVALID_RESPONSE');
+      }
+      if (external.status === 'UNKNOWN') {
+        await this.reschedule(claim, 'ORDER_UNKNOWN', now);
+      } else {
+        await this.repository.applyExternalResult(
+          claim.orderId,
+          external,
+          'RECONCILIATION',
+          `reconciliation:${claim.jobId}`,
+          claim.jobId,
+        );
+      }
+    } catch (error) {
+      await this.reschedule(
+        claim,
+        error instanceof BrokerageTransportError
+          ? `BROKERAGE_${error.code}`
+          : 'RECONCILIATION_FAILED',
+        now,
+      );
+    }
+    return true;
+  }
+
+  private async reschedule(
+    claim: Parameters<TradingRepository['rescheduleReconciliation']>[0],
+    reasonCode: string,
+    now: Date,
+  ): Promise<void> {
+    const backoff = this.positiveInteger(
+      'ORDER_RECONCILIATION_BACKOFF_MS',
+      5000,
+    );
+    const maxAttempts = this.positiveInteger(
+      'ORDER_RECONCILIATION_MAX_ATTEMPTS',
+      3,
+    );
+    await this.repository.rescheduleReconciliation(
+      claim,
+      reasonCode,
+      new Date(now.getTime() + backoff * claim.attempt),
+      maxAttempts,
+    );
+  }
+
+  private positiveInteger(name: string, fallback: number): number {
+    const value = Number.parseInt(process.env[name] ?? String(fallback), 10);
+    return Number.isSafeInteger(value) && value > 0 ? value : fallback;
+  }
+
+  private uuid(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      value,
+    );
   }
 
   private validate(request: unknown): QuoteRequest {

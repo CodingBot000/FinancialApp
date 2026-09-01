@@ -127,6 +127,8 @@ DEV_SCENARIO_CHANGED
 
 metadata는 allowlist 방식으로 추가한다.
 
+BE-0010 기준 `finapp_audit_event`는 runtime role에 SELECT/INSERT만 허용하고 UPDATE/DELETE를 거부한다. order audit은 settlement transaction 안에서 기록하며 connection/sync/simulation/developer action도 resource UUID 또는 null, synthetic flag와 상태/mode 같은 allowlist metadata만 저장한다. token, full external identifier, request/response body와 암호화 plaintext는 audit metadata에 저장하지 않는다.
+
 ## 8. 환경 보호
 
 - local Keycloak `start-dev`는 local에서만 사용한다.

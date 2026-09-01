@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   Inject,
   NotFoundException,
   Param,
@@ -50,10 +51,11 @@ export class SimulationController {
   @Post()
   async create(
     @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Headers('x-correlation-id') traceId: string | undefined,
     @Body() body: unknown,
   ): Promise<SimulationView> {
     try {
-      return await this.simulationService.create(principal, body);
+      return await this.simulationService.create(principal, body, traceId);
     } catch (error: unknown) {
       if (error instanceof SimulationInputError) {
         throw new BadRequestException(

@@ -57,6 +57,8 @@ Testcontainers for Node.js PostgreSQL 사용:
 - audit append-only 권한
 - DB role isolation
 
+BE-0010 자동 DB suite는 정상 fill, reject, UNKNOWN worker 두 개의 단일 claim, duplicate settlement, max-attempt 환불, execution/position/ledger/cash 보존과 audit/ledger UPDATE·DELETE 거부를 PostgreSQL 17.6에서 검증한다.
+
 ### External integration
 
 platform-api와 실제 institution-simulator를 실행한다.
@@ -68,6 +70,8 @@ platform-api와 실제 institution-simulator를 실행한다.
 - ORDER_REJECT
 - ORDER_UNKNOWN_THEN_FILLED
 - duplicate clientOrderId
+
+`npm run smoke:local-order`는 clean local Compose migration/seed 뒤 합성 local JWT로 platform process를 시작해 sync→NORMAL FILLED→ORDER_REJECT→UNKNOWN reconciliation FILLED→reset을 실제 HTTP로 검증한다. 이 명령은 원격 endpoint나 credential을 사용하지 않는다.
 
 HTTP adapter mock은 세부 client unit test에 사용할 수 있지만 이 suite를 대체하지 않는다.
 

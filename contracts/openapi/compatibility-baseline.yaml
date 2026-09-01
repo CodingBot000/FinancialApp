@@ -72,7 +72,27 @@ contracts:
         {
           method: POST,
           path: /api/v1/orders,
-          statuses: [200, 202, 400, 401, 403, 404, 409],
+          statuses: [200, 201, 202, 400, 401, 403, 404, 409],
+        }
+      listOrders:
+        { method: GET, path: /api/v1/orders, statuses: [200, 400, 401, 403] }
+      getOrder:
+        {
+          method: GET,
+          path: '/api/v1/orders/{orderId}',
+          statuses: [200, 400, 401, 403, 404],
+        }
+      setDeveloperScenario:
+        {
+          method: PUT,
+          path: /api/v1/dev/scenario,
+          statuses: [200, 400, 401, 403],
+        }
+      resetDeveloperDataset:
+        {
+          method: POST,
+          path: /api/v1/dev/dataset/reset,
+          statuses: [200, 401, 403],
         }
     schemas:
       CreateConnectionRequest:
@@ -242,6 +262,16 @@ contracts:
               statusRefreshRecommendedAfterMs,
               updatedAt,
             ],
+        }
+      OrderPage: { type: object, properties: [items, nextCursor] }
+      DeveloperScenarioMode: { type: string }
+      SetDeveloperScenarioRequest:
+        { type: object, properties: [correlationScope, mode] }
+      DeveloperScenarioResponse: { type: object, properties: [mode, scope] }
+      DeveloperResetResponse:
+        {
+          type: object,
+          properties: [datasetVersion, scenarioMode, syntheticData],
         }
       MeResponse:
         {

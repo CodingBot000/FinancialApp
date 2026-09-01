@@ -266,17 +266,70 @@
   {
     "contract": "platform-v1",
     "operationId": "prepareBuyOrder",
-    "status": 202,
+    "status": 201,
     "body": {
       "orderId": "23df8759-92ef-45fc-8015-ef891e4e8757",
-      "status": "PENDING_SUBMISSION",
+      "status": "FILLED",
       "side": "BUY",
       "quantity": "3.00000000",
       "estimatedAmount": "375000.0000",
-      "filledAmount": null,
+      "filledAmount": "375000.0000",
       "createdAt": "2026-09-01T10:00:20.000Z",
-      "updatedAt": "2026-09-01T10:00:20.000Z",
-      "statusRefreshRecommendedAfterMs": 2000
+      "updatedAt": "2026-09-01T10:00:23.000Z",
+      "statusRefreshRecommendedAfterMs": null
+    }
+  },
+  {
+    "contract": "platform-v1",
+    "operationId": "listOrders",
+    "status": 200,
+    "body": {
+      "items": [
+        {
+          "orderId": "23df8759-92ef-45fc-8015-ef891e4e8757",
+          "status": "FILLED",
+          "side": "BUY",
+          "quantity": "3.00000000",
+          "estimatedAmount": "375000.0000",
+          "filledAmount": "375000.0000",
+          "createdAt": "2026-09-01T10:00:20.000Z",
+          "updatedAt": "2026-09-01T10:00:23.000Z",
+          "statusRefreshRecommendedAfterMs": null
+        }
+      ],
+      "nextCursor": null
+    }
+  },
+  {
+    "contract": "platform-v1",
+    "operationId": "getOrder",
+    "status": 200,
+    "body": {
+      "orderId": "23df8759-92ef-45fc-8015-ef891e4e8757",
+      "status": "FILLED",
+      "side": "BUY",
+      "quantity": "3.00000000",
+      "estimatedAmount": "375000.0000",
+      "filledAmount": "375000.0000",
+      "createdAt": "2026-09-01T10:00:20.000Z",
+      "updatedAt": "2026-09-01T10:00:23.000Z",
+      "statusRefreshRecommendedAfterMs": null
+    }
+  },
+  {
+    "contract": "platform-v1",
+    "operationId": "setDeveloperScenario",
+    "status": 200,
+    "body": { "mode": "ORDER_UNKNOWN_THEN_FILLED", "scope": "GLOBAL" }
+  },
+  {
+    "contract": "platform-v1",
+    "operationId": "resetDeveloperDataset",
+    "status": 200,
+    "body": {
+      "datasetVersion": "FINANCIAL_APP_DATASET_V1",
+      "scenarioMode": "NORMAL",
+      "syntheticData": true
     }
   },
   {

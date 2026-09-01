@@ -17,7 +17,9 @@ import { MYDATA_REPOSITORY } from '../../src/modules/mydata/application/ports/my
 import { SENSITIVE_DATA_PORT } from '../../src/modules/mydata/application/ports/sensitive-data.port.js';
 import { SIMULATION_REPOSITORY } from '../../src/modules/simulation/application/ports/simulation-repository.port.js';
 import { MARKET_PRICE_PORT } from '../../src/modules/trading/application/ports/market-price.port.js';
+import { BROKERAGE_PORT } from '../../src/modules/trading/application/ports/brokerage.port.js';
 import { TRADING_REPOSITORY } from '../../src/modules/trading/application/ports/trading-repository.port.js';
+import { AuditService } from '../../src/modules/audit/audit.service.js';
 import { WEALTH_REPOSITORY } from '../../src/modules/wealth/application/ports/wealth-repository.port.js';
 
 describe('GET /api/v1/me OIDC boundary', () => {
@@ -251,7 +253,66 @@ describe('GET /api/v1/me OIDC boundary', () => {
         },
       },
     }),
+    submission: vi.fn().mockResolvedValue({
+      orderId: '23df8759-92ef-45fc-8015-ef891e4e8757',
+      userId: 'user-a',
+      clientOrderId: '23df8759-92ef-45fc-8015-ef891e4e8757',
+      accountId: 'SYNTH-ACCOUNT-A-001',
+      instrumentId: 'SYNTH-EQUITY-001',
+      quantity: '3.00000000',
+    }),
+    applyExternalResult: vi.fn().mockResolvedValue({
+      orderId: '23df8759-92ef-45fc-8015-ef891e4e8757',
+      status: 'FILLED',
+      side: 'BUY',
+      quantity: '3.00000000',
+      estimatedAmount: '375000.0000',
+      filledAmount: '375000.0000',
+      createdAt: '2026-09-02T00:00:20.000Z',
+      updatedAt: '2026-09-02T00:00:23.000Z',
+      statusRefreshRecommendedAfterMs: null,
+    }),
+    findOrder: vi.fn().mockResolvedValue({
+      orderId: '23df8759-92ef-45fc-8015-ef891e4e8757',
+      status: 'FILLED',
+      side: 'BUY',
+      quantity: '3.00000000',
+      estimatedAmount: '375000.0000',
+      filledAmount: '375000.0000',
+      createdAt: '2026-09-02T00:00:20.000Z',
+      updatedAt: '2026-09-02T00:00:23.000Z',
+      statusRefreshRecommendedAfterMs: null,
+    }),
+    listOrders: vi.fn().mockResolvedValue({
+      items: [
+        {
+          orderId: '23df8759-92ef-45fc-8015-ef891e4e8757',
+          status: 'FILLED',
+          side: 'BUY',
+          quantity: '3.00000000',
+          estimatedAmount: '375000.0000',
+          filledAmount: '375000.0000',
+          createdAt: '2026-09-02T00:00:20.000Z',
+          updatedAt: '2026-09-02T00:00:23.000Z',
+          statusRefreshRecommendedAfterMs: null,
+        },
+      ],
+      nextCursor: null,
+    }),
   };
+  const brokerage = {
+    submit: vi.fn().mockResolvedValue({
+      clientOrderId: '23df8759-92ef-45fc-8015-ef891e4e8757',
+      externalOrderId: 'SIM-23df8759-92ef-45fc-8015-ef891e4e8757',
+      status: 'FILLED',
+      quantity: '3.00000000',
+      unitPrice: '125000.0000',
+      filledAmount: '375000.0000',
+      executedAt: '2026-09-02T00:00:23.000Z',
+    }),
+    find: vi.fn(),
+  };
+  const audit = { record: vi.fn().mockResolvedValue(undefined) };
   let app: NestFastifyApplication;
   let issuer: string;
   let privateKey: CryptoKey;
@@ -312,8 +373,12 @@ describe('GET /api/v1/me OIDC boundary', () => {
       .useValue(simulationRepository)
       .overrideProvider(TRADING_REPOSITORY)
       .useValue(tradingRepository)
+      .overrideProvider(BROKERAGE_PORT)
+      .useValue(brokerage)
       .overrideProvider(MARKET_PRICE_PORT)
       .useValue({ price: vi.fn().mockResolvedValue('125000.0000') })
+      .overrideProvider(AuditService)
+      .useValue(audit)
       .compile();
     app = moduleRef.createNestApplication<NestFastifyApplication>(
       createFastifyAdapter(),
@@ -469,6 +534,9 @@ describe('GET /api/v1/me OIDC boundary', () => {
     expect(response.statusCode).toBe(201);
     validateResponse('createMyDataConnection', response);
     expect(response.body).not.toContain('SYNTH-CUSTOMER-A');
+    expect(audit.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'MYDATA_CONNECTION_CREATED' }),
+    );
     expect(response.json()).toMatchObject({
       institutionCode: 'SYNTH_WEALTH_001',
       status: 'ACTIVE',
@@ -535,6 +603,9 @@ describe('GET /api/v1/me OIDC boundary', () => {
       assumptionSetVersion: 'SYNTHETIC_V1',
       goalProbability: 0.71,
     });
+    expect(audit.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'SIMULATION_EXECUTED' }),
+    );
   });
 
   it('enforces order.execute and returns a synthetic quote preview', async () => {
@@ -611,10 +682,11 @@ describe('GET /api/v1/me OIDC boundary', () => {
         url: '/api/v1/orders',
         payload,
       });
-    expect(response.statusCode).toBe(202);
+    expect(response.statusCode).toBe(201);
     validateResponse('prepareBuyOrder', response);
     expect(response.json()).toMatchObject({
-      status: 'PENDING_SUBMISSION',
+      status: 'FILLED',
+      filledAmount: '375000.0000',
       quantity: '3.00000000',
       estimatedAmount: '375000.0000',
     });
@@ -687,6 +759,18 @@ describe('GET /api/v1/me OIDC boundary', () => {
         operationId: 'getSimulation',
         method: 'GET' as const,
         url: '/api/v1/simulations/df4ee3a2-df76-454e-9627-57fcafda7f8d',
+        headers,
+      },
+      {
+        operationId: 'listOrders',
+        method: 'GET' as const,
+        url: '/api/v1/orders?limit=20',
+        headers,
+      },
+      {
+        operationId: 'getOrder',
+        method: 'GET' as const,
+        url: '/api/v1/orders/23df8759-92ef-45fc-8015-ef891e4e8757',
         headers,
       },
     ];

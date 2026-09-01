@@ -138,6 +138,40 @@ contracts:
           ]
         providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
         consumer: { status: planned, target: FE-0013 }
+      listOrders:
+        implementation:
+          [
+            services/platform-api/src/modules/trading/api/trading.controller.ts,
+            listOrders,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0013 }
+      getOrder:
+        implementation:
+          [
+            services/platform-api/src/modules/trading/api/trading.controller.ts,
+            getOrder,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0013 }
+      setDeveloperScenario:
+        implementation:
+          [
+            services/platform-api/src/modules/developer/api/developer.controller.ts,
+            setScenario,
+          ]
+        providerTests:
+          [services/platform-api/test/developer/developer.e2e.test.ts]
+        consumer: { status: planned, target: FE-0014 }
+      resetDeveloperDataset:
+        implementation:
+          [
+            services/platform-api/src/modules/developer/api/developer.controller.ts,
+            reset,
+          ]
+        providerTests:
+          [services/platform-api/test/developer/developer.e2e.test.ts]
+        consumer: { status: planned, target: FE-0014 }
   institution-simulator-v1:
     openapi: contracts/openapi/institution-simulator-v1.yaml
     controllerRoots: [services/institution-simulator/src]
@@ -232,7 +266,12 @@ contracts:
           ]
         providerTests:
           [services/institution-simulator/test/trading/trading.e2e.test.ts]
-        consumer: { status: planned, target: BE-0010 }
+        consumer:
+          {
+            status: implemented,
+            adapter: services/platform-api/src/modules/trading/infrastructure/http/simulator-brokerage.adapter.ts,
+            target: BE-0010,
+          }
       getSimulatorOrder:
         implementation:
           [
@@ -241,7 +280,12 @@ contracts:
           ]
         providerTests:
           [services/institution-simulator/test/trading/trading.e2e.test.ts]
-        consumer: { status: planned, target: BE-0010 }
+        consumer:
+          {
+            status: implemented,
+            adapter: services/platform-api/src/modules/trading/infrastructure/http/simulator-brokerage.adapter.ts,
+            target: BE-0010,
+          }
       setSimulatorScenario:
         implementation:
           [
@@ -250,7 +294,12 @@ contracts:
           ]
         providerTests:
           [services/institution-simulator/test/trading/trading.e2e.test.ts]
-        consumer: { status: planned, target: BE-0010 }
+        consumer:
+          {
+            status: implemented,
+            adapter: services/platform-api/src/modules/developer/infrastructure/http/simulator-admin.adapter.ts,
+            target: BE-0010,
+          }
       resetSimulatorDataset:
         implementation:
           [
@@ -259,4 +308,9 @@ contracts:
           ]
         providerTests:
           [services/institution-simulator/test/trading/trading.e2e.test.ts]
-        consumer: { status: planned, target: BE-0010 }
+        consumer:
+          {
+            status: implemented,
+            adapter: services/platform-api/src/modules/developer/infrastructure/http/simulator-admin.adapter.ts,
+            target: BE-0010,
+          }

@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../../core/auth/auth.module.js';
 import { DatabaseModule } from '../../core/database/database.module.js';
 import { IdentityModule } from '../identity/identity.module.js';
+import { AuditModule } from '../audit/audit.module.js';
 import { MyDataController } from './api/mydata.controller.js';
 import { MyDataService } from './application/mydata.service.js';
 import { MyDataSchedulerService } from './application/mydata-scheduler.service.js';
@@ -15,7 +16,7 @@ import { DrizzleMyDataRepository } from './infrastructure/persistence/drizzle-my
 
 @Module({
   controllers: [MyDataController],
-  imports: [AuthModule, DatabaseModule, IdentityModule],
+  imports: [AuditModule, AuthModule, DatabaseModule, IdentityModule],
   providers: [
     MyDataService,
     MyDataSchedulerService,

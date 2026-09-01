@@ -386,6 +386,8 @@ QUEUED → FETCHING → RAW_STORED → NORMALIZING → COMPLETED
 - `200`: 같은 key와 같은 payload의 기존 결과
 - `409 IDEMPOTENCY_CONFLICT`: 같은 key와 다른 payload
 
+cash reservation transaction이 commit된 뒤 simulator POST를 정확히 한 번 호출한다. 외부 POST는 자동 retry하지 않으며 timeout/5xx/malformed 응답은 `UNKNOWN`과 reconciliation job으로 저장한다. 같은 idempotency key replay는 immutable 최초 snapshot이 아니라 현재 owner-scoped order 상태를 반환한다.
+
 ```json
 {
   "orderId": "23df8759-92ef-45fc-8015-ef891e4e8757",
@@ -418,6 +420,8 @@ CREATED
 ### `GET /api/v1/orders?cursor=&limit=20`
 
 필요 scope: `financial.read`
+
+`cursor`는 직전 page 마지막 `orderId`이며 `limit`은 1~100이다. 응답은 `{ items, nextCursor }`이고 모든 항목은 현재 사용자 ownership으로 제한한다.
 
 ## 8. Developer API
 

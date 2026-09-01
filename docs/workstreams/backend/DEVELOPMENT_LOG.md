@@ -1,7 +1,7 @@
 # Backend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `BE-0010`
+- 다음 ID: `BE-0011` (통합 순서상 다음은 `FE-0010`)
 - 운영 상태: `codex/backend`는 DEV-0006 통합 이력으로 보존, 신규 BE commit은 단일 `main`에서 수행
 - 활성 worktree: `/Users/switch/Development/Web/FinancialApp`
 - 통합 검토 기준: `main` at `2574ad0`, `platform-v1` at BE-0008, `institution-simulator-v1` at BE-0003
@@ -549,6 +549,73 @@
 ### 다음 작업
 
 - BE-0010: platform external submit, settlement, reconciliation, order 조회와 append-only 최소 audit 구현
+
+## BE-0010 — Platform Settlement·Reconciliation·Audit
+
+- 날짜: 2026-09-02
+- Milestone: 3, 4, 5
+- 상태: COMPLETED
+- base commit: `fbe96c8` (`BE-0009`)
+- contract revision: `platform-v1` order GET/list와 developer scenario/reset, 총 31 operations
+- migration owner: 단일 main backend session; local Compose/Testcontainers만 적용
+- commit: `feat(be): settle and reconcile synthetic orders [BE-0010]`
+
+### 완료
+
+- reservation commit 후 simulator brokerage POST를 단 한 번 호출하고 HTTP timeout/5xx/malformed를 자동 retry 없이 UNKNOWN으로 저장한다.
+- FILLED는 order, active reservation, cash, execution, weighted-average position, immutable ledger와 audit를 한 transaction에서 settlement한다.
+- REJECTED와 reconciliation 최대 실패는 예약금을 반환하고 RELEASE ledger를 남기며 cash available+reserved 불변조건을 유지한다.
+- reconciliation job에 SKIP LOCKED claim, lease recovery, attempt/backoff/max-attempt와 duplicate settlement advisory lock을 구현했다.
+- owner-scoped order 단건/목록 API, 200 current-state replay, 201 final과 202 UNKNOWN 응답을 canonical 계약에 추가했다.
+- append-only audit table/module에 MyData connection/sync, simulation, order lifecycle와 developer scenario action을 trace/allowlist metadata로 기록한다.
+- local/demo developer proxy를 simulator admin API에 연결하고 production AppModule에는 DeveloperModule을 등록하지 않는다.
+- clean local Compose 실제 흐름을 재현하는 `npm run smoke:local-order`를 추가했다.
+
+### 변경 파일
+
+- `services/platform-api/src/modules/{trading,audit,developer,mydata,simulation}/**`
+- `services/platform-api/src/database/schema.ts`, `drizzle/0006_finapp_settlement_audit.sql`, journal
+- `services/platform-api/test/{database,trading,developer,identity,simulation}/**`
+- `contracts/openapi/platform-v1.yaml`, operation coverage, fixtures와 compatibility baseline
+- `scripts/smoke-local-order-flow.mjs`, root package script, Compose worker 환경
+- 중앙 상태·계획·API/table/security/test/issue와 backend workstream 문서
+
+### 검증
+
+- 명령: platform lint, strict typecheck, dependency-cruiser, Vitest와 Nest build
+- 결과: 80 modules/216 dependencies, 위반 0; 12 test files/61 tests와 build 통과
+- 명령: canonical `contract:check`
+- 결과: 두 OpenAPI lint와 31 operations/34 fixtures/controller/provider/consumer/compatibility gate 통과
+- 명령: PostgreSQL 17.6 Testcontainers settlement/concurrency
+- 결과: 두 worker claim 중 하나, duplicate settlement 1회, execution 2, ledger 8, position `3.00000000`, audit 13; 정상/reject/UNKNOWN→FILLED/max-failure와 총 cash 감소 `375000.0000` 검증
+- 명령: 두 production Docker image build와 runtime audit
+- 결과: platform 145/simulator 144 runtime package, vulnerability 0; 기존 Drizzle build-time moderate 4만 재현
+- 명령: clean Compose migration/seed와 `npm run smoke:local-order`
+- 결과: platform history 7/simulator 3, prefix 위반 relation/constraint 0. actual JWT sync→NORMAL FILLED→ORDER_REJECT REJECTED→UNKNOWN reconciliation FILLED→reset 200 통과
+- 명령: Compose runtime role catalog
+- 결과: audit/ledger UPDATE·DELETE 모두 false; 최종 smoke audit에 connection/sync/order created/submitted/reconciled/filled와 `DEV_SCENARIO_CHANGED` 4건 확인
+- 명령: local Colima socket을 명시한 root `npm run verify`
+- 결과: formatter, 31-operation contract, Expo dependency, secret, architecture, lint, strict typecheck, mobile 60 + simulator 12 + platform 61 = 총 133 tests와 두 backend build 통과
+
+### 원격 DB
+
+- 사용 여부: 사용하지 않음
+- migration commit/dataset version: local/Testcontainers `0006_finapp_settlement_audit` / `FINANCIAL_APP_DATASET_V1`
+- 결과: 원격 DB 사전 검토, endpoint/credential 요청, 연결, catalog, migration, seed와 배포 모두 미실행
+
+### 이슈·누락·Handoff
+
+- `BE-ISSUE-0001`: 변화 없음. build-time only이며 production runtime audit은 0이다.
+- 중앙 `GAP-0006`: RESOLVED. 최소 append-only audit action/권한/redaction 조건을 충족했다.
+- 중앙 `ISSUE-0005`: RESOLVED. body 없는 simulator reset POST의 JSON content-type defect를 actual HTTP test와 Compose에서 수정·검증했다.
+- 중앙 `ISSUE-0006`: RESOLVED. 주문 목록 cursor를 `(created_at, id)` 복합 keyset으로 수정하고 timestamp 동률 pagination을 검증했다.
+- 중앙 `ISSUE-0007`: RESOLVED. developer action에 실제 요청 correlation ID를 전달하고 E2E로 검증했다.
+- 신규 active backend issue/gap: 없음.
+- Handoff: FE-0013은 POST 자동 retry 없이 201 FILLED/REJECTED, 202 UNKNOWN과 GET polling을 처리한다. FE-0014는 local/demo developer route만 노출한다.
+
+### 다음 작업
+
+- 통합 순서 `FE-0010`: live OIDC `/me` mobile adapter; 다음 backend ID는 Milestone 6A의 `BE-0011`
 
 ## 새 기록 Template
 

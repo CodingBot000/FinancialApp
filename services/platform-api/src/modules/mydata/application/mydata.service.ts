@@ -1,10 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 
 import type { AuthenticatedPrincipal } from '../../../core/auth/authenticated-principal.js';
 import {
   IDENTITY_REPOSITORY,
   type IdentityRepository,
 } from '../../identity/application/ports/identity-repository.port.js';
+import { AuditService } from '../../audit/audit.service.js';
 import type { ConnectionView, SyncView } from '../domain/institution-data.js';
 import { MyDataResourceNotFoundError } from '../domain/mydata-errors.js';
 import {
@@ -36,12 +37,16 @@ export class MyDataService {
     private readonly institution: InstitutionPort,
     @Inject(SENSITIVE_DATA_PORT)
     private readonly sensitiveData: SensitiveDataPort,
+    @Optional()
+    @Inject(AuditService)
+    private readonly audit?: AuditService,
   ) {}
 
   async createConnection(
     principal: AuthenticatedPrincipal,
     institutionCode: string,
     consentExpiresAtText: string,
+    traceId = 'unavailable',
   ): Promise<ConnectionView> {
     if (institutionCode !== SYNTHETIC_INSTITUTION) {
       throw new MyDataInputError('Unsupported institution code.');
@@ -58,7 +63,7 @@ export class MyDataService {
       principal.subject,
     );
     const encrypted = this.sensitiveData.encrypt(SYNTHETIC_CUSTOMER);
-    return this.repository.createConnection({
+    const connection = await this.repository.createConnection({
       userId: user.userId,
       institutionCode,
       externalCustomerIdHash: this.sensitiveData.lookupHash(SYNTHETIC_CUSTOMER),
@@ -67,6 +72,15 @@ export class MyDataService {
       maskedExternalCustomerId: 'SYNTH-****-A',
       consentExpiresAt,
     });
+    await this.audit?.record({
+      userId: user.userId,
+      action: 'MYDATA_CONNECTION_CREATED',
+      resourceType: 'MYDATA_CONNECTION',
+      resourceId: connection.connectionId,
+      traceId,
+      metadata: { institutionCode, syntheticData: true },
+    });
+    return connection;
   }
 
   async listConnections(
@@ -82,6 +96,7 @@ export class MyDataService {
   async createSync(
     principal: AuthenticatedPrincipal,
     connectionId: string,
+    traceId = 'unavailable',
   ): Promise<{ readonly sync: SyncView; readonly created: boolean }> {
     const user = await this.identityRepository.provisionFromOidc(
       principal.issuer,
@@ -90,7 +105,7 @@ export class MyDataService {
     const result = await this.repository.createSync(user.userId, connectionId);
     if (result.created) {
       setImmediate(() => {
-        void this.runSync(result.sync.syncId);
+        void this.runSync(result.sync.syncId, traceId);
       });
     }
     return result;
@@ -109,17 +124,33 @@ export class MyDataService {
     return sync;
   }
 
-  async runSync(syncId: string): Promise<void> {
+  async runSync(syncId: string, traceId = `sync:${syncId}`): Promise<void> {
     const connection = await this.repository.beginSync(syncId);
     if (connection === undefined) return;
 
     try {
+      await this.audit?.record({
+        userId: connection.userId,
+        action: 'MYDATA_SYNC_STARTED',
+        resourceType: 'MYDATA_SYNC',
+        resourceId: syncId,
+        traceId,
+        metadata: { status: 'FETCHING', syntheticData: true },
+      });
       const customerId = this.sensitiveData.decrypt(
         connection.ciphertext,
         connection.encryptionKeyVersion,
       );
       const dataset = await this.institution.fetchDataset(customerId);
       await this.repository.completeSync(syncId, dataset);
+      await this.audit?.record({
+        userId: connection.userId,
+        action: 'MYDATA_SYNC_COMPLETED',
+        resourceType: 'MYDATA_SYNC',
+        resourceId: syncId,
+        traceId,
+        metadata: { status: 'COMPLETED', syntheticData: true },
+      });
     } catch {
       await this.repository.rescheduleOrFailSync(
         syncId,

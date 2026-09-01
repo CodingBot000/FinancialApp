@@ -934,3 +934,203 @@ export const finappFundReservation = finappTradingSchema.table(
       .where(sql`${table.status} = 'ACTIVE'`),
   ],
 );
+
+export const finappOrderExecution = finappTradingSchema.table(
+  'finapp_order_execution',
+  {
+    id: uuid('id').notNull(),
+    orderId: uuid('order_id').notNull(),
+    externalExecutionId: varchar('external_execution_id', {
+      length: 140,
+    }).notNull(),
+    quantity: numeric('quantity', { precision: 19, scale: 8 }).notNull(),
+    unitPrice: numeric('unit_price', { precision: 19, scale: 4 }).notNull(),
+    amount: numeric('amount', { precision: 19, scale: 4 }).notNull(),
+    executedAt: timestamp('executed_at', {
+      withTimezone: true,
+      mode: 'date',
+    }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_order_execution', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_execution_order',
+      columns: [table.orderId],
+      foreignColumns: [finappTradeOrder.id],
+    }).onDelete('restrict'),
+    unique('finapp_uq_execution_external').on(table.externalExecutionId),
+    unique('finapp_uq_execution_order').on(table.orderId),
+    check(
+      'finapp_ck_execution_values',
+      sql`${table.quantity} > 0 AND ${table.unitPrice} > 0 AND ${table.amount} > 0`,
+    ),
+  ],
+);
+
+export const finappCashLedgerEntry = finappTradingSchema.table(
+  'finapp_cash_ledger_entry',
+  {
+    id: uuid('id').notNull(),
+    cashAccountId: uuid('cash_account_id').notNull(),
+    orderId: uuid('order_id').notNull(),
+    entryType: varchar('entry_type', { length: 30 }).notNull(),
+    amount: numeric('amount', { precision: 19, scale: 4 }).notNull(),
+    balanceAfter: numeric('balance_after', {
+      precision: 19,
+      scale: 4,
+    }).notNull(),
+    occurredAt: timestamp('occurred_at', {
+      withTimezone: true,
+      mode: 'date',
+    }).notNull(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_cash_ledger_entry', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_ledger_cash_account',
+      columns: [table.cashAccountId],
+      foreignColumns: [finappCashAccount.id],
+    }).onDelete('restrict'),
+    foreignKey({
+      name: 'finapp_fk_ledger_order',
+      columns: [table.orderId],
+      foreignColumns: [finappTradeOrder.id],
+    }).onDelete('restrict'),
+    unique('finapp_uq_ledger_order_entry_type').on(
+      table.orderId,
+      table.entryType,
+    ),
+    check(
+      'finapp_ck_ledger_entry_type',
+      sql`${table.entryType} IN ('RESERVE', 'RELEASE', 'SETTLE')`,
+    ),
+    check('finapp_ck_ledger_balance', sql`${table.balanceAfter} >= 0`),
+  ],
+);
+
+export const finappPosition = finappTradingSchema.table(
+  'finapp_position',
+  {
+    id: uuid('id').notNull(),
+    userId: uuid('user_id').notNull(),
+    accountId: uuid('account_id').notNull(),
+    instrumentId: uuid('instrument_id').notNull(),
+    quantity: numeric('quantity', { precision: 19, scale: 8 })
+      .notNull()
+      .default('0'),
+    averagePrice: numeric('average_price', { precision: 19, scale: 4 })
+      .notNull()
+      .default('0'),
+    version: bigint('version', { mode: 'bigint' }).notNull().default(0n),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_position', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_position_user',
+      columns: [table.userId],
+      foreignColumns: [finappAppUser.id],
+    }).onDelete('restrict'),
+    foreignKey({
+      name: 'finapp_fk_position_account',
+      columns: [table.accountId],
+      foreignColumns: [finappFinancialAccount.id],
+    }).onDelete('restrict'),
+    foreignKey({
+      name: 'finapp_fk_position_instrument',
+      columns: [table.instrumentId],
+      foreignColumns: [finappInstrument.id],
+    }).onDelete('restrict'),
+    unique('finapp_uq_position_account_instrument').on(
+      table.accountId,
+      table.instrumentId,
+    ),
+    check(
+      'finapp_ck_position_values',
+      sql`${table.quantity} >= 0 AND ${table.averagePrice} >= 0`,
+    ),
+  ],
+);
+
+export const finappReconciliationJob = finappTradingSchema.table(
+  'finapp_reconciliation_job',
+  {
+    id: uuid('id').notNull(),
+    orderId: uuid('order_id').notNull(),
+    status: varchar('status', { length: 20 }).notNull().default('QUEUED'),
+    attempt: integer('attempt').notNull().default(0),
+    nextAttemptAt: timestamp('next_attempt_at', {
+      withTimezone: true,
+      mode: 'date',
+    }).notNull(),
+    lockedAt: timestamp('locked_at', { withTimezone: true, mode: 'date' }),
+    lockedBy: varchar('locked_by', { length: 100 }),
+    lastErrorCode: varchar('last_error_code', { length: 80 }),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+    completedAt: timestamp('completed_at', {
+      withTimezone: true,
+      mode: 'date',
+    }),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_reconciliation_job', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_reconciliation_order',
+      columns: [table.orderId],
+      foreignColumns: [finappTradeOrder.id],
+    }).onDelete('restrict'),
+    check('finapp_ck_reconciliation_attempt', sql`${table.attempt} >= 0`),
+    check(
+      'finapp_ck_reconciliation_status',
+      sql`${table.status} IN ('QUEUED', 'PROCESSING', 'COMPLETED', 'FAILED')`,
+    ),
+    index('finapp_idx_reconcile_claim').on(
+      table.status,
+      table.nextAttemptAt,
+      table.createdAt,
+    ),
+    uniqueIndex('finapp_uq_reconcile_order_active')
+      .on(table.orderId)
+      .where(sql`${table.status} IN ('QUEUED', 'PROCESSING')`),
+  ],
+);
+
+export const finappAuditEvent = finappAuditSchema.table(
+  'finapp_audit_event',
+  {
+    id: uuid('id').notNull(),
+    occurredAt: timestamp('occurred_at', {
+      withTimezone: true,
+      mode: 'date',
+    }).notNull(),
+    userId: uuid('user_id'),
+    action: varchar('action', { length: 80 }).notNull(),
+    resourceType: varchar('resource_type', { length: 50 }),
+    resourceId: uuid('resource_id'),
+    result: varchar('result', { length: 20 }).notNull(),
+    reasonCode: varchar('reason_code', { length: 80 }),
+    traceId: varchar('trace_id', { length: 100 }).notNull(),
+    metadata: jsonb('metadata').notNull().default({}),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_audit_event', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_audit_event_user',
+      columns: [table.userId],
+      foreignColumns: [finappAppUser.id],
+    }).onDelete('restrict'),
+    check(
+      'finapp_ck_audit_result',
+      sql`${table.result} IN ('SUCCESS', 'FAILURE', 'UNKNOWN')`,
+    ),
+    index('finapp_idx_audit_user_time').on(table.userId, table.occurredAt),
+    index('finapp_idx_audit_action_time').on(table.action, table.occurredAt),
+  ],
+);

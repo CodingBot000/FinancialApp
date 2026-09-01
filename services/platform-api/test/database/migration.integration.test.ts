@@ -86,7 +86,7 @@ describe('platform Drizzle migration', () => {
         SELECT count(*)::text AS count
         FROM finapp_meta.finapp_platform_drizzle_migrations
       `);
-      expect(history.rows[0]?.count).toBe('6');
+      expect(history.rows[0]?.count).toBe('7');
     } finally {
       await client.end();
     }
@@ -777,6 +777,278 @@ describe('platform Drizzle migration', () => {
         orders: '2',
         reservations: '2',
         idempotency_records: '2',
+      });
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('settles, releases, reconciles, and audits orders exactly once', async () => {
+    const platformUrl = new URL(connectionString);
+    platformUrl.username = 'financial_platform_app';
+    platformUrl.password = 'example-platform-test-only';
+    const pool = new Pool({ connectionString: platformUrl.toString(), max: 8 });
+    const identity = new DrizzleIdentityRepository(pool);
+    const repository = new DrizzleTradingRepository(pool);
+
+    try {
+      const owner = await identity.provisionFromOidc(
+        'https://issuer.example/realms/finapp',
+        'sync-user-a',
+      );
+      const resources = await pool.query<{
+        account_id: string;
+        instrument_id: string;
+      }>(
+        `
+        SELECT a.id AS account_id, i.id AS instrument_id
+        FROM finapp_wealth.finapp_financial_account a
+        JOIN finapp_wealth.finapp_holding h ON h.account_id = a.id
+        JOIN finapp_wealth.finapp_instrument i ON i.id = h.instrument_id
+        WHERE a.user_id = $1 LIMIT 1
+      `,
+        [owner.userId],
+      );
+      const resource = resources.rows[0]!;
+      const before = await pool.query<{ total: string }>(
+        `SELECT (available_balance + reserved_balance)::text AS total
+         FROM finapp_wealth.finapp_cash_account WHERE account_id = $1`,
+        [resource.account_id],
+      );
+
+      let sequence = 10;
+      const prepare = async (quantity: string) => {
+        const quote = await repository.createQuote(
+          owner.userId,
+          {
+            accountId: resource.account_id,
+            instrumentId: resource.instrument_id,
+            side: 'BUY',
+            quantity,
+          },
+          '125000.0000',
+        );
+        expect(quote).toBeDefined();
+        const request = {
+          quoteId: quote!.quoteId,
+          accountId: resource.account_id,
+          instrumentId: resource.instrument_id,
+          side: 'BUY' as const,
+          quantity,
+        };
+        const hash = createHash('sha256')
+          .update(JSON.stringify(request))
+          .digest('hex');
+        const key = `81000000-0000-4000-8000-${String(sequence).padStart(12, '0')}`;
+        sequence += 1;
+        const prepared = await repository.prepareOrder(
+          owner.userId,
+          key,
+          hash,
+          request,
+          `trace-${key}`,
+        );
+        expect(prepared.kind).toBe('prepared');
+        if (prepared.kind !== 'prepared') throw new Error('not prepared');
+        return prepared.value.order;
+      };
+
+      const filled = await prepare('1.00000000');
+      await expect(
+        repository.applyExternalResult(
+          filled.orderId,
+          {
+            clientOrderId: filled.orderId,
+            externalOrderId: `SIM-${filled.orderId}`,
+            status: 'FILLED',
+            quantity: '1.00000000',
+            unitPrice: '125000.0000',
+            filledAmount: '125000.0000',
+            executedAt: '2026-09-02T00:00:00.000Z',
+          },
+          'SUBMISSION',
+          'trace-filled',
+        ),
+      ).resolves.toMatchObject({
+        status: 'FILLED',
+        filledAmount: '125000.0000',
+      });
+
+      const rejected = await prepare('1.00000000');
+      await expect(
+        repository.applyExternalResult(
+          rejected.orderId,
+          {
+            clientOrderId: rejected.orderId,
+            externalOrderId: `SIM-${rejected.orderId}`,
+            status: 'REJECTED',
+            quantity: '1.00000000',
+            unitPrice: null,
+            filledAmount: null,
+            executedAt: null,
+          },
+          'SUBMISSION',
+          'trace-rejected',
+        ),
+      ).resolves.toMatchObject({ status: 'REJECTED', filledAmount: null });
+
+      const unknown = await prepare('2.00000000');
+      await repository.markUnknown(
+        unknown.orderId,
+        'BROKERAGE_TIMEOUT',
+        'trace-unknown',
+      );
+      const claimResults = await Promise.all([
+        repository.claimReconciliation('worker-a', new Date(), new Date(0)),
+        repository.claimReconciliation('worker-b', new Date(), new Date(0)),
+      ]);
+      expect(claimResults.filter(Boolean)).toHaveLength(1);
+      const claim = claimResults.find(Boolean)!;
+      await repository.applyExternalResult(
+        unknown.orderId,
+        {
+          clientOrderId: unknown.orderId,
+          externalOrderId: `SIM-${unknown.orderId}`,
+          status: 'FILLED',
+          quantity: '2.00000000',
+          unitPrice: '125000.0000',
+          filledAmount: '250000.0000',
+          executedAt: '2026-09-02T00:01:00.000Z',
+        },
+        'RECONCILIATION',
+        `reconciliation:${claim.jobId}`,
+        claim.jobId,
+      );
+      await repository.applyExternalResult(
+        unknown.orderId,
+        {
+          clientOrderId: unknown.orderId,
+          externalOrderId: `SIM-${unknown.orderId}`,
+          status: 'FILLED',
+          quantity: '2.00000000',
+          unitPrice: '125000.0000',
+          filledAmount: '250000.0000',
+          executedAt: '2026-09-02T00:01:00.000Z',
+        },
+        'RECONCILIATION',
+        `reconciliation:${claim.jobId}`,
+        claim.jobId,
+      );
+
+      const failed = await prepare('1.00000000');
+      await repository.markUnknown(
+        failed.orderId,
+        'BROKERAGE_TIMEOUT',
+        'trace-failed',
+      );
+      const failedClaim = await repository.claimReconciliation(
+        'worker-c',
+        new Date(),
+        new Date(0),
+      );
+      expect(failedClaim?.orderId).toBe(failed.orderId);
+      await repository.rescheduleReconciliation(
+        failedClaim!,
+        'BROKERAGE_HTTP_ERROR',
+        new Date(),
+        1,
+      );
+
+      const pagedOrderIds = [
+        filled.orderId,
+        rejected.orderId,
+        unknown.orderId,
+        failed.orderId,
+      ];
+      await pool.query(
+        `UPDATE finapp_trading.finapp_trade_order
+         SET created_at = '2030-01-01T00:00:00.000Z'
+         WHERE id = ANY($1::uuid[])`,
+        [pagedOrderIds],
+      );
+      const firstPage = await repository.listOrders(owner.userId, undefined, 2);
+      const secondPage = await repository.listOrders(
+        owner.userId,
+        firstPage.nextCursor ?? undefined,
+        2,
+      );
+      expect(firstPage.nextCursor).not.toBeNull();
+      expect(
+        [...firstPage.items, ...secondPage.items]
+          .map((order) => order.orderId)
+          .sort(),
+      ).toEqual(pagedOrderIds.sort());
+
+      const after = await pool.query<{
+        available: string;
+        reserved: string;
+        total: string;
+      }>(
+        `SELECT available_balance::text AS available,
+                reserved_balance::text AS reserved,
+                (available_balance + reserved_balance)::text AS total
+         FROM finapp_wealth.finapp_cash_account WHERE account_id = $1`,
+        [resource.account_id],
+      );
+      expect(Number(before.rows[0]?.total) - Number(after.rows[0]?.total)).toBe(
+        375000,
+      );
+      const invariants = await pool.query<{
+        audit_actions: string;
+        executions: string;
+        failed_status: string;
+        ledger_entries: string;
+        position_quantity: string;
+        reconciliation_completed: string;
+      }>(
+        `
+        SELECT
+          (SELECT count(*) FROM finapp_trading.finapp_order_execution
+           WHERE order_id IN ($1,$2,$3,$4))::text AS executions,
+          (SELECT count(*) FROM finapp_trading.finapp_cash_ledger_entry
+           WHERE order_id IN ($1,$2,$3,$4))::text AS ledger_entries,
+          (SELECT quantity::text FROM finapp_trading.finapp_position
+           WHERE account_id = $5 AND instrument_id = $6) AS position_quantity,
+          (SELECT status FROM finapp_trading.finapp_trade_order WHERE id = $4) AS failed_status,
+          (SELECT count(*) FROM finapp_trading.finapp_reconciliation_job
+           WHERE order_id = $3 AND status = 'COMPLETED')::text AS reconciliation_completed,
+          (SELECT count(*) FROM finapp_audit.finapp_audit_event
+           WHERE resource_id IN ($1,$2,$3,$4))::text AS audit_actions
+      `,
+        [
+          filled.orderId,
+          rejected.orderId,
+          unknown.orderId,
+          failed.orderId,
+          resource.account_id,
+          resource.instrument_id,
+        ],
+      );
+      expect(invariants.rows[0]).toEqual({
+        audit_actions: '13',
+        executions: '2',
+        failed_status: 'FAILED',
+        ledger_entries: '8',
+        position_quantity: '3.00000000',
+        reconciliation_completed: '1',
+      });
+      const privileges = await pool.query<{
+        audit_delete: boolean;
+        audit_update: boolean;
+        ledger_delete: boolean;
+        ledger_update: boolean;
+      }>(`
+        SELECT
+          has_table_privilege(current_user, 'finapp_audit.finapp_audit_event', 'UPDATE') AS audit_update,
+          has_table_privilege(current_user, 'finapp_audit.finapp_audit_event', 'DELETE') AS audit_delete,
+          has_table_privilege(current_user, 'finapp_trading.finapp_cash_ledger_entry', 'UPDATE') AS ledger_update,
+          has_table_privilege(current_user, 'finapp_trading.finapp_cash_ledger_entry', 'DELETE') AS ledger_delete
+      `);
+      expect(privileges.rows[0]).toEqual({
+        audit_delete: false,
+        audit_update: false,
+        ledger_delete: false,
+        ledger_update: false,
       });
     } finally {
       await pool.end();

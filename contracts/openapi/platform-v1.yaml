@@ -406,10 +406,37 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
   /api/v1/orders:
+    get:
+      operationId: listOrders
+      summary: List current user's BUY orders
+      description: Requires `financial.read`; cursor is the last order ID from the prior page.
+      security:
+        - BearerAuth: []
+      tags: [Trading]
+      parameters:
+        - name: cursor
+          in: query
+          schema: { type: string, format: uuid }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200':
+          description: Owner-scoped order page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPage'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       operationId: prepareBuyOrder
       summary: Idempotently create a BUY order and reserve cash
-      description: Requires `order.execute`. External submission occurs after this local transaction.
+      description: Requires `order.execute`. Cash reservation commits before one non-retried external POST.
       security:
         - BearerAuth: []
       tags: [Trading]
@@ -433,8 +460,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Order'
+        '201':
+          description: New order reached FILLED or REJECTED deterministically.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
         '202':
-          description: Cash reserved and order ready for external submission.
+          description: External result is UNKNOWN and reconciliation is queued.
           content:
             application/json:
               schema:
@@ -453,6 +486,82 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/orders/{orderId}:
+    get:
+      operationId: getOrder
+      summary: Get one owner-scoped order
+      description: Requires `financial.read`.
+      security:
+        - BearerAuth: []
+      tags: [Trading]
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Current persisted order state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/dev/scenario:
+    put:
+      operationId: setDeveloperScenario
+      summary: Set the local/demo simulator scenario
+      description: Local is relaxed; demo requires `scenario.admin`. The module is absent in production.
+      security:
+        - {}
+        - BearerAuth: []
+      tags: [Developer]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetDeveloperScenarioRequest'
+      responses:
+        '200':
+          description: Applied global simulator scenario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeveloperScenarioResponse'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/dev/dataset/reset:
+    post:
+      operationId: resetDeveloperDataset
+      summary: Reset the local/demo synthetic simulator dataset
+      description: Local is relaxed; demo requires `scenario.admin`. The module is absent in production.
+      security:
+        - {}
+        - BearerAuth: []
+      tags: [Developer]
+      responses:
+        '200':
+          description: Deterministic synthetic baseline restored.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeveloperResetResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 components:
   securitySchemes:
     BearerAuth:
@@ -999,7 +1108,7 @@ components:
           format: uuid
         status:
           type: string
-          const: PENDING_SUBMISSION
+          enum: [PENDING_SUBMISSION, UNKNOWN, FILLED, REJECTED, FAILED]
         side:
           type: string
           const: BUY
@@ -1009,7 +1118,8 @@ components:
         estimatedAmount:
           $ref: '#/components/schemas/Money'
         filledAmount:
-          type: 'null'
+          type: [string, 'null']
+          pattern: '^[0-9]+\.[0-9]{4}$'
         createdAt:
           type: string
           format: date-time
@@ -1017,8 +1127,59 @@ components:
           type: string
           format: date-time
         statusRefreshRecommendedAfterMs:
-          type: integer
-          const: 2000
+          type: [integer, 'null']
+          enum: [2000, null]
+    OrderPage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+        nextCursor:
+          type: [string, 'null']
+          format: uuid
+    DeveloperScenarioMode:
+      type: string
+      enum:
+        [
+          NORMAL,
+          TIMEOUT,
+          HTTP_500,
+          MALFORMED_RESPONSE,
+          ORDER_REJECT,
+          ORDER_UNKNOWN_THEN_FILLED,
+        ]
+    SetDeveloperScenarioRequest:
+      type: object
+      additionalProperties: false
+      required: [mode]
+      properties:
+        mode:
+          $ref: '#/components/schemas/DeveloperScenarioMode'
+        correlationScope:
+          type: string
+          const: CURRENT_USER
+    DeveloperScenarioResponse:
+      type: object
+      additionalProperties: false
+      required: [mode, scope]
+      properties:
+        mode:
+          $ref: '#/components/schemas/DeveloperScenarioMode'
+        scope:
+          type: string
+          const: GLOBAL
+    DeveloperResetResponse:
+      type: object
+      additionalProperties: false
+      required: [datasetVersion, scenarioMode, syntheticData]
+      properties:
+        datasetVersion: { type: string, minLength: 1 }
+        scenarioMode: { type: string, const: NORMAL }
+        syntheticData: { type: boolean, const: true }
     MeResponse:
       type: object
       additionalProperties: false

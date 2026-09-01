@@ -1,12 +1,13 @@
 import { randomBytes } from 'node:crypto';
 
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 
 import type { AuthenticatedPrincipal } from '../../../core/auth/authenticated-principal.js';
 import {
   IDENTITY_REPOSITORY,
   type IdentityRepository,
 } from '../../identity/application/ports/identity-repository.port.js';
+import { AuditService } from '../../audit/audit.service.js';
 import { runSimulation } from '../domain/simulation-engine.js';
 import {
   SIMULATION_ENGINE_VERSION,
@@ -60,11 +61,15 @@ export class SimulationService {
     private readonly identityRepository: IdentityRepository,
     @Inject(SIMULATION_REPOSITORY)
     private readonly repository: SimulationRepository,
+    @Optional()
+    @Inject(AuditService)
+    private readonly audit?: AuditService,
   ) {}
 
   async create(
     principal: AuthenticatedPrincipal,
     request: unknown,
+    traceId = 'unavailable',
   ): Promise<SimulationView> {
     const input = this.validate(request);
     const user = await this.identityRepository.provisionFromOidc(
@@ -86,7 +91,7 @@ export class SimulationService {
       seed,
       paths,
     );
-    return this.repository.save({
+    const saved = await this.repository.save({
       userId: user.userId,
       assumption,
       input,
@@ -95,6 +100,15 @@ export class SimulationService {
       engineVersion: SIMULATION_ENGINE_VERSION,
       result,
     });
+    await this.audit?.record({
+      userId: user.userId,
+      action: 'SIMULATION_EXECUTED',
+      resourceType: 'SIMULATION',
+      resourceId: saved.simulationId,
+      traceId,
+      metadata: { status: 'COMPLETED', syntheticData: true },
+    });
+    return saved;
   }
 
   async get(

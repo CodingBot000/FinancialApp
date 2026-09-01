@@ -72,7 +72,12 @@ function setup() {
     })),
     findByUser: vi.fn(),
   } as unknown as SimulationRepository;
-  return { service: new SimulationService(identity, repository), repository };
+  const audit = { record: vi.fn().mockResolvedValue(undefined) };
+  return {
+    service: new SimulationService(identity, repository, audit as never),
+    repository,
+    audit,
+  };
 }
 
 describe('simulation input and ownership policy', () => {
@@ -101,8 +106,8 @@ describe('simulation input and ownership policy', () => {
 
   it('runs validated input server-side and passes a generated seed to persistence', async () => {
     process.env.SIMULATION_PATH_COUNT = '50';
-    const { service, repository } = setup();
-    await service.create(principal, validRequest);
+    const { service, repository, audit } = setup();
+    await service.create(principal, validRequest, 'trace-simulation');
     expect(repository.save).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: 'user-1',
@@ -111,6 +116,14 @@ describe('simulation input and ownership policy', () => {
         engineVersion: '1.0.0',
       }),
     );
+    expect(audit.record).toHaveBeenCalledWith({
+      userId: 'user-1',
+      action: 'SIMULATION_EXECUTED',
+      resourceType: 'SIMULATION',
+      resourceId: 'simulation-1',
+      traceId: 'trace-simulation',
+      metadata: { status: 'COMPLETED', syntheticData: true },
+    });
   });
 
   it('returns 404 semantics for another user or unknown run', async () => {

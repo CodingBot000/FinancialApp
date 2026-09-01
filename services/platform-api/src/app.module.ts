@@ -6,6 +6,10 @@ import { MyDataModule } from './modules/mydata/mydata.module.js';
 import { SimulationModule } from './modules/simulation/simulation.module.js';
 import { TradingModule } from './modules/trading/trading.module.js';
 import { WealthModule } from './modules/wealth/wealth.module.js';
+import { DeveloperModule } from './modules/developer/developer.module.js';
+
+const environmentModules =
+  process.env.APP_ENV === 'production' ? [] : [DeveloperModule];
 
 @Module({
   imports: [
@@ -15,6 +19,7 @@ import { WealthModule } from './modules/wealth/wealth.module.js';
     WealthModule,
     SimulationModule,
     TradingModule,
+    ...environmentModules,
   ],
 })
 export class AppModule {}

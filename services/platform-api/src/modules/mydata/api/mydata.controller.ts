@@ -4,6 +4,7 @@ import {
   ConflictException,
   Controller,
   Get,
+  Headers,
   HttpCode,
   Inject,
   NotFoundException,
@@ -68,6 +69,7 @@ export class MyDataController {
   @RequiredScopes('financial.write')
   async createConnection(
     @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Headers('x-correlation-id') traceId: string | undefined,
     @Body() body: CreateConnectionBody,
   ): Promise<ConnectionView> {
     if (
@@ -83,6 +85,7 @@ export class MyDataController {
         principal,
         body.institutionCode,
         body.consentExpiresAt,
+        traceId,
       );
     } catch (error: unknown) {
       if (error instanceof MyDataInputError) {
@@ -116,6 +119,7 @@ export class MyDataController {
   @RequiredScopes('financial.write')
   async createSync(
     @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Headers('x-correlation-id') traceId: string | undefined,
     @Body() body: CreateSyncBody,
     @Res({ passthrough: true }) response: StatusReply,
   ): Promise<SyncView> {
@@ -128,6 +132,7 @@ export class MyDataController {
       const result = await this.myDataService.createSync(
         principal,
         body.connectionId,
+        traceId,
       );
       response.status(result.created ? 202 : 200);
       return result.sync;
