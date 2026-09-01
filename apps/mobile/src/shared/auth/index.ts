@@ -19,6 +19,13 @@ export type {
 export { ExpoSecureRefreshTokenStore } from './expo-secure-refresh-token-store';
 export { ExpoBiometricGate } from './expo-biometric-gate';
 export { RefreshCoordinator } from './refresh-coordinator';
+export { OidcAuthorizationError } from './oidc-authorization';
+export type {
+  OidcAuthorizationErrorCode,
+  OidcAuthorizationPort,
+  OidcAuthorizationResult,
+  OidcAuthorizedTokens,
+} from './oidc-authorization';
 export type { RefreshedTokens, TokenRefreshPort } from './refresh-coordinator';
 export type { RefreshTokenStore } from './refresh-token-store';
 export { SessionExpiredError, SessionPersistenceError } from './session-errors';

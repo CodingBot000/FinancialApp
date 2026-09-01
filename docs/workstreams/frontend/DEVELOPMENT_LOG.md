@@ -1,7 +1,7 @@
 # Frontend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `FE-0007`
+- 다음 ID: `FE-0008`
 - branch/worktree: `codex/frontend` / `/Users/switch/Development/Web/FinancialApp-frontend`
 - base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
 - contract revision: `platform-v1` at base commit (blob `8942e08342cd78f7e251f09b8a3005c9e797d93f`)
@@ -392,3 +392,63 @@ frontend session은 `apps/mobile/**` 변경을 commit 단위로 기록한다. �
 ### 다음 작업
 
 - FE-0007: Expo AuthSession Authorization Code + PKCE port/adapter와 환경 config validation; live redirect와 `/me`는 승인된 IdP/계약 통합 후 검증
+
+## FE-0007 — OIDC Authorization Code + PKCE mobile adapter
+
+- 날짜: 2026-09-02
+- Milestone: 2
+- 상태: COMPLETED
+- base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
+- contract revision: `platform-v1` at base commit (blob `8942e08342cd78f7e251f09b8a3005c9e797d93f`)
+- commit: `feat(fe): add OIDC PKCE session adapter [FE-0007]`
+
+### 완료
+
+- Expo SDK 57 공식 호환 `expo-auth-session ~57.0.10`을 추가하고 OIDC browser flow를 `OidcAuthorizationPort` 뒤에 격리
+- `EXPO_PUBLIC_OIDC_ISSUER`와 `EXPO_PUBLIC_OIDC_CLIENT_ID`만 받는 public config validator와 비밀값이 없는 mobile `.env.example` 추가
+- issuer는 HTTPS를 요구하되 local Keycloak 개발을 위해 `localhost`/`127.0.0.1`만 HTTP를 허용하고 client secret 입력 경로를 만들지 않음
+- OIDC discovery, Authorization Code, PKCE S256, state를 포함하는 Expo `AuthRequest`, `wealthsandbox://oauth/callback` redirect와 `openid profile offline_access` scope 구현
+- system browser cancel/dismiss를 credential 생성 없이 반환하고 잘못된 authorization response와 provider 오류를 token value 없는 typed error로 정규화
+- code verifier로 token exchange 후 access token과 필수 refresh token을 FE-0005 `AuthSessionManager`에 전달하는 `OidcLoginService` 구현
+- 동일 discovery/client 설정으로 refresh token rotation을 지원하는 `TokenRefreshPort` 구현
+- config가 유효할 때만 login/refresh adapter를 조립하는 composition factory를 추가하고 승인되지 않은 issuer/client 값을 하드코딩하지 않음
+
+### 변경 파일
+
+- `apps/mobile/.env.example`
+- `apps/mobile/package.json`
+- `apps/mobile/src/features/login/**`
+- `apps/mobile/src/shared/auth/**`
+- `apps/mobile/src/shared/config/**`
+- `docs/workstreams/frontend/DEVELOPMENT_LOG.md`
+- `docs/workstreams/frontend/ISSUE_REGISTER.md`
+
+### 검증
+
+- 명령: `npm run architecture:check -w @finapp/mobile`
+- 결과: 58 source files boundary/cycle check 통과
+- 명령: `npm run lint -w @finapp/mobile`
+- 결과: 통과
+- 명령: `npm run typecheck -w @finapp/mobile`
+- 결과: TypeScript strict 통과
+- 명령: `npm run test -w @finapp/mobile`
+- 결과: 18 files, 52 tests 통과; public config, HTTPS/local issuer, PKCE S256/verifier exchange, browser cancel, missing refresh token, rotation과 secure session establish 포함
+- 명령: `npm run dependency:check -w @finapp/mobile`
+- 결과: Expo SDK dependency 호환성 통과
+- 명령: `npm run security:secrets`
+- 결과: mobile env template과 source token/secret scan 통과
+- 명령: `npx expo export --platform android --output-dir /tmp/financialapp-fe0007-android.UGdPgU`
+- 결과: 2,427 modules, Hermes bundle 5.2MB 성공
+- 명령: `npx expo export --platform web --output-dir /tmp/financialapp-fe0007-web.FKj8dU`
+- 결과: 862 modules bundle 성공
+
+### 이슈·누락·Handoff
+
+- FE-GAP-0003: adapter와 test는 완료했지만 승인된 issuer/public client와 실행 중인 IdP가 없어 live browser redirect, code exchange, process restart refresh와 canonical `/me`는 계속 UNVERIFIED다.
+- CONTRACT_CHANGE_REQUEST: backend/integration owner는 OIDC issuer, public client ID, `wealthsandbox://oauth/callback` 등록, offline refresh 정책과 additive `/api/v1/me`/authentication problem 계약을 확정해야 한다.
+- INTEGRATION_HANDOFF: integration owner는 `expo-auth-session`과 transitive native browser dependency를 root lockfile에 반영하고 clean Development Build의 redirect scheme 등록을 확인해야 한다.
+- frontend는 client secret, undocumented password grant, 자체 JWT login 또는 canonical OpenAPI에 없는 `/me` 응답을 구현하지 않았다.
+
+### 다음 작업
+
+- FE-0008: session-aware Login Boundary와 OIDC configured/missing/opening/cancel/error UI; live login success는 FE-GAP-0003 조건 충족 후 연결 검증

@@ -48,7 +48,7 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 목표 Milestone: 2
 - 재확인 조건: 승인된 IdP 설정과 additive `/me` 계약으로 실제 Development Build에서 login → process restart → refresh single-flight → `/me`, refresh 실패 → local clear/재로그인 흐름 통과
 - 해결 FE:
-- 검증: FE-0005에서 11 files/27 tests, Expo dependency check, Android Hermes와 web bundle 통과. SecureStore adapter가 refresh token만 저장하고 adapter error에 credential value를 포함하지 않는 unit test 통과.
+- 검증: FE-0005에서 SecureStore/session single-flight 11 files/27 tests를 통과했다. FE-0007에서 public config validator, OIDC discovery + Authorization Code/PKCE S256, browser cancel, code exchange의 필수 refresh token, refresh rotation과 secure session establish를 포함해 mobile 전체 18 files/52 tests, Expo dependency check, Android Hermes와 web bundle을 통과했다. Live provider와 `/me`는 여전히 미검증이다.
 
 ### FE-GAP-0004 — 실제 기기 LocalAuthentication과 background App Lock 검증
 
