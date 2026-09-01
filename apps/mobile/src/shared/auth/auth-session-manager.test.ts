@@ -34,6 +34,7 @@ describe('AuthSessionManager', () => {
     expect(manager.getAccessToken()).toBe('example-access-token');
     expect(refreshStore.token).toBe('example-refresh-token');
     expect(await manager.hasRefreshSession()).toBe(true);
+    expect(manager.getSessionPresence()).toBe('active');
   });
 
   it('clears both stores on logout', async () => {
@@ -49,6 +50,46 @@ describe('AuthSessionManager', () => {
 
     expect(manager.getAccessToken()).toBeUndefined();
     expect(refreshStore.token).toBeUndefined();
+    expect(manager.getSessionPresence()).toBe('absent');
+  });
+
+  it('publishes only actual session-presence transitions', async () => {
+    const manager = new AuthSessionManager(
+      new MemoryAccessTokenStore(),
+      new MemoryRefreshTokenStore(),
+    );
+    const states: string[] = [];
+    const unsubscribe = manager.subscribeToSessionPresence(() => {
+      states.push(manager.getSessionPresence());
+    });
+
+    await manager.hasRefreshSession();
+    await manager.hasRefreshSession();
+    await manager.establish({
+      accessToken: 'example-access-token',
+      refreshToken: 'example-refresh-token',
+    });
+    unsubscribe();
+    await manager.clear();
+
+    expect(states).toEqual(['absent', 'active']);
+  });
+
+  it('keeps protected content unavailable when secure session inspection fails', async () => {
+    const failingRefreshStore: RefreshTokenStore = {
+      clear: async () => undefined,
+      read: async () => {
+        throw new Error('example-storage-failure');
+      },
+      write: async () => undefined,
+    };
+    const manager = new AuthSessionManager(
+      new MemoryAccessTokenStore(),
+      failingRefreshStore,
+    );
+
+    await expect(manager.inspectSessionPresence()).resolves.toBe('unavailable');
+    expect(manager.getSessionPresence()).toBe('unavailable');
   });
 
   it('rejects empty credentials without persisting either token', async () => {

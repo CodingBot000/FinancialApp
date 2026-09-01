@@ -2,7 +2,9 @@ import {
   createContext,
   type PropsWithChildren,
   useContext,
+  useEffect,
   useState,
+  useSyncExternalStore,
 } from 'react';
 
 import { MemoryAccessTokenStore } from './access-token-store';
@@ -28,9 +30,14 @@ export function AuthSessionProvider({
         new ExpoSecureRefreshTokenStore(),
       ),
   );
+  const activeManager = manager ?? defaultManager;
+
+  useEffect(() => {
+    void activeManager.inspectSessionPresence();
+  }, [activeManager]);
 
   return (
-    <AuthSessionContext.Provider value={manager ?? defaultManager}>
+    <AuthSessionContext.Provider value={activeManager}>
       {children}
     </AuthSessionContext.Provider>
   );
@@ -43,4 +50,13 @@ export function useAuthSession() {
   }
 
   return manager;
+}
+
+export function useSessionPresence() {
+  const manager = useAuthSession();
+  return useSyncExternalStore(
+    manager.subscribeToSessionPresence,
+    manager.getSessionPresence,
+    manager.getSessionPresence,
+  );
 }

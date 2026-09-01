@@ -1,7 +1,7 @@
 # Frontend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `FE-0006`
+- 다음 ID: `FE-0007`
 - branch/worktree: `codex/frontend` / `/Users/switch/Development/Web/FinancialApp-frontend`
 - base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
 - contract revision: `platform-v1` at base commit (blob `8942e08342cd78f7e251f09b8a3005c9e797d93f`)
@@ -326,3 +326,69 @@ frontend session은 `apps/mobile/**` 변경을 commit 단위로 기록한다. �
 ### 다음 작업
 
 - FE-0006: LocalAuthentication App Lock state machine, AppState timeout adapter와 non-token auth UI state
+
+## FE-0006 — Local biometric App Lock와 session-aware boundary
+
+- 날짜: 2026-09-02
+- Milestone: 2
+- 상태: COMPLETED
+- base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
+- contract revision: `platform-v1` at base commit (blob `8942e08342cd78f7e251f09b8a3005c9e797d93f`)
+- commit: `feat(fe): add biometric app lock foundation [FE-0006]`
+
+### 완료
+
+- Expo SDK 57 공식 호환 `expo-local-authentication ~57.0.2`와 client-only app lock 상태 전용 `zustand 5.0.15` 추가
+- Android Class 3 `strong`, device passcode fallback 비활성화, hardware/enrollment 선검사를 적용한 `ExpoBiometricGate` adapter 구현
+- success, cancel, retryable authentication failure/timeout, 미지원·미등록·device lockout·OIDC 재인증 필요 결과를 token-free domain result로 정규화
+- active session의 화면을 초기 잠금 상태로 가리고 성공한 로컬 생체인증 이후에만 공개하는 `AppLockBoundary`를 root에 조합
+- 60초의 주입 가능한 AppState background timeout과 `active → inactive → background`에서 최초 이탈 시간을 보존하는 lifecycle adapter 구현
+- secure session 존재 여부를 `unknown/active/absent/unavailable`로 관찰하고, SecureStore 검사 실패 시 protected content를 노출하지 않는 fail-closed recovery UI 구현
+- 앱 잠금 상태만 Zustand에 두고 access/refresh token이나 server state를 저장하지 않도록 상태 소유권 분리
+- Face ID usage description config plugin을 추가하고 UI에 local device unlock이며 server MFA가 아니라는 경계를 명시
+
+### 변경 파일
+
+- `apps/mobile/app.json`
+- `apps/mobile/package.json`
+- `apps/mobile/scripts/react-native-test-shim.mjs`
+- `apps/mobile/src/app/_layout.tsx`
+- `apps/mobile/src/features/app-lock/**`
+- `apps/mobile/src/shared/auth/**`
+- `docs/workstreams/frontend/DEVELOPMENT_LOG.md`
+- `docs/workstreams/frontend/ISSUE_REGISTER.md`
+
+### 검증
+
+- 명령: `npm run architecture:check -w @finapp/mobile`
+- 결과: 48 source files boundary/cycle check 통과
+- 명령: `npm run lint -w @finapp/mobile`
+- 결과: 통과
+- 명령: `npm run typecheck -w @finapp/mobile`
+- 결과: TypeScript strict 통과
+- 명령: `npm run test -w @finapp/mobile`
+- 결과: 15 files, 43 tests 통과; session presence/fail-closed, biometric result mapping, Zustand transition, background timeout과 잠금 UI success/cancel/reauthentication branch 포함
+- 명령: `npm run dependency:check -w @finapp/mobile`
+- 결과: Expo SDK dependency 호환성 통과
+- 명령: `npm run security:secrets`
+- 결과: token/secret scan 통과
+- 명령: `npx expo config --type public`
+- 결과: `expo-local-authentication` plugin과 Face ID permission 반영 확인
+- 명령: `npx expo export --platform android --output-dir /tmp/financialapp-fe0006-android.LlBpYB`
+- 결과: LocalAuthentication/Zustand boundary를 포함한 2,426 modules, Hermes bundle 5.2MB 성공
+- 명령: `npx expo export --platform web --output-dir /tmp/financialapp-fe0006-web.RX4J6U`
+- 결과: 859 modules bundle 성공
+- 명령: 임시 mobile 복제본에서 `npx expo prebuild --platform android --no-install` 후 `./android/gradlew -p android -PreactNativeArchitectures=x86_64 assembleDebug`
+- 결과: `expo-local-authentication 57.0.2` autolinking 확인, Gradle 670 tasks와 x86_64 Development Build APK 생성 성공
+
+### 이슈·누락·Handoff
+
+- FE-GAP-0004: native module autolinking/build는 통과했지만 현재 실제 Face ID/Touch ID/Android biometric 등록 기기를 사용하지 않았으므로 실제 prompt, 성공, cancel, lockout와 background timeout 수동 검증을 Milestone 2 integration으로 기록했다.
+- FE-ISSUE-0001: OPEN 유지. LocalAuthentication/Zustand 추가 후에도 audit moderate 13/high 0/critical 0이며 Expo 호환성을 깨지 않는 자동 fix가 없다.
+- CONTRACT_CHANGE_REQUEST: LocalAuthentication과 app lock은 로컬 경계라 canonical OpenAPI를 변경하지 않았다. OIDC 재인증 화면 연결에는 FE-GAP-0003의 승인된 IdP 설정과 `/me` 계약이 필요하다.
+- INTEGRATION_HANDOFF: integration owner는 `expo-local-authentication`, Zustand와 app config plugin을 root lockfile에 반영하고 iOS `NSFaceIDUsageDescription`, Android clean Development Build와 실제 기기 권한 prompt를 확인해야 한다.
+- 생체인증 성공은 local unlock으로만 처리하며 서버가 검증한 MFA 또는 거래 승인으로 사용하지 않는다.
+
+### 다음 작업
+
+- FE-0007: Expo AuthSession Authorization Code + PKCE port/adapter와 환경 config validation; live redirect와 `/me`는 승인된 IdP/계약 통합 후 검증

@@ -7,6 +7,12 @@ function createNativeTestComponent(name) {
 }
 
 export const ActivityIndicator = createNativeTestComponent('ActivityIndicator');
+export const AppState = {
+  currentState: 'active',
+  addEventListener() {
+    return { remove() {} };
+  },
+};
 export const SafeAreaView = createNativeTestComponent('SafeAreaView');
 export const ScrollView = createNativeTestComponent('ScrollView');
 export const Text = createNativeTestComponent('Text');
