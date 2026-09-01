@@ -13,7 +13,7 @@
 
 1. `MVP_SCOPE.md`
 2. `IMPLEMENTATION_DECISIONS.md`와 `docs/adr/*`
-3. `API_CONTRACTS.md`, `DATA_MODEL.md`, `SECURITY_MODEL.md`, `TEST_STRATEGY.md`
+3. `API_CONTRACTS.md`, `DATA_MODEL.md`, `TABLE_DEFINITIONS.md`, `SECURITY_MODEL.md`, `TEST_STRATEGY.md`
 4. 본 문서
 5. `Financial_app_CODEX_DETAILED_IMPLEMENTATION_SPEC.md`
 
@@ -68,6 +68,7 @@ FinancialApp/
 │   ├── ISSUE_REGISTER.md
 │   ├── MVP_SCOPE.md
 │   ├── SECURITY_MODEL.md
+│   ├── TABLE_DEFINITIONS.md
 │   └── TEST_STRATEGY.md
 ├── .github/workflows/
 ├── .env.example

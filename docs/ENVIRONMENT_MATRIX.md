@@ -66,6 +66,8 @@
 ## 원격 배포 전 확인표
 
 - [ ] database 또는 전용 schema 생성 가능
+- [ ] 모든 애플리케이션 소유 DB 객체가 `finapp_` prefix를 사용하는지 catalog query로 확인
+- [ ] Keycloak은 별도 `finapp_keycloak` database 또는 schema에만 존재
 - [ ] platform/simulator/keycloak role 분리 가능
 - [ ] 기존 schema에 권한 없음 확인
 - [ ] backup/snapshot 절차 확인

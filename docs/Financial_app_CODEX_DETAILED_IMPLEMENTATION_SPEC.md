@@ -1162,17 +1162,20 @@ Codex는 실제 DB 연결 전에 다음을 확인하고 문서화한다.
 권장 schema:
 
 ```text
-identity
-mydata_raw
-wealth
-trading
-simulation
-audit
-crypto
-simulator
+finapp_meta
+finapp_identity
+finapp_mydata
+finapp_wealth
+finapp_trading
+finapp_simulation
+finapp_audit
+finapp_crypto
+finapp_simulator
 ```
 
-Keycloak은 가능하면 별도 database 또는 전용 schema와 role을 사용한다.
+모든 애플리케이션 소유 table은 `finapp_` prefix를 사용한다. 정확한 물리 이름은 `docs/TABLE_DEFINITIONS.md`를 따른다.
+
+Keycloak은 가능하면 별도 `finapp_keycloak` database를 사용하고, 불가능하면 전용 `finapp_keycloak` schema와 role을 사용한다.
 
 ## 10.3 role 격리
 
@@ -1186,7 +1189,7 @@ Keycloak은 가능하면 별도 database 또는 전용 schema와 role을 사용�
 
 필수 권한:
 
-- platform role은 `simulator` schema 직접 조회 금지
+- platform role은 `finapp_simulator` schema 직접 조회 금지
 - simulator role은 platform domain schema 조회 금지
 - migration role만 DDL
 - app role은 audit table UPDATE/DELETE 금지
@@ -1213,6 +1216,8 @@ Keycloak은 가능하면 별도 database 또는 전용 schema와 role을 사용�
 ## 10.5 주요 테이블 후보
 
 최종 DDL은 Codex가 관계와 쿼리 패턴을 검토해 결정한다.
+
+아래 이름은 논리 후보명이다. 실제 table, index, constraint와 Flyway history 이름은 반드시 `docs/TABLE_DEFINITIONS.md`의 `finapp_` prefix 규칙을 적용한다.
 
 ### identity
 

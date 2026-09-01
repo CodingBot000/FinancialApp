@@ -30,7 +30,7 @@
 - 영향: Java 21 toolchain을 준비하기 전 backend scaffold와 최종 build 검증을 완료할 수 없다.
 - 임시 우회: 문서 작업과 Java에 독립적인 저장소 준비는 계속할 수 있다.
 - 해결 조건: Java 21 설치 또는 Gradle toolchain provisioning 후 `java -version`과 빈 Gradle build 성공 확인.
-- 목표 DEV: DEV-0002
+- 목표 DEV: DEV-0003
 
 ## Active Gap
 

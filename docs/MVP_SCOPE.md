@@ -63,7 +63,7 @@
 ### Simulator
 
 - 별도 Spring Boot process
-- 별도 DB role과 simulator schema
+- 별도 DB role과 `finapp_simulator` schema
 - 단일 가상기관
 - `BALANCED_WORKER` deterministic preset
 - 계좌, 보유자산, 거래내역, 시세, 주문 API

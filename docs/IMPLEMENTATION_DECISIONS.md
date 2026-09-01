@@ -19,7 +19,7 @@
 | D-008 | ACCEPTED | access token은 메모리, refresh token은 SecureStore에 저장한다. token을 Zustand/AsyncStorage에 저장하지 않는다. |
 | D-009 | ACCEPTED | 로컬 DB는 PostgreSQL 17 major를 사용한다. 원격 연결 전 실제 Lightsail engine과 호환성을 다시 확인한다. |
 | D-010 | ACCEPTED | platform과 simulator는 같은 로컬 PostgreSQL instance를 사용할 수 있지만 schema와 login role을 분리한다. |
-| D-011 | ACCEPTED | simulator 연동은 HTTP로만 수행하며 platform role은 simulator schema를 조회할 수 없다. |
+| D-011 | ACCEPTED | simulator 연동은 HTTP로만 수행하며 platform role은 `finapp_simulator` schema를 조회할 수 없다. |
 | D-012 | ACCEPTED | MVP는 단일 기관과 `BALANCED_WORKER` dataset만 구현한다. |
 | D-013 | ACCEPTED | raw payload row는 immutable하고 처리 상태/오류는 별도 processing result에 기록한다. |
 | D-014 | ACCEPTED | 동일 payload 재수신도 새 raw batch로 기록한다. 중복 제거는 scoped checksum과 external key로 수행한다. |
@@ -34,6 +34,8 @@
 | D-023 | ACCEPTED | 시간은 DB에서 UTC `timestamptz`, API에서 ISO-8601 UTC로 표현한다. |
 | D-024 | ACCEPTED | 환경은 `local`, `test`, `demo`, `production`으로 구분한다. dev scenario endpoint는 demo에서만 scope로 보호하고 production에는 bean을 등록하지 않는다. |
 | D-025 | ACCEPTED | 원격 DB migration, KMS, 배포는 사용자 승인과 환경정보 확인 전 실행하지 않는다. |
+| D-026 | ACCEPTED | 모든 애플리케이션 소유 schema, table, index, constraint와 Flyway history table에 `finapp_` prefix를 사용한다. |
+| D-027 | ACCEPTED | Keycloak vendor table은 rename하지 않고 별도 `finapp_keycloak` database를 우선 사용한다. 별도 database가 불가능한 경우 전용 `finapp_keycloak` schema와 role로 격리한다. |
 
 ## 버전 기준
 

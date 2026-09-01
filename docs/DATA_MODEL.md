@@ -3,7 +3,7 @@
 - 상태: Milestone 1~5 구현 기준선
 - 작성일: 2026-09-01
 
-이 문서는 논리 모델과 불변조건을 정의한다. 실제 DDL은 Flyway migration으로 구현하며 migration 변경 시 이 문서를 함께 갱신한다.
+이 문서는 논리 모델과 불변조건을 정의한다. 물리 이름, column, PK/FK/index는 `TABLE_DEFINITIONS.md`를 따른다. 실제 DDL은 Flyway migration으로 구현하며 migration 변경 시 두 문서를 함께 갱신한다.
 
 ## 1. 공통 규칙
 
@@ -18,6 +18,7 @@
 - raw payload: `jsonb`
 - optimistic version이 필요한 row: `bigint version`
 - 생성·변경 시간: `created_at`, `updated_at`
+- 모든 애플리케이션 소유 schema/table/index/constraint 이름: `finapp_` prefix
 
 모든 timestamp는 UTC 의미로 저장한다. 금액과 수량에 floating point DB 타입을 사용하지 않는다.
 
@@ -25,19 +26,19 @@
 
 ```mermaid
 flowchart LR
-    I[identity] --> R[mydata_raw]
-    R --> W[wealth]
-    W --> S[simulation]
-    W --> T[trading]
-    T --> A[audit]
-    X[simulator] -. HTTP only .-> R
+    I[finapp_identity] --> R[finapp_mydata]
+    R --> W[finapp_wealth]
+    W --> S[finapp_simulation]
+    W --> T[finapp_trading]
+    T --> A[finapp_audit]
+    X[finapp_simulator] -. HTTP only .-> R
 ```
 
-`simulator` schema와 platform schema 사이에 foreign key를 만들지 않는다. 연결은 external identifier와 HTTP 계약으로만 이루어진다.
+`finapp_simulator` schema와 platform schema 사이에 foreign key를 만들지 않는다. 연결은 external identifier와 HTTP 계약으로만 이루어진다.
 
-## 3. identity
+## 3. finapp_identity
 
-### `identity.app_user`
+### `finapp_identity.finapp_app_user`
 
 | column | 설명 |
 |---|---|
@@ -46,7 +47,7 @@ flowchart LR
 | `display_name` | 합성 표시명 |
 | `created_at`, `updated_at` | 시간 |
 
-### `identity.oidc_identity`
+### `finapp_identity.finapp_oidc_identity`
 
 | column | 설명 |
 |---|---|
@@ -58,7 +59,7 @@ flowchart LR
 
 제약: `(issuer, subject)` unique.
 
-### `identity.risk_profile`
+### `finapp_identity.finapp_risk_profile`
 
 | column | 설명 |
 |---|---|
@@ -68,9 +69,9 @@ flowchart LR
 | `monthly_contribution` | 0 이상 |
 | `version` | optimistic version |
 
-## 4. mydata_raw
+## 4. finapp_mydata
 
-### `mydata_raw.institution_connection`
+### `finapp_mydata.finapp_institution_connection`
 
 | column | 설명 |
 |---|---|
@@ -85,7 +86,7 @@ flowchart LR
 
 제약: 사용자와 기관당 활성 connection 하나. partial unique index를 검토한다.
 
-### `mydata_raw.sync_job`
+### `finapp_mydata.finapp_sync_job`
 
 | column | 설명 |
 |---|---|
@@ -100,7 +101,7 @@ flowchart LR
 
 동일 connection에 실행 상태인 job은 하나만 존재하도록 partial unique index를 사용한다.
 
-### `mydata_raw.raw_batch`
+### `finapp_mydata.finapp_raw_batch`
 
 | column | 설명 |
 |---|---|
@@ -115,7 +116,7 @@ flowchart LR
 
 동일 payload 재수신도 새 batch row로 기록한다. checksum은 조회 index이며 전역 unique가 아니다.
 
-### `mydata_raw.raw_record`
+### `finapp_mydata.finapp_raw_record`
 
 | column | 설명 |
 |---|---|
@@ -131,7 +132,7 @@ flowchart LR
 
 `raw_record`는 INSERT 후 UPDATE/DELETE하지 않는다.
 
-### `mydata_raw.raw_processing_result`
+### `finapp_mydata.finapp_raw_processing_result`
 
 | column | 설명 |
 |---|---|
@@ -146,9 +147,9 @@ flowchart LR
 
 제약: `(raw_record_id, processor_version)` unique.
 
-## 5. wealth
+## 5. finapp_wealth
 
-### `wealth.financial_account`
+### `finapp_wealth.finapp_financial_account`
 
 - `id`, `user_id`, `connection_id`
 - `institution_code`, `external_account_id_hash`
@@ -158,7 +159,7 @@ flowchart LR
 
 제약: `(connection_id, external_account_id_hash)` unique.
 
-### `wealth.instrument`
+### `finapp_wealth.finapp_instrument`
 
 - `id`, `instrument_code`, `display_name`
 - `asset_class`, `currency`, `status`
@@ -166,7 +167,7 @@ flowchart LR
 
 제약: `instrument_code` unique.
 
-### `wealth.holding`
+### `finapp_wealth.finapp_holding`
 
 - `id`, `user_id`, `account_id`, `instrument_id`
 - `quantity`, `average_price`
@@ -175,7 +176,7 @@ flowchart LR
 
 제약: `(account_id, instrument_id)` unique. quantity는 0 이상.
 
-### `wealth.financial_transaction`
+### `finapp_wealth.finapp_financial_transaction`
 
 - `id`, `user_id`, `account_id`
 - `external_transaction_id`, `transaction_type`
@@ -184,7 +185,7 @@ flowchart LR
 
 제약: `(account_id, external_transaction_id)` unique. 이 제약이 재동기화 중복을 막는 최종 방어선이다.
 
-### `wealth.cash_account`
+### `finapp_wealth.finapp_cash_account`
 
 - `id`, `user_id`, `account_id`
 - `available_balance`, `reserved_balance`, `currency`
@@ -196,7 +197,7 @@ flowchart LR
 - 주문 예약 시 available 감소와 reserved 증가 합계가 보존됨
 - settlement 시 reserved 감소와 ledger 기록이 같은 transaction에 포함됨
 
-### `wealth.asset_snapshot`
+### `finapp_wealth.finapp_asset_snapshot`
 
 - `id`, `user_id`, `as_of_date`, `currency`
 - `total_assets`, `cash_amount`, `investment_amount`
@@ -204,9 +205,16 @@ flowchart LR
 
 제약: `(user_id, as_of_date, currency)` unique.
 
-## 6. simulation
+### `finapp_wealth.finapp_asset_snapshot_allocation`
 
-### `simulation.assumption_set`
+- `id`, `snapshot_id`, `asset_class`
+- `amount`, `weight`
+
+제약: `(snapshot_id, asset_class)` unique, weight는 0~1.
+
+## 6. finapp_simulation
+
+### `finapp_simulation.finapp_assumption_set`
 
 - `id`, `version`, `status`
 - 자산군별 expected return, volatility, fee
@@ -215,37 +223,37 @@ flowchart LR
 
 제약: version unique. 사용된 assumption row는 수정하지 않고 새 version을 만든다.
 
-### `simulation.simulation_run`
+### `finapp_simulation.finapp_simulation_run`
 
 - `id`, `user_id`, `engine_version`, `assumption_set_id`
 - input snapshot JSONB
 - `seed`, `path_count`, `duration_months`
 - `status`, `created_at`, `completed_at`
 
-### `simulation.simulation_result_summary`
+### `finapp_simulation.finapp_simulation_result_summary`
 
 - `simulation_run_id` PK/FK
 - `goal_probability`
 - `final_p10`, `final_p50`, `final_p90`
 - `currency`
 
-### `simulation.simulation_result_point`
+### `finapp_simulation.finapp_simulation_result_point`
 
 - `simulation_run_id`, `month`
 - `p10`, `p50`, `p90`
 
 제약: `(simulation_run_id, month)` unique, `p10 <= p50 <= p90` check.
 
-## 7. trading
+## 7. finapp_trading
 
-### `trading.quote`
+### `finapp_trading.finapp_quote`
 
 - `id`, `user_id`, `account_id`, `instrument_id`
 - `side` check: MVP `BUY`
 - `quantity`, `unit_price`, `estimated_amount`, `fee`, `currency`
 - `expires_at`, `created_at`
 
-### `trading.idempotency_record`
+### `finapp_trading.finapp_idempotency_record`
 
 - `id`, `user_id`, `operation`, `idempotency_key`
 - `request_hash`, `resource_type`, `resource_id`
@@ -254,7 +262,7 @@ flowchart LR
 
 제약: `(user_id, operation, idempotency_key)` unique.
 
-### `trading.trade_order`
+### `finapp_trading.finapp_trade_order`
 
 - `id`, `user_id`, `account_id`, `instrument_id`, `quote_id`
 - `client_order_id`
@@ -268,7 +276,7 @@ flowchart LR
 - status는 결정 문서의 7개 상태만 허용
 - quantity와 estimated amount는 양수
 
-### `trading.fund_reservation`
+### `finapp_trading.finapp_fund_reservation`
 
 - `id`, `order_id`, `cash_account_id`
 - `amount`, `status`
@@ -276,14 +284,14 @@ flowchart LR
 
 제약: 주문당 활성 reservation 하나.
 
-### `trading.order_execution`
+### `finapp_trading.finapp_order_execution`
 
 - `id`, `order_id`, `external_execution_id`
 - `quantity`, `unit_price`, `amount`, `executed_at`
 
 제약: `external_execution_id` unique, MVP 주문당 execution 최대 하나.
 
-### `trading.cash_ledger_entry`
+### `finapp_trading.finapp_cash_ledger_entry`
 
 - `id`, `cash_account_id`, `order_id`
 - `entry_type`, `amount`, `balance_after`
@@ -291,14 +299,14 @@ flowchart LR
 
 제약: `(order_id, entry_type)` unique로 중복 settlement를 막는다.
 
-### `trading.position`
+### `finapp_trading.finapp_position`
 
 - `id`, `user_id`, `account_id`, `instrument_id`
 - `quantity`, `average_price`, `version`
 
 제약: `(account_id, instrument_id)` unique, quantity 0 이상.
 
-### `trading.reconciliation_job`
+### `finapp_trading.finapp_reconciliation_job`
 
 - `id`, `order_id`, `status`, `attempt`
 - `next_attempt_at`, `locked_at`, `locked_by`
@@ -306,9 +314,17 @@ flowchart LR
 
 제약: 주문당 활성 reconciliation job 하나.
 
-## 8. audit
+### `finapp_trading.finapp_outbox_event` — Milestone 6
 
-### `audit.audit_event`
+- aggregate와 event type
+- redacted payload
+- 처리 상태, attempt, available/processed time
+
+settlement transaction과 같은 transaction에서 INSERT한다.
+
+## 8. finapp_audit
+
+### `finapp_audit.finapp_audit_event`
 
 - `id`, `occurred_at`, `user_id`
 - `action`, `resource_type`, `resource_id`
@@ -317,20 +333,28 @@ flowchart LR
 
 app role은 INSERT/SELECT만 가능하며 UPDATE/DELETE 권한이 없다. token, full identifier, plaintext PII와 전체 request body를 저장하지 않는다.
 
-## 9. simulator
+### `finapp_audit.finapp_security_event` — Milestone 6
+
+인증·인가·비정상 접근 이벤트를 append-only로 저장한다.
+
+### `finapp_crypto.finapp_data_keyring` — Milestone 6
+
+KMS encrypted DEK, key version, algorithm과 scope metadata를 저장한다. plaintext DEK는 저장하지 않는다.
+
+## 9. finapp_simulator
 
 주요 table:
 
-- `sim_customer`
-- `sim_account`
-- `sim_instrument`
-- `sim_holding`
-- `sim_transaction`
-- `sim_market_price`
-- `sim_order`
-- `sim_scenario`
+- `finapp_sim_customer`
+- `finapp_sim_account`
+- `finapp_sim_instrument`
+- `finapp_sim_holding`
+- `finapp_sim_transaction`
+- `finapp_sim_market_price`
+- `finapp_sim_order`
+- `finapp_sim_scenario`
 
-`sim_order.client_order_id`는 unique다. simulator role 외에는 접근할 수 없다.
+`finapp_sim_order.client_order_id`는 unique다. simulator role 외에는 접근할 수 없다.
 
 ## 10. 주문 Transaction 경계
 

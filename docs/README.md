@@ -13,6 +13,7 @@
 7. 현재 작업에 해당하는 계약 문서
    - `API_CONTRACTS.md`
    - `DATA_MODEL.md`
+   - `TABLE_DEFINITIONS.md`
    - `SECURITY_MODEL.md`
    - `TEST_STRATEGY.md`
    - `ENVIRONMENT_MATRIX.md`
@@ -36,6 +37,7 @@ MVP_SCOPE
 - scope 변경은 `MVP_SCOPE.md`에 먼저 반영한다.
 - 구조 또는 기술 선택 변경은 ADR이나 `IMPLEMENTATION_DECISIONS.md`에 이유를 기록한다.
 - API와 DB 변경은 계약 문서와 구현을 같은 변경에서 갱신한다.
+- 모든 애플리케이션 소유 테이블과 DB 객체는 `TABLE_DEFINITIONS.md`의 `finapp_` prefix 규칙을 따른다.
 - 작업 완료 여부는 테스트 결과를 확인한 후 `IMPLEMENTATION_STATUS.md`에 기록한다.
 - 모든 개발 commit은 같은 `DEV-####`의 `DEVELOPMENT_LOG.md` 항목을 포함한다.
 - 발견된 문제와 누락은 `ISSUE_REGISTER.md`에 등록하며 해결 후에도 삭제하지 않는다.

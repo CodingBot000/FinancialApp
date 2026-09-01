@@ -3,8 +3,8 @@
 - 현재 Milestone: 0 — 저장소와 결정 기준선
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-01
-- 마지막 DEV ID: DEV-0001
-- 다음 DEV ID: DEV-0002
+- 마지막 DEV ID: DEV-0002
+- 다음 DEV ID: DEV-0003
 
 ## 상태 표기
 
@@ -38,6 +38,7 @@
 - [x] 환경 matrix
 - [x] API 계약 초안
 - [x] 데이터 모델 초안
+- [x] `finapp_` prefix 기반 물리 테이블 정의서
 - [x] 보안 모델
 - [x] 테스트 전략
 - [x] 시스템 경계 ADR
@@ -78,7 +79,7 @@ Milestone 6 시작 전에만 확인한다. 실제 기기 생체인증은 Milesto
 
 ## Active Issue와 Gap
 
-- `ISSUE-0001`: 로컬 Java가 17이며 프로젝트 기준 Java 21이 준비되지 않음
+- `ISSUE-0001`: 로컬 Java가 17이며 프로젝트 기준 Java 21이 준비되지 않음 (`DEV-0003`에서 처리 예정)
 - 현재 등록된 `GAP` 없음
 
 ## 다음 작업

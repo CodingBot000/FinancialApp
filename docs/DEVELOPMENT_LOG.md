@@ -1,8 +1,8 @@
 # 개발 로그
 
 - 기록 방식: append-only
-- 마지막 DEV ID: `DEV-0001`
-- 다음 DEV ID: `DEV-0002`
+- 마지막 DEV ID: `DEV-0002`
+- 다음 DEV ID: `DEV-0003`
 
 모든 개발 commit은 하나의 `DEV-####`와 연결한다. commit subject에도 같은 ID를 넣어 Git history와 문서 기록을 상호 추적할 수 있게 한다.
 
@@ -60,6 +60,51 @@
 ### 다음 작업
 
 - `DEV-0002`: Java 21 사용 가능 여부 해결 및 저장소 scaffold 시작
+
+## DEV-0002 — 공용 DB용 prefix와 물리 테이블 정의
+
+- 날짜: 2026-09-01
+- Milestone: 0
+- 상태: COMPLETED
+- 예정 commit: `docs(m0): define prefixed database tables [DEV-0002]`
+
+### 완료
+
+- 사용자 우선순위에 따라 Java 환경 작업 전에 DB naming 기준을 먼저 확정
+- 모든 애플리케이션 소유 DB 객체에 `finapp_` prefix 강제
+- platform/simulator Flyway history table 이름 분리
+- Keycloak vendor table의 별도 database/schema 격리 정책 확정
+- schema, table, column, PK/FK/index/check constraint를 포함한 물리 테이블 정의서 작성
+- 데이터 모델, ADR, 환경 확인표와 구현 결정 동기화
+
+### 변경 파일
+
+- `docs/TABLE_DEFINITIONS.md`
+- `docs/Financial_app_CODEX_DETAILED_IMPLEMENTATION_SPEC.md`
+- `docs/DATA_MODEL.md`
+- `docs/IMPLEMENTATION_DECISIONS.md`
+- `docs/ENVIRONMENT_MATRIX.md`
+- `docs/IMPLEMENTATION_STATUS.md`
+- `docs/CODEX_IMPLEMENTATION_PLAN.md`
+- `docs/README.md`
+- `docs/adr/ADR-0003-database-isolation.md`
+- `docs/DEVELOPMENT_LOG.md`
+- `docs/ISSUE_REGISTER.md`
+
+### 검증
+
+- 모든 application-owned table 이름의 `finapp_` prefix 검사
+- schema/table 이름과 logical data model 대응 검사
+- Markdown code fence, trailing whitespace, staged diff 검사
+
+### 이슈와 누락
+
+- `ISSUE-0001`: Java 21 준비는 `DEV-0003`으로 이동
+- Keycloak vendor table은 직접 prefix 변경 불가. 별도 `finapp_keycloak` database 우선, 불가 시 전용 schema로 격리
+
+### 다음 작업
+
+- `DEV-0003`: Java 21 사용 가능 여부 해결 및 저장소 scaffold 시작
 
 ## 새 기록 Template
 

@@ -145,5 +145,5 @@ metadata는 allowlist 방식으로 추가한다.
 - 로그 token/full identifier 검색 실패
 - refresh 실패 후 cache와 token 제거
 - 잘못된 AAD decrypt 실패
-- platform role의 simulator schema SELECT 실패
-- simulator role의 platform schema SELECT 실패
+- platform role의 `finapp_simulator` schema SELECT 실패
+- simulator role의 `finapp_*` platform schema SELECT 실패
