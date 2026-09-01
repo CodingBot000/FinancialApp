@@ -44,6 +44,9 @@
 | D-033 | ACCEPTED | backend unit/module/integration test runner는 NestJS 신규 프로젝트 기본값인 Vitest를 사용한다. PostgreSQL integration은 Testcontainers for Node.js를 사용한다. |
 | D-034 | ACCEPTED | NestJS HTTP provider는 `@nestjs/platform-fastify`의 Fastify adapter를 사용하며 Express 전용 middleware를 혼용하지 않는다. |
 | D-035 | ACCEPTED | OAuth2/OIDC access token은 Nest guard 뒤의 `jose` adapter가 remote JWKS, issuer, audience와 시간 claim을 검증한다. 암호 검증 코드를 직접 구현하거나 controller에서 token을 파싱하지 않는다. |
+| D-036 | ACCEPTED | frontend와 backend Codex session은 별도 Git worktree/branch와 `FE-####`/`BE-####` 추적 ID를 사용한다. backend session을 기본 integration owner로 두고 shared file, root lockfile과 main merge를 직렬 처리한다. |
+| D-037 | ACCEPTED | backend가 canonical OpenAPI artifact를 소유하고 frontend mock/API client는 특정 contract commit revision을 사용한다. mock payload는 schema validation과 deterministic dataset 기준을 통과해야 한다. |
+| D-038 | ACCEPTED | frontend는 원격 DB에 연결하지 않는다. 원격 Lightsail migration은 backend의 단일 migration owner만 승인 후 수행하며 자동 test는 local/Testcontainers PostgreSQL을 사용한다. 합성 데이터는 destructive DB 작업의 허가 근거가 아니다. |
 
 ## 정정 이력
 

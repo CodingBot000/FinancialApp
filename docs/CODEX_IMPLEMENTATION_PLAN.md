@@ -126,11 +126,23 @@ NestJS의 module/DI 구조를 application framework로 사용하고 Fastify는 H
 - Keycloak 26.7.3
 - Docker Compose
 - 로컬 PostgreSQL 17 major
-- AWS Lightsail와 KMS는 로컬 MVP 완료 후 연결
+- AWS Lightsail PostgreSQL은 local/Testcontainers migration 검증과 사용자 승인 후 demo integration에 연결하고, KMS는 Milestone 6에서 연결
 
 이미지와 패키지는 scaffold 시점에 정확한 patch 또는 digest로 고정하고 `IMPLEMENTATION_DECISIONS.md`에 기록한다.
 
 ## 5. Codex 작업 규칙
+
+### 5.0 두 session 병렬 실행
+
+frontend와 backend를 동시에 개발할 때는 `PARALLEL_DEVELOPMENT_GUIDE.md`를 이 절보다 우선 적용한다.
+
+- root workspace와 계약·CI 골격은 먼저 하나의 integration commit으로 만든다.
+- frontend와 backend session은 같은 working directory나 branch를 공유하지 않고 별도 Git worktree를 사용한다.
+- frontend는 `FE-####`, backend는 `BE-####`, integration owner는 `DEV-####` ID를 사용한다.
+- frontend는 contract mock을 통해 개발하고 DB에 직접 연결하지 않는다.
+- backend는 canonical OpenAPI와 DB migration을 소유한다.
+- shared file, root lockfile, 공통 상태 문서와 main merge는 integration owner가 직렬 처리한다.
+- 병렬 작업 완료는 main 통합 상태에서 contract, lint, typecheck와 test gate를 통과한 뒤에만 인정한다.
 
 ### 5.1 지속 실행 원칙
 
@@ -152,9 +164,9 @@ Codex는 사용자가 승인한 현재 MVP 범위 안에서 안전하게 진행�
 
 멈춤이 불가피하면 종료 전에 반드시 다음을 수행한다.
 
-1. `ISSUE_REGISTER.md`에 `BLOCKED` issue를 등록한다.
-2. `IMPLEMENTATION_STATUS.md`에 막힌 항목, 영향과 재개 조건을 기록한다.
-3. `DEVELOPMENT_LOG.md`에 시도한 내용과 검증 결과를 추가한다.
+1. 현재 session의 issue register에 `BLOCKED` issue를 등록한다.
+2. workstream 개발 로그에 막힌 항목, 영향과 재개 조건을 기록한다.
+3. 다른 session 또는 milestone에도 영향이 있으면 handoff를 만들고 integration owner가 중앙 상태·issue 문서에 연결하게 한다.
 4. 독립적으로 진행 가능한 작업이 정말 없는지 확인한다.
 5. 검증을 통과한 변경만 commit하고, 불완전하거나 검증하지 못한 코드는 완료로 표시하지 않는다.
 
@@ -162,34 +174,37 @@ Codex는 사용자가 승인한 현재 MVP 범위 안에서 안전하게 진행�
 
 각 작업 시작 전 다음을 수행한다.
 
-1. `git status --short --branch`로 사용자 변경사항을 확인한다.
-2. `IMPLEMENTATION_STATUS.md`에서 현재 milestone과 다음 항목을 확인한다.
-3. `ISSUE_REGISTER.md`에서 현재 milestone의 open/blocking issue를 확인한다.
-4. `DEVELOPMENT_LOG.md`의 다음 `DEV-####` ID를 할당한다.
-5. `ARCHITECTURE_GUIDE.md`, 관련 계약 문서와 ADR을 읽는다.
-6. 변경 범위를 한 milestone의 한 vertical slice로 제한한다.
-7. 구현과 테스트를 같은 변경 단위에 포함한다.
+1. `git status --short --branch`로 worktree와 사용자 변경사항을 확인한다.
+2. 병렬 실행이면 `PARALLEL_DEVELOPMENT_GUIDE.md`와 자신의 workstream 문서를 읽고 base/contract revision을 확인한다.
+3. `IMPLEMENTATION_STATUS.md`에서 현재 milestone과 다음 항목을 확인한다.
+4. 중앙 및 session-local issue register에서 open/blocking issue를 확인한다.
+5. frontend는 다음 `FE-####`, backend는 `BE-####`, integration owner는 `DEV-####` ID를 할당한다.
+6. `ARCHITECTURE_GUIDE.md`, 관련 계약 문서와 ADR을 읽는다.
+7. 변경 범위를 한 milestone의 한 vertical slice로 제한한다.
+8. 구현과 테스트를 같은 변경 단위에 포함한다.
 
 각 작업 종료 전 다음을 수행한다.
 
 1. 관련 formatter, lint, typecheck, unit/integration test를 실행한다.
 2. 구현된 architecture test와 import boundary 검증을 실행한다.
 3. 실패한 검증을 성공으로 기록하지 않는다.
-4. `IMPLEMENTATION_STATUS.md`를 실제 상태로 갱신한다.
-5. 완료, 실패, 미검증, 후속 작업을 `DEVELOPMENT_LOG.md`에 기록한다.
-6. 새 이슈·누락·불가피한 연기를 `ISSUE_REGISTER.md`에 등록하거나 기존 항목을 갱신한다.
-7. 계약 또는 아키텍처 결정이 변경되면 코드보다 문서를 먼저 또는 같은 변경에서 갱신한다.
+4. 완료, 실패, 미검증, contract/base revision과 후속 작업을 자신의 workstream 개발 로그에 기록한다.
+5. 새 이슈·누락·불가피한 연기를 session-local issue register에 등록하거나 기존 항목을 갱신한다.
+6. 다른 session 작업이 필요하면 handoff를 추가한다.
+7. shared 계약·상태·결정 문서 변경은 integration owner에게 전달하고 통합 commit에서 갱신한다.
 8. 실제 비밀정보와 합성 데이터가 아닌 개인정보가 Git에 없는지 확인한다.
-9. 검증을 통과한 변경과 관련 문서 갱신을 하나의 atomic commit으로 만든다.
+9. 검증을 통과한 변경과 관련 lane 문서 갱신을 하나의 atomic commit으로 만든다.
 10. commit 후 `git status`와 `git log -1 --oneline`으로 결과를 확인한 뒤 다음 작업으로 이동한다.
 
 ### 5.3 단계별 Commit 규칙
 
 각 vertical slice와 milestone 완료는 commit으로 남긴다. 여러 milestone의 구현을 하나의 commit으로 합치지 않는다.
 
-모든 개발 commit은 다음 형식을 사용한다.
+작업 lane에 따라 다음 형식을 사용한다.
 
 ```text
+<type>(fe): <summary> [FE-####]
+<type>(be): <summary> [BE-####]
 <type>(m<milestone>): <summary> [DEV-####]
 ```
 
@@ -197,9 +212,9 @@ Codex는 사용자가 승인한 현재 MVP 범위 안에서 안전하게 진행�
 
 ```text
 docs(m0): establish implementation tracking [DEV-0001]
-chore(m1): scaffold backend services [DEV-0002]
-feat(m3): ingest synthetic account data [DEV-0012]
-fix(m5): prevent duplicate order settlement [DEV-0028]
+feat(fe): render dashboard states [FE-0003]
+feat(be): ingest synthetic account data [BE-0004]
+chore(m1): integrate health vertical slice [DEV-0006]
 ```
 
 허용 type은 `feat`, `fix`, `test`, `docs`, `refactor`, `chore`, `ci`다.
@@ -210,9 +225,9 @@ commit 전 필수 확인:
 2. `git diff --check`가 통과했다.
 3. 의도한 파일만 stage되었다.
 4. secret과 실제 개인정보 패턴이 없다.
-5. 같은 `DEV-####` 항목이 `DEVELOPMENT_LOG.md`에 있다.
-6. 완료 checklist와 현재 next action이 `IMPLEMENTATION_STATUS.md`에 반영되었다.
-7. 관련 `ISSUE-####` 또는 `GAP-####`가 최신 상태다.
+5. 같은 FE/BE/DEV ID 항목이 해당 lane의 개발 로그에 있다.
+6. 관련 lane issue/gap과 handoff가 최신 상태다.
+7. integration commit이면 완료 checklist, 중앙 issue/gap과 next action이 공통 문서에 반영되었다.
 
 commit 정책:
 
@@ -225,31 +240,36 @@ commit 정책:
 
 ### 5.4 완료·이슈·누락 기록 규칙
 
-세 문서의 역할을 분리한다.
+공통 문서와 lane 문서의 역할을 분리한다.
 
 - `IMPLEMENTATION_STATUS.md`: 현재 milestone, 완료 checklist, active blocker와 바로 다음 작업
-- `DEVELOPMENT_LOG.md`: commit 단위의 append-only 작업 이력
+- `DEVELOPMENT_LOG.md`: integration commit 단위의 append-only 작업 이력
 - `ISSUE_REGISTER.md`: 미해결 issue, blocker, deferred item과 불가피한 누락의 수명주기
+- `workstreams/frontend/**`: frontend `FE-####`, `FE-ISSUE-####`, `FE-GAP-####` 추적
+- `workstreams/backend/**`: backend `BE-####`, `BE-ISSUE-####`, `BE-GAP-####` 추적
 
-모든 commit은 `DEVELOPMENT_LOG.md`에 같은 `DEV-####` ID로 기록한다. 기록에는 완료 내용, 변경 파일, 검증 명령과 결과, 발생한 issue/gap, 다음 작업을 포함한다.
+모든 commit은 해당 lane의 개발 로그에 같은 ID로 기록한다. integration owner는 main에 통합된 FE/BE commit과 전체 검증 결과를 중앙 `DEV-####` 항목에 요약한다. 기록에는 완료 내용, 변경 파일, 검증 명령과 결과, contract/base revision, 발생한 issue/gap/handoff와 다음 작업을 포함한다.
 
 이슈와 누락은 다음 ID를 사용한다.
 
 - `ISSUE-####`: defect, 환경 문제, blocker, 보안·성능 위험
 - `GAP-####`: 요구사항 누락, 의도적 연기, 검증하지 못한 인수 조건
+- `FE-ISSUE-####`/`FE-GAP-####`: frontend 내부 항목
+- `BE-ISSUE-####`/`BE-GAP-####`: backend 내부 항목
 
 규칙:
 
-- issue와 gap 항목은 삭제하지 않는다. 해결 시 `RESOLVED`로 바꾸고 해결 `DEV-####`와 검증 결과를 기록한다.
+- issue와 gap 항목은 삭제하지 않는다. 해결 시 `RESOLVED`로 바꾸고 해결한 FE/BE/DEV ID와 검증 결과를 기록한다.
 - checklist 항목을 완료하지 못하면 제거하거나 완료 표시하지 않고 해당 `ISSUE-####` 또는 `GAP-####`를 옆에 연결한다.
 - MVP 완료 조건에 영향을 주는 open blocker/gap이 있으면 milestone을 `DONE`으로 표시하지 않는다.
 - 후속 milestone으로 연기할 때는 이유, 영향, 목표 milestone, 재확인 조건을 기록한다.
 - 자동화하지 못한 수동 검증은 `UNVERIFIED` gap으로 남기고 기기·권한이 생기면 재검증한다.
-- 오래된 이슈도 추적 가능하도록 최초 발견일, 마지막 갱신일과 관련 `DEV-####`를 유지한다.
+- 오래된 이슈도 추적 가능하도록 최초 발견일, 마지막 갱신일과 관련 FE/BE/DEV ID를 유지한다.
 
 금지 사항:
 
 - 원격 DB에 사용자 확인 없이 migration 또는 seed 실행
+- 두 Codex session에서 같은 working directory, branch, migration 또는 중앙 개발 로그를 동시에 수정
 - 실제 계좌정보, 개인정보, 금융기관 credential 사용
 - 주문 POST 자동 retry
 - 외부 HTTP 요청을 포함하는 장시간 DB transaction

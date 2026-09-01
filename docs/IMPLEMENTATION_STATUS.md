@@ -3,8 +3,8 @@
 - 현재 Milestone: 0 — 저장소와 결정 기준선
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-01
-- 마지막 DEV ID: DEV-0003
-- 다음 DEV ID: DEV-0004
+- 마지막 DEV ID: DEV-0004
+- 다음 DEV ID: DEV-0005
 
 ## 상태 표기
 
@@ -46,6 +46,8 @@
 - [x] DB 격리 ADR
 - [x] 비동기 작업 ADR
 - [x] 앱·서버 권장 아키텍처와 자동 품질 gate 기준
+- [x] frontend/backend 병렬 worktree, 소유권, contract와 통합 규칙
+- [x] frontend/backend별 개발 로그와 issue/gap tracker
 
 ### 환경과 scaffold
 
@@ -76,7 +78,7 @@
 - Apple Developer/Google Play credential: 미확인
 - 실제 iOS/Android 생체인증 기기: 미확인
 
-Milestone 6 시작 전에만 확인한다. 실제 기기 생체인증은 Milestone 2 완료 보고에서 자동 테스트와 분리해 기록한다.
+이 조건들은 local/contract mock 병렬 개발을 막지 않는다. Lightsail DB를 Milestone 6 전에 demo integration에 사용하려면 최초 원격 migration 전에 DB 정보와 명시적 승인을 확인한다. 나머지 배포 조건은 Milestone 6 시작 전에 확인한다. 실제 기기 생체인증은 Milestone 2 완료 보고에서 자동 테스트와 분리해 기록한다.
 
 ## Active Issue와 Gap
 
@@ -85,9 +87,11 @@ Milestone 6 시작 전에만 확인한다. 실제 기기 생체인증은 Milesto
 
 ## 다음 작업
 
-1. architecture guide에 맞춘 root npm workspace와 디렉터리 scaffold
-2. NestJS 12 + Fastify 기반 platform/simulator와 Expo SDK 57 프로젝트 생성
-3. Drizzle migration baseline과 `finapp_` history 설정
-4. dependency-cruiser/ESLint와 mobile import boundary 기본 gate 추가
-5. Docker Compose에 PostgreSQL과 Keycloak 추가
-6. Milestone 1 health vertical slice 구현
+1. `DEV-0005`에서 root npm workspace, 디렉터리, 공통 lockfile과 OpenAPI/CI baseline을 직렬 scaffold
+2. 통합 scaffold commit을 공통 base로 frontend/backend worktree와 branch 분리
+3. frontend는 `FE-0001`, backend는 `BE-0001`부터 병렬 개발 시작
+4. NestJS 12 + Fastify platform/simulator와 Expo SDK 57 실행 골격 완성
+5. Drizzle migration baseline과 `finapp_` history 설정
+6. dependency-cruiser/ESLint와 mobile import boundary 기본 gate 추가
+7. Docker Compose에 PostgreSQL과 Keycloak 추가
+8. Milestone 1 health vertical slice를 main에서 통합 검증

@@ -27,6 +27,15 @@
 
 `demo`를 `production`처럼 표현하지 않는다. 개발자 장애 시나리오를 사용한 시연 환경임을 문서화한다.
 
+## 병렬 session과 원격 DB
+
+- frontend session은 모든 환경에서 platform API 또는 contract mock만 사용하고 PostgreSQL에 직접 연결하지 않는다.
+- backend unit/integration/concurrency test는 local Compose 또는 Testcontainers PostgreSQL을 사용한다.
+- Lightsail PostgreSQL은 `demo` integration과 remote smoke 용도이며 backend의 단일 migration owner만 접근한다.
+- 합성 데이터만 사용하더라도 shared remote DB의 migration, seed와 reset은 동시에 실행하지 않는다.
+- 원격 migration은 사용자 승인, snapshot/backup 확인, `finapp_` 객체 catalog 확인과 TLS 검증 후 실행한다.
+- 원격 실행 결과에는 commit SHA, migration history와 `datasetVersion`을 기록한다.
+
 ## 기본 로컬 port
 
 | 구성요소 | Host port | Container/internal port |

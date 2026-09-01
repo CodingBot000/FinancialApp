@@ -88,6 +88,16 @@ Codex는 코드를 작성하기 전에 다음을 수행한다.
 - 생체인증 결과를 서버가 검증한 MFA인 것처럼 설명하지 않는다.
 - 테스트를 통과하지 않은 상태를 완료로 표시하지 않는다.
 
+## 1.4 두 Codex session 병렬 개발
+
+- `docs/PARALLEL_DEVELOPMENT_GUIDE.md`를 frontend/backend 병렬 실행의 기준으로 사용한다.
+- root workspace와 공통 계약·CI baseline은 먼저 하나의 integration commit으로 만든다.
+- frontend와 backend는 별도 worktree/branch, 파일 소유권과 `FE-####`/`BE-####` 추적 ID를 사용한다.
+- frontend는 OpenAPI revision에 고정된 contract mock으로 진행하며 PostgreSQL에 직접 연결하지 않는다.
+- backend는 canonical OpenAPI와 migration을 소유하고 원격 migration은 승인된 단일 owner만 직렬 수행한다.
+- 합성 데이터라는 이유로 shared Lightsail DB reset, destructive migration 또는 동시 migration을 허용하지 않는다.
+- 각 branch의 성공만으로 완료 처리하지 않고 main 통합 상태의 contract/E2E/quality gate를 통과해야 한다.
+
 ---
 
 # 2. 프로젝트 목표와 성공 기준
@@ -2323,6 +2333,7 @@ Keycloak이 현재 Lightsail 인스턴스에서 안정적으로 동작하지 않
 - ADR 작성
 - 프로젝트 naming
 - 위협모델 초안
+- 병렬 worktree, 파일 소유권, contract handoff와 session별 추적 규칙 확정
 
 ## 산출물
 
@@ -2331,6 +2342,7 @@ Keycloak이 현재 Lightsail 인스턴스에서 안정적으로 동작하지 않
 - architecture diagram
 - threat model
 - environment matrix
+- parallel development guide와 frontend/backend workstream tracker
 
 ## 완료 기준
 
@@ -2348,6 +2360,7 @@ Keycloak이 현재 Lightsail 인스턴스에서 안정적으로 동작하지 않
 - backend scaffold
 - simulator scaffold
 - Docker Compose
+- 공통 workspace·OpenAPI·CI baseline 통합 후 frontend/backend worktree 분리
 - local PostgreSQL
 - Keycloak realm/client
 - base CI

@@ -3,7 +3,7 @@
 - 상태: 실행 기준선
 - 작성일: 2026-09-01
 - 적용 대상: `apps/mobile`, `services/platform-api`, `services/institution-simulator`
-- 관련 결정: `ADR-0001`, `D-001`~`D-003`, `D-028`~`D-035`
+- 관련 결정: `ADR-0001`, `D-001`~`D-003`, `D-028`~`D-038`
 
 ## 1. 목적과 강제 수준
 
@@ -89,6 +89,14 @@ FinancialApp/
 - OpenAPI generated type을 공유할 때도 각 서비스 내부 domain type으로 변환한다.
 - Node.js는 현재 LTS인 24 major를 `.nvmrc`, `engines`, CI와 container에 고정한다.
 - TypeScript는 `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`를 활성화한다. 호환성 문제가 확인되면 개별 option 완화 근거를 결정 문서에 남긴다.
+
+### 4.1 병렬 delivery 경계
+
+- frontend와 backend Codex session은 `PARALLEL_DEVELOPMENT_GUIDE.md`에 따라 별도 worktree와 branch에서 실행한다.
+- frontend는 `apps/mobile`, backend는 `services`, `infra`, OpenAPI와 migration을 주로 소유한다.
+- 두 영역의 결합점은 canonical OpenAPI revision이며 frontend mock과 실제 backend가 같은 계약 검증을 통과해야 한다.
+- shared root config, lockfile, 공통 결정 문서와 main merge는 integration owner 한 명이 직렬 처리한다.
+- 병렬 branch에서 각각 성공했어도 main 통합 상태의 전체 gate가 실패하면 완료가 아니다.
 
 ## 5. Platform API 아키텍처
 
@@ -224,6 +232,9 @@ module composition ───────────────> api/applicatio
 - money/quantity는 PostgreSQL `numeric`과 decimal string/value object로 다루며 JavaScript `number` 금융 계산을 금지한다.
 - row lock, `SKIP LOCKED`, isolation level과 transaction 범위는 repository adapter에서 명시한다.
 - migration은 자동 rollback을 가정하지 않고 expand/contract와 forward-fix를 기본으로 한다.
+- frontend는 local 또는 원격 PostgreSQL에 직접 연결하지 않는다.
+- backend 자동 test는 Testcontainers를 사용하며 원격 Lightsail DB는 승인된 migration smoke와 demo integration에만 사용한다.
+- 합성 데이터만 저장하더라도 원격 migration은 단일 migration owner가 직렬 적용하고 commit SHA와 dataset version을 기록한다.
 
 ### 5.5 인증과 외부 통합
 

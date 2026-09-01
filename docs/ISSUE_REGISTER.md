@@ -6,6 +6,8 @@
 
 이 문서는 defect, blocker, 위험과 불가피한 누락을 삭제하지 않고 추적한다.
 
+frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-####`/`FE-GAP-####`, backend 내부 항목은 `workstreams/backend/ISSUE_REGISTER.md`의 `BE-ISSUE-####`/`BE-GAP-####`를 사용한다. 두 영역 또는 milestone 완료에 영향을 주는 항목만 integration owner가 이 중앙 register의 `ISSUE-####`/`GAP-####`에 연결한다.
+
 ## 상태
 
 - `OPEN`: 해결 작업이 필요함

@@ -6,6 +6,7 @@
 ## 1. 원칙
 
 - 테스트는 원격 Lightsail DB를 사용하지 않는다.
+- 원격 Lightsail에서는 별도의 승인된 migration/role/TLS/E2E smoke만 실행하고 자동 test suite의 test data source로 사용하지 않는다.
 - DB integration test는 `@testcontainers/postgresql`을 사용한다.
 - 시간은 주입된 `Clock`, random은 명시적 seed를 사용한다.
 - 테스트 간 데이터와 scenario는 독립적이어야 한다.
@@ -100,6 +101,16 @@ HTTP adapter mock은 세부 client unit test에 사용할 수 있지만 이 suit
 - route가 API transport, store implementation과 feature internal file을 직접 import하지 않는지 검사
 - feature 간 cycle과 공개 `index.ts` 밖의 deep import 검사
 - TanStack Query server state를 Zustand에 복제하지 않는지 review와 targeted test로 확인
+
+### Frontend contract mock
+
+- frontend mock/API client가 지정된 canonical OpenAPI commit revision을 사용
+- 모든 mock response가 OpenAPI schema validation 통과
+- 고정 seed와 `datasetVersion`으로 fixture 재현
+- loading, empty, partial, timeout, 401, 403/404와 5xx 상태 검증
+- money/quantity decimal string과 enum이 실제 계약과 일치
+- mock adapter와 real HTTP adapter가 같은 application API port를 구현
+- backend 준비 후 동일 consumer contract를 실제 API에 실행
 
 ### Mobile E2E
 

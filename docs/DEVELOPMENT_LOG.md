@@ -1,10 +1,10 @@
 # 개발 로그
 
 - 기록 방식: append-only
-- 마지막 DEV ID: `DEV-0003`
-- 다음 DEV ID: `DEV-0004`
+- 마지막 DEV ID: `DEV-0004`
+- 다음 DEV ID: `DEV-0005`
 
-모든 개발 commit은 하나의 `DEV-####`와 연결한다. commit subject에도 같은 ID를 넣어 Git history와 문서 기록을 상호 추적할 수 있게 한다.
+모든 integration/shared commit은 하나의 `DEV-####`와 연결한다. frontend와 backend lane commit은 각각 `FE-####`, `BE-####`와 workstream 개발 로그를 사용한다. commit subject에도 같은 ID를 넣어 Git history와 문서 기록을 상호 추적할 수 있게 한다.
 
 기존 항목의 사실 오류를 수정할 때는 원문을 삭제하지 않고 `정정` 또는 `추가 기록`을 남긴다.
 
@@ -166,6 +166,63 @@
 ### 다음 작업
 
 - `DEV-0004`: Node.js/NestJS architecture baseline에 맞춘 npm workspace와 저장소 scaffold 시작
+
+## DEV-0004 — Frontend·Backend 병렬 개발 운영 기준선
+
+- 날짜: 2026-09-01
+- Milestone: 0
+- 상태: COMPLETED
+- 예정 commit: `docs(m0): define parallel development lanes [DEV-0004]`
+
+### 완료
+
+- 사용자의 우선순위에 따라 scaffold 전에 두 Codex session 병렬 개발 지침을 먼저 확정
+- 같은 working directory/branch 동시 사용을 금지하고 frontend/backend별 worktree와 branch 분리
+- frontend, backend와 integration owner의 파일 소유권 및 shared file 직렬 통합 규칙 확정
+- `FE-####`, `BE-####`, `DEV-####` commit namespace와 session별 append-only log 분리
+- session별 issue/gap namespace와 cross-session handoff protocol 추가
+- backend canonical OpenAPI revision과 frontend contract mock 동기화 규칙 확정
+- root lockfile conflict 시 package manifest 통합 후 package manager 재생성 규칙 추가
+- frontend 원격 DB 직접 접근 금지와 backend 단일 migration owner 원칙 추가
+- 합성 데이터여도 shared Lightsail DB의 destructive reset·동시 migration이 안전하지 않음을 환경·테스트 지침에 반영
+- 공통 scaffold를 먼저 직렬 commit한 뒤 두 session을 시작하도록 다음 작업 순서 변경
+
+### 변경 파일
+
+- `docs/PARALLEL_DEVELOPMENT_GUIDE.md`
+- `docs/workstreams/frontend/DEVELOPMENT_LOG.md`
+- `docs/workstreams/frontend/ISSUE_REGISTER.md`
+- `docs/workstreams/backend/DEVELOPMENT_LOG.md`
+- `docs/workstreams/backend/ISSUE_REGISTER.md`
+- `docs/README.md`
+- `docs/CODEX_IMPLEMENTATION_PLAN.md`
+- `docs/ARCHITECTURE_GUIDE.md`
+- `docs/IMPLEMENTATION_DECISIONS.md`
+- `docs/IMPLEMENTATION_STATUS.md`
+- `docs/ISSUE_REGISTER.md`
+- `docs/ENVIRONMENT_MATRIX.md`
+- `docs/TEST_STRATEGY.md`
+- `docs/Financial_app_CODEX_DETAILED_IMPLEMENTATION_SPEC.md`
+- `docs/DEVELOPMENT_LOG.md`
+
+### 검증
+
+- Markdown local link target와 code fence 균형 검사
+- trailing whitespace와 `git diff --check`
+- 중앙/lane commit ID, 문서 소유권과 remote DB 규칙 상호 참조 검사
+- table catalog의 `finapp_` prefix 회귀 검사
+- secret/private-key pattern과 staged file 범위 검사
+
+### 이슈와 누락
+
+- active issue/gap 없음
+- 실제 frontend/backend session과 worktree는 공통 scaffold `DEV-0005` 완료 후 생성
+- 원격 DB 정보와 migration 승인은 아직 제공되지 않았으며 local/contract mock 병렬 개발을 막지 않음
+
+### 다음 작업
+
+- `DEV-0005`: root npm workspace, 디렉터리, 공통 lockfile, OpenAPI/CI baseline을 통합 scaffold
+- 이후 frontend `FE-0001`과 backend `BE-0001` 병렬 시작
 
 ## 새 기록 Template
 
