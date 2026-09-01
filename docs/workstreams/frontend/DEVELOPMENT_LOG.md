@@ -1,7 +1,7 @@
 # Frontend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `FE-0005`
+- 다음 ID: `FE-0006`
 - branch/worktree: `codex/frontend` / `/Users/switch/Development/Web/FinancialApp-frontend`
 - base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
 - contract revision: `platform-v1` at base commit (blob `8942e08342cd78f7e251f09b8a3005c9e797d93f`)
@@ -271,3 +271,58 @@ frontend session은 `apps/mobile/**` 변경을 commit 단위로 기록한다. �
 ### 다음 작업
 
 - FE-0005: OIDC와 App Lock의 contract-independent mobile port/session foundation; `/api/v1/me` 소비는 canonical additive contract 통합 후 연결
+
+## FE-0005 — Secure mobile session과 refresh single-flight foundation
+
+- 날짜: 2026-09-02
+- Milestone: 2
+- 상태: COMPLETED
+- base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
+- contract revision: `platform-v1` at base commit (blob `8942e08342cd78f7e251f09b8a3005c9e797d93f`)
+- commit: `feat(fe): add secure session foundation [FE-0005]`
+
+### 완료
+
+- access token을 process memory에만 두는 `MemoryAccessTokenStore`와 refresh token만 저장하는 `RefreshTokenStore` port 구현
+- Expo SDK 57 공식 호환 `expo-secure-store ~57.0.2` adapter를 추가하고 iOS에서는 `WHEN_UNLOCKED_THIS_DEVICE_ONLY` 접근성으로 device-bound 저장 구성
+- credential establish, boot 시 refresh session 확인, corrupt empty credential 제거와 local logout clear를 담당하는 `AuthSessionManager` 구현
+- app root에 injectable `AuthSessionProvider`를 조합해 향후 Login/Boot/App Lock feature가 동일 session owner를 사용하도록 구성
+- 동시 401이 하나의 refresh 요청만 공유하는 `RefreshCoordinator`와 refresh token rotation, 성공 후 memory access token 교체를 구현
+- refresh 없음/실패/storage 실패 시 두 local store를 제거하고 token value를 오류 message에 포함하지 않는 재인증 경계 구현
+- canonical 계약에 없는 OIDC token endpoint나 `/api/v1/me`를 발명하지 않고 provider-specific refresh는 `TokenRefreshPort` 뒤로 보류
+
+### 변경 파일
+
+- `apps/mobile/package.json`
+- `apps/mobile/src/app/_layout.tsx`
+- `apps/mobile/src/shared/auth/**`
+- `docs/workstreams/frontend/DEVELOPMENT_LOG.md`
+- `docs/workstreams/frontend/ISSUE_REGISTER.md`
+
+### 검증
+
+- 명령: `npm run architecture:check -w @finapp/mobile`
+- 결과: 38 source files boundary/cycle check 통과
+- 명령: `npm run lint -w @finapp/mobile`
+- 결과: 통과
+- 명령: `npm run typecheck -w @finapp/mobile`
+- 결과: TypeScript strict 통과
+- 명령: `npm run test -w @finapp/mobile`
+- 결과: 11 files, 27 tests 통과; access/refresh 분리, corrupt credential clear, logout, concurrent single-flight, rotation, refresh failure와 SecureStore error redaction 포함
+- 명령: `npm run dependency:check -w @finapp/mobile`
+- 결과: Expo SDK dependency 호환성 통과
+- 명령: `npx expo export --platform android --output-dir /tmp/financialapp-fe0005-android.XZssLU`
+- 결과: SecureStore provider를 포함한 2,415 modules, Hermes bundle 5.1MB 성공
+- 명령: `npx expo export --platform web --output-dir /tmp/financialapp-fe0005-web.LiaZA2`
+- 결과: 850 modules bundle 성공
+
+### 이슈·누락·Handoff
+
+- FE-GAP-0003: 실제 IdP와 canonical `/me` 계약이 아직 없으므로 `TokenRefreshPort`의 AuthSession adapter와 native SecureStore process-restart 검증은 Milestone 2 integration으로 연기했다.
+- CONTRACT_CHANGE_REQUEST: backend/integration owner는 환경별 OIDC issuer/client ID/redirect URI와 additive `/api/v1/me`, 인증 problem response 계약을 확정해야 한다. frontend는 확정 전 임의 token/me endpoint를 호출하지 않는다.
+- INTEGRATION_HANDOFF: integration owner가 `expo-secure-store`를 root lockfile에 반영하고 clean Development Build autolinking을 확인해야 한다.
+- token은 source log/AsyncStorage/Zustand에 추가하지 않았고 test credential도 secure adapter 오류 message에 노출되지 않음을 검증했다.
+
+### 다음 작업
+
+- FE-0006: LocalAuthentication App Lock state machine, AppState timeout adapter와 non-token auth UI state

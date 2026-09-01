@@ -1,9 +1,9 @@
 # Frontend Workstream Issue와 Gap Register
 
 - 다음 ISSUE ID: `FE-ISSUE-0002`
-- 다음 GAP ID: `FE-GAP-0003`
+- 다음 GAP ID: `FE-GAP-0004`
 - active issue: `FE-ISSUE-0001`
-- active gap: `FE-GAP-0002`
+- active gap: `FE-GAP-0002`, `FE-GAP-0003`
 
 frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한다. backend·계약·milestone 완료에도 영향을 주면 handoff와 중앙 `ISSUE_REGISTER.md`에 연결한다.
 
@@ -37,6 +37,18 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 재확인 조건: Expo SDK 57 지원 Xcode/iOS simulator 또는 실제 iOS 기기에서 clean Development Build, health screen chart 렌더링, fatal native/JS log 없음 확인
 - 해결 FE:
 - 검증: FE-0004에서 iOS Hermes production bundle 2,312 modules/4.9MB는 성공했다. Android에서는 x86_64 Debug APK build와 API 31 runtime chart render까지 성공했다.
+
+### FE-GAP-0003 — Live OIDC refresh와 native SecureStore restart 검증
+
+- 상태: UNVERIFIED
+- 심각도: MEDIUM
+- 발견 FE: FE-0005
+- 누락/연기 이유: base canonical `platform-v1`에는 health만 있고 환경별 OIDC issuer/public client/redirect 및 `/api/v1/me` 계약이 확정되지 않았다. undocumented token endpoint나 identity response를 frontend가 임의 구현하지 않았다.
+- 현재 영향: memory access token, SecureStore refresh token adapter, logout/invalid credential clear와 refresh single-flight core는 unit/bundle 검증됐다. 실제 Authorization Code + PKCE 로그인, token rotation process restart와 `/me` 호출은 아직 실행되지 않는다.
+- 목표 Milestone: 2
+- 재확인 조건: 승인된 IdP 설정과 additive `/me` 계약으로 실제 Development Build에서 login → process restart → refresh single-flight → `/me`, refresh 실패 → local clear/재로그인 흐름 통과
+- 해결 FE:
+- 검증: FE-0005에서 11 files/27 tests, Expo dependency check, Android Hermes와 web bundle 통과. SecureStore adapter가 refresh token만 저장하고 adapter error에 credential value를 포함하지 않는 unit test 통과.
 
 ## Resolved Gap History
 
