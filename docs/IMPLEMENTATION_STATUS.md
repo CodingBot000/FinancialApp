@@ -3,15 +3,17 @@
 - 현재 Milestone: 2~5 — 단일 Main 로컬 MVP 통합
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-02
-- 마지막 DEV ID: DEV-0008
-- 다음 DEV ID: DEV-0009
+- 마지막 DEV ID: DEV-0009
+- 다음 DEV ID: DEV-0010
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
+- 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
 ## 상태 표기
 
 - `NOT_STARTED`: 시작하지 않음
 - `IN_PROGRESS`: 구현 또는 검증 중
 - `BLOCKED`: 외부 조건 없이는 진행 불가
+- `CURRENT_RUN_EXCLUDED`: 장기 범위에는 있으나 이번 실행에서는 진행하지 않음
 - `DONE`: 완료 조건과 검증 통과
 
 ## 단일 Main 통합 상태
@@ -36,7 +38,8 @@
 | 3. 동기화와 Dashboard | IN_PROGRESS | backend sync/raw/derived/조회 완료; frontend Dashboard/Accounts/sync UX와 최소 audit 남음 |
 | 4. 서버 시뮬레이션 | IN_PROGRESS | deterministic server simulation 완료; frontend 입력·결과 화면 남음 |
 | 5. BUY 주문과 복구 | IN_PROGRESS | quote/idempotency/reservation 완료; simulator brokerage/scenario, settlement/reconciliation/audit와 frontend 주문 화면 남음 |
-| 6. 하드닝과 원격 데모 | NOT_STARTED | KMS, Lightsail, HTTPS, EAS와 preview/demo release gate |
+| 6A. 로컬 하드닝 | NOT_STARTED | outbox, local KMS adapter 경계, security event/관측성, 최종 포트폴리오 문서 |
+| 6B. 원격 데모 | CURRENT_RUN_EXCLUDED | Lightsail migration, 실제 AWS KMS, HTTPS/EAS와 원격 rollback은 향후 별도 실행 |
 
 ## 완료된 통합 기준선
 
@@ -71,7 +74,7 @@
 
 ## 외부 조건
 
-다음은 Milestone 2~5의 local/contract 개발을 막지 않는다.
+다음은 Milestone 2~5와 단계 10까지의 local 개발을 막지 않는다.
 
 - Lightsail DB 정보: 미제공
 - AWS KMS 권한: 미제공
@@ -79,7 +82,7 @@
 - Apple Developer/Google Play credential: 미확인
 - 최신 iOS toolchain과 실제 생체인증 기기: 미확인
 
-원격 migration, seed, 배포 또는 유료 resource 생성은 별도 사용자 승인 전 실행하지 않는다. 자동 test는 local/Testcontainers PostgreSQL을 사용한다.
+이번 실행에서는 원격 DB 사전 설정 검토, endpoint/credential 요청, 연결, catalog 조회, migration, seed와 배포를 모두 제외한다. 단계 10 완료 후 원격 작업 직전에 반드시 멈춘다. 자동 test는 local/Testcontainers PostgreSQL을 사용한다.
 
 ## Active Issue와 Gap
 
@@ -97,9 +100,10 @@
 
 ## 다음 작업
 
-1. `DEV-0009`: 모든 canonical operation의 provider/consumer 계약 추적과 CI gate
+1. `DEV-0010`: 모든 canonical operation의 provider/consumer 계약 추적과 CI gate
 2. `BE-0009`: simulator 시세·brokerage·scenario·reset/reseed 경계
 3. `BE-0010`: platform external submit, settlement, reconciliation, order 조회와 최소 audit
 4. `FE-0010`: 현재 OpenAPI 기준 live OIDC `/me`와 authenticated adapter 통합
 5. `FE-0011`~`FE-0014`: Dashboard/MyData, simulation, order, Settings/developer scenario
-6. `DEV-0010`: local full-stack E2E와 fresh-clone 인수 후 Milestone 6 진행
+6. `DEV-0011`: local full-stack E2E와 fresh-clone 인수 후 Milestone 6A local hardening 진행
+7. 단계 10 local hardening 완료 결과를 commit/push하고 Milestone 6B 원격 단계 전에 STOP

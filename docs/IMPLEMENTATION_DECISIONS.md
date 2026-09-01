@@ -53,6 +53,7 @@
 | D-042 | ACCEPTED | mobile import boundary와 두 backend dependency-cruiser 검사를 root `verify`와 CI의 필수 gate로 실행한다. |
 | D-043 | ACCEPTED | npm install script는 version-pinned allow/deny policy로 관리한다. Docker build context는 `.dockerignore`로 제한하고 backend image build는 해당 workspace와 root build tool만 clean install한다. |
 | D-044 | ACCEPTED | DEV-0007 이후 `INTEGRATED_DEVELOPMENT_PLAN.md`를 단일 `main`의 활성 실행 순서로 사용한다. 기존 분리 branch는 이력으로 보존하고 FE/BE ID와 lane log는 영역별 추적을 위해 main에서도 유지한다. |
+| D-045 | ACCEPTED | 이번 연속 개발 실행은 Milestone 6 local hardening까지 진행하고 원격 DB 사전점검·접속·migration/seed와 원격 배포 직전에 반드시 멈춘다. 원격 단계는 과거 승인과 무관하게 사용자가 향후 별도 실행으로 명시적으로 재개해야 한다. |
 
 ## 정정 이력
 

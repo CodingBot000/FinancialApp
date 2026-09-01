@@ -109,7 +109,7 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 원래 요구사항: backend controller와 canonical OpenAPI 일치, 모든 frontend mock/API client의 schema 검증, 실제 provider/consumer contract smoke와 하위 호환성 감지
 - 누락/연기 이유: 분리 단계에서 frontend는 health 계약에 고정된 반면 backend가 `/me`, MyData, wealth, simulation과 order 계약을 확장했다. DEV-0006 통합 gate는 OpenAPI lint와 health fixture 1건만 실행해 전체 operation 일치를 증명하지 못했다.
 - 현재 영향: 서비스별 테스트는 통과하지만 수동 OpenAPI, 실제 Fastify 응답과 이후 mobile adapter 사이의 drift를 CI가 모든 endpoint에서 차단하지 못한다.
-- 목표 Milestone: 2~5 통합 전 / DEV-0009
+- 목표 Milestone: 2~5 통합 전 / DEV-0010
 - 재확인 조건: canonical operation 전체가 provider test와 consumer fixture/adapter 상태로 추적되고 주요 성공/ProblemDetails 응답이 schema 검증을 통과하며 호환되지 않는 계약 제거가 CI에서 실패함
 - 해결 DEV:
 - 검증: `scripts/validate-contract-fixtures.mjs`의 검증 대상이 `HealthResponse` fixture 1개뿐이고 backend source에 Swagger/OpenAPI 생성 또는 전체 route 대조가 없음을 DEV-0007에서 확인했다.
@@ -154,7 +154,7 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 원래 요구사항: local Keycloak login부터 sync, Dashboard, simulation, BUY settlement, UNKNOWN reconciliation까지 실제 mobile/platform/simulator/PostgreSQL을 연결한 12단계 인수와 fresh-clone 실행 명령
 - 누락/연기 이유: DEV-0006은 service test, clean Compose와 개별 smoke를 검증했지만 mobile 업무 화면과 거래 외부 경계가 아직 없어 전체 흐름을 실행할 수 없었다. Makefile도 현재 기본 formatter/test/build wrapper만 제공한다.
 - 현재 영향: 개별 컴포넌트의 품질은 높지만 포트폴리오의 최종 사용자 흐름과 재현 가능한 신규 환경 설치를 아직 증명하지 못한다.
-- 목표 Milestone: 2~5 local MVP / DEV-0010
+- 목표 Milestone: 2~5 local MVP / DEV-0011
 - 재확인 조건: clean 환경에서 문서화된 단일 명령 집합으로 migration/seed/service를 기동하고 `MVP_SCOPE.md` 12단계 정상·UNKNOWN 시나리오, 전체 verify와 smoke가 통과
 - 해결 DEV:
 - 검증: DEV-0007에서 mobile feature가 health/login/app-lock에 한정되고 Makefile은 bootstrap/build/contract/format/lint/test/typecheck/verify target만 제공함을 확인했다.

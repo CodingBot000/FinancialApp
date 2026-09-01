@@ -1,8 +1,8 @@
 # 개발 로그
 
 - 기록 방식: append-only
-- 마지막 DEV ID: `DEV-0008`
-- 다음 DEV ID: `DEV-0009`
+- 마지막 DEV ID: `DEV-0009`
+- 다음 DEV ID: `DEV-0010`
 
 모든 integration/shared commit은 하나의 `DEV-####`와 연결한다. frontend와 backend 영역 commit은 각각 `FE-####`, `BE-####`와 workstream 개발 로그를 사용한다. DEV-0006 이후에는 단일 main에서 작업하되 영역별 ID namespace와 기록은 유지한다. commit subject에도 같은 ID를 넣어 Git history와 문서 기록을 상호 추적할 수 있게 한다.
 
@@ -383,8 +383,8 @@
 
 ### 다음 작업
 
-- `DEV-0009`: canonical OpenAPI 전체 operation의 provider/consumer 계약 추적과 CI gate 구현
-- 이후 `BE-0009`, `BE-0010`, `FE-0010`~`FE-0014`, `DEV-0010` 순으로 local MVP 완성
+- `DEV-0010`: canonical OpenAPI 전체 operation의 provider/consumer 계약 추적과 CI gate 구현
+- 이후 `BE-0009`, `BE-0010`, `FE-0010`~`FE-0014`, `DEV-0011` 순으로 local MVP 완성
 
 ## DEV-0008 — 병렬 개발 Worktree 정리
 
@@ -421,7 +421,49 @@
 
 ### 다음 작업
 
-- `DEV-0009`: canonical OpenAPI 전체 operation의 provider/consumer 계약 추적과 CI gate
+- `DEV-0010`: canonical OpenAPI 전체 operation의 provider/consumer 계약 추적과 CI gate
+
+## DEV-0009 — 원격 DB Migration 범위 제외와 STOP Gate
+
+- 날짜: 2026-09-02
+- Milestone: 현재 실행 범위 조정
+- 상태: COMPLETED
+- 예정 commit: `docs(integration): defer remote migration boundary [DEV-0009]`
+
+### 완료
+
+- 사용자의 최신 결정에 따라 원격 DB migration을 이번 연속 개발 실행 범위에서 제외
+- 원격 DB endpoint/credential 요청, 사전 설정 검토, 연결, catalog 조회, migration/seed와 원격 배포도 이번 실행에서 시작하지 않도록 범위 확정
+- 로컬 MVP와 Milestone 6A local hardening까지는 멈춤 없이 진행하고 단계 10 완료 결과를 commit/push한 뒤 반드시 종료하도록 STOP gate 추가
+- 기존 원격 migration 승인 의사는 이번 실행에 재사용하지 않고 향후 사용자가 별도 실행으로 명시적으로 재개하도록 결정 `D-045` 등록
+- 원격 미실행을 issue/gap 또는 blocker가 아닌 `CURRENT_RUN_EXCLUDED` 상태로 분리
+- 계약 gate와 local E2E의 다음 DEV ID를 각각 `DEV-0010`, `DEV-0011`로 조정
+
+### 변경 파일
+
+- `README.md`
+- `docs/INTEGRATED_DEVELOPMENT_PLAN.md`
+- `docs/IMPLEMENTATION_STATUS.md`
+- `docs/IMPLEMENTATION_DECISIONS.md`
+- `docs/ISSUE_REGISTER.md`
+- `docs/DEVELOPMENT_LOG.md`
+
+### 검증
+
+- 활성 계획, 상태, 결정, issue target과 DEV ID의 원격 STOP 경계 일치 확인
+- `remote`, `Lightsail`, `migration` 관련 활성 문구가 현재 실행 제외와 향후 별도 재개 조건을 명시하는지 검색 검증
+- Prettier format check, secret scan과 `git diff --check` 통과
+- 원격 DB 연결·조회·migration 명령은 실행하지 않음
+
+### 이슈와 누락
+
+- 신규 issue/gap 없음
+- 원격 DB와 배포는 사용자가 확정한 현재 실행 범위 제외이며 장기 Milestone 6B 요구사항으로 보존
+
+### 다음 작업
+
+- `DEV-0010`: canonical OpenAPI 전체 operation의 provider/consumer 계약 추적과 CI gate
+- local 단계 10 완료 후 Milestone 6B 원격 단계 전에 STOP
 
 ## 새 기록 Template
 

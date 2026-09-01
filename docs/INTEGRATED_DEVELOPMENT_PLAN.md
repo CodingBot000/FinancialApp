@@ -5,11 +5,13 @@
 - 적용 시작: `DEV-0007`
 - 검토 기준 commit: `2574ad0be71c1c71e44c862ab37f395ac498f449`
 - 활성 branch/worktree: `main` / `/Users/switch/Development/Web/FinancialApp`
-- 다음 작업 ID: `DEV-0009`, `BE-0009`, `FE-0010`
+- 현재 실행 종료선: 단계 10 로컬 하드닝 완료 후 STOP
+- 현재 실행 제외: 원격 DB 접속·사전점검·migration/seed와 원격 배포
+- 다음 작업 ID: `DEV-0010`, `BE-0009`, `FE-0010`
 
 ## 1. 목적과 문서 권한
 
-이 문서는 `DEV-0006`에서 frontend와 backend 병렬 작업을 `main`에 통합한 뒤, 한 작업 흐름에서 로컬 MVP와 원격 데모까지 이어서 개발하기 위한 활성 실행계획이다.
+이 문서는 `DEV-0006`에서 frontend와 backend 병렬 작업을 `main`에 통합한 뒤, 한 작업 흐름에서 로컬 MVP와 Milestone 6의 로컬 하드닝까지 이어서 개발하기 위한 활성 실행계획이다. 이번 실행은 원격 DB 단계 직전에 반드시 종료한다.
 
 기존 `CODEX_IMPLEMENTATION_PLAN.md`는 최초 milestone과 작업 원칙의 기준선으로, `PARALLEL_DEVELOPMENT_GUIDE.md`와 `docs/workstreams/**`의 기존 항목은 분리 개발 이력으로 보존한다. 이후 작업 순서, commit 분할과 통합 완료 판정은 본 문서를 따른다. 제품 범위, 보안, 아키텍처와 계약 자체는 본 문서가 임의로 변경하지 않는다.
 
@@ -46,7 +48,8 @@
 | Simulator MVP | 계좌/보유/거래 조회와 deterministic seed | 시세, 주문, status, 장애 scenario, reset/reseed | IN_PROGRESS |
 | Contract 품질 | OpenAPI 2개 lint, health fixture schema validation | 모든 operation의 구현·fixture·consumer 추적과 호환성 감지 | PARTIAL |
 | Local E2E | 서비스별 test와 수동 Compose smoke | mobile→IdP→platform→simulator→DB 전체 인수 시나리오 | NOT_STARTED |
-| Milestone 6 | 일부 scheduled sync를 선행 구현 | outbox, KMS, security event, 원격 DB/HTTPS/EAS/rollback과 포트폴리오 문서 | NOT_STARTED |
+| Milestone 6A local | 일부 scheduled sync를 선행 구현 | outbox, local KMS adapter 경계, security event, 관측성 보강과 포트폴리오 문서 | NOT_STARTED |
+| Milestone 6B remote | 없음 | Lightsail DB migration, AWS KMS, HTTPS/EAS와 원격 rollback | CURRENT_RUN_EXCLUDED |
 
 ### 3.1 최초 계획에서 누락되거나 약하게 연결된 항목
 
@@ -58,7 +61,8 @@
 4. `GAP-0007`: 실제 서비스 전체를 연결한 자동 E2E와 fresh-clone 인수 명령이 없다.
 5. frontend M3~M5 화면은 누락이라기보다 계획된 미구현 상태이며 `FE-0011` 이후 단계에서 화면과 API를 한 vertical slice로 연결한다.
 6. onboarding/risk profile 편집과 규칙 기반 `portfolio` 추천은 상세 명세에는 있으나 승인된 로컬 MVP 항목에는 없다. 로컬 MVP 후 Milestone 6 진입 시 구현 여부와 완료 조건을 다시 확정한다.
-7. outbox, AWS KMS, production 수준 관측성과 원격 배포는 `MVP_SCOPE.md`에 따라 Milestone 6에서 처리한다. 로컬 MVP 완료와 혼동하지 않는다.
+7. outbox, local KMS adapter 경계와 production 수준 관측성은 로컬 MVP 후 단계 10에서 처리한다.
+8. Lightsail DB migration, 실제 AWS KMS와 원격 배포는 장기 Milestone 6 범위로 보존하되 이번 실행에서는 제외한다. 미완료 Gap이나 blocker로 취급하지 않고 STOP gate에서 종료한다.
 
 ## 4. 단일 Main 작업 규칙
 
@@ -75,9 +79,11 @@
 승인된 범위 안에서 안전하게 진행 가능한 작업이 남아 있으면 중간 계획만 남기고 멈추지 않는다.
 
 - 한 단계가 끝나면 본 문서의 다음 미완료 단계로 이동한다.
-- 외부 credential, 실제 기기 또는 원격 권한이 없으면 `ISSUE_REGISTER.md`에 재개 조건을 남기고 local/test/contract/document 작업을 계속한다.
+- 외부 credential 또는 실제 기기가 없어도 local/test/contract/document 작업을 계속한다.
 - test/build 실패는 누락 사유로 처리하지 않고 원인을 수정하거나 재현 가능한 issue로 기록한다.
-- 원격 migration, seed/reset, 유료 resource 생성, 외부 배포와 데이터 삭제는 별도 사용자 승인 전 실행하지 않는다.
+- 이번 실행에서는 원격 DB endpoint/credential을 요청하거나 확인하지 않고, 원격 접속·catalog 사전점검·migration·seed/reset·유료 resource 생성과 외부 배포를 모두 실행하지 않는다.
+- 단계 10의 로컬 하드닝 완료 후 반드시 최종 상태를 보고하고 멈춘다. 원격 단계로 자동 이동하지 않는다.
+- 향후 사용자가 원격 단계를 명시적으로 다시 시작하라고 요청한 경우에만 별도 계획과 승인 경계를 작성한다. 과거의 원격 migration 승인은 이번 실행에 재사용하지 않는다.
 - 사용자 변경과 충돌하거나 범위·보안 경계를 바꾸는 결정만 사용자 확인을 위해 멈춘다.
 
 ### 4.3 계약 우선 순서
@@ -119,7 +125,7 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - 문서 인덱스, 우선순위, 상태, 결정, issue/gap와 개발 로그가 같은 다음 작업을 가리킨다.
 - 문서 format과 link/path 참조가 유효하다.
 
-### 단계 1 — 계약 추적과 통합 Test Harness (`DEV-0009`)
+### 단계 1 — 계약 추적과 통합 Test Harness (`DEV-0010`)
 
 목표:
 
@@ -242,7 +248,7 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - production build/config에는 dev route 진입점이 없다.
 - 핵심 화면의 접근성, Reduce Motion과 민감정보 가리기 검토가 완료된다.
 
-### 단계 9 — 로컬 MVP 전체 인수 (`DEV-0010`)
+### 단계 9 — 로컬 MVP 전체 인수 (`DEV-0011`)
 
 목표:
 
@@ -271,9 +277,16 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - dependency advisory 재확인과 release 위험 판정
 - 아키텍처/sequence/보안/제한사항/요구사항 대응표와 3분 데모 문서
 
-### 단계 11 — 원격 Demo와 Preview
+### 단계 11 — 원격 Demo와 Preview (`CURRENT_RUN_EXCLUDED`)
 
-사용자의 별도 승인과 환경정보가 있을 때만 진행한다.
+이 단계는 이번 실행에서 진행하지 않는다. 단계 10 완료 후 Codex는 다음을 수행한다.
+
+1. local 완료 결과와 남은 외부 항목을 문서에 기록한다.
+2. 마지막 검증된 local commit을 `origin/main`에 push한다.
+3. 원격 DB에 연결하거나 사전 설정 검토를 시작하지 않고 사용자에게 종료 상태를 보고한다.
+4. 후속 사용자 요청을 기다리며 멈춘다.
+
+향후 사용자가 별도 실행으로 원격 단계를 명시적으로 재개할 때만 아래 범위를 새 계획으로 활성화한다.
 
 - Lightsail PostgreSQL engine/TLS/backup/role/schema/prefix 사전 점검
 - 승인된 forward-only migration과 synthetic seed
@@ -341,6 +354,8 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 ## 9. 최종 완료 판정
 
 - 로컬 MVP 완료는 단계 9와 `MVP_SCOPE.md`의 완료 정의를 모두 충족할 때만 선언한다.
-- Milestone 6 완료는 승인된 원격 환경의 migration, KMS, HTTPS, Preview Build, 원격 E2E와 rollback 증거까지 있어야 한다.
+- 이번 실행 완료는 단계 10의 로컬 하드닝, 문서 갱신, commit/push까지다. 완료 직후 단계 11 전에 반드시 멈춘다.
+- 원격 migration을 실행하지 않은 것은 이번 실행의 누락이나 blocker가 아니라 사용자가 확정한 범위 제외다.
+- 전체 Milestone 6 완료는 향후 별도 실행에서 승인된 원격 환경의 migration, KMS, HTTPS, Preview Build, 원격 E2E와 rollback 증거까지 있어야 선언할 수 있다.
 - iOS/Android 실기기, AWS/Lightsail 같은 외부 검증은 자동 결과와 구분해 기록한다.
 - `IMPLEMENTATION_STATUS.md`, 실제 Git/DB 상태와 테스트 결과가 다르면 문서의 완료 표시를 되돌리고 issue/gap을 등록한다.

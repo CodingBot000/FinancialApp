@@ -40,4 +40,4 @@ frontend FE-0001~~FE-0009와 backend BE-0001~~BE-0008의 병렬 단계는 DEV-00
 
 ## Remote database
 
-Lightsail PostgreSQL은 승인된 demo integration에만 사용한다. 자동 test는 local/Testcontainers DB를 사용하며 shared DB에서 `drizzle-kit push`, destructive reset과 동시 migration을 실행하지 않는다. 모든 application-owned DB 객체는 `finapp_` prefix를 사용한다.
+이번 연속 개발 실행에서는 Lightsail PostgreSQL 사전점검, 연결과 migration/seed를 진행하지 않으며 local hardening 완료 후 원격 단계 직전에 멈춘다. 자동 test는 local/Testcontainers DB를 사용한다. 장기 원격 단계가 별도로 재승인되더라도 shared DB에서 `drizzle-kit push`, destructive reset과 동시 migration은 실행하지 않으며 모든 application-owned DB 객체는 `finapp_` prefix를 사용한다.
