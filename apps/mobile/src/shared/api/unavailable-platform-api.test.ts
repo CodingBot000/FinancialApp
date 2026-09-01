@@ -14,5 +14,9 @@ describe('UnavailablePlatformApi', () => {
       kind: 'configuration',
       retryable: false,
     });
+    await expect(api.getAssetSummary()).rejects.toMatchObject({
+      kind: 'configuration',
+      retryable: false,
+    });
   });
 });

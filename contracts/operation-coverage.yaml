@@ -38,7 +38,12 @@ contracts:
             createConnection,
           ]
         providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
-        consumer: { status: planned, target: FE-0011 }
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-0011,
+          }
       listMyDataConnections:
         implementation:
           [
@@ -46,7 +51,12 @@ contracts:
             listConnections,
           ]
         providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
-        consumer: { status: planned, target: FE-0011 }
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-0011,
+          }
       createMyDataSync:
         implementation:
           [
@@ -54,7 +64,12 @@ contracts:
             createSync,
           ]
         providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
-        consumer: { status: planned, target: FE-0011 }
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-0011,
+          }
       getMyDataSync:
         implementation:
           [
@@ -62,7 +77,12 @@ contracts:
             getSync,
           ]
         providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
-        consumer: { status: planned, target: FE-0011 }
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-0011,
+          }
       getAssetSummary:
         implementation:
           [
@@ -70,7 +90,12 @@ contracts:
             summary,
           ]
         providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
-        consumer: { status: planned, target: FE-0011 }
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-0011,
+          }
       listAccounts:
         implementation:
           [
@@ -78,7 +103,12 @@ contracts:
             accounts,
           ]
         providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
-        consumer: { status: planned, target: FE-0011 }
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-0011,
+          }
       getAccount:
         implementation:
           [
@@ -86,7 +116,12 @@ contracts:
             account,
           ]
         providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
-        consumer: { status: planned, target: FE-0011 }
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-0011,
+          }
       listHoldings:
         implementation:
           [
@@ -94,7 +129,12 @@ contracts:
             holdings,
           ]
         providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
-        consumer: { status: planned, target: FE-0011 }
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-0011,
+          }
       listTransactions:
         implementation:
           [
@@ -102,7 +142,12 @@ contracts:
             transactions,
           ]
         providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
-        consumer: { status: planned, target: FE-0011 }
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-0011,
+          }
       getAssetHistory:
         implementation:
           [
@@ -110,7 +155,12 @@ contracts:
             history,
           ]
         providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
-        consumer: { status: planned, target: FE-0011 }
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-0011,
+          }
       createSimulation:
         implementation:
           [

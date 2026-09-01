@@ -1,6 +1,6 @@
 # Frontend Workstream Issue와 Gap Register
 
-- 다음 ISSUE ID: `FE-ISSUE-0007`
+- 다음 ISSUE ID: `FE-ISSUE-0008`
 - 다음 GAP ID: `FE-GAP-0005`
 - active issue: `FE-ISSUE-0001`
 - active gap: `FE-GAP-0002`, `FE-GAP-0004`
@@ -51,6 +51,19 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 검증: FE-0006 자동/native build에 더해 FE-0010 Android API 36 Development Build에서 fingerprint enrollment, OS prompt, unlock, process restart 뒤 재인증과 실제 `/me` 복구를 통과했다. UI는 생체인증을 server MFA로 표현하지 않는다.
 
 ## Resolved History
+
+### FE-ISSUE-0007 — Connection GET/POST test double 응답 혼용
+
+- 상태: RESOLVED
+- 심각도: LOW
+- 발견 FE: FE-0011 adapter test
+- 관련 contract revision: `platform-v1` at `bda9e5cdb43f4f01f58fec1acba308ea3f68ab4d`
+- 내용: 동일 `/mydata/connections` URL을 사용하는 생성 POST와 목록 GET에 테스트 fetch가 모두 단일 connection 객체를 반환했다.
+- 영향: 제품 adapter가 아니라 신규 consumer test double이 목록의 canonical 배열 guard에서 실패했다.
+- 해결 조건: method에 따라 canonical 생성 객체/목록 배열을 반환하고 FE-0011 전체 adapter suite가 통과할 것.
+- 목표 FE: FE-0011
+- 해결 FE: FE-0011
+- 검증: fetch double이 `RequestInit.method`를 분기하도록 수정한 뒤 mobile 26 files/75 tests와 root contract gate를 통과했다.
 
 ### FE-ISSUE-0006 — Current-user test token placeholder의 secret scan 오탐
 

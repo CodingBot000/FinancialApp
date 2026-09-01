@@ -1,5 +1,5 @@
-import { CurrentUserScreen } from '../features/identity';
+import { WealthDashboardScreen } from '../features/wealth';
 
 export default function HomeRoute() {
-  return <CurrentUserScreen />;
+  return <WealthDashboardScreen />;
 }

@@ -3,8 +3,8 @@
 - 현재 Milestone: 2~5 — 단일 Main 로컬 MVP 통합
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-02
-- 마지막 완료 ID: FE-0010
-- 다음 작업 ID: FE-0011
+- 마지막 완료 ID: FE-0011
+- 다음 작업 ID: FE-0012
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
@@ -35,7 +35,7 @@
 | 0. 저장소와 결정 기준선 | DONE | 문서, Node.js 24, workspace, 공통 품질 gate 완료 |
 | 1. 실행 가능한 골격 | DONE | Expo, 두 NestJS/Fastify 서비스, Compose, PostgreSQL/Keycloak, health, CI 완료 |
 | 2. OIDC와 App Lock | DONE | Android Development Build에서 live PKCE→App Lock→`/me`, process restart refresh와 logout/cache clear 완료; iOS·물리 기기 edge case는 GAP-0002/0003으로 분리 |
-| 3. 동기화와 Dashboard | IN_PROGRESS | backend sync/raw/derived/조회와 최소 audit 완료; frontend Dashboard/Accounts/sync UX 남음 |
+| 3. 동기화와 Dashboard | DONE | backend sync/raw/derived/조회·audit와 frontend connection/sync polling, Dashboard/Accounts/detail/chart, 부분 오류 UX 및 local actual API smoke 완료 |
 | 4. 서버 시뮬레이션 | IN_PROGRESS | deterministic server simulation 완료; frontend 입력·결과 화면 남음 |
 | 5. BUY 주문과 복구 | IN_PROGRESS | backend quote/reservation/simulator/settlement/reconciliation/audit 완료; frontend 주문 화면과 전체 E2E 남음 |
 | 6A. 로컬 하드닝 | NOT_STARTED | outbox, local KMS adapter 경계, security event/관측성, 최종 포트폴리오 문서 |
@@ -90,6 +90,16 @@
 - [x] local logout 뒤 session/Query cache clear와 로그인 화면 복귀 확인
 - [x] `GAP-0001`과 `FE-GAP-0003` 해결; 물리 기기 edge case/iOS는 기존 `GAP-0002`/`GAP-0003` 유지
 - [x] 최종 root `npm run verify`: mobile 67/simulator 12/platform 61, 총 140 tests와 두 backend build 통과
+
+## FE-0011 MyData와 Dashboard
+
+- [x] canonical 10개 MyData/wealth operation의 strict authenticated adapter, fixture와 operation coverage 구현
+- [x] connection 생성/조회, manual sync polling과 완료 후 관련 Query invalidation 구현
+- [x] backend summary 기반 총자산, Accounts/detail/holdings/transactions/history/allocation 화면 구현
+- [x] canonical decimal money·quantity formatter, masked account fail-closed와 `nextCursor: null` 계약 검증
+- [x] loading/empty/stale/partial error/retry와 mutation error, synthetic disclaimer, 48px 이상 action, Reduce Motion chart 접근성 구현
+- [x] mobile 26 files/75 tests와 local actual sync/wealth/order smoke 통과
+- [x] Colima socket을 명시한 root `npm run verify`: mobile 75/simulator 12/platform 61, 총 148 tests와 두 backend build 통과
 
 ## 완료된 통합 기준선
 
@@ -146,6 +156,6 @@
 
 ## 다음 작업
 
-1. `FE-0011`~`FE-0014`: Dashboard/MyData, simulation, order, Settings/developer scenario
+1. `FE-0012`~`FE-0014`: simulation, order, Settings/developer scenario
 2. `DEV-0011`: local full-stack E2E와 fresh-clone 인수 후 Milestone 6A local hardening 진행
 3. 단계 10 local hardening 완료 결과를 commit/push하고 Milestone 6B 원격 단계 전에 STOP

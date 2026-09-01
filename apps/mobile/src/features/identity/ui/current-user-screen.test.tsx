@@ -9,11 +9,7 @@ vi.mock('expo-secure-store', () => ({
   setItemAsync: vi.fn(),
 }));
 
-import {
-  PlatformApiError,
-  PlatformApiProvider,
-  type PlatformApi,
-} from '../../../shared/api';
+import { PlatformApiError, PlatformApiProvider } from '../../../shared/api';
 import { ContractMockPlatformApi } from '../../../shared/api/mock/contract-mock-platform-api';
 import { MemoryAccessTokenStore } from '../../../shared/auth/access-token-store';
 import { AuthSessionProvider } from '../../../shared/auth/auth-session-context';
@@ -37,7 +33,7 @@ class MemoryRefreshTokenStore implements RefreshTokenStore {
   }
 }
 
-async function renderScreen(api: PlatformApi) {
+async function renderScreen(api: ContractMockPlatformApi) {
   const manager = new AuthSessionManager(
     new MemoryAccessTokenStore(),
     new MemoryRefreshTokenStore(),
@@ -76,24 +72,19 @@ describe('CurrentUserScreen', () => {
   });
 
   it('does not offer automatic retry for a missing scope', async () => {
-    const deniedApi: PlatformApi = {
-      getCurrentUser: () =>
-        Promise.reject(
+    class DeniedApi extends ContractMockPlatformApi {
+      override getCurrentUser() {
+        return Promise.reject(
           new PlatformApiError({
             kind: 'http',
             message: 'financial.read scope가 필요합니다.',
             retryable: false,
             status: 403,
           }),
-        ),
-      getHealth: () =>
-        Promise.resolve({
-          datasetVersion: 'FINANCIAL_APP_DATASET_V1',
-          service: 'platform-api',
-          status: 'ok',
-        }),
-    };
-    const { view } = await renderScreen(deniedApi);
+        );
+      }
+    }
+    const { view } = await renderScreen(new DeniedApi({ latencyMs: 0 }));
 
     expect(
       await view.findByText('사용자 연결을 확인하지 못했습니다'),

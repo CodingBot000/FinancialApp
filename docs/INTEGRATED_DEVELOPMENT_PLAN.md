@@ -7,8 +7,8 @@
 - 활성 branch/worktree: `main` / `/Users/switch/Development/Web/FinancialApp`
 - 현재 실행 종료선: 단계 10 로컬 하드닝 완료 후 STOP
 - 현재 실행 제외: 원격 DB 접속·사전점검·migration/seed와 원격 배포
-- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`, 단계 3 `BE-0010`
-- 다음 작업 ID: `FE-0010`
+- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`, 단계 3 `BE-0010`, 단계 4 `FE-0010`, 단계 5 `FE-0011`
+- 다음 작업 ID: `FE-0012`
 
 ## 1. 목적과 문서 권한
 
@@ -43,7 +43,7 @@
 |---|---|---|---|
 | Milestone 0~1 | workspace, Expo, 두 NestJS/Fastify 서비스, PostgreSQL/Keycloak Compose, CI/architecture gate | fresh-clone 명령 계약 보강 | 기능 기준선 DONE |
 | Milestone 2 | backend JWT와 `/me`, mobile PKCE/session/App Lock/401 lifecycle | 실제 local Keycloak 로그인, `/me`, restart refresh, 실기기 항목 | IN_PROGRESS |
-| Milestone 3 | simulator 원천 데이터, manual/scheduled sync, raw/derived, 자산 조회, 최소 audit | mobile Dashboard/Accounts/sync UX | IN_PROGRESS |
+| Milestone 3 | simulator 원천 데이터, manual/scheduled sync, raw/derived, 자산 조회, 최소 audit, mobile Dashboard/Accounts/sync UX | local actual API smoke 완료 | DONE |
 | Milestone 4 | deterministic simulation engine와 저장/조회 | mobile 입력, 결과 차트와 disclaimer | IN_PROGRESS |
 | Milestone 5 | quote, reservation, simulator brokerage/scenario, settlement/reconciliation/ledger/position/execution/audit와 주문 조회 | mobile 주문 흐름과 full-stack E2E | IN_PROGRESS |
 | Simulator MVP | 계좌/보유/거래/시세/주문/status, 6개 장애 scenario, deterministic reset/reseed와 platform developer proxy | mobile 포함 전체 E2E에서 재검증 | DONE (local service boundary) |
@@ -223,7 +223,7 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - Android app process force-stop/restart 뒤 SecureStore refresh→App Lock→`/me`를 다시 통과했고 local logout은 session/Query cache를 지우고 로그인 화면으로 복귀했다.
 - 실제 물리 기기의 cancel/lockout/background timing과 iOS runtime은 기존 `GAP-0002`/`GAP-0003`에만 남기고 `GAP-0001`을 해결했다.
 
-### 단계 5 — MyData와 Dashboard Vertical Slice (`FE-0011`)
+### 단계 5 — MyData와 Dashboard Vertical Slice (`FE-0011`) ✅ 완료
 
 목표:
 
@@ -237,6 +237,14 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - sync 완료 후 관련 Query를 정확히 invalidate한다.
 - money/quantity mapper, masked identifier와 cursor 계약을 component/adapter test로 검증한다.
 - synthetic disclaimer, 접근성 label/touch target과 Reduce Motion 기본 동작이 있다.
+
+완료 증거:
+
+- connection 생성/목록, manual sync/status polling과 6개 자산 조회를 authenticated `PlatformApi` adapter/Query에 연결했다.
+- PostgreSQL 기반 summary를 화면의 총자산 기준으로 사용하고 sync 완료 시 connection/summary/account/holding/transaction/history Query를 invalidate한다.
+- canonical money·quantity, masked identifier, MVP `nextCursor: null`과 exact response를 fail-closed guard 및 adapter/component test로 검증했다.
+- loading, empty, stale, partial error/retry, mutation error와 48px 이상 touch target, synthetic disclaimer, Reduce Motion chart 접근성을 구현했다.
+- 로컬 PostgreSQL/Compose simulator와 실제 Platform API에서 sync 뒤 account/holding/transaction/summary/history를 읽고 기존 주문 정상·거절·UNKNOWN reconciliation까지 smoke를 통과했다.
 
 ### 단계 6 — Simulation Vertical Slice (`FE-0012`)
 

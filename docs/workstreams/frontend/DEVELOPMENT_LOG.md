@@ -1,7 +1,7 @@
 # Frontend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `FE-0010`
+- 다음 ID: `FE-0012`
 - 운영 상태: `codex/frontend`는 DEV-0006 통합 이력으로 보존, 신규 FE commit은 단일 `main`에서 수행
 - 활성 worktree: `/Users/switch/Development/Web/FinancialApp`
 - 통합 검토 기준: `main` at `2574ad0`, `platform-v1` at DEV-0006
@@ -622,3 +622,47 @@
 ### 다음 작업
 
 - FE-0011: MyData connection/sync와 Dashboard/Accounts vertical slice
+
+## FE-0011 — MyData와 자산 Dashboard 통합
+
+- 날짜: 2026-09-02
+- Milestone: 3
+- 상태: COMPLETED
+- base commit: `bda9e5cdb43f4f01f58fec1acba308ea3f68ab4d`
+- contract revision: `platform-v1` at base commit
+- 예정 commit: `feat(fe): add MyData wealth dashboard [FE-0011]`
+
+### 완료
+
+- canonical MyData connection/sync 4개와 자산 summary/accounts/detail/holdings/transactions/history 6개 operation을 strict authenticated adapter와 deterministic fixture에 연결
+- TanStack Query 기반 manual sync polling과 완료 후 server-state invalidation을 구현하고 backend summary만 총자산 기준으로 표시
+- account/holding/transaction, total/history/allocation chart와 loading/empty/stale/partial error/retry/mutation error UX 구현
+- canonical decimal money·quantity mapper, masked identifier와 MVP null cursor를 fail-closed response guard로 검증
+- synthetic-only disclaimer, accessibility label/live region, 최소 48px action과 Reduce Motion chart 설명 구현
+
+### 변경 파일
+
+- `apps/mobile/src/features/wealth/**`
+- `apps/mobile/src/shared/api/**`
+- `apps/mobile/src/app/index.tsx`
+- `contracts/operation-coverage.yaml`
+- `scripts/smoke-local-order-flow.mjs`
+- frontend/central 상태·개발 문서
+
+### 검증
+
+- mobile lint와 strict typecheck 통과
+- mobile 26 files/75 tests 통과: adapter exact schema, money/quantity/masking/cursor, loading/partial error, account detail/chart/sync 포함
+- local Compose PostgreSQL에서 simulator migration/seed와 simulator 기동 통과
+- 실제 local Platform API smoke: sync, account 1, transaction 1, history 1, FILLED/REJECTED/UNKNOWN→FILLED 통과
+- 첫 root verify는 local Colima socket 자동 탐지 실패로 Testcontainers가 시작 전에 종료됐고 test를 건너뛰지 않고 기존 환경 계약의 socket 값을 명시해 재실행
+- Colima socket을 명시한 root `npm run verify`: formatter, 31 operation/34 fixture 계약, Expo dependency, secret, architecture, lint, strict typecheck, mobile 75/simulator 12/platform 61 총 148 tests와 두 backend build 통과
+
+### 이슈·누락·Handoff
+
+- 테스트 더블이 동일 connection URL의 GET/POST 응답을 구분하지 않던 실패를 같은 slice에서 수정했으며 제품 defect나 잔여 gap은 없음
+- 원격 DB·credential·migration·deploy는 사용자 STOP 규칙에 따라 실행하지 않음
+
+### 다음 작업
+
+- FE-0012: server simulation 입력/실행/결과와 percentile chart vertical slice

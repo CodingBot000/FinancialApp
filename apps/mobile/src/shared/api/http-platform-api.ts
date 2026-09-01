@@ -1,10 +1,31 @@
 import {
   PlatformApiError,
+  type Account,
+  type AssetHistoryPoint,
+  type AssetSummary,
   type CurrentUserResponse,
+  type Holding,
+  type MyDataConnection,
+  type MyDataSync,
+  type Page,
   type PlatformApi,
   type PlatformHealthResponse,
   type PlatformRequestOptions,
+  type Transaction,
 } from './platform-api';
+import {
+  isAccount,
+  isAccountPage,
+  isConnection,
+  isConnections,
+  isCurrentUser,
+  isHistory,
+  isHoldingPage,
+  isPlatformHealth,
+  isSummary,
+  isSync,
+  isTransactionPage,
+} from './platform-api-contract';
 
 type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
@@ -15,53 +36,12 @@ export interface HttpPlatformApiOptions {
   readonly requestId?: () => string;
 }
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
 function defaultRequestId() {
   if (typeof globalThis.crypto?.randomUUID === 'function') {
     return globalThis.crypto.randomUUID();
   }
 
   return `mobile-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
-function isPlatformHealthResponse(
-  value: unknown,
-): value is PlatformHealthResponse {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    return false;
-  }
-
-  const record = value as Record<string, unknown>;
-  return (
-    Object.keys(record).length === 3 &&
-    record.status === 'ok' &&
-    record.service === 'platform-api' &&
-    typeof record.datasetVersion === 'string' &&
-    record.datasetVersion.length > 0
-  );
-}
-
-function isCurrentUserResponse(value: unknown): value is CurrentUserResponse {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    return false;
-  }
-
-  const record = value as Record<string, unknown>;
-  return (
-    Object.keys(record).length === 5 &&
-    typeof record.userId === 'string' &&
-    UUID_PATTERN.test(record.userId) &&
-    typeof record.displayName === 'string' &&
-    record.displayName.length > 0 &&
-    ['BALANCED', 'CONSERVATIVE', 'GROWTH'].includes(
-      String(record.riskProfile),
-    ) &&
-    typeof record.datasetVersion === 'string' &&
-    record.datasetVersion.length > 0 &&
-    record.syntheticData === true
-  );
 }
 
 export class HttpPlatformApi implements PlatformApi {
@@ -78,12 +58,72 @@ export class HttpPlatformApi implements PlatformApi {
     this.requestId = options.requestId ?? defaultRequestId;
   }
 
+  createMyDataConnection(
+    consentExpiresAt: string,
+    options: PlatformRequestOptions = {},
+  ): Promise<MyDataConnection> {
+    return this.requestJson(
+      '/api/v1/mydata/connections',
+      isConnection,
+      options,
+      this.authenticatedFetch,
+      { consentExpiresAt, institutionCode: 'SYNTH_WEALTH_001' },
+    );
+  }
+
+  createMyDataSync(
+    connectionId: string,
+    options: PlatformRequestOptions = {},
+  ): Promise<MyDataSync> {
+    return this.requestJson(
+      '/api/v1/mydata/syncs',
+      isSync,
+      options,
+      this.authenticatedFetch,
+      { connectionId },
+    );
+  }
+
+  getAccount(
+    accountId: string,
+    options: PlatformRequestOptions = {},
+  ): Promise<Account> {
+    return this.requestJson(
+      `/api/v1/accounts/${encodeURIComponent(accountId)}`,
+      isAccount,
+      options,
+      this.authenticatedFetch,
+    );
+  }
+
+  async getAssetHistory(
+    range: '1M' | '3M' | '1Y' | 'ALL' = '1Y',
+    options: PlatformRequestOptions = {},
+  ): Promise<readonly AssetHistoryPoint[]> {
+    const response = await this.requestJson(
+      `/api/v1/assets/history?range=${range}`,
+      isHistory,
+      options,
+      this.authenticatedFetch,
+    );
+    return response.points;
+  }
+
+  getAssetSummary(options: PlatformRequestOptions = {}): Promise<AssetSummary> {
+    return this.requestJson(
+      '/api/v1/assets/summary',
+      isSummary,
+      options,
+      this.authenticatedFetch,
+    );
+  }
+
   getCurrentUser(
     options: PlatformRequestOptions = {},
   ): Promise<CurrentUserResponse> {
     return this.requestJson(
       '/api/v1/me',
-      isCurrentUserResponse,
+      isCurrentUser,
       options,
       this.authenticatedFetch,
     );
@@ -94,9 +134,68 @@ export class HttpPlatformApi implements PlatformApi {
   ): Promise<PlatformHealthResponse> {
     return this.requestJson(
       '/api/v1/health',
-      isPlatformHealthResponse,
+      isPlatformHealth,
       options,
       this.fetch,
+    );
+  }
+
+  getMyDataSync(
+    syncId: string,
+    options: PlatformRequestOptions = {},
+  ): Promise<MyDataSync> {
+    return this.requestJson(
+      `/api/v1/mydata/syncs/${encodeURIComponent(syncId)}`,
+      isSync,
+      options,
+      this.authenticatedFetch,
+    );
+  }
+
+  listAccounts(options: PlatformRequestOptions = {}): Promise<Page<Account>> {
+    return this.requestJson(
+      '/api/v1/accounts',
+      isAccountPage,
+      options,
+      this.authenticatedFetch,
+    );
+  }
+
+  listHoldings(
+    accountId?: string,
+    options: PlatformRequestOptions = {},
+  ): Promise<Page<Holding>> {
+    const query =
+      accountId === undefined
+        ? ''
+        : `?accountId=${encodeURIComponent(accountId)}`;
+    return this.requestJson(
+      `/api/v1/holdings${query}`,
+      isHoldingPage,
+      options,
+      this.authenticatedFetch,
+    );
+  }
+
+  listMyDataConnections(
+    options: PlatformRequestOptions = {},
+  ): Promise<readonly MyDataConnection[]> {
+    return this.requestJson(
+      '/api/v1/mydata/connections',
+      isConnections,
+      options,
+      this.authenticatedFetch,
+    );
+  }
+
+  listTransactions(
+    options: PlatformRequestOptions = {},
+  ): Promise<Page<Transaction>> {
+    return this.requestJson(
+      '/api/v1/transactions',
+      isTransactionPage,
+      options,
+      this.authenticatedFetch,
     );
   }
 
@@ -105,6 +204,7 @@ export class HttpPlatformApi implements PlatformApi {
     validate: (value: unknown) => value is T,
     options: PlatformRequestOptions,
     fetch: FetchLike,
+    body?: Readonly<Record<string, unknown>>,
   ): Promise<T> {
     let response: Response;
 
@@ -112,9 +212,11 @@ export class HttpPlatformApi implements PlatformApi {
       response = await fetch(`${this.baseUrl}${path}`, {
         headers: {
           Accept: 'application/json',
+          ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
           'X-Request-Id': this.requestId(),
         },
-        method: 'GET',
+        method: body === undefined ? 'GET' : 'POST',
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
         ...(options.signal === undefined ? {} : { signal: options.signal }),
       });
     } catch (error) {

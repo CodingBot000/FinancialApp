@@ -3,6 +3,19 @@ import { describe, expect, it } from 'vitest';
 import { ContractMockPlatformApi } from './contract-mock-platform-api';
 
 describe('ContractMockPlatformApi', () => {
+  it('returns the canonical FE-0011 wealth fixtures', async () => {
+    const api = new ContractMockPlatformApi({ latencyMs: 0 });
+    const accounts = await api.listAccounts();
+    await expect(api.getAssetSummary()).resolves.toMatchObject({
+      currency: 'KRW',
+      totalAssets: '185400000.0000',
+    });
+    await expect(api.listMyDataConnections()).resolves.toHaveLength(1);
+    await expect(
+      api.getAccount(accounts.items[0]!.accountId),
+    ).resolves.toMatchObject({ maskedAccountNumber: '***-**-0001' });
+    await expect(api.getAssetHistory()).resolves.toHaveLength(2);
+  });
   it('returns the canonical synthetic current user fixture', async () => {
     const api = new ContractMockPlatformApi({ latencyMs: 0 });
 

@@ -572,3 +572,33 @@
 ### 다음 작업
 
 - `FE-0011`: MyData connection/sync와 Dashboard/Accounts vertical slice
+
+## FE-0011 — MyData와 Dashboard Mobile 통합
+
+- 날짜: 2026-09-02
+- Milestone: 3
+- 상태: COMPLETED
+- 예정 commit: `feat(fe): add MyData wealth dashboard [FE-0011]`
+
+### 완료
+
+- canonical connection/sync와 자산 조회 10개 operation을 mobile strict adapter/fixture/Query와 화면에 연결
+- server-authoritative summary, sync polling/invalidation, Accounts/detail/holdings/transactions와 history/allocation chart 구현
+- money/quantity/masked identifier/null cursor 계약과 loading/empty/stale/partial error/retry, 접근성/Reduce Motion을 component/adapter test로 검증
+- local PostgreSQL/Compose simulator와 실제 Platform API sync/wealth/order smoke 통과
+
+### 검증
+
+- mobile lint, strict typecheck와 26 files/75 tests 통과
+- local actual smoke: account 1, transaction 1, history 1, FILLED/REJECTED/UNKNOWN→FILLED
+- 첫 root verify는 local Colima socket 자동 탐지 실패로 Testcontainers가 시작 전에 종료됐고, socket을 명시해 동일 gate를 재실행
+- Colima socket을 명시한 root `npm run verify`: mobile 75/simulator 12/platform 61 총 148 tests와 두 backend build 통과
+
+### 이슈와 누락
+
+- 신규 unresolved issue/gap 없음
+- 원격 DB와 배포 작업은 실행하지 않음
+
+### 다음 작업
+
+- `FE-0012`: Simulation vertical slice

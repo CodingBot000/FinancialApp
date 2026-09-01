@@ -168,14 +168,26 @@ try {
     const current = await request(`/api/v1/mydata/syncs/${sync.syncId}`);
     return current.status === 'COMPLETED' ? current : undefined;
   });
+  const connections = await request('/api/v1/mydata/connections');
+  const summary = await request('/api/v1/assets/summary');
   const accounts = await request('/api/v1/accounts');
   const holdings = await request('/api/v1/holdings');
+  const transactions = await request('/api/v1/transactions');
+  const history = await request('/api/v1/assets/history?range=1Y');
   const accountId = accounts.items[0]?.accountId;
   const holdingId = holdings.items[0]?.holdingId;
   const resource = await fetch(`${platformBase}/api/v1/accounts/${accountId}`, {
     headers,
   });
-  if (!resource.ok || !accountId || !holdingId)
+  if (
+    !resource.ok ||
+    !accountId ||
+    !holdingId ||
+    connections.length !== 1 ||
+    summary.currency !== 'KRW' ||
+    transactions.items.length === 0 ||
+    history.points.length === 0
+  )
     throw new Error('Synced resources missing.');
   const database = await import('pg');
   const pool = new database.Pool({
@@ -201,7 +213,7 @@ try {
   });
   await request('/api/v1/dev/dataset/reset', { method: 'POST' }, 200);
   process.stdout.write(
-    `${JSON.stringify({ normal: 'FILLED', rejected: 'REJECTED', reconciled: reconciled.status, syntheticData: true })}\n`,
+    `${JSON.stringify({ accounts: accounts.items.length, historyPoints: history.points.length, normal: 'FILLED', rejected: 'REJECTED', reconciled: reconciled.status, syntheticData: true, transactions: transactions.items.length })}\n`,
   );
 } finally {
   platform.kill('SIGTERM');

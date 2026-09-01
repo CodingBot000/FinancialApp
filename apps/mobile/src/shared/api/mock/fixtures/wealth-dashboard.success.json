@@ -1,0 +1,85 @@
+{
+  "connection": {
+    "connectionId": "44fc3d1c-cd8f-46ba-833f-96dac39dddfd",
+    "institutionCode": "SYNTH_WEALTH_001",
+    "status": "ACTIVE",
+    "consentExpiresAt": "2027-09-01T00:00:00.000Z",
+    "lastSuccessfulSyncAt": "2026-09-01T10:00:02.000Z"
+  },
+  "sync": {
+    "syncId": "4467ac44-cf36-449a-b9f9-2b29924a6212",
+    "connectionId": "44fc3d1c-cd8f-46ba-833f-96dac39dddfd",
+    "status": "COMPLETED",
+    "createdAt": "2026-09-01T10:00:00.000Z",
+    "startedAt": "2026-09-01T10:00:01.000Z",
+    "completedAt": "2026-09-01T10:00:02.000Z",
+    "counts": {
+      "rawRecords": 3,
+      "accounts": 1,
+      "holdings": 1,
+      "transactions": 1
+    },
+    "errorCode": null
+  },
+  "summary": {
+    "asOfDate": "2026-09-01",
+    "currency": "KRW",
+    "totalAssets": "185400000.0000",
+    "cash": "15400000.0000",
+    "investments": "170000000.0000",
+    "change": { "amount": "0.0000", "rate": 0 },
+    "allocation": [
+      { "assetClass": "CASH", "amount": "15400000.0000", "weight": 0.083064 },
+      { "assetClass": "EQUITY", "amount": "170000000.0000", "weight": 0.916936 }
+    ],
+    "lastSyncedAt": "2026-09-01T10:00:02.000Z"
+  },
+  "accounts": [
+    {
+      "accountId": "688c601b-ab70-4683-9dd4-6a1174550653",
+      "institutionCode": "SYNTH_WEALTH_001",
+      "maskedAccountNumber": "***-**-0001",
+      "accountType": "BROKERAGE",
+      "currency": "KRW",
+      "status": "ACTIVE",
+      "cashBalance": "15400000.0000"
+    }
+  ],
+  "holdings": [
+    {
+      "holdingId": "788c601b-ab70-4683-9dd4-6a1174550653",
+      "accountId": "688c601b-ab70-4683-9dd4-6a1174550653",
+      "instrumentCode": "SYNTH-EQUITY-001",
+      "displayName": "Synthetic Equity Fund",
+      "assetClass": "EQUITY",
+      "quantity": "1360.00000000",
+      "averagePrice": "125000.0000",
+      "marketValue": "170000000.0000",
+      "asOfAt": "2026-09-01T10:00:02.000Z"
+    }
+  ],
+  "transactions": [
+    {
+      "transactionId": "888c601b-ab70-4683-9dd4-6a1174550653",
+      "accountId": "688c601b-ab70-4683-9dd4-6a1174550653",
+      "transactionType": "DEPOSIT",
+      "amount": "15400000.0000",
+      "currency": "KRW",
+      "occurredAt": "2026-09-01T09:00:00.000Z"
+    }
+  ],
+  "history": [
+    {
+      "date": "2026-08-30",
+      "totalAssets": "180000000.0000",
+      "cash": "15000000.0000",
+      "investments": "165000000.0000"
+    },
+    {
+      "date": "2026-09-01",
+      "totalAssets": "185400000.0000",
+      "cash": "15400000.0000",
+      "investments": "170000000.0000"
+    }
+  ]
+}
