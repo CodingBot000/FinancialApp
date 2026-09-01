@@ -2,7 +2,7 @@
 ## Codex 상세 구현 명세서
 
 - 문서 파일명: `Financial_app_CODEX_DETAILED_IMPLEMENTATION_SPEC.md`
-- 문서 목적: React Native 모바일 앱과 실제 Spring Boot 백엔드, 실제 PostgreSQL, 금융기관 시뮬레이터를 연결한 포트폴리오 프로젝트 구현 지시
+- 문서 목적: React Native 모바일 앱과 실제 Node.js/TypeScript NestJS 백엔드, 실제 PostgreSQL, 금융기관 시뮬레이터를 연결한 포트폴리오 프로젝트 구현 지시
 - 대상 실행자: Codex
 - 작성 기준일: 2026-09-01
 - 문서 상태: 구현 기준선(Baseline)
@@ -20,7 +20,7 @@
 핵심 정의는 다음과 같다.
 
 > Synthetic인 것은 고객의 금융 데이터, 시세, 금융기관, 주문 체결 결과다.  
-> 실제로 구현하는 것은 React Native 앱, HTTP 통신, Spring Boot API, PostgreSQL 영속화, OAuth2/OIDC, 생체인증, 세션 처리, 서버사이드 금융 시뮬레이션, 외부기관 연동 패턴, 주문 정합성, KMS 기반 암호화, 접근통제, 감사로그, 테스트와 배포다.
+> 실제로 구현하는 것은 React Native 앱, HTTP 통신, NestJS/Fastify API, PostgreSQL 영속화, OAuth2/OIDC, 생체인증, 세션 처리, 서버사이드 금융 시뮬레이션, 외부기관 연동 패턴, 주문 정합성, KMS 기반 암호화, 접근통제, 감사로그, 테스트와 배포다.
 
 이 프로젝트는 한화생명 PLUS WM전략팀의 공개 채용공고에서 요구하는 다음 역량을 포트폴리오로 증명하기 위한 독립 프로젝트다.
 
@@ -29,7 +29,7 @@
 - TanStack Query, Zustand
 - 생체인증, Secure Storage, 세션 만료와 재인증
 - 모바일 차트와 Reanimated
-- Java 기반 프로덕션 백엔드
+- Node.js + TypeScript 기반 프로덕션 백엔드
 - PostgreSQL 스키마와 트랜잭션 정합성
 - OAuth2/OIDC
 - 마이데이터 전송요구·정기전송을 모사한 수집 파이프라인
@@ -81,7 +81,7 @@ Codex는 코드를 작성하기 전에 다음을 수행한다.
 - 가짜 보안성 심의 통과, 마이데이터 인증, 금융규제 준수를 주장하지 않는다.
 - 실사용자 개인정보나 실제 계좌정보를 저장하지 않는다.
 - 실제 주문 가능 기능이나 실제 투자 추천 기능을 만들지 않는다.
-- 기존 Lightsail DB에 `DROP DATABASE`, `DROP SCHEMA`, `Flyway clean`을 실행하지 않는다.
+- 기존 Lightsail DB에 `DROP DATABASE`, `DROP SCHEMA`, destructive reset 또는 `drizzle-kit push`를 실행하지 않는다.
 - 외부 API 호출을 유지한 채 하나의 긴 DB 트랜잭션으로 묶지 않는다.
 - 토큰, DB 비밀번호, KMS 키 식별자, 관리자 비밀번호를 코드나 Git에 커밋하지 않는다.
 - React Query 캐시와 Zustand에 동일한 서버 데이터를 중복 보관하지 않는다.
@@ -99,7 +99,7 @@ Codex는 코드를 작성하기 전에 다음을 수행한다.
 ```text
 React Native App
     → OAuth2/OIDC 로그인
-    → 실제 Spring Boot API 호출
+    → 실제 NestJS + Fastify API 호출
     → 실제 Lightsail PostgreSQL 조회
     → 가상 마이데이터 기관 HTTP 연동
     → 원본 데이터 적재 및 정규화
@@ -179,11 +179,12 @@ React Native App
 
 ## B. 백엔드
 
-- Java 21 계열의 현재 지원 버전
-- Spring Boot
-- Spring Security OAuth2 Resource Server
+- Node.js 24 LTS
+- TypeScript strict mode
+- NestJS 12와 Fastify adapter
+- `jose` 기반 OAuth2/OIDC JWT guard와 remote JWKS 검증
 - PostgreSQL
-- Flyway migration
+- Drizzle ORM/Kit versioned migration
 - 모듈형 모놀리스 구조
 - OpenAPI 문서
 - 요청 검증과 표준 에러 응답
@@ -205,7 +206,7 @@ React Native App
 - 감사로그와 보안 이벤트
 - 구조화 로그, trace/correlation ID, health check
 - 외부기관 HTTP client의 timeout, 제한된 retry, circuit breaker
-- Testcontainers 기반 통합 테스트
+- Vitest와 Testcontainers for Node.js 기반 통합 테스트
 - 동시성·중복 요청 테스트
 
 ## C. 금융기관 시뮬레이터
@@ -379,7 +380,7 @@ flowchart LR
     U[Portfolio Reviewer / Test User]
     M[React Native Mobile App]
     I[OIDC Identity Provider]
-    A[Spring Boot Platform API]
+    A[Node.js NestJS + Fastify Platform API]
     S[Financial Institution Simulator]
     D[(Lightsail Managed PostgreSQL)]
     K[AWS KMS]
@@ -477,24 +478,24 @@ Victory Native, Skia, Reanimated의 peer dependency 조합은 공식 문서를 �
 
 ## 6.2 백엔드
 
-- Java 21
-- Spring Boot
-- Spring Security
+- Node.js 24 LTS
+- TypeScript strict mode
+- NestJS 12
+- `@nestjs/platform-fastify`
 - OAuth2 Resource Server
-- Spring Data JPA
+- `jose` JWT/JWKS verifier
 - PostgreSQL
-- Flyway
-- Bean Validation
-- WebClient
-- Resilience4j
-- Spring Actuator
-- Micrometer
-- springdoc-openapi
-- Testcontainers
-- JUnit 5
-- Gradle Kotlin DSL 권장
+- Drizzle ORM과 Drizzle Kit
+- Nest validation pipe와 DTO validation
+- Node.js `fetch` 기반 gateway adapter
+- `@nestjs/terminus` health check
+- `@nestjs/swagger`
+- Vitest와 `@nestjs/testing`
+- Testcontainers for Node.js
+- dependency-cruiser와 ESLint
+- npm workspaces
 
-기존 백엔드가 jOOQ, MyBatis, Maven 등을 일관되게 사용하면 그 구조를 존중할 수 있다. 단, 변경 이유를 ADR에 남긴다.
+bare Fastify 또는 다른 persistence 도구로 변경하려면 현재 NestJS/Fastify/Drizzle 기준을 바꾸는 이유를 ADR에 남긴다.
 
 ## 6.3 Identity Provider
 
@@ -917,21 +918,23 @@ MUST interaction:
 
 `platform-api`는 모듈형 모놀리스와 ports/adapters 원칙을 사용한다.
 
-권장 package-by-feature:
+권장 feature module 구조:
 
 ```text
-com.example.financialapp
-├── common
-├── identity
-├── mydata
-├── wealth
-├── portfolio
-├── simulation
-├── trading
-├── integration
-├── crypto
-├── audit
-└── developer
+services/platform-api/src
+├── main.ts
+├── app.module.ts
+├── core
+└── modules
+    ├── identity
+    ├── mydata
+    ├── wealth
+    ├── portfolio
+    ├── simulation
+    ├── trading
+    ├── crypto
+    ├── audit
+    └── developer
 ```
 
 각 feature 내부는 필요 범위에서 다음을 사용한다.
@@ -948,7 +951,7 @@ infrastructure
 - controller가 repository를 직접 호출하지 않음
 - domain이 HTTP client DTO에 의존하지 않음
 - simulator DTO와 내부 domain model 분리
-- JPA entity를 모바일 API response로 직접 노출하지 않음
+- Drizzle row를 모바일 API response로 직접 노출하지 않음
 - 암호화 세부 구현을 domain에서 분리
 - 시간은 `Clock` 주입
 - ID 생성기는 테스트 가능하게 추상화
@@ -1044,17 +1047,17 @@ infrastructure
 
 ### developer
 
-- dev profile 전용 장애 시나리오
+- local/demo 환경 전용 장애 시나리오
 - dataset reset
 - forced API error
-- production에서 bean과 endpoint 미생성
+- production module에서 controller/provider와 endpoint 미등록
 
 ## 9.3 API 설계 규칙
 
 - base path에 version 사용
 - URI는 resource 중심
 - request/response DTO 분리
-- Bean Validation
+- Nest `ValidationPipe` 기반 DTO validation
 - money는 문자열 또는 명시적 decimal 직렬화
 - 날짜와 시간은 ISO-8601
 - pagination/cursor 명시
@@ -1217,7 +1220,7 @@ Keycloak은 가능하면 별도 `finapp_keycloak` database를 사용하고, 불�
 
 최종 DDL은 Codex가 관계와 쿼리 패턴을 검토해 결정한다.
 
-아래 이름은 논리 후보명이다. 실제 table, index, constraint와 Flyway history 이름은 반드시 `docs/TABLE_DEFINITIONS.md`의 `finapp_` prefix 규칙을 적용한다.
+아래 이름은 논리 후보명이다. 실제 table, index, constraint와 Drizzle migration history 이름은 반드시 `docs/TABLE_DEFINITIONS.md`의 `finapp_` prefix 규칙을 적용한다.
 
 ### identity
 
@@ -1307,12 +1310,13 @@ MUST:
 
 ## 10.7 migration
 
-- Flyway 사용
+- Drizzle Kit versioned SQL migration 사용
 - migration은 forward-only
 - 기존 migration 수정 금지
 - seed는 production migration과 분리
-- local/demo seed command 또는 profile 사용
-- `Flyway clean` 비활성화
+- local/demo seed command 또는 environment 사용
+- shared/demo/production DB에서 `drizzle-kit push` 금지
+- history table은 `finapp_meta.finapp_<service>_drizzle_migrations`로 지정
 - CI에서 빈 DB migration test
 - 이전 버전 DB에서 최신 버전 migration test 가능하면 추가
 
@@ -1763,7 +1767,7 @@ MUST 최소 구현:
 
 ## 16.2 Resource Server
 
-Spring API는 다음을 검증한다.
+NestJS platform API의 auth guard는 다음을 검증한다.
 
 - signature
 - issuer
@@ -1985,7 +1989,7 @@ MUST:
 - trace/correlation ID
 - mobile request ID
 - API → simulator correlation 전파
-- Actuator liveness/readiness
+- Nest Terminus 기반 liveness/readiness
 - DB health
 - IdP dependency health를 readiness에 무조건 강결합할지 검토
 - 외부 API latency metric
@@ -2030,12 +2034,12 @@ MUST:
 
 ## Integration Test
 
-Testcontainers PostgreSQL을 사용한다.
+Testcontainers for Node.js PostgreSQL을 사용한다.
 
 MUST:
 
-- Flyway migration
-- repository mapping
+- Drizzle versioned migration
+- Drizzle repository mapping
 - unique/check constraints
 - transaction rollback
 - row lock 또는 optimistic conflict
@@ -2056,7 +2060,7 @@ MUST:
 - unknown then filled
 - duplicate response
 
-WireMock만으로 끝내지 말고 최소 한 suite는 실제 simulator service를 사용한다.
+HTTP adapter mock만으로 끝내지 말고 최소 한 suite는 실제 simulator service를 사용한다.
 
 ## Security Test
 
@@ -2117,7 +2121,7 @@ MUST:
 # 20.2 테스트 데이터
 
 - 테스트는 원격 Lightsail DB를 사용하지 않는다.
-- local/Testcontainers DB 사용
+- local/Testcontainers for Node.js DB 사용
 - deterministic fixture
 - 테스트 간 독립성
 - 시간은 fixed Clock
@@ -2236,7 +2240,7 @@ simulator admin/API는 public Nginx route로 노출하지 않는다.
 - 최소 권한
 - pool 크기는 DB plan에 맞춤
 - connection leak 감지
-- production log에 JDBC URL password 금지
+- production log에 database connection URL과 credential 출력 금지
 
 ## 22.3 Identity Provider 자원 판단
 
@@ -2268,8 +2272,9 @@ Keycloak이 현재 Lightsail 인스턴스에서 안정적으로 동작하지 않
 
 ### backend-ci
 
-- Gradle cache
-- unit/integration tests
+- npm cache와 `npm ci`
+- lint/typecheck/dependency-cruiser
+- Vitest unit/integration tests
 - Docker build
 - image scan
 - OpenAPI artifact
@@ -2392,7 +2397,7 @@ Keycloak이 현재 Lightsail 인스턴스에서 안정적으로 동작하지 않
 
 ## 작업
 
-- Flyway baseline
+- Drizzle migration baseline
 - schema/role
 - simulator source tables
 - deterministic generator
@@ -2576,7 +2581,7 @@ Keycloak이 현재 Lightsail 인스턴스에서 안정적으로 동작하지 않
 
 - [ ] OAuth2 Resource Server
 - [ ] scope와 ownership
-- [ ] PostgreSQL/Flyway
+- [ ] PostgreSQL/Drizzle
 - [ ] MyData sync
 - [ ] raw/dedup/normalization
 - [ ] portfolio
@@ -2605,7 +2610,7 @@ Keycloak이 현재 Lightsail 인스턴스에서 안정적으로 동작하지 않
 ## Tests
 
 - [ ] unit tests
-- [ ] Testcontainers integration
+- [ ] Testcontainers for Node.js integration
 - [ ] external simulator integration
 - [ ] security tests
 - [ ] mobile component tests
@@ -2662,7 +2667,7 @@ Keycloak이 현재 Lightsail 인스턴스에서 안정적으로 동작하지 않
 
 사용 가능:
 
-> This project uses deterministic synthetic financial data and a separately deployed financial-institution simulator. The React Native application, Spring Boot APIs, OAuth2/OIDC flow, PostgreSQL persistence, server-side simulation, order consistency, KMS envelope encryption, audit logging, resilience handling, and deployment pipeline are implemented as working components.
+> This project uses deterministic synthetic financial data and a separately deployed financial-institution simulator. The React Native application, Node.js/TypeScript NestJS APIs with Fastify, OAuth2/OIDC flow, PostgreSQL persistence, server-side simulation, order consistency, KMS envelope encryption, audit logging, resilience handling, and deployment pipeline are implemented as working components.
 
 사용 금지:
 
@@ -2756,8 +2761,13 @@ Codex는 구현 시 아래 공식 문서를 최신 상태로 다시 확인한다
   `https://docs.swmansion.com/react-native-reanimated/`
 - Victory Native  
   `https://commerce.nearform.com/open-source/victory-native/`
-- Spring Security OAuth2 Resource Server  
-  `https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/`
+- NestJS modules, Fastify adapter and testing
+  `https://docs.nestjs.com/modules`
+  `https://docs.nestjs.com/techniques/performance`
+  `https://docs.nestjs.com/fundamentals/testing`
+- Drizzle PostgreSQL schema and migrations
+  `https://orm.drizzle.team/docs/sql-schema-declaration`
+  `https://orm.drizzle.team/docs/drizzle-config-file#migrations`
 - AWS KMS envelope encryption  
   `https://docs.aws.amazon.com/kms/latest/developerguide/kms-cryptography.html`
 - AWS KMS data keys  

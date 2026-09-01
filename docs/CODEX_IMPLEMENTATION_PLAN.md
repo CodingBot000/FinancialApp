@@ -13,7 +13,7 @@
 
 1. `MVP_SCOPE.md`
 2. `IMPLEMENTATION_DECISIONS.md`와 `docs/adr/*`
-3. `API_CONTRACTS.md`, `DATA_MODEL.md`, `TABLE_DEFINITIONS.md`, `SECURITY_MODEL.md`, `TEST_STRATEGY.md`
+3. `ARCHITECTURE_GUIDE.md`, `API_CONTRACTS.md`, `DATA_MODEL.md`, `TABLE_DEFINITIONS.md`, `SECURITY_MODEL.md`, `TEST_STRATEGY.md`
 4. 본 문서
 5. `Financial_app_CODEX_DETAILED_IMPLEMENTATION_SPEC.md`
 
@@ -59,6 +59,7 @@ FinancialApp/
 ├── docs/
 │   ├── adr/
 │   ├── API_CONTRACTS.md
+│   ├── ARCHITECTURE_GUIDE.md
 │   ├── CODEX_IMPLEMENTATION_PLAN.md
 │   ├── DATA_MODEL.md
 │   ├── DEVELOPMENT_LOG.md
@@ -75,10 +76,13 @@ FinancialApp/
 ├── .gitignore
 ├── docker-compose.yml
 ├── Makefile
+├── package.json
+├── package-lock.json
+├── tsconfig.base.json
 └── README.md
 ```
 
-백엔드는 하나의 Gradle multi-project build로 관리하되 두 서비스는 별도 실행 파일, 별도 컨테이너, 별도 DB 사용자로 배포한다. 도메인 entity나 repository를 두 서비스가 공유하지 않는다.
+백엔드와 모바일은 npm workspaces로 dependency version과 공통 도구 설정을 관리하되 두 backend 서비스는 별도 실행 파일, 별도 컨테이너, 별도 DB 사용자로 배포한다. domain type, Drizzle schema, repository나 migration을 두 서비스가 공유하지 않는다.
 
 ## 4. 기술 기준선
 
@@ -102,19 +106,20 @@ Expo 및 native package는 임의 버전을 직접 설치하지 않고 `npx expo
 
 ### 백엔드
 
-- Java 21
-- Spring Boot 3.5.16
-- Gradle 8 계열 wrapper와 Kotlin DSL
-- Spring Security OAuth2 Resource Server
-- Spring Data JPA
-- Flyway
+- Node.js 24 LTS
+- TypeScript strict mode
+- NestJS 12
+- `@nestjs/platform-fastify` Fastify adapter
+- `jose` 기반 OAuth2/OIDC JWT guard와 remote JWKS 검증
+- Drizzle ORM과 Drizzle Kit
 - PostgreSQL
-- WebClient
-- Resilience4j
-- Testcontainers
-- springdoc-openapi
+- Node.js `fetch` 기반 feature gateway adapter
+- Vitest와 `@nestjs/testing`
+- Testcontainers for Node.js
+- `@nestjs/swagger`
+- dependency-cruiser와 ESLint architecture rules
 
-Spring Boot 4는 최종 버전 업그레이드 후보로만 둔다. 초기 구현에서는 주변 라이브러리 호환성과 완성 가능성을 우선한다.
+NestJS의 module/DI 구조를 application framework로 사용하고 Fastify는 HTTP provider로 사용한다. bare Fastify와 NestJS를 서비스별로 혼용하지 않는다. 정확한 patch version은 scaffold 시 공식 호환성을 확인해 lockfile에 고정한다.
 
 ### 인증과 인프라
 
@@ -161,21 +166,22 @@ Codex는 사용자가 승인한 현재 MVP 범위 안에서 안전하게 진행�
 2. `IMPLEMENTATION_STATUS.md`에서 현재 milestone과 다음 항목을 확인한다.
 3. `ISSUE_REGISTER.md`에서 현재 milestone의 open/blocking issue를 확인한다.
 4. `DEVELOPMENT_LOG.md`의 다음 `DEV-####` ID를 할당한다.
-5. 관련 계약 문서와 ADR을 읽는다.
+5. `ARCHITECTURE_GUIDE.md`, 관련 계약 문서와 ADR을 읽는다.
 6. 변경 범위를 한 milestone의 한 vertical slice로 제한한다.
 7. 구현과 테스트를 같은 변경 단위에 포함한다.
 
 각 작업 종료 전 다음을 수행한다.
 
 1. 관련 formatter, lint, typecheck, unit/integration test를 실행한다.
-2. 실패한 검증을 성공으로 기록하지 않는다.
-3. `IMPLEMENTATION_STATUS.md`를 실제 상태로 갱신한다.
-4. 완료, 실패, 미검증, 후속 작업을 `DEVELOPMENT_LOG.md`에 기록한다.
-5. 새 이슈·누락·불가피한 연기를 `ISSUE_REGISTER.md`에 등록하거나 기존 항목을 갱신한다.
-6. 계약 또는 아키텍처 결정이 변경되면 코드보다 문서를 먼저 또는 같은 변경에서 갱신한다.
-7. 실제 비밀정보와 합성 데이터가 아닌 개인정보가 Git에 없는지 확인한다.
-8. 검증을 통과한 변경과 관련 문서 갱신을 하나의 atomic commit으로 만든다.
-9. commit 후 `git status`와 `git log -1 --oneline`으로 결과를 확인한 뒤 다음 작업으로 이동한다.
+2. 구현된 architecture test와 import boundary 검증을 실행한다.
+3. 실패한 검증을 성공으로 기록하지 않는다.
+4. `IMPLEMENTATION_STATUS.md`를 실제 상태로 갱신한다.
+5. 완료, 실패, 미검증, 후속 작업을 `DEVELOPMENT_LOG.md`에 기록한다.
+6. 새 이슈·누락·불가피한 연기를 `ISSUE_REGISTER.md`에 등록하거나 기존 항목을 갱신한다.
+7. 계약 또는 아키텍처 결정이 변경되면 코드보다 문서를 먼저 또는 같은 변경에서 갱신한다.
+8. 실제 비밀정보와 합성 데이터가 아닌 개인정보가 Git에 없는지 확인한다.
+9. 검증을 통과한 변경과 관련 문서 갱신을 하나의 atomic commit으로 만든다.
+10. commit 후 `git status`와 `git log -1 --oneline`으로 결과를 확인한 뒤 다음 작업으로 이동한다.
 
 ### 5.3 단계별 Commit 규칙
 
@@ -247,11 +253,11 @@ commit 정책:
 - 실제 계좌정보, 개인정보, 금융기관 credential 사용
 - 주문 POST 자동 retry
 - 외부 HTTP 요청을 포함하는 장시간 DB transaction
-- JPA entity를 API response로 직접 반환
+- Drizzle row를 API response로 직접 반환
 - access token 또는 refresh token 로그 출력
 - 서버 데이터를 Zustand에 복제
 - 테스트를 비활성화하여 품질 게이트 통과
-- `Flyway clean`, 기존 schema 삭제, destructive migration
+- shared/demo/production DB에서 `drizzle-kit push`, 기존 schema 삭제, destructive migration
 
 ## 6. 구현 Milestone
 
@@ -260,15 +266,17 @@ commit 정책:
 작업:
 
 - 본 문서 세트 확정
-- Java 21, Node, Docker 실행 환경 확인
+- 앱·서버 architecture baseline과 자동 검증 계획 확정
+- Node.js 24 LTS, npm과 Docker 실행 환경 확인
 - 디렉터리 scaffold
-- Gradle wrapper와 Expo package manager 결정 적용
+- npm workspaces, backend/mobile TypeScript 설정과 lockfile 적용
 - `.env.example`, Makefile 기본 명령 작성
 
 완료 조건:
 
 - 모든 핵심 결정이 `IMPLEMENTATION_DECISIONS.md`에 있음
-- Java 21 사용 가능
+- `ARCHITECTURE_GUIDE.md`의 module과 dependency baseline이 확정됨
+- Node.js 24 LTS와 npm workspace 사용 가능
 - 빈 프로젝트 구조가 문서와 일치
 - secret이 커밋되지 않음
 
@@ -277,11 +285,12 @@ commit 정책:
 작업:
 
 - PostgreSQL, Keycloak Docker Compose
-- platform-api와 simulator Spring Boot scaffold
+- platform-api와 simulator NestJS 12 + Fastify scaffold
 - mobile Expo scaffold와 Development Build 설정
 - 각 서비스 health endpoint
 - correlation/request ID
 - 기본 CI
+- backend dependency-cruiser/ESLint와 mobile import boundary architecture gate
 - Victory Native/Reanimated/Skia compatibility spike
 
 완료 조건:
@@ -291,6 +300,7 @@ commit 정책:
 - 모바일이 platform health를 조회
 - iOS와 Android 중 최소 한 플랫폼 Development Build에서 차트 smoke test 성공
 - CI에서 formatting, typecheck, unit test, build 성공
+- backend module dependency와 mobile import boundary 검증 성공
 
 ### Milestone 2 — OIDC와 모바일 App Lock
 

@@ -6,9 +6,10 @@
 ## 1. 원칙
 
 - 테스트는 원격 Lightsail DB를 사용하지 않는다.
-- DB integration test는 Testcontainers PostgreSQL을 사용한다.
+- DB integration test는 `@testcontainers/postgresql`을 사용한다.
 - 시간은 주입된 `Clock`, random은 명시적 seed를 사용한다.
 - 테스트 간 데이터와 scenario는 독립적이어야 한다.
+- backend test runner는 Vitest를 사용하고 `tsc --noEmit`을 별도 gate로 실행한다.
 - mock HTTP test만으로 외부기관 연동 완료를 주장하지 않는다. 실제 simulator container suite가 필요하다.
 - 자동화할 수 없는 생체인증과 signing은 수동 검증으로 분리한다.
 - 실패한 test나 미실행 test를 완료로 표시하지 않는다.
@@ -28,14 +29,22 @@
 - ownership policy
 - encryption roundtrip와 wrong AAD
 
-Spring context 없이 실행 가능한 domain test를 우선한다.
+Nest application context 없이 실행 가능한 Vitest domain test를 우선한다.
+
+### Backend architecture
+
+- dependency-cruiser로 module cycle, internal deep import와 허용되지 않은 module/layer dependency 검사
+- ESLint로 controller → Drizzle/repository 직접 의존, domain → Nest/Fastify/Drizzle 의존을 조기에 차단
+- Nest module은 필요한 provider만 `exports`에 공개하며 `@Global()` 업무 module을 금지
+- platform production source가 simulator package를 import하지 않는지 검사
+- architecture violation ignore는 만료 조건이 있는 issue/gap과 ADR 없이는 금지
 
 ### Backend integration
 
-Testcontainers PostgreSQL 사용:
+Testcontainers for Node.js PostgreSQL 사용:
 
-- Flyway clean database migration
-- JPA mapping과 query
+- 빈 database에 Drizzle versioned migration 적용
+- Drizzle schema mapping과 query
 - unique/check/foreign key constraint
 - raw immutable 권한 또는 application rule
 - raw → derived normalization
@@ -59,7 +68,7 @@ platform-api와 실제 institution-simulator를 실행한다.
 - ORDER_UNKNOWN_THEN_FILLED
 - duplicate clientOrderId
 
-WireMock은 세부 client unit test에 사용할 수 있지만 이 suite를 대체하지 않는다.
+HTTP adapter mock은 세부 client unit test에 사용할 수 있지만 이 suite를 대체하지 않는다.
 
 ### Security
 
@@ -84,6 +93,13 @@ WireMock은 세부 client unit test에 사용할 수 있지만 이 suite를 대�
 - order UNKNOWN 상태에서 POST retry 없음
 - biometric adapter 결과 분기
 - Reduce Motion 분기
+
+### Mobile architecture
+
+- `shared`가 `features` 또는 `app`을 import하지 않는지 검사
+- route가 API transport, store implementation과 feature internal file을 직접 import하지 않는지 검사
+- feature 간 cycle과 공개 `index.ts` 밖의 deep import 검사
+- TanStack Query server state를 Zustand에 복제하지 않는지 review와 targeted test로 확인
 
 ### Mobile E2E
 
@@ -153,7 +169,9 @@ WireMock은 세부 client unit test에 사용할 수 있지만 이 suite를 대�
 ### Milestone 1
 
 - backend formatting/unit/build
+- dependency-cruiser와 ESLint architecture test
 - mobile lint/typecheck/component smoke
+- mobile import boundary와 cycle 검사
 - Compose health smoke
 - OpenAPI generation
 - chart Development Build smoke
@@ -167,7 +185,7 @@ WireMock은 세부 client unit test에 사용할 수 있지만 이 suite를 대�
 
 ### Milestone 3
 
-- Flyway/Testcontainers
+- Drizzle migration/Testcontainers
 - actual simulator integration
 - raw/derived dedup
 - Dashboard component states

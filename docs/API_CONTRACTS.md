@@ -19,7 +19,7 @@
 - Platform API는 health를 제외하고 Bearer access token이 필요하다.
 - Simulator API는 public internet에 노출하지 않는다.
 - Developer API는 `local`에서만 완화할 수 있고 `demo`에서는 `scenario.admin` scope가 필요하다.
-- `production`에서는 Developer controller bean을 등록하지 않는다.
+- `production` module에는 Developer controller/provider를 등록하지 않는다.
 
 ### 공통 Header
 

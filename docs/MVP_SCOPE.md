@@ -12,7 +12,7 @@
 
 - React Native 모바일 앱
 - OAuth2/OIDC 로그인과 서버 JWT 검증
-- Spring Boot API와 PostgreSQL 영속화
+- Node.js/TypeScript NestJS API와 PostgreSQL 영속화
 - 별도 금융기관 simulator와 실제 HTTP 통신
 - raw/derived 데이터 경계
 - 서버 기반 자산 집계와 시뮬레이션
@@ -46,9 +46,9 @@
 
 ### 플랫폼 API
 
-- Java 21과 Spring Boot modular monolith
-- Resource Server JWT 검증
-- PostgreSQL과 Flyway
+- Node.js 24 LTS, TypeScript strict와 NestJS modular monolith
+- Fastify adapter와 OAuth2/OIDC Resource Server JWT 검증
+- PostgreSQL과 Drizzle ORM/Kit migration
 - `/me`
 - 단일 가상기관 connection과 수동 sync
 - immutable raw ingestion과 normalization
@@ -62,7 +62,7 @@
 
 ### Simulator
 
-- 별도 Spring Boot process
+- 별도 NestJS + Fastify process
 - 별도 DB role과 `finapp_simulator` schema
 - 단일 가상기관
 - `BALANCED_WORKER` deterministic preset
@@ -74,7 +74,7 @@
 ### 테스트
 
 - 핵심 domain unit test
-- Testcontainers PostgreSQL integration test
+- Vitest와 Testcontainers for Node.js PostgreSQL integration test
 - 실제 simulator container integration test
 - 인증·소유권 test
 - 중복 idempotency와 현금 oversubscription concurrency test

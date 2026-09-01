@@ -10,15 +10,16 @@
 4. `ISSUE_REGISTER.md` — 현재 blocker, issue, deferred gap
 5. `DEVELOPMENT_LOG.md` — 마지막 commit 단위 작업과 다음 DEV ID
 6. `IMPLEMENTATION_DECISIONS.md` — 확정 기술과 미결정 외부 조건
-7. 현재 작업에 해당하는 계약 문서
+7. `ARCHITECTURE_GUIDE.md` — 앱·서버 구조, 의존성 방향과 자동 품질 gate
+8. 현재 작업에 해당하는 계약 문서
    - `API_CONTRACTS.md`
    - `DATA_MODEL.md`
    - `TABLE_DEFINITIONS.md`
    - `SECURITY_MODEL.md`
    - `TEST_STRATEGY.md`
    - `ENVIRONMENT_MATRIX.md`
-8. 관련 `adr/ADR-*.md`
-9. `Financial_app_CODEX_DETAILED_IMPLEMENTATION_SPEC.md` — 최종 포트폴리오 배경과 장기 요구사항
+9. 관련 `adr/ADR-*.md`
+10. `Financial_app_CODEX_DETAILED_IMPLEMENTATION_SPEC.md` — 최종 포트폴리오 배경과 장기 요구사항
 
 ## 문서 우선순위
 
@@ -27,7 +28,7 @@
 ```text
 MVP_SCOPE
   > IMPLEMENTATION_DECISIONS / ADR
-  > API / DATA / SECURITY / TEST 계약
+  > ARCHITECTURE / API / DATA / SECURITY / TEST 계약
   > CODEX_IMPLEMENTATION_PLAN
   > 원본 상세 명세
 ```
@@ -36,6 +37,7 @@ MVP_SCOPE
 
 - scope 변경은 `MVP_SCOPE.md`에 먼저 반영한다.
 - 구조 또는 기술 선택 변경은 ADR이나 `IMPLEMENTATION_DECISIONS.md`에 이유를 기록한다.
+- 앱·서버 코드는 `ARCHITECTURE_GUIDE.md`의 module, dependency와 상태 소유권 규칙을 따르며 CI에서 자동 검증한다.
 - API와 DB 변경은 계약 문서와 구현을 같은 변경에서 갱신한다.
 - 모든 애플리케이션 소유 테이블과 DB 객체는 `TABLE_DEFINITIONS.md`의 `finapp_` prefix 규칙을 따른다.
 - 작업 완료 여부는 테스트 결과를 확인한 후 `IMPLEMENTATION_STATUS.md`에 기록한다.

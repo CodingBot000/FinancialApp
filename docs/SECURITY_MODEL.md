@@ -63,7 +63,7 @@ flowchart LR
 | simulation 생성/조회 | `simulation.execute` | user ownership |
 | order preview/submit | `order.execute` | account, quote ownership |
 | order 조회 | `financial.read` | user ownership |
-| dev scenario/reset | `scenario.admin` | demo profile; production bean 없음 |
+| dev scenario/reset | `scenario.admin` | demo 환경 전용; production controller/provider 미등록 |
 
 다른 사용자 resource는 `403` 대신 `404 RESOURCE_NOT_FOUND`를 사용해 존재 여부 노출을 줄인다.
 
@@ -132,7 +132,7 @@ metadata는 allowlist 방식으로 추가한다.
 - local Keycloak `start-dev`는 local에서만 사용한다.
 - demo Keycloak은 production mode, PostgreSQL, HTTPS를 사용한다.
 - simulator와 admin endpoint는 public reverse proxy에 등록하지 않는다.
-- production에서는 developer controller와 reset service bean을 생성하지 않는다.
+- production module에는 developer controller와 reset provider를 등록하지 않는다.
 - CORS origin과 redirect URI는 환경별 allowlist다.
 - `.env`, keystore, certificate private key는 Git에서 제외한다.
 

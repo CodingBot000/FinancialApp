@@ -9,7 +9,7 @@ MyData sync, UNKNOWN 주문 reconciliation과 outbox 처리는 실패 후 재시
 
 ## Decision
 
-- PostgreSQL job table과 Spring scheduler를 사용한다.
+- PostgreSQL job table과 Nest scheduler trigger를 사용한다.
 - worker는 짧은 transaction에서 처리할 job을 claim한다.
 - 복수 instance 안전성을 위해 `FOR UPDATE SKIP LOCKED` 또는 동등한 원자적 claim query를 사용한다.
 - 외부 HTTP 호출 중 DB lock이나 transaction을 유지하지 않는다.

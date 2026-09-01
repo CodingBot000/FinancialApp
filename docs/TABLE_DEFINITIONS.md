@@ -5,7 +5,7 @@
 - 공통 DB 객체 prefix: `finapp_`
 - 대상 DBMS: PostgreSQL 17 major
 
-이 문서는 공용 Lightsail Managed PostgreSQL에 다른 서비스와 함께 배치될 때 이름 충돌과 권한 혼동을 방지하기 위한 물리 테이블 기준이다. Flyway migration은 이 문서의 schema, table, column, constraint와 index 이름을 구현해야 한다.
+이 문서는 공용 Lightsail Managed PostgreSQL에 다른 서비스와 함께 배치될 때 이름 충돌과 권한 혼동을 방지하기 위한 물리 테이블 기준이다. Drizzle Kit versioned migration은 이 문서의 schema, table, column, constraint와 index 이름을 구현해야 한다.
 
 ## 1. 필수 Naming 규칙
 
@@ -20,7 +20,7 @@
 | unique | `finapp_uq_<entity>_<key>` | `finapp_uq_order_client_id` |
 | check | `finapp_ck_<entity>_<rule>` | `finapp_ck_order_status` |
 | index | `finapp_idx_<entity>_<key>` | `finapp_idx_order_user_created` |
-| Flyway history | `finapp_<service>_flyway_history` | `finapp_platform_flyway_history` |
+| Drizzle history | `finapp_<service>_drizzle_migrations` | `finapp_platform_drizzle_migrations` |
 
 규칙:
 
@@ -41,13 +41,13 @@ Keycloak table은 vendor migration이 관리하므로 table rename이나 prefix 
 2. 별도 database가 불가능하면 공유 database의 전용 schema `finapp_keycloak` 사용
 3. `financial_keycloak` role만 해당 database/schema에 권한 부여
 
-Keycloak schema는 애플리케이션 Flyway가 생성·수정·삭제하지 않는다.
+Keycloak schema는 애플리케이션 Drizzle migration이 생성·수정·삭제하지 않는다.
 
 ## 2. Schema와 migration owner
 
 | Schema | Owner/migration | 용도 |
 |---|---|---|
-| `finapp_meta` | `financial_migration` | Flyway history와 migration metadata |
+| `finapp_meta` | `financial_migration` | Drizzle history와 migration metadata |
 | `finapp_identity` | platform migration | 사용자와 OIDC mapping |
 | `finapp_mydata` | platform migration | connection, sync, immutable raw |
 | `finapp_wealth` | platform migration | 계좌, 보유자산, 거래, snapshot |
@@ -58,12 +58,12 @@ Keycloak schema는 애플리케이션 Flyway가 생성·수정·삭제하지 않
 | `finapp_simulator` | simulator migration | 가상 외부기관 원천 데이터 |
 | `finapp_keycloak` | Keycloak vendor migration | IdP 전용; 별도 database 우선 |
 
-Flyway history:
+Drizzle migration history:
 
-- Platform: `finapp_meta.finapp_platform_flyway_history`
-- Simulator: `finapp_meta.finapp_simulator_flyway_history`
+- Platform: `finapp_meta.finapp_platform_drizzle_migrations`
+- Simulator: `finapp_meta.finapp_simulator_drizzle_migrations`
 
-두 서비스의 Flyway location과 history table을 분리한다.
+두 서비스의 migration directory, Drizzle config와 history table을 분리한다. `drizzle-kit`의 기본 `__drizzle_migrations` 이름은 사용하지 않는다.
 
 ## 3. Table catalog
 
@@ -756,10 +756,10 @@ Simulator table은 모두 `finapp_simulator` schema에 있고 platform schema와
 - 별도 `finapp_keycloak` database 또는 schema만 사용
 - application schema 접근 금지
 
-## 13. Flyway와 공용 DB 안전장치
+## 13. Drizzle migration과 공용 DB 안전장치
 
-- `cleanDisabled=true`
-- baseline은 신규 `finapp_*` schema에만 적용한다.
+- shared/demo/production DB에서 `drizzle-kit push`를 사용하지 않는다.
+- versioned SQL migration은 신규 `finapp_*` schema와 명시된 객체만 대상으로 한다.
 - migration에 unqualified `DROP`, `ALTER`, `TRUNCATE`를 사용하지 않는다.
 - destructive SQL은 원칙적으로 금지하고 expand/migrate/contract 순서를 사용한다.
 - 원격 최초 migration 전 `finapp_` 객체 목록, owner, privilege를 기록한다.

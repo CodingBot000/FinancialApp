@@ -3,7 +3,7 @@
 - 상태: Milestone 1~5 구현 기준선
 - 작성일: 2026-09-01
 
-이 문서는 논리 모델과 불변조건을 정의한다. 물리 이름, column, PK/FK/index는 `TABLE_DEFINITIONS.md`를 따른다. 실제 DDL은 Flyway migration으로 구현하며 migration 변경 시 두 문서를 함께 갱신한다.
+이 문서는 논리 모델과 불변조건을 정의한다. 물리 이름, column, PK/FK/index는 `TABLE_DEFINITIONS.md`를 따른다. 실제 DDL은 Drizzle Kit versioned migration으로 구현하며 migration 변경 시 두 문서를 함께 갱신한다.
 
 ## 1. 공통 규칙
 

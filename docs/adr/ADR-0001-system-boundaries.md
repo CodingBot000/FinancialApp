@@ -12,14 +12,14 @@
 - 모바일은 `apps/mobile`에 둔다.
 - 플랫폼 API는 `services/platform-api`에 둔다.
 - 금융기관 simulator는 `services/institution-simulator`에 둔다.
-- 두 backend 서비스는 하나의 Gradle multi-project에서 버전과 build convention을 공유할 수 있다.
-- domain model, JPA entity, repository, database migration은 공유하지 않는다.
+- 두 backend 서비스는 npm workspaces에서 dependency version과 lint/build convention을 공유할 수 있다.
+- domain type, Drizzle schema, repository 구현과 database migration은 공유하지 않는다.
 - API 계약 DTO는 OpenAPI로 관리하며 내부 domain class를 공유 계약으로 사용하지 않는다.
 - simulator는 별도 process, container, DB login role로 실행한다.
 
 ## Consequences
 
 - 서비스 경계와 배포 단위가 명확해진다.
-- Gradle wrapper와 dependency version은 한곳에서 관리할 수 있다.
+- root `package.json`과 lockfile에서 dependency version과 공통 명령을 관리할 수 있다.
 - 일부 DTO 중복이 생기지만 외부기관 경계를 보여주기 위해 허용한다.
 - platform이 simulator DB를 직접 조회하는 구현은 아키텍처 위반이다.

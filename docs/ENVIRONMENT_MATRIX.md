@@ -12,18 +12,18 @@
 | Keycloak | Docker `start-dev` | container/fixture | production mode container | 별도 승인 전 미사용 |
 | simulator | local container | actual test container | private container network | 외부 노출 금지 |
 | KMS | local provider | deterministic test provider | AWS KMS | AWS KMS |
-| dev scenario API | 활성 | test fixture | `scenario.admin` 필요 | bean 미등록, 404 |
+| dev scenario API | 활성 | test fixture | `scenario.admin` 필요 | controller/provider 미등록, 404 |
 | synthetic reset | 활성 | test setup | admin만 허용 | 비활성 |
 | HTTPS | 선택 | 불필요 | 필수 | 필수 |
 | logging | 개발 친화, token redaction | 캡처/검증 | structured JSON | structured JSON |
 | seed | `BALANCED_WORKER` | fixture별 | 고정 demo seed | 사용하지 않음 |
 
-## Spring profile
+## Node runtime 환경
 
-- `local`: Compose dependency와 local crypto provider
-- `test`: Testcontainers, fixed Clock, deterministic key provider
-- `demo`: remote PostgreSQL, AWS KMS, dev scenario endpoint를 admin scope로 제한
-- `production`: AWS KMS, dev/reset endpoint bean 미등록, 엄격한 CORS와 HTTPS
+- `local`: `NODE_ENV=development`, Compose dependency와 local crypto provider
+- `test`: `NODE_ENV=test`, Testcontainers, fixed Clock, deterministic key provider
+- `demo`: `APP_ENV=demo`, remote PostgreSQL, AWS KMS, dev scenario endpoint를 admin scope로 제한
+- `production`: `NODE_ENV=production`, AWS KMS, dev/reset module 미등록, 엄격한 CORS와 HTTPS
 
 `demo`를 `production`처럼 표현하지 않는다. 개발자 장애 시나리오를 사용한 시연 환경임을 문서화한다.
 
@@ -71,7 +71,7 @@
 - [ ] platform/simulator/keycloak role 분리 가능
 - [ ] 기존 schema에 권한 없음 확인
 - [ ] backup/snapshot 절차 확인
-- [ ] PostgreSQL engine과 Flyway migration 호환 확인
+- [ ] PostgreSQL engine과 Drizzle migration 호환 확인
 - [ ] TLS CA와 hostname verification 확인
 - [ ] Keycloak memory/CPU 측정
 - [ ] simulator route가 public reverse proxy에 없음

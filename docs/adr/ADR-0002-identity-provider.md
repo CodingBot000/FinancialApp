@@ -12,7 +12,7 @@
 - local과 demo 환경의 IdP는 Keycloak 26.7.3이다.
 - 모바일은 Authorization Code Flow와 PKCE S256을 사용한다.
 - 모바일 client에는 client secret을 두지 않는다.
-- platform-api는 Spring Security OAuth2 Resource Server로 JWT signature, issuer, audience, expiration과 scope를 검증한다.
+- platform-api는 NestJS auth guard와 OIDC/JWKS adapter로 JWT signature, issuer, audience, expiration과 scope를 검증한다.
 - access token은 메모리에만 보관한다.
 - refresh token은 Expo SecureStore에 보관한다.
 - LocalAuthentication은 앱 잠금과 주문 전 local gate이며 서버 MFA라고 표현하지 않는다.

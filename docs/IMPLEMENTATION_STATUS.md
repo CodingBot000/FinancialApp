@@ -3,8 +3,8 @@
 - 현재 Milestone: 0 — 저장소와 결정 기준선
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-01
-- 마지막 DEV ID: DEV-0002
-- 다음 DEV ID: DEV-0003
+- 마지막 DEV ID: DEV-0003
+- 다음 DEV ID: DEV-0004
 
 ## 상태 표기
 
@@ -17,7 +17,7 @@
 
 | Milestone | 상태 | 완료 조건 요약 |
 |---|---|---|
-| 0. 저장소와 결정 기준선 | IN_PROGRESS | 문서, Java 21, 구조, 기본 명령 |
+| 0. 저장소와 결정 기준선 | IN_PROGRESS | 문서, Node.js 24, 구조, 기본 명령 |
 | 1. 실행 가능한 골격 | NOT_STARTED | Compose, 두 서비스, Expo, health, CI |
 | 2. OIDC와 App Lock | NOT_STARTED | PKCE, JWT 검증, refresh, biometric |
 | 3. 동기화와 Dashboard | NOT_STARTED | simulator HTTP, raw/derived, 자산 UI |
@@ -45,13 +45,14 @@
 - [x] IdP ADR
 - [x] DB 격리 ADR
 - [x] 비동기 작업 ADR
+- [x] 앱·서버 권장 아키텍처와 자동 품질 gate 기준
 
 ### 환경과 scaffold
 
-- [ ] Java 21 설치 또는 Gradle toolchain provisioning 확인
-- [ ] Node version 파일
+- [x] 로컬 Node.js 24 LTS와 npm 실행 확인
+- [ ] Node version/engines 파일
 - [ ] `apps/mobile` scaffold
-- [ ] `services` Gradle multi-project scaffold
+- [ ] root npm workspaces와 두 NestJS service scaffold
 - [ ] `infra` 디렉터리와 Compose scaffold
 - [ ] `.env.example`
 - [ ] Makefile
@@ -61,7 +62,7 @@
 ### Milestone 0 검증
 
 - [ ] `git status`에 의도하지 않은 파일 없음
-- [ ] Java 21로 빈 backend build 성공
+- [ ] TypeScript strict로 두 backend build 성공
 - [ ] Expo dependency install 성공
 - [x] 문서 참조 파일, code fence, trailing whitespace 검사 성공
 
@@ -79,13 +80,14 @@ Milestone 6 시작 전에만 확인한다. 실제 기기 생체인증은 Milesto
 
 ## Active Issue와 Gap
 
-- `ISSUE-0001`: 로컬 Java가 17이며 프로젝트 기준 Java 21이 준비되지 않음 (`DEV-0003`에서 처리 예정)
+- 현재 active issue 없음 (`ISSUE-0001`은 backend 기술 기준 정정으로 `DEV-0003`에서 해소)
 - 현재 등록된 `GAP` 없음
 
 ## 다음 작업
 
-1. Java 21 사용 환경 준비
-2. 문서 구조에 맞춘 디렉터리 scaffold
-3. Gradle multi-project와 Expo SDK 57 프로젝트 생성
-4. Docker Compose에 PostgreSQL과 Keycloak 추가
-5. Milestone 1 health vertical slice 구현
+1. architecture guide에 맞춘 root npm workspace와 디렉터리 scaffold
+2. NestJS 12 + Fastify 기반 platform/simulator와 Expo SDK 57 프로젝트 생성
+3. Drizzle migration baseline과 `finapp_` history 설정
+4. dependency-cruiser/ESLint와 mobile import boundary 기본 gate 추가
+5. Docker Compose에 PostgreSQL과 Keycloak 추가
+6. Milestone 1 health vertical slice 구현

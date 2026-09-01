@@ -18,19 +18,7 @@
 
 ## Active Issue
 
-### ISSUE-0001 — 로컬 Java 21 미준비
-
-- 상태: OPEN
-- 심각도: HIGH
-- 최초 발견: 2026-09-01
-- 마지막 갱신: 2026-09-01
-- 발견 DEV: DEV-0001
-- 영향 Milestone: 0, 1~5 backend 개발
-- 내용: 현재 로컬 `java -version`은 `17.0.20.1`이며 프로젝트 기준은 Java 21이다.
-- 영향: Java 21 toolchain을 준비하기 전 backend scaffold와 최종 build 검증을 완료할 수 없다.
-- 임시 우회: 문서 작업과 Java에 독립적인 저장소 준비는 계속할 수 있다.
-- 해결 조건: Java 21 설치 또는 Gradle toolchain provisioning 후 `java -version`과 빈 Gradle build 성공 확인.
-- 목표 DEV: DEV-0003
+현재 active issue 없음.
 
 ## Active Gap
 
@@ -38,7 +26,18 @@
 
 ## Resolved History
 
-현재 해결 이력 없음.
+### ISSUE-0001 — 로컬 Java 21 미준비
+
+- 상태: RESOLVED
+- 심각도: HIGH
+- 최초 발견: 2026-09-01
+- 마지막 갱신: 2026-09-01
+- 발견 DEV: DEV-0001
+- 원래 영향 Milestone: 0, 1~5 backend 개발
+- 원래 내용: 최초 문서가 Java 21/Spring Boot backend를 잘못 전제했고 로컬 Java는 17이었다.
+- 해결 DEV: DEV-0003
+- 해결 내용: 사용자가 backend 기술을 Node.js + TypeScript와 NestJS/Fastify로 정정했다. Java toolchain 요구를 폐기하고 로컬 Node.js 24 LTS 환경을 기준으로 변경했다.
+- 검증: `node --version`은 `v24.19.0`, `npm --version`은 `11.17.0`이며 Node.js 24는 2026-09-01 기준 LTS다.
 
 ## 새 Issue Template
 
