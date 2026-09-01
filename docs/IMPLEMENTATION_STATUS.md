@@ -3,8 +3,8 @@
 - 현재 Milestone: 6A — 로컬 하드닝
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-02
-- 마지막 완료 ID: BE-0015
-- 다음 작업 ID: DEV-0012
+- 마지막 완료 ID: DEV-0012
+- 다음 작업 ID: DEV-0013
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
@@ -38,7 +38,7 @@
 | 3. 동기화와 Dashboard | DONE | backend sync/raw/derived/조회·audit와 frontend connection/sync polling, Dashboard/Accounts/detail/chart, 부분 오류 UX 및 local actual API smoke 완료 |
 | 4. 서버 시뮬레이션 | DONE | deterministic server 저장/조회, frontend draft validation·persisted result·p10/p50/p90 chart와 local actual API smoke 완료 |
 | 5. BUY 주문과 복구 | DONE | quote/biometric/idempotent mobile BUY, backend reservation/simulator/settlement/reconciliation/audit, UNKNOWN GET recovery와 actual local smoke 완료; clean 전체 인수는 DEV-0011 |
-| 6A. 로컬 하드닝 | IN_PROGRESS | DEV-0011 local MVP, BE-0012 outbox, BE-0013 crypto, BE-0014 security/log isolation과 BE-0015 readiness/metrics/resilience 완료; 제품 범위, 성능·dependency와 최종 포트폴리오 문서 진행 |
+| 6A. 로컬 하드닝 | IN_PROGRESS | DEV-0011 local MVP, BE-0012 outbox, BE-0013 crypto, BE-0014 security/log isolation, BE-0015 readiness/metrics/resilience와 DEV-0012 profile 범위 완료; 성능·dependency와 최종 포트폴리오 문서 진행 |
 | 6B. 원격 데모 | CURRENT_RUN_EXCLUDED | Lightsail migration, 실제 AWS KMS, HTTPS/EAS와 원격 rollback은 향후 별도 실행 |
 
 ## DEV-0010 계약 Gate
@@ -127,6 +127,18 @@
 - [x] actual Compose DB readiness/metrics와 OIDC 포함 12단계 smoke 통과
 - [x] `BE-ISSUE-0008` readonly counter type defect 해결·재검증
 - [x] DB migration과 원격 DB/endpoint/credential/deploy 미사용
+
+## DEV-0012 Risk Profile 범위 재확정과 편집
+
+- [x] 별도 onboarding wizard와 portfolio recommendation은 명시적 제외 유지
+- [x] OIDC 기본 합성 profile + Settings owner-scoped 조회/수정으로 onboarding 범위 종료
+- [x] GET `financial.read`, PUT `financial.write`, conditional version update와 400/409
+- [x] mobile exact response guard, PUT adapter와 accessible Settings 편집/no-advice 문구
+- [x] canonical 계약 35 operations·38 fixtures/provider/consumer/compatibility gate 통과
+- [x] PostgreSQL owner/version 0→1 및 stale update 무효, actual OIDC GET→PUT version 증가 통과
+- [x] root verify: mobile 97/simulator 12/platform 80 총 189 tests와 두 backend build 통과
+- [x] `BE-ISSUE-0009`, `FE-ISSUE-0011` 해결·재검증
+- [x] DB migration과 원격 작업 미사용
 
 ## FE-0010 Live OIDC와 `/me`
 

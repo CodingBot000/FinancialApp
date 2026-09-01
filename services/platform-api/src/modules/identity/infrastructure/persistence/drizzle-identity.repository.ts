@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { Pool } from 'pg';
 
@@ -12,7 +12,12 @@ import {
   finappRiskProfile,
 } from '../../../../database/schema.js';
 import type { IdentityRepository } from '../../application/ports/identity-repository.port.js';
+import type { RiskProfileRepository } from '../../application/ports/risk-profile-repository.port.js';
 import type { CurrentUser, RiskLevel } from '../../domain/current-user.js';
+import type {
+  RiskProfile,
+  RiskProfileUpdate,
+} from '../../domain/risk-profile.js';
 
 const identitySchema = {
   finappAppUser,
@@ -36,7 +41,9 @@ function isUniqueViolation(error: unknown): error is PostgreSqlError {
 }
 
 @Injectable()
-export class DrizzleIdentityRepository implements IdentityRepository {
+export class DrizzleIdentityRepository
+  implements IdentityRepository, RiskProfileRepository
+{
   private readonly database: IdentityDatabase;
 
   constructor(@Inject(PLATFORM_DATABASE_POOL) pool: Pool) {
@@ -112,6 +119,42 @@ export class DrizzleIdentityRepository implements IdentityRepository {
     }
   }
 
+  async getRiskProfile(userId: string): Promise<RiskProfile> {
+    const rows = await this.database
+      .select()
+      .from(finappRiskProfile)
+      .where(eq(finappRiskProfile.userId, userId))
+      .limit(1);
+    const row = rows[0];
+    if (row === undefined) throw new Error('Risk profile is missing.');
+    return this.profile(row);
+  }
+
+  async updateRiskProfile(
+    userId: string,
+    input: RiskProfileUpdate,
+  ): Promise<RiskProfile | undefined> {
+    const expectedVersion = BigInt(input.expectedVersion);
+    const rows = await this.database
+      .update(finappRiskProfile)
+      .set({
+        riskLevel: input.riskLevel,
+        investmentHorizonMonths: input.investmentHorizonMonths,
+        monthlyContribution: input.monthlyContribution,
+        version: sql`${finappRiskProfile.version} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(finappRiskProfile.userId, userId),
+          eq(finappRiskProfile.version, expectedVersion),
+        ),
+      )
+      .returning();
+    const row = rows[0];
+    return row === undefined ? undefined : this.profile(row);
+  }
+
   private async findByExternalIdentity(
     issuer: string,
     subject: string,
@@ -150,6 +193,16 @@ export class DrizzleIdentityRepository implements IdentityRepository {
       riskProfile: row.riskProfile as RiskLevel,
       datasetVersion: row.datasetVersion,
       syntheticData: row.syntheticData as true,
+    };
+  }
+
+  private profile(row: typeof finappRiskProfile.$inferSelect): RiskProfile {
+    return {
+      riskLevel: row.riskLevel as RiskLevel,
+      investmentHorizonMonths: row.investmentHorizonMonths,
+      monthlyContribution: row.monthlyContribution,
+      version: row.version.toString(),
+      updatedAt: row.updatedAt.toISOString(),
     };
   }
 }

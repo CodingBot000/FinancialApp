@@ -12,6 +12,21 @@ export interface PlatformHealthResponse {
 
 export type RiskProfile = 'BALANCED' | 'CONSERVATIVE' | 'GROWTH';
 
+export interface UserRiskProfile {
+  readonly riskLevel: RiskProfile;
+  readonly investmentHorizonMonths: number;
+  readonly monthlyContribution: Money;
+  readonly version: string;
+  readonly updatedAt: string;
+}
+
+export interface UpdateRiskProfileInput {
+  readonly riskLevel: RiskProfile;
+  readonly investmentHorizonMonths: number;
+  readonly monthlyContribution: Money;
+  readonly expectedVersion: string;
+}
+
 export interface CurrentUserResponse {
   readonly datasetVersion: string;
   readonly displayName: string;
@@ -230,6 +245,7 @@ export interface PlatformApi {
   getCurrentUser(
     options?: PlatformRequestOptions,
   ): Promise<CurrentUserResponse>;
+  getRiskProfile(options?: PlatformRequestOptions): Promise<UserRiskProfile>;
   getHealth(options?: PlatformRequestOptions): Promise<PlatformHealthResponse>;
   getMyDataSync(
     syncId: string,
@@ -272,6 +288,10 @@ export interface PlatformApi {
     mode: DeveloperScenarioMode,
     options?: PlatformRequestOptions,
   ): Promise<DeveloperScenarioResponse>;
+  updateRiskProfile(
+    input: UpdateRiskProfileInput,
+    options?: PlatformRequestOptions,
+  ): Promise<UserRiskProfile>;
 }
 
 export type PlatformApiErrorKind =

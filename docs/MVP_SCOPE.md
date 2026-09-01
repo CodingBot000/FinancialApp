@@ -110,6 +110,8 @@
 - app attestation, pinning, 위변조 방지 솔루션
 - App Store와 Google Play 정식 공개
 
+Milestone 6 재확정: 별도 onboarding wizard와 규칙 기반 portfolio recommendation은 계속 제외한다. OIDC 첫 로그인에서 합성 기본 risk profile을 자동 생성하고 Settings에서 위험 선호·기간·월 납입액을 owner-scoped/versioned하게 편집하는 planning preference 기능만 `DEV-0012`에서 구현했다. 이 값은 추천 비율, 적합성 판정 또는 수익 보장을 생성하지 않는다.
+
 ## 5. 로컬 MVP E2E 인수 시나리오
 
 1. 사용자가 Keycloak 테스트 계정으로 로그인한다.

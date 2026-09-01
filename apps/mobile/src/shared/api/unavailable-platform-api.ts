@@ -21,6 +21,8 @@ import {
   type Quote,
   type Simulation,
   type Transaction,
+  type UpdateRiskProfileInput,
+  type UserRiskProfile,
 } from './platform-api';
 
 export class UnavailablePlatformApi implements PlatformApi {
@@ -48,6 +50,10 @@ export class UnavailablePlatformApi implements PlatformApi {
   }
 
   getCurrentUser(): Promise<CurrentUserResponse> {
+    return this.reject();
+  }
+
+  getRiskProfile(): Promise<UserRiskProfile> {
     return this.reject();
   }
 
@@ -98,6 +104,10 @@ export class UnavailablePlatformApi implements PlatformApi {
     mode: DeveloperScenarioMode,
   ): Promise<DeveloperScenarioResponse> {
     void mode;
+    return this.reject();
+  }
+  updateRiskProfile(input: UpdateRiskProfileInput): Promise<UserRiskProfile> {
+    void input;
     return this.reject();
   }
 

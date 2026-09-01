@@ -747,6 +747,28 @@
 - `BE-ISSUE-0008` RESOLVED.
 - 다음은 `DEV-0012` 제품 범위 재확정 및 선택 항목 구현이다.
 
+## DEV-0012 — Risk Profile 범위 재확정과 편집
+
+- 날짜: 2026-09-02
+- Milestone: 6A local hardening
+- 상태: COMPLETED
+- 예정 commit: `feat(dev): add versioned risk profile settings [DEV-0012]`
+
+### 완료와 검증
+
+- 별도 onboarding wizard와 portfolio recommendation을 구현하지 않기로 재확정하고, OIDC default profile + Settings owner 편집만 완료 범위로 고정했다.
+- `GET|PUT /api/v1/me/risk-profile`의 scope, strict input, optimistic version 409와 audit를 구현했다.
+- mobile strict adapter/mock/unavailable boundary와 접근 가능한 성향·기간·월 납입액 Settings 편집, no-advice 문구를 구현했다.
+- canonical 계약은 35 operations/38 fixtures로 확장됐고 provider/consumer/compatibility gate를 통과했다.
+- PostgreSQL에서 version 0→1과 stale update 무효, actual Compose OIDC refresh access token GET→PUT version 1회 증가와 기존 12단계 smoke를 통과했다.
+- root verify는 mobile 97/simulator 12/platform 80 총 189 tests와 두 backend build를 통과했다.
+- DB migration과 원격 DB·credential·catalog·migration/seed·deploy는 사용하지 않았다.
+
+### 이슈와 다음 작업
+
+- `BE-ISSUE-0009` provisioning/profile port coupling과 `FE-ISSUE-0011` production 저장 message 미노출을 해결했다.
+- 다음은 `DEV-0013` 핵심 query plan과 dependency advisory/release risk 재검증이다.
+
 ## FE-0013 — Biometric BUY와 Recovery Mobile 통합
 
 - 날짜: 2026-09-02

@@ -282,6 +282,54 @@ describe('platform Drizzle migration', () => {
     }
   });
 
+  it('updates only the owner risk profile at the expected version', async () => {
+    const platformUrl = new URL(connectionString);
+    platformUrl.username = 'financial_platform_app';
+    platformUrl.password = 'example-platform-test-only';
+    const pool = new Pool({ connectionString: platformUrl.toString(), max: 2 });
+    const repository = new DrizzleIdentityRepository(pool);
+
+    try {
+      const user = await repository.provisionFromOidc(
+        'https://issuer.example/realms/finapp',
+        'risk-profile-owner',
+      );
+      const initial = await repository.getRiskProfile(user.userId);
+      expect(initial).toMatchObject({
+        riskLevel: 'BALANCED',
+        investmentHorizonMonths: 120,
+        monthlyContribution: '1500000.0000',
+        version: '0',
+      });
+
+      const updated = await repository.updateRiskProfile(user.userId, {
+        riskLevel: 'GROWTH',
+        investmentHorizonMonths: 180,
+        monthlyContribution: '2000000.0000',
+        expectedVersion: '0',
+      });
+      expect(updated).toMatchObject({
+        riskLevel: 'GROWTH',
+        investmentHorizonMonths: 180,
+        monthlyContribution: '2000000.0000',
+        version: '1',
+      });
+      await expect(
+        repository.updateRiskProfile(user.userId, {
+          riskLevel: 'CONSERVATIVE',
+          investmentHorizonMonths: 60,
+          monthlyContribution: '500000.0000',
+          expectedVersion: '0',
+        }),
+      ).resolves.toBeUndefined();
+      await expect(repository.getRiskProfile(user.userId)).resolves.toEqual(
+        updated,
+      );
+    } finally {
+      await pool.end();
+    }
+  });
+
   it('keeps raw immutable and deduplicates normalized data across repeated syncs', async () => {
     const platformUrl = new URL(connectionString);
     platformUrl.username = 'financial_platform_app';

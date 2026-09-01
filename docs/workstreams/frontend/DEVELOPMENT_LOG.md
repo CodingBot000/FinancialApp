@@ -771,3 +771,27 @@
 ### 다음 작업
 
 - DEV-0011: clean local MVP 12-step acceptance와 fresh-clone/release gate
+
+## DEV-0012 — Risk Profile Mobile Lane
+
+- 날짜: 2026-09-02
+- Milestone: 6A local hardening
+- 상태: COMPLETED
+- contract revision: additive GET/PUT risk profile
+- 예정 commit: `feat(dev): add versioned risk profile settings [DEV-0012]`
+
+### 완료와 검증
+
+- exact risk profile response/version guard와 authenticated GET/PUT, mock/unavailable adapter를 구현했다.
+- Settings에 48px 성향 선택, 기간·월 납입액 입력, no-advice 설명과 저장 live-region을 추가했다.
+- component는 production에서 developer tools 없이도 profile 저장 결과를 표시하고 current-user query를 invalidate한다.
+- targeted mobile 3 files/17 tests, mobile 전체 97 tests와 actual OIDC profile GET→PUT을 통과했다.
+
+### 이슈·누락·Handoff
+
+- `FE-ISSUE-0011` RESOLVED: 공용 mutation message를 developer-only card 밖으로 이동했다.
+- 별도 onboarding wizard, 추천 비율/적합성/수익 보장 표현은 구현하지 않았다.
+
+### 다음 작업
+
+- `DEV-0013`: local query plan/dependency release gate

@@ -153,6 +153,8 @@ BE-0010 기준 `finapp_audit_event`는 runtime role에 SELECT/INSERT만 허용�
 - missing scope
 - 다른 사용자 account/order/simulation 접근
 - production profile dev endpoint 404
+- risk profile URL/body에 user ID를 받지 않고 verified OIDC owner만 접근하며 PUT은 `financial.write`와 optimistic version을 요구
+- planning preference는 합성 데이터만 사용하고 recommendation/suitability 판단이나 실제 개인정보를 저장하지 않음
 - 로그 token/full identifier 검색 실패
 - refresh 실패 후 cache와 token 제거
 - 잘못된 AAD decrypt 실패

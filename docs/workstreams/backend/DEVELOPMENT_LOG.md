@@ -810,6 +810,32 @@
 
 - `DEV-0012`: onboarding/risk profile 편집과 규칙 기반 portfolio recommendation 범위 재확정 및 선택 범위 구현
 
+## DEV-0012 — Risk Profile Backend Lane
+
+- 날짜: 2026-09-02
+- Milestone: 6A local hardening
+- 상태: COMPLETED
+- base commit: `65ab33333455d35a82a57a5f0df8793ac06cd9c4`
+- contract revision: additive GET/PUT risk profile / DB migration 없음
+- migration owner: single main, schema 변경 없음, local/Testcontainers only
+- 예정 commit: `feat(dev): add versioned risk profile settings [DEV-0012]`
+
+### 완료와 검증
+
+- identity provisioning과 risk profile repository port를 분리하고 기존 `finapp_risk_profile`에 owner/version conditional update를 구현했다.
+- GET `financial.read`, PUT `financial.write`, canonical 400/409와 redacted audit를 provider E2E로 검증했다.
+- PostgreSQL에서 default profile, version 0→1과 stale update no-op를 확인하고 actual OIDC GET→PUT도 통과했다.
+- root verify는 mobile 97/simulator 12/platform 80 총 189 tests와 두 backend build를 통과했다.
+- 추천 engine/API는 만들지 않았고 DB migration·원격 작업은 없었다.
+
+### 이슈·누락·Handoff
+
+- `BE-ISSUE-0009` RESOLVED.
+
+### 다음 작업
+
+- `DEV-0013`: local 핵심 query plan과 dependency advisory 재확인
+
 ## 새 기록 Template
 
 ```markdown

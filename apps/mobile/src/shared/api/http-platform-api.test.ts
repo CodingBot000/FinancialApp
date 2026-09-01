@@ -261,6 +261,44 @@ describe('HttpPlatformApi', () => {
     );
   });
 
+  it('reads and replaces the versioned risk profile with PUT', async () => {
+    const profile = {
+      riskLevel: 'GROWTH' as const,
+      investmentHorizonMonths: 180,
+      monthlyContribution: '2000000.0000',
+      version: '1',
+      updatedAt: '2026-09-02T00:01:00.000Z',
+    };
+    const authenticatedFetch = vi.fn(async () => Response.json(profile));
+    const api = new HttpPlatformApi({
+      authenticatedFetch,
+      baseUrl: 'https://platform.example',
+    });
+
+    await expect(api.getRiskProfile()).resolves.toEqual(profile);
+    await expect(
+      api.updateRiskProfile({
+        riskLevel: 'GROWTH',
+        investmentHorizonMonths: 180,
+        monthlyContribution: '2000000.0000',
+        expectedVersion: '0',
+      }),
+    ).resolves.toEqual(profile);
+    expect(authenticatedFetch).toHaveBeenNthCalledWith(
+      2,
+      'https://platform.example/api/v1/me/risk-profile',
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({
+          riskLevel: 'GROWTH',
+          investmentHorizonMonths: 180,
+          monthlyContribution: '2000000.0000',
+          expectedVersion: '0',
+        }),
+      }),
+    );
+  });
+
   it('keeps missing-scope failures non-retryable', async () => {
     const api = new HttpPlatformApi({
       authenticatedFetch: async () => new Response(undefined, { status: 403 }),

@@ -106,4 +106,39 @@ describe('SettingsScreen', () => {
       await view.findByText('합성 데이터 FINANCIAL_APP_DATASET_V1 초기화'),
     ).toBeTruthy();
   });
+
+  it('edits the owner risk profile without presenting a recommendation', async () => {
+    const api = new ContractMockPlatformApi({ latencyMs: 0 });
+    const updateSpy = vi.spyOn(api, 'updateRiskProfile');
+    const { view } = await renderSettings(api, false);
+
+    expect(await view.findByText('투자 성향 정보')).toBeTruthy();
+    expect(view.getByText(/투자 추천이 아닙니다/)).toBeTruthy();
+    await waitFor(() =>
+      expect(view.getByRole('button', { name: '성장형' })).toBeTruthy(),
+    );
+    fireEvent.press(view.getByRole('button', { name: '성장형' }));
+    fireEvent.changeText(view.getByLabelText('투자 기간 개월'), '180');
+    fireEvent.changeText(view.getByLabelText('월 납입액'), '2000000.0000');
+    await waitFor(() => {
+      expect(
+        view.getByRole('button', { name: '성장형' }).props.accessibilityState,
+      ).toEqual({ selected: true });
+      expect(view.getByLabelText('투자 기간 개월').props.value).toBe('180');
+      expect(view.getByLabelText('월 납입액').props.value).toBe('2000000.0000');
+    });
+    fireEvent.press(view.getByRole('button', { name: '투자 성향 저장' }));
+
+    await waitFor(() =>
+      expect(updateSpy).toHaveBeenCalledWith({
+        riskLevel: 'GROWTH',
+        investmentHorizonMonths: 180,
+        monthlyContribution: '2000000.0000',
+        expectedVersion: '0',
+      }),
+    );
+    expect(
+      await view.findByText('투자 성향 정보가 저장되었습니다.'),
+    ).toBeTruthy();
+  });
 });

@@ -68,6 +68,8 @@ BE-0014는 auth guard의 missing/invalid token과 missing scope가 token/subject
 
 BE-0015는 실제 Fastify readiness의 DB success/exception을 canonical 200/503 schema로, metrics의 고정 counter/pool field를 canonical 200 schema로 검증한다. circuit unit test는 failure threshold, open fast rejection, single half-open probe와 recovery를 검사한다. 실제 loopback brokerage HTTP test는 circuit이 열린 뒤 주문 POST가 전송도 retry도 되지 않음을 request count로 검증하고, quote provider E2E는 open circuit을 canonical `503 UPSTREAM_CIRCUIT_OPEN`으로 검증한다. Compose에서는 실제 PostgreSQL readiness와 bounded metrics JSON, 기존 12단계 smoke를 재검증한다.
 
+DEV-0012는 profile GET의 `financial.read`, PUT의 `financial.write`, 입력 400과 stale version 409를 actual Fastify response schema로 검증한다. PostgreSQL test는 owner profile의 version 0→1 conditional update와 stale update 무효를 확인한다. mobile strict adapter는 exact response/version과 PUT body를 검증하고 Settings component는 위험 성향·기간·월 납입액 저장, no-retry mutation과 “투자 추천이 아님” 문구를 확인한다. local OIDC smoke는 refresh access token으로 GET→PUT을 수행해 version이 정확히 1 증가하는지 검사한다.
+
 ### External integration
 
 platform-api와 실제 institution-simulator를 실행한다.

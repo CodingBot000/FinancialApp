@@ -247,6 +247,14 @@ module composition ───────────────> api/applicatio
 - GET/status query만 제한적으로 retry하며 주문 POST는 자동 retry하지 않는다.
 - 외부 오류는 내부 application error code로 변환하고 원문 token/PII를 log하지 않는다.
 
+### 5.5.0 Identity와 risk profile
+
+- OIDC identity provisioning port와 risk profile mutation port는 분리한다. profile 기능 추가가 인증 provisioning consumer의 interface/test double을 확장하지 않는다.
+- 첫 verified OIDC subject는 같은 transaction에서 합성 기본 risk profile을 가진다. 별도 onboarding wizard 상태는 두지 않는다.
+- profile 조회·수정은 verified principal로 내부 user를 resolve한 뒤 해당 user row만 접근한다. client가 user ID를 전달하지 않는다.
+- update는 전체 planning preference와 decimal string, expected version을 받고 단일 conditional UPDATE로 lost update를 409 처리한다.
+- risk profile은 simulation input 편의를 위한 선호 정보다. portfolio recommendation, suitability 또는 보장 결과를 domain/API/mobile에 만들지 않는다.
+
 ### 5.5.1 Data key provider
 
 - application port는 data-key generate/decrypt와 stable lookup MAC만 정의한다.

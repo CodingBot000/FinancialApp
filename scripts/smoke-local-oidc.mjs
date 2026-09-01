@@ -70,6 +70,39 @@ async function currentUser(accessToken, expected = 200) {
   }
   return body;
 }
+async function readRiskProfile(accessToken) {
+  const response = await fetch(`${platformBase}/api/v1/me/risk-profile`, {
+    headers: { authorization: `Bearer ${accessToken}` },
+  });
+  const body = await response.json();
+  if (!response.ok) {
+    throw new Error(`Risk profile read returned HTTP ${response.status}.`);
+  }
+  return body;
+}
+async function replaceRiskProfile(accessToken, profile) {
+  const response = await fetch(`${platformBase}/api/v1/me/risk-profile`, {
+    method: 'PUT',
+    headers: {
+      authorization: `Bearer ${accessToken}`,
+      'content-type': 'application/json',
+      'x-correlation-id': 'local-risk-profile-smoke',
+    },
+    body: JSON.stringify({
+      riskLevel: profile.riskLevel,
+      investmentHorizonMonths: profile.investmentHorizonMonths,
+      monthlyContribution: profile.monthlyContribution,
+      expectedVersion: profile.version,
+    }),
+  });
+  const body = await response.json();
+  if (!response.ok) {
+    throw new Error(
+      `Risk profile update returned HTTP ${response.status} (${String(body.code ?? 'unknown')}).`,
+    );
+  }
+  return body;
+}
 function tokenBoundary(accessToken) {
   const payload = accessToken.split('.')[1];
   if (!payload) throw new Error('OIDC access token is not a JWT.');
@@ -196,6 +229,17 @@ const restartedUser = await currentUser(restarted.access_token);
 if (restartedUser.userId !== initialUser.userId) {
   throw new Error('OIDC refresh resolved another application user.');
 }
+const initialRiskProfile = await readRiskProfile(restarted.access_token);
+const updatedRiskProfile = await replaceRiskProfile(
+  restarted.access_token,
+  initialRiskProfile,
+);
+if (
+  BigInt(updatedRiskProfile.version) !==
+  BigInt(initialRiskProfile.version) + 1n
+) {
+  throw new Error('Risk profile optimistic version did not advance once.');
+}
 
 const invalid = await currentUser(`${restarted.access_token}invalid`, 401);
 if (invalid.code !== 'AUTH_TOKEN_INVALID') {
@@ -228,5 +272,5 @@ if (refreshAfterLogout.ok) {
 }
 
 process.stdout.write(
-  `${JSON.stringify({ callback: redirectUri, refreshRestart: true, syntheticData: initialUser.syntheticData, userId: initialUser.userId })}\n`,
+  `${JSON.stringify({ callback: redirectUri, refreshRestart: true, riskProfileVersioned: true, syntheticData: initialUser.syntheticData, userId: initialUser.userId })}\n`,
 );

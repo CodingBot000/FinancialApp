@@ -1,6 +1,6 @@
 # Frontend Workstream Issue와 Gap Register
 
-- 다음 ISSUE ID: `FE-ISSUE-0011`
+- 다음 ISSUE ID: `FE-ISSUE-0012`
 - 다음 GAP ID: `FE-GAP-0005`
 - active issue: `FE-ISSUE-0001`
 - active gap: `FE-GAP-0002`, `FE-GAP-0004`
@@ -51,6 +51,20 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 검증: FE-0006 자동/native build에 더해 FE-0010 Android API 36 Development Build에서 fingerprint enrollment, OS prompt, unlock, process restart 뒤 재인증과 실제 `/me` 복구를 통과했다. UI는 생체인증을 server MFA로 표현하지 않는다.
 
 ## Resolved History
+
+### FE-ISSUE-0011 — Profile 저장 결과가 developer tools 내부에서만 표시
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 발견 FE: DEV-0012 Settings component test
+- 관련 contract revision: risk profile GET/PUT additive platform-v1
+- 중앙 연결: 없음
+- 내용: 공용 mutation 상태 message가 developer tools 조건부 card 안에 렌더링돼 production profile에서 risk profile 저장 성공·오류 결과가 보이지 않았다.
+- 영향: server update는 수행되지만 일반 사용자는 저장 결과나 409/validation 안내를 확인할 수 없었다.
+- 해결 조건: 공용 live-region status를 developer 조건 밖으로 이동하고 production-disabled component에서 실제 profile update 결과가 표시될 것.
+- 목표 FE: DEV-0012
+- 해결 FE: DEV-0012
+- 검증: production-disabled Settings component가 profile 입력/PUT과 성공 live-region을 확인했고 mobile 전체/root gate를 통과했다.
 
 ### FE-ISSUE-0010 — Settings session fixture의 secret scan 오탐
 

@@ -52,6 +52,30 @@
   },
   {
     "contract": "platform-v1",
+    "operationId": "getRiskProfile",
+    "status": 200,
+    "body": {
+      "riskLevel": "BALANCED",
+      "investmentHorizonMonths": 120,
+      "monthlyContribution": "1500000.0000",
+      "version": "0",
+      "updatedAt": "2026-09-02T00:00:00.000Z"
+    }
+  },
+  {
+    "contract": "platform-v1",
+    "operationId": "updateRiskProfile",
+    "status": 200,
+    "body": {
+      "riskLevel": "GROWTH",
+      "investmentHorizonMonths": 180,
+      "monthlyContribution": "2000000.0000",
+      "version": "1",
+      "updatedAt": "2026-09-02T00:01:00.000Z"
+    }
+  },
+  {
+    "contract": "platform-v1",
     "operationId": "createMyDataConnection",
     "status": 201,
     "body": {

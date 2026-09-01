@@ -127,6 +127,14 @@ MVP 목록은 cursor 방식을 사용한다.
 }
 ```
 
+### `GET|PUT /api/v1/me/risk-profile`
+
+- GET은 `financial.read`, PUT은 `financial.write` scope가 필요하다.
+- URL/body에 user ID를 받지 않고 검증된 OIDC principal의 내부 user만 조회·수정한다.
+- PUT body는 `riskLevel`, 1~600개월 `investmentHorizonMonths`, non-negative decimal `monthlyContribution`과 string `expectedVersion` 전체를 보낸다.
+- stale version은 `409 VERSION_CONFLICT`, 형식/범위 오류는 `400 VALIDATION_FAILED`다.
+- 응답은 현재 값, 증가한 string `version`과 `updatedAt`을 반환한다. 이 API는 planning preference만 저장하며 portfolio recommendation을 반환하지 않는다.
+
 최초 유효 token 요청 시 OIDC subject를 기준으로 내부 user를 idempotent하게 provision할 수 있다.
 
 ## 4. MyData API

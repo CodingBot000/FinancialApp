@@ -10,6 +10,18 @@ contracts:
         { method: GET, path: /api/v1/health/metrics, statuses: [200, 429] }
       getCurrentUser:
         { method: GET, path: /api/v1/me, statuses: [200, 401, 403] }
+      getRiskProfile:
+        {
+          method: GET,
+          path: /api/v1/me/risk-profile,
+          statuses: [200, 401, 403],
+        }
+      updateRiskProfile:
+        {
+          method: PUT,
+          path: /api/v1/me/risk-profile,
+          statuses: [200, 400, 401, 403, 409],
+        }
       createMyDataConnection:
         {
           method: POST,
@@ -282,6 +294,29 @@ contracts:
           type: object,
           properties:
             [datasetVersion, displayName, riskProfile, syntheticData, userId],
+        }
+      RiskProfile:
+        {
+          type: object,
+          properties:
+            [
+              investmentHorizonMonths,
+              monthlyContribution,
+              riskLevel,
+              updatedAt,
+              version,
+            ],
+        }
+      UpdateRiskProfileRequest:
+        {
+          type: object,
+          properties:
+            [
+              expectedVersion,
+              investmentHorizonMonths,
+              monthlyContribution,
+              riskLevel,
+            ],
         }
       ProblemDetails:
         {

@@ -13,6 +13,7 @@ import { AppModule } from '../../src/app.module.js';
 import { createFastifyAdapter } from '../../src/core/http/create-fastify-adapter.js';
 import { CircuitOpenError } from '../../src/core/resilience/circuit-breaker.js';
 import { IDENTITY_REPOSITORY } from '../../src/modules/identity/application/ports/identity-repository.port.js';
+import { RISK_PROFILE_REPOSITORY } from '../../src/modules/identity/application/ports/risk-profile-repository.port.js';
 import { INSTITUTION_PORT } from '../../src/modules/mydata/application/ports/institution.port.js';
 import { MYDATA_REPOSITORY } from '../../src/modules/mydata/application/ports/mydata-repository.port.js';
 import { SENSITIVE_DATA_PORT } from '../../src/modules/mydata/application/ports/sensitive-data.port.js';
@@ -32,6 +33,22 @@ describe('GET /api/v1/me OIDC boundary', () => {
       riskProfile: 'BALANCED',
       datasetVersion: 'FINANCIAL_APP_DATASET_V1',
       syntheticData: true,
+    }),
+  };
+  const riskProfileRepository = {
+    getRiskProfile: vi.fn().mockResolvedValue({
+      riskLevel: 'BALANCED',
+      investmentHorizonMonths: 120,
+      monthlyContribution: '1500000.0000',
+      version: '0',
+      updatedAt: '2026-09-02T00:00:00.000Z',
+    }),
+    updateRiskProfile: vi.fn().mockResolvedValue({
+      riskLevel: 'GROWTH',
+      investmentHorizonMonths: 180,
+      monthlyContribution: '2000000.0000',
+      version: '1',
+      updatedAt: '2026-09-02T00:01:00.000Z',
     }),
   };
   const myDataRepository = {
@@ -366,6 +383,8 @@ describe('GET /api/v1/me OIDC boundary', () => {
     })
       .overrideProvider(IDENTITY_REPOSITORY)
       .useValue(identityRepository)
+      .overrideProvider(RISK_PROFILE_REPOSITORY)
+      .useValue(riskProfileRepository)
       .overrideProvider(MYDATA_REPOSITORY)
       .useValue(myDataRepository)
       .overrideProvider(INSTITUTION_PORT)
@@ -515,6 +534,106 @@ describe('GET /api/v1/me OIDC boundary', () => {
       issuer,
       'synthetic-user-a',
     );
+  });
+
+  it('reads and updates the owner risk profile with version protection', async () => {
+    const read = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: { authorization: `Bearer ${await accessToken()}` },
+        method: 'GET',
+        url: '/api/v1/me/risk-profile',
+      });
+    expect(read.statusCode).toBe(200);
+    validateResponse('getRiskProfile', read);
+    expect(read.json()).toMatchObject({ riskLevel: 'BALANCED', version: '0' });
+
+    const forbidden = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: { authorization: `Bearer ${await accessToken()}` },
+        method: 'PUT',
+        url: '/api/v1/me/risk-profile',
+        payload: {
+          riskLevel: 'GROWTH',
+          investmentHorizonMonths: 180,
+          monthlyContribution: '2000000.0000',
+          expectedVersion: '0',
+        },
+      });
+    expect(forbidden.statusCode).toBe(403);
+
+    const updated = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: {
+          authorization: `Bearer ${await accessToken({ scope: 'financial.write' })}`,
+          'x-correlation-id': 'profile-update-1',
+        },
+        method: 'PUT',
+        url: '/api/v1/me/risk-profile',
+        payload: {
+          riskLevel: 'GROWTH',
+          investmentHorizonMonths: 180,
+          monthlyContribution: '2000000.0000',
+          expectedVersion: '0',
+        },
+      });
+    expect(updated.statusCode).toBe(200);
+    validateResponse('updateRiskProfile', updated);
+    expect(updated.json()).toMatchObject({ riskLevel: 'GROWTH', version: '1' });
+    expect(riskProfileRepository.updateRiskProfile).toHaveBeenCalledWith(
+      '4e34157c-f4fa-4f77-aeaf-19ea60ec6806',
+      expect.objectContaining({ expectedVersion: '0' }),
+    );
+    expect(audit.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'RISK_PROFILE_UPDATED',
+        traceId: 'profile-update-1',
+      }),
+    );
+  });
+
+  it('returns canonical validation and optimistic lock conflicts', async () => {
+    const token = await accessToken({ scope: 'financial.write' });
+    const invalid = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: { authorization: `Bearer ${token}` },
+        method: 'PUT',
+        url: '/api/v1/me/risk-profile',
+        payload: {
+          riskLevel: 'SPECULATIVE',
+          investmentHorizonMonths: 0,
+          monthlyContribution: '-1',
+          expectedVersion: '0',
+        },
+      });
+    expect(invalid.statusCode).toBe(400);
+    validateResponse('updateRiskProfile', invalid);
+
+    riskProfileRepository.updateRiskProfile.mockResolvedValueOnce(undefined);
+    const conflict = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: { authorization: `Bearer ${token}` },
+        method: 'PUT',
+        url: '/api/v1/me/risk-profile',
+        payload: {
+          riskLevel: 'BALANCED',
+          investmentHorizonMonths: 120,
+          monthlyContribution: '1500000.0000',
+          expectedVersion: '0',
+        },
+      });
+    expect(conflict.statusCode).toBe(409);
+    expect(conflict.json().code).toBe('VERSION_CONFLICT');
+    validateResponse('updateRiskProfile', conflict);
   });
 
   it('enforces financial.write on connection creation', async () => {

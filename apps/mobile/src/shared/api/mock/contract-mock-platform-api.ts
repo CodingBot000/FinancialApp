@@ -22,6 +22,8 @@ import {
   type Quote,
   type Simulation,
   type Transaction,
+  type UpdateRiskProfileInput,
+  type UserRiskProfile,
 } from '../platform-api';
 import currentUserFixture from './fixtures/current-user.success.json';
 import fixture from './fixtures/platform-health.success.json';
@@ -81,6 +83,13 @@ export class ContractMockPlatformApi implements PlatformApi {
   private readonly latencyMs: number;
   private readonly scenario: ContractMockHealthScenario;
   private developerScenario: DeveloperScenarioMode = 'NORMAL';
+  private riskProfile: UserRiskProfile = {
+    riskLevel: 'BALANCED',
+    investmentHorizonMonths: 120,
+    monthlyContribution: '1500000.0000',
+    version: '0',
+    updatedAt: '2026-09-02T00:00:00.000Z',
+  };
 
   constructor(options: ContractMockPlatformApiOptions = {}) {
     this.latencyMs = options.latencyMs ?? 250;
@@ -144,7 +153,15 @@ export class ContractMockPlatformApi implements PlatformApi {
     options: PlatformRequestOptions = {},
   ): Promise<CurrentUserResponse> {
     await waitForMockLatency(this.latencyMs, options.signal);
-    return structuredClone(currentUser);
+    return {
+      ...structuredClone(currentUser),
+      riskProfile: this.riskProfile.riskLevel,
+    };
+  }
+
+  async getRiskProfile(options: PlatformRequestOptions = {}) {
+    await waitForMockLatency(this.latencyMs, options.signal);
+    return structuredClone(this.riskProfile);
   }
 
   async getHealth(
@@ -275,5 +292,29 @@ export class ContractMockPlatformApi implements PlatformApi {
     await waitForMockLatency(this.latencyMs, options.signal);
     this.developerScenario = mode;
     return { mode: this.developerScenario, scope: 'GLOBAL' };
+  }
+
+  async updateRiskProfile(
+    input: UpdateRiskProfileInput,
+    options: PlatformRequestOptions = {},
+  ) {
+    await waitForMockLatency(this.latencyMs, options.signal);
+    if (input.expectedVersion !== this.riskProfile.version) {
+      throw new PlatformApiError({
+        code: 'VERSION_CONFLICT',
+        kind: 'http',
+        message: '투자 성향 정보가 먼저 변경되었습니다.',
+        retryable: false,
+        status: 409,
+      });
+    }
+    this.riskProfile = {
+      riskLevel: input.riskLevel,
+      investmentHorizonMonths: input.investmentHorizonMonths,
+      monthlyContribution: input.monthlyContribution,
+      version: String(Number(this.riskProfile.version) + 1),
+      updatedAt: '2026-09-02T00:01:00.000Z',
+    };
+    return structuredClone(this.riskProfile);
   }
 }

@@ -20,6 +20,8 @@ import {
   type PlatformHealthResponse,
   type PlatformRequestOptions,
   type Quote,
+  type UpdateRiskProfileInput,
+  type UserRiskProfile,
   type Simulation,
   type Transaction,
 } from './platform-api';
@@ -37,6 +39,7 @@ import {
   isOrder,
   isOrderPage,
   isQuote,
+  isRiskProfile,
   isSimulation,
   isSummary,
   isSync,
@@ -153,6 +156,17 @@ export class HttpPlatformApi implements PlatformApi {
     return this.requestJson(
       '/api/v1/me',
       isCurrentUser,
+      options,
+      this.authenticatedFetch,
+    );
+  }
+
+  getRiskProfile(
+    options: PlatformRequestOptions = {},
+  ): Promise<UserRiskProfile> {
+    return this.requestJson(
+      '/api/v1/me/risk-profile',
+      isRiskProfile,
       options,
       this.authenticatedFetch,
     );
@@ -319,6 +333,21 @@ export class HttpPlatformApi implements PlatformApi {
       options,
       this.authenticatedFetch,
       { mode, correlationScope: 'CURRENT_USER' },
+      {},
+      'PUT',
+    );
+  }
+
+  updateRiskProfile(
+    input: UpdateRiskProfileInput,
+    options: PlatformRequestOptions = {},
+  ): Promise<UserRiskProfile> {
+    return this.requestJson(
+      '/api/v1/me/risk-profile',
+      isRiskProfile,
+      options,
+      this.authenticatedFetch,
+      input,
       {},
       'PUT',
     );

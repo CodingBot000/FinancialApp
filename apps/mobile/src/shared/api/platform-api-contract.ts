@@ -13,6 +13,7 @@ import type {
   Page,
   PlatformHealthResponse,
   Quote,
+  UserRiskProfile,
   Simulation,
   Transaction,
 } from './platform-api';
@@ -21,6 +22,7 @@ const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MONEY = /^-?[0-9]+\.[0-9]{4}$/;
 const QUANTITY = /^[0-9]+\.[0-9]{8}$/;
+const VERSION = /^\d+$/;
 
 function record(value: unknown): Record<string, unknown> | undefined {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -71,6 +73,30 @@ export function isCurrentUser(value: unknown): value is CurrentUserResponse {
     ['BALANCED', 'CONSERVATIVE', 'GROWTH'].includes(String(item.riskProfile)) &&
     text(item.datasetVersion) &&
     item.syntheticData === true
+  );
+}
+
+export function isRiskProfile(value: unknown): value is UserRiskProfile {
+  const item = record(value);
+  return (
+    !!item &&
+    exact(item, [
+      'riskLevel',
+      'investmentHorizonMonths',
+      'monthlyContribution',
+      'version',
+      'updatedAt',
+    ]) &&
+    ['BALANCED', 'CONSERVATIVE', 'GROWTH'].includes(String(item.riskLevel)) &&
+    Number.isInteger(item.investmentHorizonMonths) &&
+    Number(item.investmentHorizonMonths) >= 1 &&
+    Number(item.investmentHorizonMonths) <= 600 &&
+    money(item.monthlyContribution) &&
+    Number(item.monthlyContribution) >= 0 &&
+    typeof item.version === 'string' &&
+    VERSION.test(item.version) &&
+    typeof item.updatedAt === 'string' &&
+    Number.isFinite(Date.parse(item.updatedAt))
   );
 }
 

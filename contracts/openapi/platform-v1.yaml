@@ -101,6 +101,57 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/me/risk-profile:
+    get:
+      operationId: getRiskProfile
+      summary: Read the current synthetic user's planning preferences
+      description: Requires `financial.read`; this is not investment advice.
+      security:
+        - BearerAuth: []
+      tags: [Identity]
+      responses:
+        '200':
+          description: Current owner-scoped risk profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      operationId: updateRiskProfile
+      summary: Replace the current synthetic user's planning preferences
+      description: Requires `financial.write`; expectedVersion prevents lost updates and no portfolio recommendation is produced.
+      security:
+        - BearerAuth: []
+      tags: [Identity]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRiskProfileRequest'
+      responses:
+        '200':
+          description: Updated owner-scoped risk profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskProfile'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: The expected version is stale.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /api/v1/mydata/connections:
     post:
       operationId: createMyDataConnection
@@ -1255,6 +1306,54 @@ components:
         syntheticData:
           type: boolean
           const: true
+    RiskProfile:
+      type: object
+      additionalProperties: false
+      required:
+        - riskLevel
+        - investmentHorizonMonths
+        - monthlyContribution
+        - version
+        - updatedAt
+      properties:
+        riskLevel:
+          type: string
+          enum: [CONSERVATIVE, BALANCED, GROWTH]
+        investmentHorizonMonths:
+          type: integer
+          minimum: 1
+          maximum: 600
+        monthlyContribution:
+          type: string
+          pattern: '^\d+(?:\.\d{1,4})?$'
+        version:
+          type: string
+          pattern: '^\d+$'
+        updatedAt:
+          type: string
+          format: date-time
+    UpdateRiskProfileRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - riskLevel
+        - investmentHorizonMonths
+        - monthlyContribution
+        - expectedVersion
+      properties:
+        riskLevel:
+          type: string
+          enum: [CONSERVATIVE, BALANCED, GROWTH]
+        investmentHorizonMonths:
+          type: integer
+          minimum: 1
+          maximum: 600
+        monthlyContribution:
+          type: string
+          pattern: '^\d+(?:\.\d{1,4})?$'
+        expectedVersion:
+          type: string
+          pattern: '^\d+$'
     ProblemDetails:
       type: object
       additionalProperties: false

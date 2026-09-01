@@ -47,6 +47,32 @@ contracts:
             adapter: apps/mobile/src/shared/api/http-platform-api.ts,
             target: FE-0010,
           }
+      getRiskProfile:
+        implementation:
+          [
+            services/platform-api/src/modules/identity/api/me.controller.ts,
+            getRiskProfile,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: DEV-0012,
+          }
+      updateRiskProfile:
+        implementation:
+          [
+            services/platform-api/src/modules/identity/api/me.controller.ts,
+            updateRiskProfile,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: DEV-0012,
+          }
       createMyDataConnection:
         implementation:
           [

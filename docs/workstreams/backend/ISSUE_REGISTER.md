@@ -1,6 +1,6 @@
 # Backend Workstream Issue와 Gap Register
 
-- 다음 ISSUE ID: `BE-ISSUE-0009`
+- 다음 ISSUE ID: `BE-ISSUE-0010`
 - 다음 GAP ID: `BE-GAP-0003`
 - active issue: `BE-ISSUE-0001`
 - active gap: 없음
@@ -23,6 +23,19 @@ backend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한�
 - 검증: BE-0009 `npm audit --json` moderate 18/high 0/critical 0. simulator Docker runtime stage는 144 package, vulnerability 0을 보고했다.
 
 ## Resolved Issue History
+
+### BE-ISSUE-0009 — Risk profile 기능이 identity provisioning port를 불필요하게 확장
+
+- 상태: RESOLVED
+- 심각도: LOW
+- 발견 BE: DEV-0012 strict typecheck
+- 관련 contract/migration revision: risk profile GET/PUT / DB migration 없음
+- 내용: 첫 구현에서 profile 조회·수정을 기존 `IdentityRepository`에 추가해 trading/scheduler 등 provisioning-only consumer의 typed test double이 새 메서드를 강제로 구현해야 했다.
+- 영향: production 동작 전 compile gate에서 무관한 test 7곳이 실패했고 identity port의 단일 책임이 깨졌다.
+- 해결 조건: provisioning port와 risk profile repository port를 분리하고 같은 Drizzle adapter를 `useExisting`으로 binding해 전체 architecture/typecheck/test를 통과할 것.
+- 목표 BE: DEV-0012
+- 해결 BE: DEV-0012
+- 검증: platform strict typecheck, dependency-cruiser, identity/provider와 PostgreSQL profile version test 및 root verify를 통과했다.
 
 ### BE-ISSUE-0008 — Readonly metric snapshot을 내부 mutable counter로 사용
 
@@ -155,6 +168,7 @@ backend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한�
 - BE-0013 (2026-09-02): `BE-ISSUE-0006`을 해결했다. local envelope/wrong AAD와 fake AWS KMS client boundary, Testcontainers 및 보존 Compose legacy-read를 검증했다. 실제 AWS/원격 자원은 사용하지 않았다.
 - BE-0014 (2026-09-02): `BE-ISSUE-0007`을 해결했다. append-only security event, auth failure redaction, structured log와 actual production developer 404를 Testcontainers/Compose에서 검증했다.
 - BE-0015 (2026-09-02): `BE-ISSUE-0008`을 해결했다. DB readiness, bounded private metrics와 세 simulator adapter circuit을 canonical provider/loopback/Compose에서 검증했다. 주문 POST retry와 원격 자원 사용은 없었다.
+- DEV-0012 backend (2026-09-02): `BE-ISSUE-0009`를 해결했다. provisioning/profile port 분리, owner/versioned update와 canonical provider/PostgreSQL/OIDC smoke를 검증했다.
 
 ## Issue Template
 

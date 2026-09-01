@@ -172,6 +172,8 @@ Constraints/indexes:
 
 Constraints: `finapp_fk_risk_profile_user`, `finapp_ck_risk_profile_level`, `finapp_ck_risk_profile_values`.
 
+DEV-0012 API는 client가 전달한 `expectedVersion`과 현재 `version`이 같은 owner row만 UPDATE하고 성공 시 `version + 1`로 증가시킨다. 별도 schema/migration 변경은 없다.
+
 ## 6. finapp_mydata
 
 ### `finapp_mydata.finapp_institution_connection`

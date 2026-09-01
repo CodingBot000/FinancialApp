@@ -25,10 +25,13 @@ export type {
   PlatformHealthResponse,
   PlatformRequestOptions,
   Quote,
+  RiskProfile,
   Simulation,
   SimulationAssetClass,
   SimulationPercentiles,
   SimulationPoint,
   SyncStatus,
   Transaction,
+  UpdateRiskProfileInput,
+  UserRiskProfile,
 } from './platform-api';
