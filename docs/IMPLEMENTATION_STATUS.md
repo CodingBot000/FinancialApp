@@ -1,10 +1,10 @@
 # 구현 상태
 
-- 현재 Milestone: 2~5 — 단일 Main 로컬 MVP 통합
+- 현재 Milestone: 6A — 로컬 하드닝
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-02
-- 마지막 완료 ID: FE-0014
-- 다음 작업 ID: DEV-0011
+- 마지막 완료 ID: DEV-0011
+- 다음 작업 ID: BE-0012
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
@@ -38,7 +38,7 @@
 | 3. 동기화와 Dashboard | DONE | backend sync/raw/derived/조회·audit와 frontend connection/sync polling, Dashboard/Accounts/detail/chart, 부분 오류 UX 및 local actual API smoke 완료 |
 | 4. 서버 시뮬레이션 | DONE | deterministic server 저장/조회, frontend draft validation·persisted result·p10/p50/p90 chart와 local actual API smoke 완료 |
 | 5. BUY 주문과 복구 | DONE | quote/biometric/idempotent mobile BUY, backend reservation/simulator/settlement/reconciliation/audit, UNKNOWN GET recovery와 actual local smoke 완료; clean 전체 인수는 DEV-0011 |
-| 6A. 로컬 하드닝 | NOT_STARTED | outbox, local KMS adapter 경계, security event/관측성, 최종 포트폴리오 문서 |
+| 6A. 로컬 하드닝 | IN_PROGRESS | DEV-0011 local MVP 인수 완료; outbox, local KMS adapter 경계, security event/관측성, 최종 포트폴리오 문서 진행 |
 | 6B. 원격 데모 | CURRENT_RUN_EXCLUDED | Lightsail migration, 실제 AWS KMS, HTTPS/EAS와 원격 rollback은 향후 별도 실행 |
 
 ## DEV-0010 계약 Gate
@@ -156,6 +156,18 @@
 - [x] root/CI formatter, contract, secret, architecture, lint, typecheck, test와 build gate
 - [x] Docker build context와 backend workspace-scoped clean install
 
+## DEV-0011 Clean Local MVP Acceptance
+
+- [x] `make acceptance-test`로 local Compose volume 제거 후 clean `npm ci`·verify 재현
+- [x] platform/simulator image build, forward migration, deterministic seed 2회, Compose health
+- [x] actual Keycloak PKCE/login·JWT·`/me`·refresh restart·invalid token·logout/revocation
+- [x] MVP 12단계: sync/raw/processing/wealth/chart API/simulation/BUY/settlement/idempotency/UNKNOWN reconciliation
+- [x] DB 증거: raw 3, processed 3, single replay order, executions 2, ledger/position, audit 10
+- [x] mobile 95/simulator 12/platform 61 총 168 tests와 두 backend build
+- [x] 두 production image runtime audit vulnerability 0
+- [x] `make` bootstrap/quality/unit/integration/concurrency/mobile/backend/infra/seed/reset/smoke/verify/acceptance 진입점 구현·검증
+- [x] `GAP-0007` RESOLVED; iOS/physical-device와 Milestone 6A/6B 항목만 별도 유지
+
 ## DEV-0006 통합 검증
 
 - [x] `npm ci` 통합 lockfile 재현
@@ -188,12 +200,11 @@
 - `ISSUE-0003`: Drizzle Kit build-time dependency의 moderate advisory 4건
 - `GAP-0002`: iOS Development Build runtime 검증
 - `GAP-0003`: 실제 기기 biometric/background App Lock 검증
-- `GAP-0007`: 실제 전체 서비스 E2E와 fresh-clone 인수 명령 미완료
 
 통합 `npm audit` 결과는 moderate 18, high 0, critical 0이다. 두 production backend image의 runtime workspace audit은 0이다.
 
 ## 다음 작업
 
-1. `DEV-0011`: local full-stack E2E와 fresh-clone 인수
-2. 단계 10 Milestone 6A local hardening 진행
+1. `BE-0012`: settlement transaction outbox와 idempotent local publisher
+2. 단계 10의 KMS/security/관측성/performance/문서 vertical slice를 순서대로 진행
 3. 단계 10 완료 결과를 commit/push하고 Milestone 6B 원격 단계 전에 STOP

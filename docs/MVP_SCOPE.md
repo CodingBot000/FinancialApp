@@ -136,3 +136,5 @@
 - 합성 데이터 경계와 disclaimer 표시
 - secret과 실제 개인정보가 저장소에 없음
 - `IMPLEMENTATION_STATUS.md`가 실제 결과와 일치
+
+DEV-0011에서 `make acceptance-test`로 빈 local Compose volume부터 위 12단계를 재현했다. 결과는 PKCE/`/me`/refresh/logout, raw 3건·processed 3건, 계좌/transaction/history, 13-point persisted simulation, FILLED/REJECTED/UNKNOWN→FILLED, 동일 key replay 단일 주문, execution 2건·audit 10건과 production image runtime audit 0을 포함했다. 자동 인수가 대체하지 않는 iOS·물리 biometric 검증은 별도 gap으로 남겨두었다.

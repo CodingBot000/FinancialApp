@@ -122,26 +122,28 @@ async function createOrder(accountId, instrumentId, expectedStatus) {
     201,
   );
   const expectedHttp = expectedStatus === 'UNKNOWN' ? 202 : 201;
+  const idempotencyKey = randomUUID();
+  const payload = {
+    quoteId: quote.quoteId,
+    accountId,
+    instrumentId,
+    side: 'BUY',
+    quantity: '1.00000000',
+  };
   const order = await request(
     '/api/v1/orders',
     {
       method: 'POST',
       headers: {
-        'idempotency-key': randomUUID(),
+        'idempotency-key': idempotencyKey,
       },
-      body: JSON.stringify({
-        quoteId: quote.quoteId,
-        accountId,
-        instrumentId,
-        side: 'BUY',
-        quantity: '1.00000000',
-      }),
+      body: JSON.stringify(payload),
     },
     expectedHttp,
   );
   if (order.status !== expectedStatus)
     throw new Error(`Expected ${expectedStatus}`);
-  return order;
+  return { idempotencyKey, order, payload };
 }
 
 try {
@@ -231,30 +233,73 @@ try {
   )
     throw new Error('Synced resources missing.');
   const database = await import('pg');
-  const pool = new database.Pool({
-    connectionString: platformDatabaseUrl,
-  });
-  const instruments = await pool.query(
-    'SELECT instrument_id FROM finapp_wealth.finapp_holding WHERE id = $1',
-    [holdingId],
-  );
-  await pool.end();
-  const instrumentId = instruments.rows[0]?.instrument_id;
+  const instrumentId = holdings.items[0]?.instrumentId;
   if (!instrumentId) throw new Error('Instrument missing.');
 
   await setScenario('NORMAL');
-  await createOrder(accountId, instrumentId, 'FILLED');
+  const normal = await createOrder(accountId, instrumentId, 'FILLED');
+  const replay = await request(
+    '/api/v1/orders',
+    {
+      method: 'POST',
+      headers: { 'idempotency-key': normal.idempotencyKey },
+      body: JSON.stringify(normal.payload),
+    },
+    200,
+  );
+  if (replay.orderId !== normal.order.orderId) {
+    throw new Error('Idempotency replay created another order.');
+  }
   await setScenario('ORDER_REJECT');
-  await createOrder(accountId, instrumentId, 'REJECTED');
+  const rejected = await createOrder(accountId, instrumentId, 'REJECTED');
   await setScenario('ORDER_UNKNOWN_THEN_FILLED');
   const unknown = await createOrder(accountId, instrumentId, 'UNKNOWN');
   const reconciled = await waitFor(async () => {
-    const current = await request(`/api/v1/orders/${unknown.orderId}`);
+    const current = await request(`/api/v1/orders/${unknown.order.orderId}`);
     return current.status === 'FILLED' ? current : undefined;
   });
+  const pool = new database.Pool({
+    connectionString: platformDatabaseUrl,
+  });
+  let persistence;
+  try {
+    persistence = await pool.query(
+      `SELECT
+      (SELECT count(*) FROM finapp_mydata.finapp_raw_record)::int AS raw_records,
+      (SELECT count(*) FROM finapp_mydata.finapp_raw_processing_result WHERE status = 'PROCESSED')::int AS processed_records,
+      (SELECT count(*) FROM finapp_trading.finapp_trade_order WHERE id = $1)::int AS normal_orders,
+      (SELECT count(*) FROM finapp_trading.finapp_order_execution WHERE order_id IN ($1, $2))::int AS executions,
+      (SELECT count(*) FROM finapp_trading.finapp_cash_ledger_entry WHERE order_id IN ($1, $2, $3))::int AS ledger_entries,
+      (SELECT count(*) FROM finapp_trading.finapp_position WHERE account_id = $4)::int AS positions,
+      (SELECT count(*) FROM finapp_audit.finapp_audit_event WHERE resource_id IN ($1, $2, $3))::int AS audit_events`,
+      [
+        normal.order.orderId,
+        unknown.order.orderId,
+        rejected.order.orderId,
+        accountId,
+      ],
+    );
+  } finally {
+    await pool.end();
+  }
+  const evidence = persistence.rows[0];
+  if (
+    !evidence ||
+    evidence.raw_records < 1 ||
+    evidence.processed_records < 1 ||
+    evidence.normal_orders !== 1 ||
+    evidence.executions < 2 ||
+    evidence.ledger_entries < 3 ||
+    evidence.positions < 1 ||
+    evidence.audit_events < 3
+  ) {
+    throw new Error(
+      `Persistence evidence missing: ${JSON.stringify(evidence)}`,
+    );
+  }
   await request('/api/v1/dev/dataset/reset', { method: 'POST' }, 200);
   process.stdout.write(
-    `${JSON.stringify({ accounts: accounts.items.length, historyPoints: history.points.length, normal: 'FILLED', rejected: 'REJECTED', reconciled: reconciled.status, simulationPoints: persistedSimulation.series.length, syntheticData: true, transactions: transactions.items.length })}\n`,
+    `${JSON.stringify({ acceptanceSteps: 12, accounts: accounts.items.length, auditEvents: evidence.audit_events, executions: evidence.executions, historyPoints: history.points.length, idempotentReplay: true, normal: normal.order.status, processedRecords: evidence.processed_records, rawRecords: evidence.raw_records, rejected: rejected.order.status, reconciled: reconciled.status, simulationPoints: persistedSimulation.series.length, syntheticData: true, transactions: transactions.items.length })}\n`,
   );
 } finally {
   platform.kill('SIGTERM');

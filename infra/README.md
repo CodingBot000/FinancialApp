@@ -7,10 +7,11 @@ Keycloak 26.7.3, platform-api와 institution-simulator를 별도 컨테이너로
 
 ```bash
 cp infra/docker/.env.example infra/docker/.env
-docker compose --env-file infra/docker/.env -f infra/docker/compose.yaml up -d --build
-docker compose --env-file infra/docker/.env -f infra/docker/compose.yaml --profile tools run --rm platform-migrate
-docker compose --env-file infra/docker/.env -f infra/docker/compose.yaml --profile tools run --rm simulator-migrate
+make infra-up
+make smoke-test
 ```
+
+`make infra-up`은 두 local image build, PostgreSQL/Keycloak 기동, platform/simulator forward migration, deterministic seed와 API 기동을 순서대로 실행한다. `make infra-down`은 volume을 보존하고 정지한다. 완전히 빈 환경의 재현은 root README의 `make acceptance-test`를 사용하며, 이 명령만 local `finapp_postgres_data` volume을 삭제한다.
 
 로컬 스택의 database bootstrap은 다음 경계를 만든다.
 

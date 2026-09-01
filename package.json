@@ -28,11 +28,16 @@
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "oidc:local:user": "node scripts/provision-local-oidc-user.mjs",
+    "accept:local-mvp": "node scripts/accept-local-mvp.mjs",
+    "accept:local-mvp:clean": "node scripts/accept-local-mvp.mjs --clean",
+    "reset:local-demo": "node scripts/reset-local-simulator.mjs",
     "security:secrets": "node scripts/check-secrets.mjs",
     "smoke:local-order": "node scripts/smoke-local-order-flow.mjs",
+    "smoke:local-mvp": "node scripts/smoke-local-mvp.mjs",
     "smoke:local-oidc": "node scripts/smoke-local-oidc.mjs",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "wait:local-infra": "node scripts/wait-local-services.mjs",
     "verify": "npm run format:check && npm run contract:check && npm run dependency:check -w @finapp/mobile && npm run security:secrets && npm run architecture:check && npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "devDependencies": {

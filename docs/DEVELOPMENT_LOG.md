@@ -1,8 +1,8 @@
 # 개발 로그
 
 - 기록 방식: append-only
-- 마지막 DEV ID: `DEV-0010`
-- 다음 영역 ID: `BE-0009`
+- 마지막 DEV ID: `DEV-0011`
+- 다음 영역 ID: `BE-0012`
 
 모든 integration/shared commit은 하나의 `DEV-####`와 연결한다. frontend와 backend 영역 commit은 각각 `FE-####`, `BE-####`와 workstream 개발 로그를 사용한다. DEV-0006 이후에는 단일 main에서 작업하되 영역별 ID namespace와 기록은 유지한다. commit subject에도 같은 ID를 넣어 Git history와 문서 기록을 상호 추적할 수 있게 한다.
 
@@ -510,6 +510,43 @@
 ### 다음 작업
 
 - `BE-0009`: simulator 시세·brokerage·scenario·reset/reseed와 platform quote HTTP adapter
+
+## DEV-0011 — Clean Local MVP 12단계 인수
+
+- 날짜: 2026-09-02
+- Milestone: 2~5 local MVP acceptance
+- 상태: COMPLETED
+- 예정 commit: `test(integration): add clean local MVP acceptance [DEV-0011]`
+
+### 완료
+
+- `make acceptance-test`에 clean local volume→`npm ci`→verify→image build→migration→seed 2회→services→OIDC/business smoke→runtime audit 순서를 단일 명령으로 구현
+- Docker context의 unix socket을 감지해 Colima Testcontainers의 host/container socket 경계를 자동 구성하는 root command wrapper 추가
+- `MVP_SCOPE.md` 12단계 smoke에 raw/processing result, normalized wealth/history, persisted simulation, settlement DB 증거와 동일 idempotency key replay 단일 order를 추가
+- Test Strategy의 모든 Make target과 destructive clean acceptance target을 구현하고 fresh-clone 절차/로컬 volume 주의를 README에 문서화
+
+### 검증
+
+- clean `npm ci`: 1,120 packages 설치, 기존 moderate 18/high 0/critical 0; force fix 미사용
+- root verify: contract 31 operations/34 fixtures, mobile 95/simulator 12/platform 61 총 168 tests, 두 backend build
+- clean Compose: platform/simulator migration, deterministic seed 2회, PostgreSQL healthy, Keycloak/platform/simulator health
+- actual OIDC: PKCE S256, callback state, JWT issuer/audience/subject/scope/signature, `/me`, refresh restart, invalid token 401, logout/revocation
+- actual 12-step smoke: raw/processed 3, account/transaction/history, simulation 13 points, normal FILLED, REJECTED, UNKNOWN→FILLED, identical-key replay, executions 2, audit 10
+- 두 production image build와 workspace runtime audit vulnerability 0
+- `make unit-test/integration-test/concurrency-test/mobile-test/backend-test/seed/reset-demo/smoke-test` 개별 진입점 재실행 통과
+- 첫 `infra-down→infra-up→smoke-test` 연속 실행에서 Keycloak startup readiness race로 smoke가 실패해 `ISSUE-0011`로 기록. `infra-up`에 3-service bounded readiness gate를 추가한 뒤 동일 경로 재검증
+
+### 이슈와 누락
+
+- `GAP-0007` RESOLVED
+- `ISSUE-0011` RESOLVED
+- clean install의 moderate 18은 기존 `ISSUE-0002`/`ISSUE-0003`으로 계속 추적하며 production runtime은 0
+- iOS/physical biometric 미검증은 기존 `GAP-0002`/`GAP-0003`으로 유지
+- 실제 개인정보·계좌정보, 원격 DB/credential/migration/deploy는 사용하지 않음
+
+### 다음 작업
+
+- `BE-0012`: settlement transaction outbox와 idempotent publisher
 
 ## 새 기록 Template
 

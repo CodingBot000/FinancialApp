@@ -1,7 +1,7 @@
 # 이슈와 누락 Register
 
 - 마지막 갱신: 2026-09-02
-- 다음 ISSUE ID: `ISSUE-0011`
+- 다음 ISSUE ID: `ISSUE-0012`
 - 다음 GAP ID: `GAP-0009`
 
 이 문서는 defect, blocker, 위험과 불가피한 누락을 삭제하지 않고 추적한다.
@@ -86,20 +86,33 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 
 ### GAP-0007 — Local Full-stack E2E와 Fresh-clone 인수
 
-- 상태: DEFERRED
+- 상태: RESOLVED
 - 심각도: HIGH
 - 최초 발견: 2026-09-02
 - 마지막 갱신: 2026-09-02
 - 발견 DEV: DEV-0007
 - 원래 요구사항: local Keycloak login부터 sync, Dashboard, simulation, BUY settlement, UNKNOWN reconciliation까지 실제 mobile/platform/simulator/PostgreSQL을 연결한 12단계 인수와 fresh-clone 실행 명령
 - 누락/연기 이유: DEV-0006은 service test, clean Compose와 개별 smoke를 검증했지만 mobile 업무 화면과 거래 외부 경계가 아직 없어 전체 흐름을 실행할 수 없었다. Makefile도 현재 기본 formatter/test/build wrapper만 제공한다.
-- 현재 영향: 개별 컴포넌트의 품질은 높지만 포트폴리오의 최종 사용자 흐름과 재현 가능한 신규 환경 설치를 아직 증명하지 못한다.
+- 현재 영향: 없음. 실기기/iOS와 Milestone 6 로컬·원격 하드닝은 별도 gap/범위로 유지한다.
 - 목표 Milestone: 2~5 local MVP / DEV-0011
 - 재확인 조건: clean 환경에서 문서화된 단일 명령 집합으로 migration/seed/service를 기동하고 `MVP_SCOPE.md` 12단계 정상·UNKNOWN 시나리오, 전체 verify와 smoke가 통과
-- 해결 DEV:
-- 검증: DEV-0007에서 mobile feature가 health/login/app-lock에 한정되고 Makefile은 bootstrap/build/contract/format/lint/test/typecheck/verify target만 제공함을 확인했다.
+- 해결 DEV: DEV-0011
+- 검증: clean local volume에서 `make acceptance-test`를 실행해 `npm ci`, root 168 tests/build, migration/seed, actual Keycloak OIDC, raw/processing/wealth/simulation, FILLED/REJECTED/UNKNOWN→FILLED, 동일 key replay와 DB execution/ledger/position/audit 증거, production image audit 0을 통과했다. 최종 JSON은 `acceptance=passed`, `scenarioSteps=12`, `remoteResourcesUsed=false`를 기록했다.
 
 ## Resolved History
+
+### ISSUE-0011 — `make infra-up` readiness race
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 최초 발견: 2026-09-02
+- 마지막 갱신: 2026-09-02
+- 발견 DEV: DEV-0011 개별 Make 진입점 검증
+- 원래 영향 Milestone: 2~5 fresh-clone local smoke
+- 원래 내용: `make infra-up`이 API 컨테이너를 생성한 즉시 반환해 직후 `make smoke-test`의 Keycloak admin token 요청이 startup 중 소켓 종료로 실패했다.
+- 해결 DEV: DEV-0011
+- 해결 내용: platform/simulator health와 Keycloak realm discovery 200을 90초 내 bounded polling하는 `wait:local-infra`를 `infra-up` 완료 gate로 추가했다.
+- 검증: volume을 보존한 `make infra-down && make infra-up && make smoke-test`를 재실행해 readiness JSON 후 actual OIDC와 12단계 smoke가 통과함을 확인했다.
 
 ### ISSUE-0010 — FE-0014 session fixture의 secret scan 오탐
 

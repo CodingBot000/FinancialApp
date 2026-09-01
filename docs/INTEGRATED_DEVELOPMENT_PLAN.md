@@ -7,8 +7,8 @@
 - 활성 branch/worktree: `main` / `/Users/switch/Development/Web/FinancialApp`
 - 현재 실행 종료선: 단계 10 로컬 하드닝 완료 후 STOP
 - 현재 실행 제외: 원격 DB 접속·사전점검·migration/seed와 원격 배포
-- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`, 단계 3 `BE-0010`, 단계 4 `FE-0010`, 단계 5 `FE-0011`, 단계 6 `FE-0012`, FE-0013 진입 보강 `BE-0011`, 단계 7 `FE-0013`, 단계 8 `FE-0014`
-- 다음 작업 ID: `DEV-0011`
+- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`, 단계 3 `BE-0010`, 단계 4 `FE-0010`, 단계 5 `FE-0011`, 단계 6 `FE-0012`, FE-0013 진입 보강 `BE-0011`, 단계 7 `FE-0013`, 단계 8 `FE-0014`, 단계 9 `DEV-0011`
+- 다음 작업 ID: `BE-0012`
 
 ## 1. 목적과 문서 권한
 
@@ -332,6 +332,14 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - Test Strategy가 약속한 실행 가능한 root 명령과 결과가 문서화된다.
 - unresolved 항목은 외부 수동 검증과 Milestone 6 항목뿐이며 `GAP-0007`이 해결된다.
 - `IMPLEMENTATION_STATUS.md`의 Milestone 2~5를 증거와 함께 DONE으로 전환한다.
+
+완료 증거:
+
+- `make acceptance-test`가 local `finapp_postgres_data` volume을 제거한 빈 환경에서 clean `npm ci`, root verify, image build, platform/simulator migration, seed 2회와 Compose 기동을 재현했다.
+- 실제 Keycloak PKCE S256→JWT issuer/audience/scope/서명→`/me`→refresh-only restart→invalid token 401→logout/revocation가 통과했다.
+- 12단계 smoke가 raw/processing, normalized wealth/history, 13-point simulation, FILLED settlement, 동일 idempotency key 200 replay/단일 order, REJECTED, UNKNOWN GET reconciliation FILLED와 execution/ledger/position/audit DB 증거를 확인했다.
+- root mobile 95/simulator 12/platform 61 총 168 tests, 두 backend build, 두 production image runtime audit 0과 모든 문서화된 `make` 진입점이 통과했다.
+- 실제 사용자 데이터·원격 DB·원격 배포는 사용하지 않았다.
 
 ### 단계 10 — Milestone 6 로컬 하드닝
 

@@ -258,9 +258,10 @@ make seed
 make reset-demo
 make smoke-test
 make verify
+make acceptance-test
 ```
 
-`make verify`는 현재 milestone의 모든 자동 품질 게이트를 실행한다. 명령 구현 전까지 `IMPLEMENTATION_STATUS.md`에서 미완료로 유지한다.
+DEV-0011에서 위 명령을 모두 실제 Make target으로 연결했다. `make verify`는 Colima/Docker Desktop의 local socket을 감지해 현재 milestone의 모든 자동 품질 게이트를 실행한다. `make acceptance-test`는 local 합성 Compose volume을 삭제하고 clean install·verify·migration·seed·OIDC·12단계 smoke·runtime audit을 통합 수행하며 원격 자원을 사용하지 않는다.
 
 ## 7. 수동 검증 기록
 
