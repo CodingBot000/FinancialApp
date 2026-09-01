@@ -1,9 +1,9 @@
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
-import { FastifyAdapter } from '@nestjs/platform-fastify';
 import { Test } from '@nestjs/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module.js';
+import { createFastifyAdapter } from '../src/core/http/create-fastify-adapter.js';
 
 describe('platform health', () => {
   let app: NestFastifyApplication;
@@ -14,7 +14,7 @@ describe('platform health', () => {
     }).compile();
 
     app = moduleRef.createNestApplication<NestFastifyApplication>(
-      new FastifyAdapter(),
+      createFastifyAdapter(),
     );
     await app.init();
     await app.getHttpAdapter().getInstance().ready();
@@ -25,12 +25,21 @@ describe('platform health', () => {
   });
 
   it('matches the canonical health contract', async () => {
-    const response = await app.getHttpAdapter().getInstance().inject({
-      method: 'GET',
-      url: '/api/v1/health',
-    });
+    const response = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: {
+          'x-correlation-id': 'mobile-correlation-1',
+          'x-request-id': 'mobile-request-1',
+        },
+        method: 'GET',
+        url: '/api/v1/health',
+      });
 
     expect(response.statusCode).toBe(200);
+    expect(response.headers['x-request-id']).toBe('mobile-request-1');
+    expect(response.headers['x-correlation-id']).toBe('mobile-correlation-1');
     expect(response.json()).toEqual({
       datasetVersion: 'baseline-v1',
       service: 'platform-api',

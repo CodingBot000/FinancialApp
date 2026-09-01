@@ -1,15 +1,15 @@
 import 'reflect-metadata';
 
-import { FastifyAdapter } from '@nestjs/platform-fastify';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { NestFactory } from '@nestjs/core';
 
 import { AppModule } from './app.module.js';
+import { createFastifyAdapter } from './core/http/create-fastify-adapter.js';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter(),
+    createFastifyAdapter(),
   );
   const port = Number.parseInt(
     process.env.PLATFORM_API_PORT ?? process.env.PORT ?? '8080',

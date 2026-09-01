@@ -1,0 +1,25 @@
+{
+  "realm": "finapp",
+  "displayName": "Wealth Sandbox Local",
+  "enabled": true,
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "sslRequired": "external",
+  "clients": [
+    {
+      "clientId": "finapp-mobile",
+      "name": "Wealth Sandbox Mobile",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["finapp://auth/*"],
+      "webOrigins": ["+"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ]
+}

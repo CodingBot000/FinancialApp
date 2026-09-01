@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788271201000,
+      "tag": "0000_finapp_simulator_baseline",
+      "breakpoints": true
+    }
+  ]
+}

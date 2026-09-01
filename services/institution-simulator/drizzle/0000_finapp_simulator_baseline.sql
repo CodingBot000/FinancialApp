@@ -1,0 +1,2 @@
+CREATE SCHEMA IF NOT EXISTS "finapp_meta";
+CREATE SCHEMA IF NOT EXISTS "finapp_simulator";

@@ -1,9 +1,9 @@
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
-import { FastifyAdapter } from '@nestjs/platform-fastify';
 import { Test } from '@nestjs/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module.js';
+import { createFastifyAdapter } from '../src/core/http/create-fastify-adapter.js';
 
 describe('institution simulator health', () => {
   let app: NestFastifyApplication;
@@ -14,7 +14,7 @@ describe('institution simulator health', () => {
     }).compile();
 
     app = moduleRef.createNestApplication<NestFastifyApplication>(
-      new FastifyAdapter(),
+      createFastifyAdapter(),
     );
     await app.init();
     await app.getHttpAdapter().getInstance().ready();
@@ -25,12 +25,21 @@ describe('institution simulator health', () => {
   });
 
   it('matches the internal simulator health contract', async () => {
-    const response = await app.getHttpAdapter().getInstance().inject({
-      method: 'GET',
-      url: '/sim/v1/health',
-    });
+    const response = await app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        headers: {
+          'x-correlation-id': 'platform-correlation-1',
+          'x-request-id': 'platform-request-1',
+        },
+        method: 'GET',
+        url: '/sim/v1/health',
+      });
 
     expect(response.statusCode).toBe(200);
+    expect(response.headers['x-request-id']).toBe('platform-request-1');
+    expect(response.headers['x-correlation-id']).toBe('platform-correlation-1');
     expect(response.json()).toEqual({
       datasetVersion: 'baseline-v1',
       service: 'institution-simulator',

@@ -1,0 +1,8 @@
+CREATE SCHEMA IF NOT EXISTS "finapp_meta";
+CREATE SCHEMA IF NOT EXISTS "finapp_identity";
+CREATE SCHEMA IF NOT EXISTS "finapp_mydata";
+CREATE SCHEMA IF NOT EXISTS "finapp_wealth";
+CREATE SCHEMA IF NOT EXISTS "finapp_simulation";
+CREATE SCHEMA IF NOT EXISTS "finapp_trading";
+CREATE SCHEMA IF NOT EXISTS "finapp_audit";
+CREATE SCHEMA IF NOT EXISTS "finapp_crypto";
