@@ -1,0 +1,355 @@
+version: 1
+contracts:
+  platform-v1:
+    operations:
+      getPlatformHealth:
+        { method: GET, path: /api/v1/health, statuses: [200, 429] }
+      getCurrentUser:
+        { method: GET, path: /api/v1/me, statuses: [200, 401, 403] }
+      createMyDataConnection:
+        {
+          method: POST,
+          path: /api/v1/mydata/connections,
+          statuses: [201, 400, 401, 403, 409],
+        }
+      listMyDataConnections:
+        {
+          method: GET,
+          path: /api/v1/mydata/connections,
+          statuses: [200, 401, 403],
+        }
+      createMyDataSync:
+        {
+          method: POST,
+          path: /api/v1/mydata/syncs,
+          statuses: [200, 202, 400, 401, 403, 404],
+        }
+      getMyDataSync:
+        {
+          method: GET,
+          path: '/api/v1/mydata/syncs/{syncId}',
+          statuses: [200, 401, 403, 404],
+        }
+      getAssetSummary:
+        { method: GET, path: /api/v1/assets/summary, statuses: [200, 401, 403] }
+      listAccounts:
+        { method: GET, path: /api/v1/accounts, statuses: [200, 401, 403] }
+      getAccount:
+        {
+          method: GET,
+          path: '/api/v1/accounts/{accountId}',
+          statuses: [200, 401, 403, 404],
+        }
+      listHoldings:
+        { method: GET, path: /api/v1/holdings, statuses: [200, 401, 403] }
+      listTransactions:
+        { method: GET, path: /api/v1/transactions, statuses: [200, 401, 403] }
+      getAssetHistory:
+        {
+          method: GET,
+          path: /api/v1/assets/history,
+          statuses: [200, 400, 401, 403],
+        }
+      createSimulation:
+        {
+          method: POST,
+          path: /api/v1/simulations,
+          statuses: [201, 400, 401, 403],
+        }
+      getSimulation:
+        {
+          method: GET,
+          path: '/api/v1/simulations/{simulationId}',
+          statuses: [200, 401, 403, 404],
+        }
+      previewBuyOrder:
+        {
+          method: POST,
+          path: /api/v1/orders/preview,
+          statuses: [201, 400, 401, 403, 404],
+        }
+      prepareBuyOrder:
+        {
+          method: POST,
+          path: /api/v1/orders,
+          statuses: [200, 202, 400, 401, 403, 404, 409],
+        }
+    schemas:
+      CreateConnectionRequest:
+        { type: object, properties: [consentExpiresAt, institutionCode] }
+      Connection:
+        {
+          type: object,
+          properties:
+            [
+              connectionId,
+              consentExpiresAt,
+              institutionCode,
+              lastSuccessfulSyncAt,
+              status,
+            ],
+        }
+      CreateSyncRequest: { type: object, properties: [connectionId] }
+      Sync:
+        {
+          type: object,
+          properties:
+            [
+              completedAt,
+              connectionId,
+              counts,
+              createdAt,
+              errorCode,
+              startedAt,
+              status,
+              syncId,
+            ],
+        }
+      SyncCounts:
+        {
+          type: object,
+          properties: [accounts, holdings, rawRecords, transactions],
+        }
+      Money: { type: string }
+      AssetSummary:
+        {
+          type: object,
+          properties:
+            [
+              allocation,
+              asOfDate,
+              cash,
+              change,
+              currency,
+              investments,
+              lastSyncedAt,
+              totalAssets,
+            ],
+        }
+      Allocation: { type: object, properties: [amount, assetClass, weight] }
+      Account:
+        {
+          type: object,
+          properties:
+            [
+              accountId,
+              accountType,
+              cashBalance,
+              currency,
+              institutionCode,
+              maskedAccountNumber,
+              status,
+            ],
+        }
+      AccountPage: { type: object, properties: [items, nextCursor] }
+      Holding:
+        {
+          type: object,
+          properties:
+            [
+              accountId,
+              asOfAt,
+              assetClass,
+              averagePrice,
+              displayName,
+              holdingId,
+              instrumentCode,
+              marketValue,
+              quantity,
+            ],
+        }
+      HoldingPage: { type: object, properties: [items, nextCursor] }
+      Transaction:
+        {
+          type: object,
+          properties:
+            [
+              accountId,
+              amount,
+              currency,
+              occurredAt,
+              transactionId,
+              transactionType,
+            ],
+        }
+      TransactionPage: { type: object, properties: [items, nextCursor] }
+      AssetHistory: { type: object, properties: [points] }
+      CreateSimulationRequest:
+        {
+          type: object,
+          properties:
+            [
+              allocation,
+              durationMonths,
+              initialAssets,
+              monthlyContribution,
+              targetAmount,
+            ],
+        }
+      NonNegativeMoneyInput: { type: string }
+      Simulation:
+        {
+          type: object,
+          properties:
+            [
+              assumptionSetVersion,
+              currency,
+              disclaimer,
+              engineVersion,
+              finalValue,
+              goalProbability,
+              series,
+              simulationId,
+            ],
+        }
+      SimulationPercentiles: { type: object, properties: [p10, p50, p90] }
+      SimulationPoint: { type: object, properties: [month, p10, p50, p90] }
+      CreateQuoteRequest:
+        { type: object, properties: [accountId, instrumentId, quantity, side] }
+      Quote:
+        {
+          type: object,
+          properties:
+            [
+              currency,
+              estimatedAmount,
+              expiresAt,
+              fee,
+              quantity,
+              quoteId,
+              side,
+              syntheticQuote,
+              unitPrice,
+            ],
+        }
+      CreateOrderRequest:
+        {
+          type: object,
+          properties: [accountId, instrumentId, quantity, quoteId, side],
+        }
+      Order:
+        {
+          type: object,
+          properties:
+            [
+              createdAt,
+              estimatedAmount,
+              filledAmount,
+              orderId,
+              quantity,
+              side,
+              status,
+              statusRefreshRecommendedAfterMs,
+              updatedAt,
+            ],
+        }
+      MeResponse:
+        {
+          type: object,
+          properties:
+            [datasetVersion, displayName, riskProfile, syntheticData, userId],
+        }
+      ProblemDetails:
+        {
+          type: object,
+          properties:
+            [
+              code,
+              detail,
+              fieldErrors,
+              retryable,
+              status,
+              title,
+              traceId,
+              type,
+            ],
+        }
+      HealthResponse:
+        { type: object, properties: [datasetVersion, service, status] }
+  institution-simulator-v1:
+    operations:
+      getInstitutionSimulatorHealth:
+        { method: GET, path: /sim/v1/health, statuses: [200, 429] }
+      getSimulatorAccounts:
+        {
+          method: GET,
+          path: '/sim/v1/mydata/customers/{externalCustomerId}/accounts',
+          statuses: [200, 429],
+        }
+      getSimulatorHoldings:
+        {
+          method: GET,
+          path: '/sim/v1/mydata/customers/{externalCustomerId}/holdings',
+          statuses: [200, 429],
+        }
+      getSimulatorTransactions:
+        {
+          method: GET,
+          path: '/sim/v1/mydata/customers/{externalCustomerId}/transactions',
+          statuses: [200, 429],
+        }
+    schemas:
+      ProblemDetails:
+        {
+          type: object,
+          properties:
+            [
+              code,
+              detail,
+              fieldErrors,
+              retryable,
+              status,
+              title,
+              traceId,
+              type,
+            ],
+        }
+      AccountPage:
+        { type: object, properties: [items, nextCursor, schemaVersion] }
+      HoldingPage:
+        { type: object, properties: [items, nextCursor, schemaVersion] }
+      TransactionPage:
+        { type: object, properties: [items, nextCursor, schemaVersion] }
+      SimulatorAccount:
+        {
+          type: object,
+          properties:
+            [
+              accountType,
+              cashBalance,
+              currency,
+              externalAccountId,
+              maskedAccountNumber,
+              status,
+            ],
+        }
+      SimulatorHolding:
+        {
+          type: object,
+          properties:
+            [
+              asOfAt,
+              assetClass,
+              averagePrice,
+              displayName,
+              externalAccountId,
+              externalHoldingId,
+              instrumentCode,
+              quantity,
+            ],
+        }
+      SimulatorTransaction:
+        {
+          type: object,
+          properties:
+            [
+              amount,
+              currency,
+              externalAccountId,
+              externalTransactionId,
+              occurredAt,
+              transactionType,
+            ],
+        }
+      HealthResponse:
+        { type: object, properties: [datasetVersion, service, status] }

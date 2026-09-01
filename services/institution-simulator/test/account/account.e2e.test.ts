@@ -2,6 +2,10 @@ import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { Test } from '@nestjs/testing';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
+import {
+  createOpenApiResponseValidator,
+  type OpenApiResponseValidator,
+} from '../../../../contracts/testing/openapi-response-validator.mjs';
 import { AppModule } from '../../src/app.module.js';
 import { createFastifyAdapter } from '../../src/core/http/create-fastify-adapter.js';
 import { AccountRepository } from '../../src/modules/account/account.repository.js';
@@ -42,8 +46,15 @@ describe('simulator MyData account API', () => {
     ]),
   };
   let app: NestFastifyApplication;
+  let contract: OpenApiResponseValidator;
 
   beforeAll(async () => {
+    contract = await createOpenApiResponseValidator(
+      new URL(
+        '../../../../contracts/openapi/institution-simulator-v1.yaml',
+        import.meta.url,
+      ),
+    );
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(AccountRepository)
       .useValue(repository)
@@ -71,6 +82,12 @@ describe('simulator MyData account API', () => {
         });
 
       expect(response.statusCode).toBe(200);
+      const operationIds: Record<string, string> = {
+        accounts: 'getSimulatorAccounts',
+        holdings: 'getSimulatorHoldings',
+        transactions: 'getSimulatorTransactions',
+      };
+      contract.validate(operationIds[resource] ?? '', 200, response.json());
       expect(response.json()).toMatchObject({
         schemaVersion: 'simulator-v1',
         nextCursor: null,

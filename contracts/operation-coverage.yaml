@@ -1,0 +1,194 @@
+version: 1
+fixtureRegistry: contracts/fixtures/operation-responses.json
+contracts:
+  platform-v1:
+    openapi: contracts/openapi/platform-v1.yaml
+    controllerRoots: [services/platform-api/src]
+    operations:
+      getPlatformHealth:
+        implementation:
+          [
+            services/platform-api/src/modules/health/health.controller.ts,
+            getHealth,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-0001,
+          }
+      getCurrentUser:
+        implementation:
+          [
+            services/platform-api/src/modules/identity/api/me.controller.ts,
+            getMe,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0010 }
+      createMyDataConnection:
+        implementation:
+          [
+            services/platform-api/src/modules/mydata/api/mydata.controller.ts,
+            createConnection,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0011 }
+      listMyDataConnections:
+        implementation:
+          [
+            services/platform-api/src/modules/mydata/api/mydata.controller.ts,
+            listConnections,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0011 }
+      createMyDataSync:
+        implementation:
+          [
+            services/platform-api/src/modules/mydata/api/mydata.controller.ts,
+            createSync,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0011 }
+      getMyDataSync:
+        implementation:
+          [
+            services/platform-api/src/modules/mydata/api/mydata.controller.ts,
+            getSync,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0011 }
+      getAssetSummary:
+        implementation:
+          [
+            services/platform-api/src/modules/wealth/api/wealth.controller.ts,
+            summary,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0011 }
+      listAccounts:
+        implementation:
+          [
+            services/platform-api/src/modules/wealth/api/wealth.controller.ts,
+            accounts,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0011 }
+      getAccount:
+        implementation:
+          [
+            services/platform-api/src/modules/wealth/api/wealth.controller.ts,
+            account,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0011 }
+      listHoldings:
+        implementation:
+          [
+            services/platform-api/src/modules/wealth/api/wealth.controller.ts,
+            holdings,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0011 }
+      listTransactions:
+        implementation:
+          [
+            services/platform-api/src/modules/wealth/api/wealth.controller.ts,
+            transactions,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0011 }
+      getAssetHistory:
+        implementation:
+          [
+            services/platform-api/src/modules/wealth/api/wealth.controller.ts,
+            history,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0011 }
+      createSimulation:
+        implementation:
+          [
+            services/platform-api/src/modules/simulation/api/simulation.controller.ts,
+            create,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0012 }
+      getSimulation:
+        implementation:
+          [
+            services/platform-api/src/modules/simulation/api/simulation.controller.ts,
+            get,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0012 }
+      previewBuyOrder:
+        implementation:
+          [
+            services/platform-api/src/modules/trading/api/trading.controller.ts,
+            preview,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0013 }
+      prepareBuyOrder:
+        implementation:
+          [
+            services/platform-api/src/modules/trading/api/trading.controller.ts,
+            prepareOrder,
+          ]
+        providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
+        consumer: { status: planned, target: FE-0013 }
+  institution-simulator-v1:
+    openapi: contracts/openapi/institution-simulator-v1.yaml
+    controllerRoots: [services/institution-simulator/src]
+    operations:
+      getInstitutionSimulatorHealth:
+        implementation:
+          [
+            services/institution-simulator/src/modules/health/health.controller.ts,
+            getHealth,
+          ]
+        providerTests: [services/institution-simulator/test/health.e2e.test.ts]
+        consumer: { status: not-applicable, target: internal-smoke }
+      getSimulatorAccounts:
+        implementation:
+          [
+            services/institution-simulator/src/modules/account/account.controller.ts,
+            accounts,
+          ]
+        providerTests:
+          [services/institution-simulator/test/account/account.e2e.test.ts]
+        consumer:
+          {
+            status: implemented,
+            adapter: services/platform-api/src/modules/mydata/infrastructure/http/simulator-institution.adapter.ts,
+            target: BE-0004,
+          }
+      getSimulatorHoldings:
+        implementation:
+          [
+            services/institution-simulator/src/modules/account/account.controller.ts,
+            holdings,
+          ]
+        providerTests:
+          [services/institution-simulator/test/account/account.e2e.test.ts]
+        consumer:
+          {
+            status: implemented,
+            adapter: services/platform-api/src/modules/mydata/infrastructure/http/simulator-institution.adapter.ts,
+            target: BE-0004,
+          }
+      getSimulatorTransactions:
+        implementation:
+          [
+            services/institution-simulator/src/modules/account/account.controller.ts,
+            transactions,
+          ]
+        providerTests:
+          [services/institution-simulator/test/account/account.e2e.test.ts]
+        consumer:
+          {
+            status: implemented,
+            adapter: services/platform-api/src/modules/mydata/infrastructure/http/simulator-institution.adapter.ts,
+            target: BE-0004,
+          }

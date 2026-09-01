@@ -5,6 +5,10 @@ import { Test } from '@nestjs/testing';
 import { exportJWK, generateKeyPair, SignJWT, type CryptoKey } from 'jose';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
+import {
+  createOpenApiResponseValidator,
+  type OpenApiResponseValidator,
+} from '../../../../contracts/testing/openapi-response-validator.mjs';
 import { AppModule } from '../../src/app.module.js';
 import { createFastifyAdapter } from '../../src/core/http/create-fastify-adapter.js';
 import { IDENTITY_REPOSITORY } from '../../src/modules/identity/application/ports/identity-repository.port.js';
@@ -34,8 +38,29 @@ describe('GET /api/v1/me OIDC boundary', () => {
       lastSuccessfulSyncAt: null,
     }),
     listConnections: vi.fn().mockResolvedValue([]),
-    createSync: vi.fn(),
-    getSync: vi.fn(),
+    createSync: vi.fn().mockResolvedValue({
+      created: true,
+      sync: {
+        syncId: '4467ac44-cf36-449a-b9f9-2b29924a6212',
+        connectionId: '44fc3d1c-cd8f-46ba-833f-96dac39dddfd',
+        status: 'QUEUED',
+        createdAt: '2026-09-01T10:00:00.000Z',
+        startedAt: null,
+        completedAt: null,
+        counts: { rawRecords: 0, accounts: 0, holdings: 0, transactions: 0 },
+        errorCode: null,
+      },
+    }),
+    getSync: vi.fn().mockResolvedValue({
+      syncId: '4467ac44-cf36-449a-b9f9-2b29924a6212',
+      connectionId: '44fc3d1c-cd8f-46ba-833f-96dac39dddfd',
+      status: 'COMPLETED',
+      createdAt: '2026-09-01T10:00:00.000Z',
+      startedAt: '2026-09-01T10:00:01.000Z',
+      completedAt: '2026-09-01T10:00:02.000Z',
+      counts: { rawRecords: 3, accounts: 1, holdings: 1, transactions: 1 },
+      errorCode: null,
+    }),
     beginSync: vi.fn(),
     completeSync: vi.fn(),
     failSync: vi.fn(),
@@ -59,11 +84,57 @@ describe('GET /api/v1/me OIDC boundary', () => {
       allocation: [],
       lastSyncedAt: '2026-09-01T10:00:02.000Z',
     }),
-    accounts: vi.fn(),
-    account: vi.fn(),
-    holdings: vi.fn(),
-    transactions: vi.fn(),
-    history: vi.fn(),
+    accounts: vi.fn().mockResolvedValue([
+      {
+        accountId: '688c601b-ab70-4683-9dd4-6a1174550653',
+        institutionCode: 'SYNTH_WEALTH_001',
+        maskedAccountNumber: '***-**-0001',
+        accountType: 'BROKERAGE',
+        currency: 'KRW',
+        status: 'ACTIVE',
+        cashBalance: '15400000.0000',
+      },
+    ]),
+    account: vi.fn().mockResolvedValue({
+      accountId: '688c601b-ab70-4683-9dd4-6a1174550653',
+      institutionCode: 'SYNTH_WEALTH_001',
+      maskedAccountNumber: '***-**-0001',
+      accountType: 'BROKERAGE',
+      currency: 'KRW',
+      status: 'ACTIVE',
+      cashBalance: '15400000.0000',
+    }),
+    holdings: vi.fn().mockResolvedValue([
+      {
+        holdingId: '788c601b-ab70-4683-9dd4-6a1174550653',
+        accountId: '688c601b-ab70-4683-9dd4-6a1174550653',
+        instrumentCode: 'SYNTH-EQUITY-001',
+        displayName: 'Synthetic Equity Fund',
+        assetClass: 'EQUITY',
+        quantity: '1360.00000000',
+        averagePrice: '125000.0000',
+        marketValue: '170000000.0000',
+        asOfAt: '2026-09-01T10:00:02.000Z',
+      },
+    ]),
+    transactions: vi.fn().mockResolvedValue([
+      {
+        transactionId: '888c601b-ab70-4683-9dd4-6a1174550653',
+        accountId: '688c601b-ab70-4683-9dd4-6a1174550653',
+        transactionType: 'DEPOSIT',
+        amount: '15400000.0000',
+        currency: 'KRW',
+        occurredAt: '2026-09-01T09:00:00.000Z',
+      },
+    ]),
+    history: vi.fn().mockResolvedValue([
+      {
+        date: '2026-09-01',
+        totalAssets: '185400000.0000',
+        cash: '15400000.0000',
+        investments: '170000000.0000',
+      },
+    ]),
   };
   const simulationRepository = {
     activeAssumption: vi.fn().mockResolvedValue({
@@ -110,11 +181,44 @@ describe('GET /api/v1/me OIDC boundary', () => {
           p50: '185400000.0000',
           p90: '185400000.0000',
         },
+        {
+          month: 1,
+          p10: '184000000.0000',
+          p50: '187000000.0000',
+          p90: '190000000.0000',
+        },
       ],
       disclaimer:
         'Synthetic financial simulation for technical demonstration only.',
     }),
-    findByUser: vi.fn(),
+    findByUser: vi.fn().mockResolvedValue({
+      simulationId: 'df4ee3a2-df76-454e-9627-57fcafda7f8d',
+      engineVersion: '1.0.0',
+      assumptionSetVersion: 'SYNTHETIC_V1',
+      currency: 'KRW',
+      goalProbability: 0.71,
+      finalValue: {
+        p10: '338200000.0000',
+        p50: '426300000.0000',
+        p90: '548100000.0000',
+      },
+      series: [
+        {
+          month: 0,
+          p10: '185400000.0000',
+          p50: '185400000.0000',
+          p90: '185400000.0000',
+        },
+        {
+          month: 1,
+          p10: '184000000.0000',
+          p50: '187000000.0000',
+          p90: '190000000.0000',
+        },
+      ],
+      disclaimer:
+        'Synthetic financial simulation for technical demonstration only.',
+    }),
   };
   const tradingRepository = {
     createQuote: vi.fn().mockResolvedValue({
@@ -150,8 +254,15 @@ describe('GET /api/v1/me OIDC boundary', () => {
   let issuer: string;
   let privateKey: CryptoKey;
   let jwksServer: Server;
+  let contract: OpenApiResponseValidator;
 
   beforeAll(async () => {
+    contract = await createOpenApiResponseValidator(
+      new URL(
+        '../../../../contracts/openapi/platform-v1.yaml',
+        import.meta.url,
+      ),
+    );
     const keyPair = await generateKeyPair('RS256');
     privateKey = keyPair.privateKey;
     const publicJwk = await exportJWK(keyPair.publicKey);
@@ -250,10 +361,18 @@ describe('GET /api/v1/me OIDC boundary', () => {
       });
   }
 
+  function validateResponse(
+    operationId: string,
+    response: { readonly statusCode: number; json(): unknown },
+  ): void {
+    contract.validate(operationId, response.statusCode, response.json());
+  }
+
   it('rejects a request without a Bearer token', async () => {
     const response = await getMe();
 
     expect(response.statusCode).toBe(401);
+    validateResponse('getCurrentUser', response);
     expect(response.json().code).toBe('AUTH_TOKEN_INVALID');
   });
 
@@ -286,6 +405,7 @@ describe('GET /api/v1/me OIDC boundary', () => {
     );
 
     expect(response.statusCode).toBe(403);
+    validateResponse('getCurrentUser', response);
     expect(response.json().code).toBe('AUTH_SCOPE_MISSING');
   });
 
@@ -293,6 +413,7 @@ describe('GET /api/v1/me OIDC boundary', () => {
     const response = await getMe(await accessToken());
 
     expect(response.statusCode).toBe(200);
+    validateResponse('getCurrentUser', response);
     expect(response.json()).toEqual({
       userId: '4e34157c-f4fa-4f77-aeaf-19ea60ec6806',
       displayName: '테스트 사용자 A',
@@ -321,6 +442,7 @@ describe('GET /api/v1/me OIDC boundary', () => {
       });
 
     expect(response.statusCode).toBe(403);
+    validateResponse('createMyDataConnection', response);
     expect(response.json().code).toBe('AUTH_SCOPE_MISSING');
   });
 
@@ -341,6 +463,7 @@ describe('GET /api/v1/me OIDC boundary', () => {
       });
 
     expect(response.statusCode).toBe(201);
+    validateResponse('createMyDataConnection', response);
     expect(response.body).not.toContain('SYNTH-CUSTOMER-A');
     expect(response.json()).toMatchObject({
       institutionCode: 'SYNTH_WEALTH_001',
@@ -359,6 +482,7 @@ describe('GET /api/v1/me OIDC boundary', () => {
       });
 
     expect(response.statusCode).toBe(200);
+    validateResponse('getAssetSummary', response);
     expect(response.json()).toMatchObject({
       totalAssets: '185400000.0000',
       cash: '15400000.0000',
@@ -401,6 +525,7 @@ describe('GET /api/v1/me OIDC boundary', () => {
         payload,
       });
     expect(response.statusCode).toBe(201);
+    validateResponse('createSimulation', response);
     expect(response.json()).toMatchObject({
       engineVersion: '1.0.0',
       assumptionSetVersion: 'SYNTHETIC_V1',
@@ -438,6 +563,7 @@ describe('GET /api/v1/me OIDC boundary', () => {
         payload,
       });
     expect(response.statusCode).toBe(201);
+    validateResponse('previewBuyOrder', response);
     expect(response.json()).toMatchObject({
       side: 'BUY',
       quantity: '3.00000000',
@@ -467,6 +593,7 @@ describe('GET /api/v1/me OIDC boundary', () => {
         payload,
       });
     expect(missingKey.statusCode).toBe(400);
+    validateResponse('prepareBuyOrder', missingKey);
 
     const response = await app
       .getHttpAdapter()
@@ -481,10 +608,91 @@ describe('GET /api/v1/me OIDC boundary', () => {
         payload,
       });
     expect(response.statusCode).toBe(202);
+    validateResponse('prepareBuyOrder', response);
     expect(response.json()).toMatchObject({
       status: 'PENDING_SUBMISSION',
       quantity: '3.00000000',
       estimatedAmount: '375000.0000',
     });
+  });
+
+  it('keeps every current platform operation backed by a Fastify contract response', async () => {
+    const token = await accessToken({
+      scope: 'financial.read financial.write simulation.execute order.execute',
+    });
+    const headers = { authorization: `Bearer ${token}` };
+    const requests = [
+      {
+        operationId: 'getPlatformHealth',
+        method: 'GET' as const,
+        url: '/api/v1/health',
+      },
+      {
+        operationId: 'listMyDataConnections',
+        method: 'GET' as const,
+        url: '/api/v1/mydata/connections',
+        headers,
+      },
+      {
+        operationId: 'createMyDataSync',
+        expectedStatus: 202,
+        method: 'POST' as const,
+        url: '/api/v1/mydata/syncs',
+        headers,
+        payload: {
+          connectionId: '44fc3d1c-cd8f-46ba-833f-96dac39dddfd',
+        },
+      },
+      {
+        operationId: 'getMyDataSync',
+        method: 'GET' as const,
+        url: '/api/v1/mydata/syncs/4467ac44-cf36-449a-b9f9-2b29924a6212',
+        headers,
+      },
+      {
+        operationId: 'listAccounts',
+        method: 'GET' as const,
+        url: '/api/v1/accounts',
+        headers,
+      },
+      {
+        operationId: 'getAccount',
+        method: 'GET' as const,
+        url: '/api/v1/accounts/688c601b-ab70-4683-9dd4-6a1174550653',
+        headers,
+      },
+      {
+        operationId: 'listHoldings',
+        method: 'GET' as const,
+        url: '/api/v1/holdings',
+        headers,
+      },
+      {
+        operationId: 'listTransactions',
+        method: 'GET' as const,
+        url: '/api/v1/transactions',
+        headers,
+      },
+      {
+        operationId: 'getAssetHistory',
+        method: 'GET' as const,
+        url: '/api/v1/assets/history?range=1Y',
+        headers,
+      },
+      {
+        operationId: 'getSimulation',
+        method: 'GET' as const,
+        url: '/api/v1/simulations/df4ee3a2-df76-454e-9627-57fcafda7f8d',
+        headers,
+      },
+    ];
+
+    for (const request of requests) {
+      const response = await app.getHttpAdapter().getInstance().inject(request);
+      expect(response.statusCode, request.operationId).toBe(
+        'expectedStatus' in request ? request.expectedStatus : 200,
+      );
+      validateResponse(request.operationId, response);
+    }
   });
 });

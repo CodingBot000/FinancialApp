@@ -30,7 +30,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
         '429':
-          description: Too many health requests.
+          $ref: '#/components/responses/TooManyRequests'
   /api/v1/me:
     get:
       operationId: getCurrentUser
@@ -473,6 +473,12 @@ components:
         minLength: 1
         maxLength: 128
   responses:
+    TooManyRequests:
+      description: The caller exceeded the configured request rate.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
     Unauthorized:
       description: Bearer token is missing, expired, or cannot be verified.
       content:

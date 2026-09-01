@@ -105,12 +105,22 @@ HTTP adapter mock은 세부 client unit test에 사용할 수 있지만 이 suit
 ### Frontend contract mock
 
 - frontend mock/API client가 지정된 canonical OpenAPI commit revision을 사용
-- 모든 mock response가 OpenAPI schema validation 통과
+- 모든 현재 operation이 `contracts/operation-coverage.yaml`에서 provider test와 consumer fixture/adapter 상태로 추적됨
+- 모든 operation 성공 fixture와 주요 ProblemDetails가 OpenAPI response schema validation 통과
 - 고정 seed와 `datasetVersion`으로 fixture 재현
 - loading, empty, partial, timeout, 401, 403/404와 5xx 상태 검증
 - money/quantity decimal string과 enum이 실제 계약과 일치
 - mock adapter와 real HTTP adapter가 같은 application API port를 구현
 - backend 준비 후 동일 consumer contract를 실제 API에 실행
+
+### Contract compatibility와 provider trace
+
+- controller의 실제 method/path와 canonical OpenAPI operation을 양방향 대조
+- 각 operation의 controller handler, provider test와 consumer target 누락 시 실패
+- 모든 문서화된 response status에 JSON schema가 없으면 실패
+- 실제 Fastify 성공 응답과 주요 400/401/403 ProblemDetails를 canonical response schema로 검증
+- compatibility baseline의 기존 path/status/schema/property 제거 또는 이동 시 실패
+- root `contract:check`와 CI contracts job은 같은 validator를 실행
 
 ### Mobile E2E
 

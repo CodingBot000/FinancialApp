@@ -1,8 +1,8 @@
 # 개발 로그
 
 - 기록 방식: append-only
-- 마지막 DEV ID: `DEV-0009`
-- 다음 DEV ID: `DEV-0010`
+- 마지막 DEV ID: `DEV-0010`
+- 다음 영역 ID: `BE-0009`
 
 모든 integration/shared commit은 하나의 `DEV-####`와 연결한다. frontend와 backend 영역 commit은 각각 `FE-####`, `BE-####`와 workstream 개발 로그를 사용한다. DEV-0006 이후에는 단일 main에서 작업하되 영역별 ID namespace와 기록은 유지한다. commit subject에도 같은 ID를 넣어 Git history와 문서 기록을 상호 추적할 수 있게 한다.
 
@@ -464,6 +464,52 @@
 
 - `DEV-0010`: canonical OpenAPI 전체 operation의 provider/consumer 계약 추적과 CI gate
 - local 단계 10 완료 후 Milestone 6B 원격 단계 전에 STOP
+
+## DEV-0010 — 전체 Operation 계약 추적과 통합 Gate
+
+- 날짜: 2026-09-02
+- Milestone: 2~5 통합 계약
+- 상태: COMPLETED
+- 예정 commit: `test(integration): enforce full API contract trace [DEV-0010]`
+
+### 완료
+
+- `contracts/operation-coverage.yaml`에 platform 16개와 simulator 4개 operation의 canonical method/path, controller handler, provider test와 consumer adapter/후속 FE 상태를 추적
+- controller source의 NestJS route를 정적으로 수집해 canonical OpenAPI와 양방향 대조하고 미등록/미구현 endpoint를 차단
+- `contracts/fixtures/operation-responses.json`에 모든 현재 operation의 성공 consumer fixture와 주요 platform/simulator ProblemDetails fixture 추가
+- 모든 documented response status가 JSON schema를 갖는지 확인하고 기존 schema가 없던 두 contract의 429 response를 canonical ProblemDetails로 보강
+- 실제 NestJS/Fastify provider E2E에서 platform 16개와 simulator 4개 성공 응답을 response schema에 검증하고 platform 400/401/403 ProblemDetails도 검증
+- `contracts/openapi/compatibility-baseline.yaml`을 추가해 기존 operation path/status와 component schema/property 제거 또는 이동을 CI에서 실패 처리
+- 기존 mobile health fixture 검증을 유지하면서 root `contract:check`와 CI contracts job이 같은 전체 validator를 실행하도록 확장
+- `GAP-0004`를 RESOLVED 처리하고 API/테스트/상태/활성 계획 문서를 현재 gate와 일치시킴
+
+### 변경 파일
+
+- 계약/fixture: `contracts/openapi/**`, `contracts/operation-coverage.yaml`, `contracts/fixtures/**`, `contracts/testing/**`
+- gate: `scripts/validate-contract-fixtures.mjs`
+- provider test: `services/platform-api/test/identity/me.e2e.test.ts`, `services/institution-simulator/test/{health,account/**}`
+- 문서: `INTEGRATED_DEVELOPMENT_PLAN.md`, `API_CONTRACTS.md`, `TEST_STRATEGY.md`, `IMPLEMENTATION_STATUS.md`, `ISSUE_REGISTER.md`, `DEVELOPMENT_LOG.md`
+
+### 검증
+
+- 명령: `npm run contract:check`
+- 결과: OpenAPI 2개 lint, 20개 operation, 23개 fixture, controller/provider/consumer trace와 compatibility baseline 통과
+- 명령: platform/simulator targeted provider test
+- 결과: platform 13 tests, simulator 4 tests 통과; 현재 operation 성공 response와 주요 ProblemDetails schema 검증 포함
+- 명령: platform/simulator strict typecheck와 lint
+- 결과: 공용 ESM validator declaration을 포함해 통과
+- 명령: `npm run verify`
+- 결과: 첫 실행은 local Colima socket 자동 탐지 실패로 Testcontainers 시작 전에 종료됐다. `DOCKER_HOST=unix:///Users/switch/.colima/default/docker.sock`와 `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock`를 명시해 동일 전체 gate를 재실행했고 formatter, 계약, Expo dependency, secret, architecture, lint, strict typecheck, mobile 60/simulator 7/platform 47 총 114 tests와 두 backend build가 모두 통과했다.
+
+### 이슈와 누락
+
+- `GAP-0004`: RESOLVED
+- 신규 issue/gap 없음
+- consumer adapter가 아직 없는 operation은 계획된 `FE-0010`~`FE-0013` target으로 machine-readable하게 유지하며 완료로 가장하지 않음
+
+### 다음 작업
+
+- `BE-0009`: simulator 시세·brokerage·scenario·reset/reseed와 platform quote HTTP adapter
 
 ## 새 기록 Template
 

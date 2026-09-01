@@ -3,8 +3,8 @@
 - 현재 Milestone: 2~5 — 단일 Main 로컬 MVP 통합
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-02
-- 마지막 DEV ID: DEV-0009
-- 다음 DEV ID: DEV-0010
+- 마지막 DEV ID: DEV-0010
+- 다음 작업 ID: BE-0009
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
@@ -40,6 +40,17 @@
 | 5. BUY 주문과 복구 | IN_PROGRESS | quote/idempotency/reservation 완료; simulator brokerage/scenario, settlement/reconciliation/audit와 frontend 주문 화면 남음 |
 | 6A. 로컬 하드닝 | NOT_STARTED | outbox, local KMS adapter 경계, security event/관측성, 최종 포트폴리오 문서 |
 | 6B. 원격 데모 | CURRENT_RUN_EXCLUDED | Lightsail migration, 실제 AWS KMS, HTTPS/EAS와 원격 rollback은 향후 별도 실행 |
+
+## DEV-0010 계약 Gate
+
+- [x] canonical platform 16개/simulator 4개 operation 전체를 machine-readable coverage로 추적
+- [x] controller method/path와 OpenAPI operation 양방향 일치 검사
+- [x] operation별 provider test, 성공 consumer fixture와 adapter 상태 추적
+- [x] 실제 Fastify 20개 성공 응답과 주요 platform ProblemDetails schema 검증
+- [x] 모든 documented response의 JSON schema 존재 검사
+- [x] 기존 operation path/status와 component schema/property 제거 compatibility gate
+- [x] root `contract:check`와 CI contracts job 동일 validator 실행
+- [x] local Colima socket을 명시한 root `npm run verify`: 114 tests와 두 backend build 통과
 
 ## 완료된 통합 기준선
 
@@ -91,7 +102,6 @@
 - `GAP-0001`: live OIDC 로그인→refresh→`/me`와 native restart 검증
 - `GAP-0002`: iOS Development Build runtime 검증
 - `GAP-0003`: 실제 기기 biometric/background App Lock 검증
-- `GAP-0004`: controller–OpenAPI–frontend mock/API 전체 계약 추적 미완료
 - `GAP-0005`: simulator 시세·brokerage·scenario·reset/reseed 미구현
 - `GAP-0006`: 로컬 MVP append-only 최소 audit event 미구현
 - `GAP-0007`: 실제 전체 서비스 E2E와 fresh-clone 인수 명령 미완료
@@ -100,10 +110,9 @@
 
 ## 다음 작업
 
-1. `DEV-0010`: 모든 canonical operation의 provider/consumer 계약 추적과 CI gate
-2. `BE-0009`: simulator 시세·brokerage·scenario·reset/reseed 경계
-3. `BE-0010`: platform external submit, settlement, reconciliation, order 조회와 최소 audit
-4. `FE-0010`: 현재 OpenAPI 기준 live OIDC `/me`와 authenticated adapter 통합
-5. `FE-0011`~`FE-0014`: Dashboard/MyData, simulation, order, Settings/developer scenario
-6. `DEV-0011`: local full-stack E2E와 fresh-clone 인수 후 Milestone 6A local hardening 진행
-7. 단계 10 local hardening 완료 결과를 commit/push하고 Milestone 6B 원격 단계 전에 STOP
+1. `BE-0009`: simulator 시세·brokerage·scenario·reset/reseed 경계
+2. `BE-0010`: platform external submit, settlement, reconciliation, order 조회와 최소 audit
+3. `FE-0010`: 현재 OpenAPI 기준 live OIDC `/me`와 authenticated adapter 통합
+4. `FE-0011`~`FE-0014`: Dashboard/MyData, simulation, order, Settings/developer scenario
+5. `DEV-0011`: local full-stack E2E와 fresh-clone 인수 후 Milestone 6A local hardening 진행
+6. 단계 10 local hardening 완료 결과를 commit/push하고 Milestone 6B 원격 단계 전에 STOP

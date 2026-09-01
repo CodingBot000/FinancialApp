@@ -99,21 +99,6 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 해결 DEV:
 - 검증: frontend `FE-GAP-0004` 참조
 
-### GAP-0004 — Controller·OpenAPI·Consumer 전체 계약 추적
-
-- 상태: DEFERRED
-- 심각도: MEDIUM
-- 최초 발견: 2026-09-02
-- 마지막 갱신: 2026-09-02
-- 발견 DEV: DEV-0007
-- 원래 요구사항: backend controller와 canonical OpenAPI 일치, 모든 frontend mock/API client의 schema 검증, 실제 provider/consumer contract smoke와 하위 호환성 감지
-- 누락/연기 이유: 분리 단계에서 frontend는 health 계약에 고정된 반면 backend가 `/me`, MyData, wealth, simulation과 order 계약을 확장했다. DEV-0006 통합 gate는 OpenAPI lint와 health fixture 1건만 실행해 전체 operation 일치를 증명하지 못했다.
-- 현재 영향: 서비스별 테스트는 통과하지만 수동 OpenAPI, 실제 Fastify 응답과 이후 mobile adapter 사이의 drift를 CI가 모든 endpoint에서 차단하지 못한다.
-- 목표 Milestone: 2~5 통합 전 / DEV-0010
-- 재확인 조건: canonical operation 전체가 provider test와 consumer fixture/adapter 상태로 추적되고 주요 성공/ProblemDetails 응답이 schema 검증을 통과하며 호환되지 않는 계약 제거가 CI에서 실패함
-- 해결 DEV:
-- 검증: `scripts/validate-contract-fixtures.mjs`의 검증 대상이 `HealthResponse` fixture 1개뿐이고 backend source에 Swagger/OpenAPI 생성 또는 전체 route 대조가 없음을 DEV-0007에서 확인했다.
-
 ### GAP-0005 — Simulator 로컬 MVP API와 장애 Scenario
 
 - 상태: DEFERRED
@@ -160,6 +145,21 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 검증: DEV-0007에서 mobile feature가 health/login/app-lock에 한정되고 Makefile은 bootstrap/build/contract/format/lint/test/typecheck/verify target만 제공함을 확인했다.
 
 ## Resolved History
+
+### GAP-0004 — Controller·OpenAPI·Consumer 전체 계약 추적
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 최초 발견: 2026-09-02
+- 마지막 갱신: 2026-09-02
+- 발견 DEV: DEV-0007
+- 원래 요구사항: backend controller와 canonical OpenAPI 일치, 모든 frontend mock/API client의 schema 검증, 실제 provider/consumer contract smoke와 하위 호환성 감지
+- 누락/연기 이유: 분리 단계에서 frontend는 health 계약에 고정된 반면 backend가 `/me`, MyData, wealth, simulation과 order 계약을 확장했다. DEV-0006 통합 gate는 OpenAPI lint와 health fixture 1건만 실행해 전체 operation 일치를 증명하지 못했다.
+- 현재 영향: 없음. 신규 operation이나 controller route가 coverage/provider fixture 없이 추가되거나 기존 path/status/schema/property가 제거되면 `contract:check`가 실패한다.
+- 목표 Milestone: 2~5 통합 전 / DEV-0010
+- 재확인 조건: canonical operation 전체가 provider test와 consumer fixture/adapter 상태로 추적되고 주요 성공/ProblemDetails 응답이 schema 검증을 통과하며 호환되지 않는 계약 제거가 CI에서 실패함
+- 해결 DEV: DEV-0010
+- 검증: `contracts/operation-coverage.yaml`에서 platform 16개와 simulator 4개 operation의 controller/handler, provider test와 consumer 상태를 추적한다. 22개 registry fixture와 기존 mobile health fixture가 response schema를 통과했고 실제 Fastify provider test가 20개 성공 응답과 주요 400/401/403 ProblemDetails를 검증했다. `contract:check`는 controller/OpenAPI 양방향 route, response schema 존재와 compatibility baseline의 path/status/schema/property 제거를 검사한다.
 
 ### ISSUE-0001 — 로컬 Java 21 미준비
 

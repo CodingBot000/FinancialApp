@@ -30,7 +30,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
         '429':
-          description: Too many health requests.
+          $ref: '#/components/responses/TooManyRequests'
   /sim/v1/mydata/customers/{externalCustomerId}/accounts:
     get:
       operationId: getSimulatorAccounts
@@ -47,7 +47,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/AccountPage'
         '429':
-          description: Too many simulator requests.
+          $ref: '#/components/responses/TooManyRequests'
   /sim/v1/mydata/customers/{externalCustomerId}/holdings:
     get:
       operationId: getSimulatorHoldings
@@ -64,7 +64,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HoldingPage'
         '429':
-          description: Too many simulator requests.
+          $ref: '#/components/responses/TooManyRequests'
   /sim/v1/mydata/customers/{externalCustomerId}/transactions:
     get:
       operationId: getSimulatorTransactions
@@ -81,8 +81,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/TransactionPage'
         '429':
-          description: Too many simulator requests.
+          $ref: '#/components/responses/TooManyRequests'
 components:
+  responses:
+    TooManyRequests:
+      description: The internal caller exceeded the configured request rate.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
   parameters:
     ExternalCustomerId:
       name: externalCustomerId
@@ -105,6 +112,29 @@ components:
         minLength: 1
         maxLength: 128
   schemas:
+    ProblemDetails:
+      type: object
+      additionalProperties: false
+      required:
+        [type, title, status, code, detail, traceId, retryable, fieldErrors]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer, minimum: 400, maximum: 599 }
+        code: { type: string }
+        detail: { type: string }
+        traceId: { type: string }
+        retryable: { type: boolean }
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [field, code, message]
+            properties:
+              field: { type: string }
+              code: { type: string }
+              message: { type: string }
     AccountPage:
       type: object
       additionalProperties: false

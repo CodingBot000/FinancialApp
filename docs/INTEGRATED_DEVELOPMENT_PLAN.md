@@ -7,7 +7,8 @@
 - 활성 branch/worktree: `main` / `/Users/switch/Development/Web/FinancialApp`
 - 현재 실행 종료선: 단계 10 로컬 하드닝 완료 후 STOP
 - 현재 실행 제외: 원격 DB 접속·사전점검·migration/seed와 원격 배포
-- 다음 작업 ID: `DEV-0010`, `BE-0009`, `FE-0010`
+- 완료 단계: 단계 1 `DEV-0010`
+- 다음 작업 ID: `BE-0009`, `BE-0010`, `FE-0010`
 
 ## 1. 목적과 문서 권한
 
@@ -46,7 +47,7 @@
 | Milestone 4 | deterministic simulation engine와 저장/조회 | mobile 입력, 결과 차트와 disclaimer | IN_PROGRESS |
 | Milestone 5 | quote, idempotency, row-lock cash reservation | simulator brokerage, settlement, reconciliation, ledger/position/execution/audit, 주문 조회와 mobile 주문 흐름 | IN_PROGRESS |
 | Simulator MVP | 계좌/보유/거래 조회와 deterministic seed | 시세, 주문, status, 장애 scenario, reset/reseed | IN_PROGRESS |
-| Contract 품질 | OpenAPI 2개 lint, health fixture schema validation | 모든 operation의 구현·fixture·consumer 추적과 호환성 감지 | PARTIAL |
+| Contract 품질 | OpenAPI 2개, 현재 operation 20개 controller/provider/fixture/consumer 추적과 호환성 gate | 이후 operation 추가 시 같은 coverage와 provider schema 검증 유지 | DONE (current surface) |
 | Local E2E | 서비스별 test와 수동 Compose smoke | mobile→IdP→platform→simulator→DB 전체 인수 시나리오 | NOT_STARTED |
 | Milestone 6A local | 일부 scheduled sync를 선행 구현 | outbox, local KMS adapter 경계, security event, 관측성 보강과 포트폴리오 문서 | NOT_STARTED |
 | Milestone 6B remote | 없음 | Lightsail DB migration, AWS KMS, HTTPS/EAS와 원격 rollback | CURRENT_RUN_EXCLUDED |
@@ -55,7 +56,7 @@
 
 다음 항목은 새 기능 제안이 아니라 기존 승인 문서의 요구사항을 실제 구현 상태와 대조해 발견한 보강 대상이다.
 
-1. `GAP-0004`: controller, canonical OpenAPI, frontend mock/API adapter의 전체 계약 추적이 없다.
+1. `GAP-0004`: `DEV-0010`에서 controller, canonical OpenAPI, provider test와 consumer fixture/adapter 상태의 전체 추적 및 호환성 gate를 구현해 해결했다.
 2. `GAP-0005`: simulator의 시세·brokerage·장애 scenario·reset/reseed가 없다.
 3. `GAP-0006`: 로컬 MVP가 요구한 append-only 최소 audit event가 없다.
 4. `GAP-0007`: 실제 서비스 전체를 연결한 자동 E2E와 fresh-clone 인수 명령이 없다.
@@ -125,7 +126,7 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - 문서 인덱스, 우선순위, 상태, 결정, issue/gap와 개발 로그가 같은 다음 작업을 가리킨다.
 - 문서 format과 link/path 참조가 유효하다.
 
-### 단계 1 — 계약 추적과 통합 Test Harness (`DEV-0010`)
+### 단계 1 — 계약 추적과 통합 Test Harness (`DEV-0010`, DONE)
 
 목표:
 
@@ -139,6 +140,13 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - health 1건이 아니라 현재 platform/simulator operation 전체의 검증 상태가 machine-readable 또는 테스트로 추적된다.
 - 새 endpoint가 구현·provider test·계약 검증 없이 완료될 수 없다.
 - root `contract:check`와 CI가 동일한 검증을 실행한다.
+
+완료 증거:
+
+- `contracts/operation-coverage.yaml`이 platform 16개와 simulator 4개 operation의 controller/handler, provider test, consumer fixture/adapter 상태를 추적한다.
+- `contracts/fixtures/operation-responses.json`의 operation별 성공 fixture와 주요 ProblemDetails를 실제 OpenAPI response schema로 검증한다.
+- 실제 NestJS/Fastify provider E2E가 현재 20개 operation 성공 응답과 platform의 주요 400/401/403 응답을 canonical schema에 대조한다.
+- `contract:check`가 controller route drift, 누락 operation/provider/fixture, response schema 누락과 compatibility baseline의 path/status/schema 제거를 실패 처리한다.
 
 ### 단계 2 — Simulator 거래·Scenario 경계 (`BE-0009`)
 

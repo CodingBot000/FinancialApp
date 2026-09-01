@@ -6,6 +6,15 @@
 
 이 문서는 구현 전 계약 초안이다. 실제 controller와 OpenAPI가 이 문서와 다르면 같은 변경에서 문서를 갱신한다.
 
+## 0. Canonical 계약 검증과 추적
+
+- canonical artifact는 `contracts/openapi/platform-v1.yaml`과 `contracts/openapi/institution-simulator-v1.yaml`이다.
+- `contracts/operation-coverage.yaml`은 모든 operation의 controller handler, provider test, consumer fixture와 adapter 구현/계획 상태를 추적한다.
+- `contracts/fixtures/operation-responses.json`은 현재 operation마다 최소 하나의 성공 consumer fixture와 주요 ProblemDetails fixture를 제공한다.
+- 실제 NestJS/Fastify provider E2E는 canonical response schema를 직접 검증한다. service unit test 또는 OpenAPI lint만으로 provider 일치를 주장하지 않는다.
+- root `npm run contract:check`는 controller route와 OpenAPI operation의 양방향 일치, response schema 존재, fixture 검증과 compatibility baseline을 함께 검사한다.
+- `contracts/openapi/compatibility-baseline.yaml`에 있는 operation path/status와 schema/property를 제거하거나 이동하면 gate가 실패한다. 의도한 호환 불가 변경은 새 API version과 migration/consumer 계획을 먼저 승인한다.
+
 ## 1. 공통 규칙
 
 ### Base URL
