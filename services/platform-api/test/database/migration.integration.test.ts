@@ -1,8 +1,9 @@
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
-import { Client } from 'pg';
+import { Client, Pool } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { migratePlatformDatabase } from '../../src/database/migrate.js';
+import { DrizzleIdentityRepository } from '../../src/modules/identity/infrastructure/persistence/drizzle-identity.repository.js';
 
 const POSTGRES_IMAGE =
   'postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94';
@@ -166,6 +167,44 @@ describe('platform Drizzle migration', () => {
       });
     } finally {
       await Promise.all([platformClient.end(), simulatorClient.end()]);
+    }
+  });
+
+  it('provisions one internal user for repeated OIDC subject requests', async () => {
+    const platformUrl = new URL(connectionString);
+    platformUrl.username = 'financial_platform_app';
+    platformUrl.password = 'example-platform-test-only';
+    const pool = new Pool({ connectionString: platformUrl.toString(), max: 2 });
+    const repository = new DrizzleIdentityRepository(pool);
+
+    try {
+      const first = await repository.provisionFromOidc(
+        'https://issuer.example/realms/finapp',
+        'synthetic-user-a',
+      );
+      const second = await repository.provisionFromOidc(
+        'https://issuer.example/realms/finapp',
+        'synthetic-user-a',
+      );
+      const counts = await pool.query<{
+        identities: string;
+        profiles: string;
+        users: string;
+      }>(`
+        SELECT
+          (SELECT count(*) FROM finapp_identity.finapp_app_user)::text AS users,
+          (SELECT count(*) FROM finapp_identity.finapp_oidc_identity)::text AS identities,
+          (SELECT count(*) FROM finapp_identity.finapp_risk_profile)::text AS profiles
+      `);
+
+      expect(second).toEqual(first);
+      expect(counts.rows[0]).toEqual({
+        identities: '1',
+        profiles: '1',
+        users: '1',
+      });
+    } finally {
+      await pool.end();
     }
   });
 });

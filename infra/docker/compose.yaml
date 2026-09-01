@@ -54,6 +54,9 @@ services:
     environment:
       APP_ENV: local
       FINAPP_DATASET_VERSION: ${FINAPP_DATASET_VERSION:-FINANCIAL_APP_DATASET_V1}
+      OIDC_AUDIENCE: finapp-platform-api
+      OIDC_ISSUER: http://localhost:8083/realms/finapp
+      OIDC_JWKS_URI: http://keycloak:8080/realms/finapp/protocol/openid-connect/certs
       PLATFORM_API_PORT: '8080'
       PLATFORM_DATABASE_URL: postgresql://financial_platform_app:${FINAPP_PLATFORM_DB_PASSWORD:?required}@postgres:5432/financial_app
     depends_on:

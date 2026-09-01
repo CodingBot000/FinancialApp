@@ -1,10 +1,10 @@
 # Backend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `BE-0002`
+- 다음 ID: `BE-0003`
 - branch/worktree: `codex/backend` / `/Users/switch/Development/Web/FinancialApp-backend`
 - base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
-- contract revision: `platform-v1`, `institution-simulator-v1` at BE-0001
+- contract revision: `platform-v1` at BE-0002, `institution-simulator-v1` at BE-0001
 - migration owner: backend session 또는 integration owner가 작업마다 기록
 
 backend session은 `services/**`, `infra/**`, OpenAPI와 migration 변경을 commit 단위로 기록한다. 중앙 `DEVELOPMENT_LOG.md`는 integration owner 역할로 통합할 때만 수정한다.
@@ -66,6 +66,66 @@ backend session은 `services/**`, `infra/**`, OpenAPI와 migration 변경을 com
 ### 다음 작업
 
 - BE-0002: identity schema, `jose` remote JWKS guard, scope/ownership baseline과 `/api/v1/me` 구현
+
+## BE-0002 — OIDC resource server와 내부 사용자 provisioning
+
+- 날짜: 2026-09-01
+- Milestone: 2
+- 상태: COMPLETED
+- base commit: `241ac06` (`BE-0001`)
+- contract revision: `platform-v1` (`GET /api/v1/me`와 auth problem response 추가)
+- migration owner: backend session; local Compose/Testcontainers만 적용
+- commit: `feat(be): add OIDC identity boundary [BE-0002]`
+
+### 완료
+
+- `finapp_identity.finapp_app_user`, `finapp_oidc_identity`, `finapp_risk_profile` Drizzle schema와 forward-only migration을 추가했다.
+- 모든 PK/FK/unique/check/index를 명시적인 `finapp_` 이름으로 생성하고 platform runtime role에 identity table DML만 부여했다.
+- `jose` remote JWKS를 사용하는 Nest guard에서 signature, issuer, audience, expiration/not-before와 endpoint scope를 검증한다.
+- 인증 실패를 token 원문이나 JOSE 내부 오류 없이 `AUTH_TOKEN_INVALID`/`AUTH_SCOPE_MISSING` problem response와 trace ID로 변환한다.
+- 검증된 OIDC `(issuer, subject)`를 내부 user UUID에 idempotent하게 매핑하고 합성 기본 risk profile을 같은 transaction에서 생성한다.
+- `/api/v1/me`가 Drizzle row 대신 명시적인 application response model을 반환한다.
+- Keycloak realm에 PKCE S256 mobile client, platform audience와 MVP scope 5개를 선언하고 Compose API에 issuer/audience/internal JWKS 설정을 연결했다.
+
+### 변경 파일
+
+- `services/platform-api/src/core/auth/**`, `src/core/database/**`
+- `services/platform-api/src/modules/identity/**`
+- `services/platform-api/src/database/schema.ts`
+- `services/platform-api/drizzle/0001_finapp_identity.sql`, migration journal
+- `services/platform-api/test/identity/**`, migration integration test
+- `infra/keycloak/finapp-realm.json`, `infra/docker/compose.yaml`
+- `contracts/openapi/platform-v1.yaml`
+- `package-lock.json`, `services/platform-api/package.json`
+- `docs/workstreams/backend/DEVELOPMENT_LOG.md`
+
+### 검증
+
+- 명령: platform lint, strict typecheck, dependency-cruiser, Vitest, Nest build
+- 결과: 3 test files / 11 tests 통과. 실제 RSA/JWT와 HTTP JWKS로 token 없음, wrong issuer, wrong audience, expired, missing scope, valid `/me`를 검증했다.
+- 명령: PostgreSQL 17.6 Testcontainers migration/repository test
+- 결과: migration 2개 적용, identity table 3개와 prefix 검사 통과, 동일 OIDC subject 반복 provisioning 결과 user/identity/profile 각 1행
+- 명령: root `npm run verify` (Colima socket 명시)
+- 결과: formatter, OpenAPI/fixture, Expo dependency, secret scan, 전체 lint/typecheck/test/build 통과
+- 명령: platform production Docker image build
+- 결과: Node 24.19.0 build 성공, runtime 145 package audit vulnerability 0
+- 명령: clean Compose migration/catalog/Keycloak discovery와 admin catalog 확인
+- 결과: history 2, prefix 위반 constraint 0, PKCE `S256`, platform audience scope와 `financial.read/write`, `simulation.execute`, `order.execute`, `scenario.admin` import 확인
+
+### 원격 DB
+
+- 사용 여부: 사용하지 않음
+- migration commit/dataset version: local/Testcontainers `0001_finapp_identity` / `FINANCIAL_APP_DATASET_V1`
+- 결과: Lightsail 연결, migration과 seed 모두 미실행
+
+### 이슈·누락·Handoff
+
+- `BE-ISSUE-0001`: 변화 없음. Drizzle Kit은 build-time only이며 production image audit은 0이다.
+- Handoff: frontend는 `GET /api/v1/me`의 canonical response와 `AUTH_TOKEN_INVALID`/`AUTH_SCOPE_MISSING` 계약을 BE-0002 revision으로 소비해야 한다.
+
+### 다음 작업
+
+- BE-0003: simulator source schema, deterministic `BALANCED_WORKER` seed와 account/holding/transaction HTTP API 구현
 
 ## 새 기록 Template
 

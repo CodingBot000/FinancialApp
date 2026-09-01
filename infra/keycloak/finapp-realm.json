@@ -6,6 +6,59 @@
   "resetPasswordAllowed": false,
   "rememberMe": false,
   "sslRequired": "external",
+  "clientScopes": [
+    {
+      "name": "financial.read",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true"
+      }
+    },
+    {
+      "name": "financial.write",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true"
+      }
+    },
+    {
+      "name": "simulation.execute",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true"
+      }
+    },
+    {
+      "name": "order.execute",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true"
+      }
+    },
+    {
+      "name": "scenario.admin",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true"
+      }
+    },
+    {
+      "name": "finapp-api-audience",
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "finapp-platform-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "included.client.audience": "finapp-platform-api"
+          }
+        }
+      ]
+    }
+  ],
   "clients": [
     {
       "clientId": "finapp-mobile",
@@ -15,11 +68,28 @@
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
+      "defaultClientScopes": [
+        "financial.read",
+        "financial.write",
+        "simulation.execute",
+        "order.execute",
+        "finapp-api-audience"
+      ],
       "redirectUris": ["finapp://auth/*"],
       "webOrigins": ["+"],
       "attributes": {
         "pkce.code.challenge.method": "S256"
       }
+    },
+    {
+      "clientId": "finapp-platform-api",
+      "name": "Wealth Sandbox Platform API",
+      "enabled": true,
+      "bearerOnly": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false
     }
   ]
 }
