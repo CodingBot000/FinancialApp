@@ -3,6 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { ContractMockPlatformApi } from './contract-mock-platform-api';
 
 describe('ContractMockPlatformApi', () => {
+  it('returns the canonical synthetic current user fixture', async () => {
+    const api = new ContractMockPlatformApi({ latencyMs: 0 });
+
+    await expect(api.getCurrentUser()).resolves.toMatchObject({
+      displayName: '테스트 사용자 A',
+      riskProfile: 'BALANCED',
+      syntheticData: true,
+    });
+  });
+
   it('returns the deterministic platform health fixture', async () => {
     const api = new ContractMockPlatformApi({ latencyMs: 0 });
 

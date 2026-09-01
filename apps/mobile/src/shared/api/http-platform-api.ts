@@ -1,5 +1,6 @@
 import {
   PlatformApiError,
+  type CurrentUserResponse,
   type PlatformApi,
   type PlatformHealthResponse,
   type PlatformRequestOptions,
@@ -8,10 +9,14 @@ import {
 type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
 export interface HttpPlatformApiOptions {
+  readonly authenticatedFetch?: FetchLike;
   readonly baseUrl: string;
   readonly fetch?: FetchLike;
   readonly requestId?: () => string;
 }
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function defaultRequestId() {
   if (typeof globalThis.crypto?.randomUUID === 'function') {
@@ -38,24 +43,73 @@ function isPlatformHealthResponse(
   );
 }
 
+function isCurrentUserResponse(value: unknown): value is CurrentUserResponse {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+  return (
+    Object.keys(record).length === 5 &&
+    typeof record.userId === 'string' &&
+    UUID_PATTERN.test(record.userId) &&
+    typeof record.displayName === 'string' &&
+    record.displayName.length > 0 &&
+    ['BALANCED', 'CONSERVATIVE', 'GROWTH'].includes(
+      String(record.riskProfile),
+    ) &&
+    typeof record.datasetVersion === 'string' &&
+    record.datasetVersion.length > 0 &&
+    record.syntheticData === true
+  );
+}
+
 export class HttpPlatformApi implements PlatformApi {
+  private readonly authenticatedFetch: FetchLike;
   private readonly baseUrl: string;
   private readonly fetch: FetchLike;
   private readonly requestId: () => string;
 
   constructor(options: HttpPlatformApiOptions) {
+    this.authenticatedFetch =
+      options.authenticatedFetch ?? options.fetch ?? globalThis.fetch;
     this.baseUrl = options.baseUrl.replace(/\/$/, '');
     this.fetch = options.fetch ?? globalThis.fetch;
     this.requestId = options.requestId ?? defaultRequestId;
   }
 
+  getCurrentUser(
+    options: PlatformRequestOptions = {},
+  ): Promise<CurrentUserResponse> {
+    return this.requestJson(
+      '/api/v1/me',
+      isCurrentUserResponse,
+      options,
+      this.authenticatedFetch,
+    );
+  }
+
   async getHealth(
     options: PlatformRequestOptions = {},
   ): Promise<PlatformHealthResponse> {
+    return this.requestJson(
+      '/api/v1/health',
+      isPlatformHealthResponse,
+      options,
+      this.fetch,
+    );
+  }
+
+  private async requestJson<T>(
+    path: string,
+    validate: (value: unknown) => value is T,
+    options: PlatformRequestOptions,
+    fetch: FetchLike,
+  ): Promise<T> {
     let response: Response;
 
     try {
-      response = await this.fetch(`${this.baseUrl}/api/v1/health`, {
+      response = await fetch(`${this.baseUrl}${path}`, {
         headers: {
           Accept: 'application/json',
           'X-Request-Id': this.requestId(),
@@ -96,7 +150,7 @@ export class HttpPlatformApi implements PlatformApi {
       });
     }
 
-    if (!isPlatformHealthResponse(payload)) {
+    if (!validate(payload)) {
       throw new PlatformApiError({
         kind: 'contract',
         message: 'Platform API 응답이 platform-v1 계약과 일치하지 않습니다.',

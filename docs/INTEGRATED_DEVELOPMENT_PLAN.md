@@ -199,7 +199,7 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - order 단건/목록과 local/demo developer proxy를 추가해 canonical surface 31 operation·34 fixture gate를 통과했고 production에서는 developer module이 등록되지 않는다.
 - clean Compose에서 실제 JWT platform process와 simulator를 연결해 sync, FILLED, REJECTED, UNKNOWN→FILLED, reset을 통과했다.
 
-### 단계 4 — Live OIDC와 `/me` Mobile 통합 (`FE-0010`)
+### 단계 4 — Live OIDC와 `/me` Mobile 통합 (`FE-0010`) ✅ 완료
 
 목표:
 
@@ -214,6 +214,14 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - Android Development Build에서 가능한 live 흐름을 통과한다.
 - iOS/실기기 제약은 `GAP-0002`/`GAP-0003`과 분리하고, 환경이 제공되면 즉시 재검증한다.
 - `GAP-0001`을 해결하거나 남은 수동 조건을 더 좁은 Gap으로 갱신한다.
+
+완료 증거:
+
+- config missing/mock/real 구현이 같은 `PlatformApi` port를 사용하고 canonical `/api/v1/me` fixture와 strict response mapper를 통과했다.
+- clean Compose Keycloak realm에서 합성 사용자를 멱등 provisioning하고 PKCE S256, state, JWT 서명/issuer/audience/subject/scope, `/me`, refresh-only restart, logout/revocation smoke를 통과했다.
+- Android API 36 Development Build에서 시스템 브라우저 login→callback route→App Lock OS fingerprint prompt→실제 `/me`를 통과했다.
+- Android app process force-stop/restart 뒤 SecureStore refresh→App Lock→`/me`를 다시 통과했고 local logout은 session/Query cache를 지우고 로그인 화면으로 복귀했다.
+- 실제 물리 기기의 cancel/lockout/background timing과 iOS runtime은 기존 `GAP-0002`/`GAP-0003`에만 남기고 `GAP-0001`을 해결했다.
 
 ### 단계 5 — MyData와 Dashboard Vertical Slice (`FE-0011`)
 

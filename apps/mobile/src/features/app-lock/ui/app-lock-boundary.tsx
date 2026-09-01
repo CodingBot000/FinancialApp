@@ -8,11 +8,11 @@ import {
   ActivityIndicator,
   AppState,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStore } from 'zustand';
 
 import {

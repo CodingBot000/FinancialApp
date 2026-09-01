@@ -21,7 +21,7 @@ describe('OIDC public config', () => {
       config: {
         clientId: 'wealth-sandbox-mobile',
         issuer: 'https://identity.example/realms/sandbox',
-        scopes: ['openid', 'profile', 'offline_access'],
+        scopes: ['openid', 'offline_access'],
       },
       status: 'configured',
     });

@@ -3,8 +3,8 @@
 - 현재 Milestone: 2~5 — 단일 Main 로컬 MVP 통합
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-02
-- 마지막 완료 ID: BE-0010
-- 다음 작업 ID: FE-0010
+- 마지막 완료 ID: FE-0010
+- 다음 작업 ID: FE-0011
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
@@ -34,7 +34,7 @@
 |---|---|---|
 | 0. 저장소와 결정 기준선 | DONE | 문서, Node.js 24, workspace, 공통 품질 gate 완료 |
 | 1. 실행 가능한 골격 | DONE | Expo, 두 NestJS/Fastify 서비스, Compose, PostgreSQL/Keycloak, health, CI 완료 |
-| 2. OIDC와 App Lock | IN_PROGRESS | backend JWT·`/me`, frontend PKCE/session/App Lock 완료; live OIDC `/me`·restart·실기기 검증 남음 |
+| 2. OIDC와 App Lock | DONE | Android Development Build에서 live PKCE→App Lock→`/me`, process restart refresh와 logout/cache clear 완료; iOS·물리 기기 edge case는 GAP-0002/0003으로 분리 |
 | 3. 동기화와 Dashboard | IN_PROGRESS | backend sync/raw/derived/조회와 최소 audit 완료; frontend Dashboard/Accounts/sync UX 남음 |
 | 4. 서버 시뮬레이션 | IN_PROGRESS | deterministic server simulation 완료; frontend 입력·결과 화면 남음 |
 | 5. BUY 주문과 복구 | IN_PROGRESS | backend quote/reservation/simulator/settlement/reconciliation/audit 완료; frontend 주문 화면과 전체 E2E 남음 |
@@ -78,6 +78,18 @@
 - [x] clean Compose actual flow: sync→NORMAL FILLED→REJECTED→UNKNOWN reconciliation FILLED→reset
 - [x] platform/simulator production image build와 runtime audit 0, catalog prefix 위반 0
 - [x] local Colima socket을 명시한 최종 root `npm run verify`: 총 133 tests와 두 backend build 통과
+
+## FE-0010 Live OIDC와 `/me`
+
+- [x] config missing/mock/HTTP가 동일 `PlatformApi` port를 구현하고 `/me` strict mapper/fixture/component test 통과
+- [x] AuthenticatedFetch와 session refresh coordinator를 real HTTP provider에 조합하고 403 non-retry와 malformed response fail-closed 검증
+- [x] Keycloak `basic` subject/default scope와 `offline_access` optional scope를 realm JSON과 멱등 provisioning에 반영
+- [x] clean Compose PKCE S256→JWT 검증→실제 `/me`→refresh-only restart→invalid token 401→logout/revocation smoke 통과
+- [x] Android API 36 x86_64 Development Build 484 Gradle task와 browser callback route 검증
+- [x] Android OS fingerprint prompt 뒤 실제 `/me`, force-stop/restart 뒤 SecureStore refresh→App Lock→`/me` 재검증
+- [x] local logout 뒤 session/Query cache clear와 로그인 화면 복귀 확인
+- [x] `GAP-0001`과 `FE-GAP-0003` 해결; 물리 기기 edge case/iOS는 기존 `GAP-0002`/`GAP-0003` 유지
+- [x] 최종 root `npm run verify`: mobile 67/simulator 12/platform 61, 총 140 tests와 두 backend build 통과
 
 ## 완료된 통합 기준선
 
@@ -126,7 +138,6 @@
 
 - `ISSUE-0002`: 통합 Expo dependency tree의 moderate advisory 14건
 - `ISSUE-0003`: Drizzle Kit build-time dependency의 moderate advisory 4건
-- `GAP-0001`: live OIDC 로그인→refresh→`/me`와 native restart 검증
 - `GAP-0002`: iOS Development Build runtime 검증
 - `GAP-0003`: 실제 기기 biometric/background App Lock 검증
 - `GAP-0007`: 실제 전체 서비스 E2E와 fresh-clone 인수 명령 미완료
@@ -135,7 +146,6 @@
 
 ## 다음 작업
 
-1. `FE-0010`: 현재 OpenAPI 기준 live OIDC `/me`와 authenticated adapter 통합
-2. `FE-0011`~`FE-0014`: Dashboard/MyData, simulation, order, Settings/developer scenario
-3. `DEV-0011`: local full-stack E2E와 fresh-clone 인수 후 Milestone 6A local hardening 진행
-4. 단계 10 local hardening 완료 결과를 commit/push하고 Milestone 6B 원격 단계 전에 STOP
+1. `FE-0011`~`FE-0014`: Dashboard/MyData, simulation, order, Settings/developer scenario
+2. `DEV-0011`: local full-stack E2E와 fresh-clone 인수 후 Milestone 6A local hardening 진행
+3. 단계 10 local hardening 완료 결과를 commit/push하고 Milestone 6B 원격 단계 전에 STOP

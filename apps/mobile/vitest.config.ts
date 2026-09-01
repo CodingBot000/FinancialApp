@@ -11,6 +11,15 @@ export default defineConfig({
           new URL('./scripts/react-native-test-shim.mjs', import.meta.url),
         ),
       },
+      {
+        find: /^react-native-safe-area-context$/,
+        replacement: fileURLToPath(
+          new URL(
+            './scripts/react-native-safe-area-context-test-shim.mjs',
+            import.meta.url,
+          ),
+        ),
+      },
     ],
   },
   test: {

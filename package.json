@@ -27,8 +27,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
+    "oidc:local:user": "node scripts/provision-local-oidc-user.mjs",
     "security:secrets": "node scripts/check-secrets.mjs",
     "smoke:local-order": "node scripts/smoke-local-order-flow.mjs",
+    "smoke:local-oidc": "node scripts/smoke-local-oidc.mjs",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "verify": "npm run format:check && npm run contract:check && npm run dependency:check -w @finapp/mobile && npm run security:secrets && npm run architecture:check && npm run lint && npm run typecheck && npm run test && npm run build"

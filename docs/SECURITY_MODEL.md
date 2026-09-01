@@ -132,6 +132,8 @@ BE-0010 기준 `finapp_audit_event`는 runtime role에 SELECT/INSERT만 허용�
 ## 8. 환경 보호
 
 - local Keycloak `start-dev`는 local에서만 사용한다.
+- local OIDC test user는 합성 이름과 `.invalid` email만 사용하고 password는 실행 시
+  환경변수로만 주입하며 source, fixture, log에 저장하지 않는다.
 - demo Keycloak은 production mode, PostgreSQL, HTTPS를 사용한다.
 - simulator와 admin endpoint는 public reverse proxy에 등록하지 않는다.
 - production module에는 developer controller와 reset provider를 등록하지 않는다.

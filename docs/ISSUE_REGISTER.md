@@ -1,7 +1,7 @@
 # 이슈와 누락 Register
 
 - 마지막 갱신: 2026-09-02
-- 다음 ISSUE ID: `ISSUE-0008`
+- 다음 ISSUE ID: `ISSUE-0009`
 - 다음 GAP ID: `GAP-0008`
 
 이 문서는 defect, blocker, 위험과 불가피한 누락을 삭제하지 않고 추적한다.
@@ -54,21 +54,6 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 
 ## Active Gap
 
-### GAP-0001 — live OIDC와 native session restart 검증
-
-- 상태: UNVERIFIED
-- 심각도: MEDIUM
-- 최초 발견: 2026-09-02
-- 마지막 갱신: 2026-09-02
-- 발견 DEV: `FE-0005`, 중앙 연결 `DEV-0006`
-- 원래 요구사항: 실제 OIDC Authorization Code + PKCE 로그인, refresh rotation, `/api/v1/me`와 SecureStore process restart 검증
-- 누락/연기 이유: adapter, backend resource server, local Keycloak와 redirect는 준비됐지만 합성 login user와 native end-to-end 실행을 아직 통합하지 않았다.
-- 현재 영향: Milestone 2의 live 완료 판정만 보류하며 unit/component/backend E2E와 이후 contract 개발은 가능하다.
-- 목표 Milestone: 2 / FE-0010
-- 재확인 조건: local Keycloak login→callback→`/me`→process restart refresh→logout을 native build에서 통과
-- 해결 DEV:
-- 검증: DEV-0006에서 Keycloak discovery, `finapp-mobile` public client, `wealthsandbox://oauth/callback`과 무인증 `/me` 401 계약을 확인했다.
-
 ### GAP-0002 — iOS Development Build runtime 검증
 
 - 상태: UNVERIFIED
@@ -97,7 +82,7 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 목표 Milestone: 6 이전
 - 재확인 조건: 지원 실제 기기에서 prompt, cancel, lockout, background 60초와 재인증 흐름 통과
 - 해결 DEV:
-- 검증: frontend `FE-GAP-0004` 참조
+- 검증: FE-0010에서 Android API 36 emulator의 실제 시스템 fingerprint prompt, 성공 unlock, process force-stop 뒤 재인증과 `/me` 복구는 통과했다. 남은 범위는 물리 기기의 cancel/lockout/enrollment 변경과 60초 background timing이다. frontend `FE-GAP-0004` 참조.
 
 ### GAP-0007 — Local Full-stack E2E와 Fresh-clone 인수
 
@@ -115,6 +100,34 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 검증: DEV-0007에서 mobile feature가 health/login/app-lock에 한정되고 Makefile은 bootstrap/build/contract/format/lint/test/typecheck/verify target만 제공함을 확인했다.
 
 ## Resolved History
+
+### ISSUE-0008 — Local Keycloak access token subject/offline scope 누락
+
+- 상태: RESOLVED
+- 심각도: HIGH
+- 최초 발견: 2026-09-02
+- 마지막 갱신: 2026-09-02
+- 발견 DEV: FE-0010 clean Compose OIDC smoke
+- 원래 영향 Milestone: 2 live identity
+- 원래 내용: realm import가 Keycloak 25+ lightweight token의 `sub`를 공급하는 `basic` client scope와 `offline_access` optional scope를 포함하지 않았고 mobile이 realm에 없는 `profile` scope를 요청해 authorization 또는 backend subject 검증이 실패했다.
+- 해결 DEV: FE-0010
+- 해결 내용: `basic`의 `oidc-sub-mapper`, mobile default/optional scope와 최소 `openid offline_access` 요청을 canonical local realm 및 멱등 provisioning에 반영했다.
+- 검증: 볼륨을 제거한 clean Keycloak 26.7.3 import에서 PKCE S256 login, access token JWT signature/issuer/audience/subject/scope, 실제 `/api/v1/me`, refresh rotation과 logout 뒤 refresh 거부를 통과했다.
+
+### GAP-0001 — live OIDC와 native session restart 검증
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 최초 발견: 2026-09-02
+- 마지막 갱신: 2026-09-02
+- 발견 DEV: `FE-0005`, 중앙 연결 `DEV-0006`
+- 원래 요구사항: 실제 OIDC Authorization Code + PKCE 로그인, refresh rotation, `/api/v1/me`와 SecureStore process restart 검증
+- 누락/연기 이유: adapter, backend resource server, local Keycloak와 redirect는 준비됐지만 합성 login user와 native end-to-end 실행을 아직 통합하지 않았다.
+- 현재 영향: 없음. iOS와 물리 biometric edge case는 `GAP-0002`/`GAP-0003`에 분리돼 있다.
+- 목표 Milestone: 2 / FE-0010
+- 재확인 조건: local Keycloak login→callback→`/me`→process restart refresh→logout을 native build에서 통과
+- 해결 DEV: FE-0010
+- 검증: clean Compose 무인 PKCE/JWT/`/me`/refresh-only restart/logout smoke와 Android API 36 Development Build login→callback→OS fingerprint→`/me`, force-stop/restart→SecureStore refresh→`/me`, local logout→login screen을 통과했다.
 
 ### ISSUE-0007 — Developer audit correlation ID 미전파
 

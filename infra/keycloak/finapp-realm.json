@@ -8,6 +8,27 @@
   "sslRequired": "external",
   "clientScopes": [
     {
+      "name": "basic",
+      "protocol": "openid-connect",
+      "attributes": {
+        "display.on.consent.screen": "false",
+        "include.in.token.scope": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "consentRequired": false,
+          "config": {
+            "access.token.claim": "true",
+            "introspection.token.claim": "true",
+            "lightweight.claim": "true"
+          }
+        }
+      ]
+    },
+    {
       "name": "financial.read",
       "protocol": "openid-connect",
       "attributes": {
@@ -69,12 +90,14 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "defaultClientScopes": [
+        "basic",
         "financial.read",
         "financial.write",
         "simulation.execute",
         "order.execute",
         "finapp-api-audience"
       ],
+      "optionalClientScopes": ["offline_access"],
       "redirectUris": ["wealthsandbox://oauth/callback"],
       "webOrigins": ["+"],
       "attributes": {

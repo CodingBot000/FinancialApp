@@ -1,25 +1,30 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppLockBoundary } from '../features/app-lock';
-import { LoginBoundary } from '../features/login';
-import { PlatformApiProvider } from '../shared/api';
+import {
+  ConfiguredPlatformApiProvider,
+  LoginBoundary,
+} from '../features/login';
 import { AuthSessionProvider } from '../shared/auth';
 import { MobileQueryProvider } from '../shared/query';
 
 export default function RootLayout() {
   return (
-    <AuthSessionProvider>
-      <LoginBoundary>
-        <AppLockBoundary>
-          <PlatformApiProvider>
-            <MobileQueryProvider>
-              <StatusBar style="light" />
-              <Stack screenOptions={{ headerShown: false }} />
-            </MobileQueryProvider>
-          </PlatformApiProvider>
-        </AppLockBoundary>
-      </LoginBoundary>
-    </AuthSessionProvider>
+    <SafeAreaProvider>
+      <AuthSessionProvider>
+        <LoginBoundary>
+          <AppLockBoundary>
+            <ConfiguredPlatformApiProvider>
+              <MobileQueryProvider>
+                <StatusBar style="light" />
+                <Stack screenOptions={{ headerShown: false }} />
+              </MobileQueryProvider>
+            </ConfiguredPlatformApiProvider>
+          </AppLockBoundary>
+        </LoginBoundary>
+      </AuthSessionProvider>
+    </SafeAreaProvider>
   );
 }

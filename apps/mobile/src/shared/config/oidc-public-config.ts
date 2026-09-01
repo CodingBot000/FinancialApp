@@ -1,4 +1,4 @@
-export const OIDC_SCOPES = ['openid', 'profile', 'offline_access'] as const;
+export const OIDC_SCOPES = ['openid', 'offline_access'] as const;
 export const OIDC_REDIRECT_PATH = 'oauth/callback';
 export const OIDC_REDIRECT_SCHEME = 'wealthsandbox';
 

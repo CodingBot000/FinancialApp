@@ -37,7 +37,7 @@ import { ExpoOidcClient } from './expo-oidc-client';
 const config: OidcPublicConfig = {
   clientId: 'wealth-sandbox-mobile',
   issuer: 'https://identity.example/realms/sandbox',
-  scopes: ['openid', 'profile', 'offline_access'],
+  scopes: ['openid', 'offline_access'],
 };
 
 describe('ExpoOidcClient', () => {

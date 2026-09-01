@@ -569,3 +569,56 @@
 ### 다음 작업
 
 - FE-0010: 승인된 OIDC provider 설정과 additive `/api/v1/me` 계약 통합. 현재 base contract에는 health 외 endpoint가 없어 FE-GAP-0003 외부 조건 충족 전에는 contract-driven Milestone 2 완료와 Milestone 3 API 화면 개발을 진행하지 않는다.
+
+## FE-0010 — Live OIDC와 현재 사용자 통합
+
+- 날짜: 2026-09-02
+- Milestone: 2
+- 상태: COMPLETED
+- base commit: `2949267de9394f14dcb8c6ce5a11aea0d0d593ed`
+- contract revision: `platform-v1` blob `e2f4581bdf17c91fec1383c8f0b75b1669f98f7c`
+- 예정 commit: `feat(fe): connect live OIDC current user [FE-0010]`
+
+### 완료
+
+- canonical `/api/v1/me` response를 strict UUID/risk/dataset/synthetic mapper와 `PlatformApi.getCurrentUser` port에 추가하고 mock/HTTP/config-unavailable adapter가 같은 port를 구현
+- 실제 mode에서 AuthSession manager, ExpoOidcClient, refresh coordinator, AuthenticatedFetch와 HttpPlatformApi를 composition root에서 조합하고 public health fetch와 authenticated fetch를 분리
+- TanStack Query current-user hook과 loading/ready/non-retryable/retry UI, risk/dataset/synthetic disclaimer와 local logout 화면 구현
+- Expo Router callback 전용 route를 추가해 Android AuthSession callback 처리 후 unmatched route 없이 App Lock과 home으로 자동 복귀
+- Keycloak 25+ lightweight token의 subject를 위한 `basic` scope mapper와 optional `offline_access`, 최소 mobile scope를 realm JSON 및 멱등 provisioning에 반영
+- 합성 사용자 provisioning과 PKCE/JWT/`/me`/refresh restart/invalid token/logout smoke script를 추가하고 credential/token/code를 source와 출력에서 제외
+- React Native core SafeAreaView를 safe-area-context provider/view로 교체하고 Vitest host shim을 추가
+
+### 변경 파일
+
+- mobile composition/UI/API: `apps/mobile/src/app/**`, `apps/mobile/src/features/identity/**`, `apps/mobile/src/features/login/**`, `apps/mobile/src/shared/api/**`
+- local identity: `infra/keycloak/finapp-realm.json`, `scripts/provision-local-oidc-user.mjs`, `scripts/smoke-local-oidc.mjs`
+- contract/test config: `contracts/operation-coverage.yaml`, `apps/mobile/vitest.config.ts`, `apps/mobile/scripts/**`
+- 문서: `infra/README.md`, 중앙/frontend 상태·결정·보안·issue/log
+
+### 검증
+
+- 명령: mobile architecture, lint, strict typecheck, test
+- 결과: architecture 74 source files, 23 test files/67 tests 통과. 최초 SafeAreaView 전환은 package Flow syntax import로 4 suite가 시작 전에 실패했고 전용 host shim 추가 후 전체 통과
+- 명령: Android/web Expo production export
+- 결과: Android 1,361 modules/Hermes 3MB, web 899 modules/1.3MB 통과
+- 명령: Android API 36 x86_64 `expo run:android` Development Build
+- 결과: Gradle 484 tasks, APK install, system browser redirect scheme, Expo native modules autolinking 통과
+- 명령: Android live UI smoke
+- 결과: Keycloak browser login→callback→OS fingerprint App Lock→실제 `/api/v1/me`; app force-stop/restart→SecureStore refresh→App Lock→`/me`; local logout→login screen 통과
+- 명령: clean Compose `oidc:local:user`와 `smoke:local-oidc`
+- 결과: 볼륨 제거/reimport 뒤 PKCE S256, state, JWT signature/issuer/audience/subject/scope, 실제 `/me`, refresh-only restart, invalid token 401, logout 뒤 refresh 거부 통과
+- 명령: Colima socket을 명시한 root `npm run verify`
+- 결과: formatter, 31 operation/34 fixture 계약, Expo dependency, secret, architecture, lint, strict typecheck, mobile 67/simulator 12/platform 61 총 140 tests와 두 backend build 통과
+
+### 이슈·누락·Handoff
+
+- `FE-ISSUE-0002`~`FE-ISSUE-0006`: 발견과 수정·재검증을 기록하고 RESOLVED
+- `FE-GAP-0003`: live OIDC와 native SecureStore restart를 해결
+- `FE-GAP-0002`: 현재 Xcode 제약의 iOS runtime은 유지
+- `FE-GAP-0004`: Android emulator 실제 fingerprint prompt까지 검증했고 물리 기기 cancel/lockout/enrollment/background timing만 남김
+- client secret, 실제 개인정보/계좌정보, password grant와 주문 POST 자동 retry를 추가하지 않음
+
+### 다음 작업
+
+- FE-0011: MyData connection/sync와 Dashboard/Accounts vertical slice

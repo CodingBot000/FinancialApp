@@ -25,7 +25,12 @@ contracts:
             getMe,
           ]
         providerTests: [services/platform-api/test/identity/me.e2e.test.ts]
-        consumer: { status: planned, target: FE-0010 }
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-0010,
+          }
       createMyDataConnection:
         implementation:
           [

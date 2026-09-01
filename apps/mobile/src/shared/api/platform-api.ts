@@ -10,11 +10,25 @@ export interface PlatformHealthResponse {
   readonly status: 'ok';
 }
 
+export type RiskProfile = 'BALANCED' | 'CONSERVATIVE' | 'GROWTH';
+
+export interface CurrentUserResponse {
+  readonly datasetVersion: string;
+  readonly displayName: string;
+  readonly riskProfile: RiskProfile;
+  readonly syntheticData: true;
+  readonly userId: string;
+}
+
 export interface PlatformApi {
+  getCurrentUser(
+    options?: PlatformRequestOptions,
+  ): Promise<CurrentUserResponse>;
   getHealth(options?: PlatformRequestOptions): Promise<PlatformHealthResponse>;
 }
 
-export type PlatformApiErrorKind = 'contract' | 'http' | 'network' | 'timeout';
+export type PlatformApiErrorKind =
+  'configuration' | 'contract' | 'http' | 'network' | 'timeout';
 
 export class PlatformApiError extends Error {
   readonly kind: PlatformApiErrorKind;

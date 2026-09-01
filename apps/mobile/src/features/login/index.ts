@@ -2,6 +2,7 @@ export { createOidcSessionComposition } from './model/create-oidc-session-compos
 export type { OidcSessionComposition } from './model/create-oidc-session-composition';
 export { OidcLoginService } from './model/oidc-login-service';
 export type { LoginResult } from './model/oidc-login-service';
+export { ConfiguredPlatformApiProvider } from './model/configured-platform-api-provider';
 export { LoginBoundary } from './ui/login-boundary';
 export {
   OidcConfigurationScreen,

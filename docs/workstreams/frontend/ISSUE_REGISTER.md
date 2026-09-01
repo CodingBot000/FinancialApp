@@ -1,9 +1,9 @@
 # Frontend Workstream Issue와 Gap Register
 
-- 다음 ISSUE ID: `FE-ISSUE-0002`
+- 다음 ISSUE ID: `FE-ISSUE-0007`
 - 다음 GAP ID: `FE-GAP-0005`
 - active issue: `FE-ISSUE-0001`
-- active gap: `FE-GAP-0002`, `FE-GAP-0003`, `FE-GAP-0004`
+- active gap: `FE-GAP-0002`, `FE-GAP-0004`
 
 frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한다. backend·계약·milestone 완료에도 영향을 주면 handoff와 중앙 `ISSUE_REGISTER.md`에 연결한다.
 
@@ -38,31 +38,97 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 해결 FE:
 - 검증: FE-0004에서 iOS Hermes production bundle 2,312 modules/4.9MB는 성공했다. Android에서는 x86_64 Debug APK build와 API 31 runtime chart render까지 성공했다.
 
-### FE-GAP-0003 — Live OIDC refresh와 native SecureStore restart 검증
-
-- 상태: UNVERIFIED
-- 심각도: MEDIUM
-- 발견 FE: FE-0005
-- 누락/연기 이유: base canonical `platform-v1`에는 health만 있고 환경별 OIDC issuer/public client/redirect 및 `/api/v1/me` 계약이 확정되지 않았다. undocumented token endpoint나 identity response를 frontend가 임의 구현하지 않았다.
-- 현재 영향: memory access token, SecureStore refresh token adapter, logout/invalid credential clear와 refresh single-flight core는 unit/bundle 검증됐다. 실제 Authorization Code + PKCE 로그인, token rotation process restart와 `/me` 호출은 아직 실행되지 않는다.
-- 목표 Milestone: 2
-- 재확인 조건: 승인된 IdP 설정과 additive `/me` 계약으로 실제 Development Build에서 login → process restart → refresh single-flight → `/me`, refresh 실패 → local clear/재로그인 흐름 통과
-- 해결 FE:
-- 검증: FE-0005에서 SecureStore/session single-flight를 구현했고 FE-0007에서 public config validator, OIDC discovery + Authorization Code/PKCE S256, browser cancel, code exchange의 필수 refresh token과 refresh rotation을 추가했다. FE-0008에서는 session-aware login UI, Android redirect intent와 WebBrowser native build를 통과했다. FE-0009에서 memory Bearer, concurrent 401 single-flight, GET replay-once, POST no-replay, second 401/refresh failure fail-closed와 Query cache clear까지 mobile 전체 21 files/60 tests로 통과했다. Live provider와 `/me`는 여전히 미검증이다.
-
 ### FE-GAP-0004 — 실제 기기 LocalAuthentication과 background App Lock 검증
 
 - 상태: UNVERIFIED
 - 심각도: MEDIUM
 - 발견 FE: FE-0006
-- 누락/연기 이유: 현재 검증은 Android x86_64 native build와 주입된 LocalAuthentication/AppState test double까지 수행했으며, 등록된 Face ID/Touch ID 또는 Android biometric가 있는 실제 기기를 사용하지 않았다.
-- 현재 영향: active session fail-closed boundary, Android strong biometric option, success/cancel/failure/lockout mapping, 60초 background timeout과 OIDC 재인증 필요 전이는 자동 검증됐다. 실제 OS prompt, 기기 enrollment 변경, lockout 복구와 background timing은 미검증이다.
+- 누락/연기 이유: Android API 36 emulator에서는 등록 fingerprint와 실제 OS prompt를 검증했지만 물리 Face ID/Touch ID/Android biometric 기기를 사용하지 않았다.
+- 현재 영향: emulator 실제 prompt/success, process restart 재인증과 자동 success/cancel/failure/lockout/60초 state test는 통과했다. 물리 기기 cancel/lockout 복구, enrollment 변경과 실제 60초 background timing만 미검증이다.
 - 목표 Milestone: 2
 - 재확인 조건: 승인된 OIDC test session과 실제 iOS/Android 기기에서 login → initial app lock → biometric unlock → 60초 이상 background → relock, cancel/retry, enrollment 제거 또는 lockout → local session clear/로그인 화면 흐름을 수동 확인
 - 해결 FE:
-- 검증: FE-0006에서 15 files/43 tests, Expo config/dependency check, Android·web production bundle과 `expo-local-authentication 57.0.2`이 autolink된 Gradle 670-task x86_64 Debug APK build 통과. UI는 생체인증을 server MFA로 표현하지 않는다.
+- 검증: FE-0006 자동/native build에 더해 FE-0010 Android API 36 Development Build에서 fingerprint enrollment, OS prompt, unlock, process restart 뒤 재인증과 실제 `/me` 복구를 통과했다. UI는 생체인증을 server MFA로 표현하지 않는다.
 
-## Resolved Gap History
+## Resolved History
+
+### FE-ISSUE-0006 — Current-user test token placeholder의 secret scan 오탐
+
+- 상태: RESOLVED
+- 심각도: LOW
+- 발견 FE: FE-0010 root verify
+- 관련 contract revision: `platform-v1` at `2949267de9394f14dcb8c6ce5a11aea0d0d593ed`
+- 내용: current-user component test의 합성 access token 문자열이 secret detector의 credential literal 규칙과 일치했다.
+- 영향: 실제 secret은 아니었지만 root gate가 의도대로 실패했다.
+- 해결 조건: detector를 비활성화하거나 파일을 제외하지 않고 명시적 허용 placeholder 표기로 변경할 것.
+- 목표 FE: FE-0010
+- 해결 FE: FE-0010
+- 검증: `<synthetic-access-token>`/`<synthetic-refresh-token>` placeholder로 교체한 뒤 secret scan과 전체 root verify를 통과했다.
+
+### FE-ISSUE-0005 — React Native core SafeAreaView runtime deprecation
+
+- 상태: RESOLVED
+- 심각도: LOW
+- 발견 FE: FE-0010 Android live smoke
+- 관련 contract revision: `platform-v1` at `2949267de9394f14dcb8c6ce5a11aea0d0d593ed`
+- 내용: Development Build가 React Native core `SafeAreaView` 제거 예정 경고를 출력했다.
+- 영향: 현재 렌더링은 성공하지만 향후 React Native 갱신에서 화면 inset 처리가 깨질 수 있다.
+- 해결 조건: direct dependency인 `react-native-safe-area-context` provider/view로 전환하고 component/native build gate를 통과할 것.
+- 목표 FE: FE-0010
+- 해결 FE: FE-0010
+- 검증: root `SafeAreaProvider`와 네 화면의 safe-area-context view로 전환하고 mobile component suite와 Android Development Build/export를 검증했다.
+
+### FE-ISSUE-0004 — OIDC callback의 Expo Router unmatched route 노출
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 발견 FE: FE-0010 Android live smoke
+- 관련 contract revision: `platform-v1` at `2949267de9394f14dcb8c6ce5a11aea0d0d593ed`
+- 내용: Android AuthSession이 callback과 token exchange를 정상 처리했지만 `/oauth/callback` route가 없어 세션 활성화 직후 Expo Router의 `Unmatched Route`가 표시됐다.
+- 영향: 인증 자체는 성공했으나 사용자가 수동으로 뒤로 가야 App Lock에 진입했다.
+- 해결 조건: callback route가 인증 경계 처리 후 자동으로 `/`에 복귀하고 live flow에서 unmatched UI가 노출되지 않을 것.
+- 목표 FE: FE-0010
+- 해결 FE: FE-0010
+- 검증: `src/app/oauth/callback.tsx`를 추가한 뒤 Android 시스템 브라우저 callback이 직접 App Lock으로 복귀하고 unmatched route가 재현되지 않았다.
+
+### FE-ISSUE-0003 — Native OIDC composition의 pure adapter test eager import
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 발견 FE: FE-0010 mobile test
+- 관련 contract revision: `platform-v1` at `2949267de9394f14dcb8c6ce5a11aea0d0d593ed`
+- 내용: shared API provider가 Expo SecureStore/AuthSession composition을 eager import해 pure mock/HTTP adapter test가 native global 초기화 오류로 실패했다.
+- 영향: production behavior가 아니라 test/runtime composition 경계가 오염돼 mobile suite가 시작되지 않았다.
+- 해결 조건: pure API context가 native module을 import하지 않고 app composition layer에서만 실제 provider를 조합할 것.
+- 목표 FE: FE-0010
+- 해결 FE: FE-0010
+- 검증: provider를 login composition으로 이동한 뒤 mobile 23 files/67 tests와 architecture check가 통과했다.
+
+### FE-ISSUE-0002 — Local Keycloak realm scope와 provisioning response 불일치
+
+- 상태: RESOLVED
+- 심각도: HIGH
+- 발견 FE: FE-0010 clean OIDC smoke
+- 관련 contract revision: `platform-v1` at `2949267de9394f14dcb8c6ce5a11aea0d0d593ed`
+- 중앙 연결: `ISSUE-0008`
+- 내용: Keycloak 26 realm import에 lightweight token `sub`용 `basic` scope와 optional `offline_access`가 없고 mobile은 제공되지 않은 `profile` scope를 요청했다. Admin API의 성공 201 no-content도 JSON으로 강제 파싱했다.
+- 영향: authorization의 invalid scope, access token subject 누락 또는 provisioning parse 실패로 live `/me`가 진행되지 않았다.
+- 해결 조건: clean realm import와 멱등 provisioning에서 PKCE, subject/scope, offline refresh와 `/me`가 모두 통과할 것.
+- 목표 FE: FE-0010
+- 해결 FE: FE-0010
+- 검증: `basic`/`offline_access`, 최소 scope와 no-content 처리를 반영하고 볼륨 제거 뒤 clean Keycloak 26.7.3 PKCE→JWT→`/me`→refresh→logout smoke를 통과했다.
+
+### FE-GAP-0003 — Live OIDC refresh와 native SecureStore restart 검증
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 발견 FE: FE-0005
+- 누락/연기 이유: 초기 canonical 계약과 local IdP 합성 사용자 연결 전에는 실제 provider login/restart를 실행할 수 없었다.
+- 현재 영향: 없음. iOS runtime과 물리 biometric edge case는 FE-GAP-0002/0004에 분리돼 있다.
+- 목표 Milestone: 2
+- 재확인 조건: 승인된 IdP 설정과 additive `/me` 계약으로 실제 Development Build에서 login → process restart → refresh single-flight → `/me`, refresh 실패 → local clear/재로그인 흐름 통과
+- 해결 FE: FE-0010
+- 검증: clean Compose 무인 PKCE/JWT/`/me`/refresh-only restart/logout smoke와 Android API 36 Development Build login→callback→App Lock→`/me`, force-stop/restart→SecureStore refresh→`/me`, local logout→login screen을 통과했다.
 
 ### FE-GAP-0001 — React 19 mobile component test harness
 

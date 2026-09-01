@@ -537,3 +537,38 @@
 ### 다음 작업
 - DEV-####:
 ```
+
+## FE-0010 — Live OIDC와 `/me` Mobile 통합
+
+- 날짜: 2026-09-02
+- Milestone: 2
+- 상태: COMPLETED
+- base commit: `2949267de9394f14dcb8c6ce5a11aea0d0d593ed`
+- 예정 commit: `feat(fe): connect live OIDC current user [FE-0010]`
+
+### 완료
+
+- canonical `/api/v1/me`를 config missing/mock/real `PlatformApi` port와 authenticated adapter, current-user Query/UI에 연결
+- clean local Keycloak의 `basic` subject와 offline refresh scope, 합성 사용자 멱등 provisioning과 PKCE/JWT/refresh/logout smoke 자동화
+- Android API 36 Development Build에서 browser login→callback→App Lock fingerprint→실제 `/me`, process restart refresh와 logout/cache clear까지 검증
+- callback unmatched route와 SafeAreaView deprecation을 live smoke에서 발견해 같은 slice에서 수정하고 issue history에 보존
+- `GAP-0001`, `FE-GAP-0003`을 해결하고 Milestone 2를 DONE 처리
+
+### 검증
+
+- mobile architecture 74 files, lint, strict typecheck, 23 files/67 tests 통과
+- Android 1,361-module Hermes export와 web 899-module export 통과
+- Android native Gradle 484 tasks/APK install과 실제 Keycloak/biometric/platform UI flow 통과
+- 볼륨 제거 clean Compose PKCE→JWT→`/me`→refresh-only restart→invalid 401→logout/revocation 통과
+- Colima socket을 명시한 root `npm run verify`: mobile 67/simulator 12/platform 61, 총 140 tests와 두 backend build 통과
+
+### 이슈와 누락
+
+- `ISSUE-0008`: local Keycloak subject/offline scope 누락 RESOLVED
+- `GAP-0001`: live OIDC/native restart RESOLVED
+- `GAP-0002`: iOS Development Build runtime 유지
+- `GAP-0003`: Android emulator 실제 prompt까지 좁혔으며 물리 biometric edge case만 유지
+
+### 다음 작업
+
+- `FE-0011`: MyData connection/sync와 Dashboard/Accounts vertical slice

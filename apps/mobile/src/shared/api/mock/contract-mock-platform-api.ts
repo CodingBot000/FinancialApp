@@ -1,12 +1,15 @@
 import {
   PlatformApiError,
+  type CurrentUserResponse,
   type PlatformApi,
   type PlatformHealthResponse,
   type PlatformRequestOptions,
 } from '../platform-api';
+import currentUserFixture from './fixtures/current-user.success.json';
 import fixture from './fixtures/platform-health.success.json';
 
 const platformHealthFixture = fixture as PlatformHealthResponse;
+const currentUser = currentUserFixture as CurrentUserResponse;
 
 export type ContractMockHealthScenario = 'rate-limited' | 'success' | 'timeout';
 
@@ -46,6 +49,13 @@ export class ContractMockPlatformApi implements PlatformApi {
   constructor(options: ContractMockPlatformApiOptions = {}) {
     this.latencyMs = options.latencyMs ?? 250;
     this.scenario = options.scenario ?? 'success';
+  }
+
+  async getCurrentUser(
+    options: PlatformRequestOptions = {},
+  ): Promise<CurrentUserResponse> {
+    await waitForMockLatency(this.latencyMs, options.signal);
+    return structuredClone(currentUser);
   }
 
   async getHealth(
