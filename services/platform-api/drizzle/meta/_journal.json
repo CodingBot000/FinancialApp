@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788271200000,
+      "tag": "0000_finapp_platform_baseline",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788278400000,
+      "tag": "0001_finapp_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788364800000,
+      "tag": "0002_finapp_mydata_wealth",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788451200000,
+      "tag": "0003_finapp_simulation",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788537600000,
+      "tag": "0004_finapp_quote",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788624000000,
+      "tag": "0005_finapp_order_reservation",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+name: finapp-local
+
+services:
+  postgres:
+    image: postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94
+    environment:
+      FINAPP_KEYCLOAK_DB_PASSWORD: ${FINAPP_KEYCLOAK_DB_PASSWORD:?required}
+      FINAPP_MIGRATION_DB_PASSWORD: ${FINAPP_MIGRATION_DB_PASSWORD:?required}
+      FINAPP_PLATFORM_DB_PASSWORD: ${FINAPP_PLATFORM_DB_PASSWORD:?required}
+      FINAPP_SIMULATOR_DB_PASSWORD: ${FINAPP_SIMULATOR_DB_PASSWORD:?required}
+      POSTGRES_DB: financial_app
+      POSTGRES_PASSWORD: ${FINAPP_POSTGRES_ADMIN_PASSWORD:?required}
+      POSTGRES_USER: finapp_admin
+    ports:
+      - '5433:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U finapp_admin -d financial_app']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - finapp_postgres_data:/var/lib/postgresql/data
+      - ../database/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - finapp_local_network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.3@sha256:ff4257d0d64efbe99ed1ddfaf07765cc3c36dc7518bf8324d41961327f441c54
+    command: ['start-dev', '--import-realm']
+    environment:
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${FINAPP_KEYCLOAK_ADMIN_PASSWORD:?required}
+      KC_BOOTSTRAP_ADMIN_USERNAME: finapp_admin
+      KC_DB: postgres
+      KC_DB_PASSWORD: ${FINAPP_KEYCLOAK_DB_PASSWORD:?required}
+      KC_DB_SCHEMA: public
+      KC_DB_URL: jdbc:postgresql://postgres:5432/finapp_keycloak
+      KC_DB_USERNAME: financial_keycloak
+      KC_HEALTH_ENABLED: 'true'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '8083:8080'
+    volumes:
+      - ../keycloak/finapp-realm.json:/opt/keycloak/data/import/finapp-realm.json:ro
+    networks:
+      - finapp_local_network
+
+  platform-api:
+    image: finapp-platform-api:local
+    build:
+      context: ../..
+      dockerfile: infra/docker/platform-api.Dockerfile
+    environment:
+      APP_ENV: local
+      FINAPP_DATASET_VERSION: ${FINAPP_DATASET_VERSION:-FINANCIAL_APP_DATASET_V1}
+      FINAPP_MYDATA_ENCRYPTION_KEY_BASE64: ${FINAPP_MYDATA_ENCRYPTION_KEY_BASE64:?required}
+      FINAPP_MYDATA_ENCRYPTION_KEY_VERSION: ${FINAPP_MYDATA_ENCRYPTION_KEY_VERSION:-local-v1}
+      INSTITUTION_SIMULATOR_BASE_URL: http://institution-simulator:8080
+      INSTITUTION_SIMULATOR_TIMEOUT_MS: '5000'
+      MYDATA_SCHEDULER_ENABLED: 'true'
+      MYDATA_SCHEDULER_TICK_MS: '5000'
+      MYDATA_SYNC_CLAIM_BATCH_SIZE: '10'
+      MYDATA_SYNC_LEASE_TIMEOUT_MS: '30000'
+      MYDATA_SYNC_MAX_ATTEMPTS: '3'
+      MYDATA_SYNC_RETRY_BACKOFF_MS: '5000'
+      MYDATA_SYNC_SCHEDULE_INTERVAL_MS: '900000'
+      OIDC_AUDIENCE: finapp-platform-api
+      OIDC_ISSUER: http://localhost:8083/realms/finapp
+      OIDC_JWKS_URI: http://keycloak:8080/realms/finapp/protocol/openid-connect/certs
+      PLATFORM_API_PORT: '8080'
+      PLATFORM_DATABASE_URL: postgresql://financial_platform_app:${FINAPP_PLATFORM_DB_PASSWORD:?required}@postgres:5432/financial_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '8081:8080'
+    networks:
+      - finapp_local_network
+
+  institution-simulator:
+    image: finapp-institution-simulator:local
+    build:
+      context: ../..
+      dockerfile: infra/docker/institution-simulator.Dockerfile
+    environment:
+      APP_ENV: local
+      FINAPP_DATASET_VERSION: ${FINAPP_DATASET_VERSION:-FINANCIAL_APP_DATASET_V1}
+      SIMULATOR_API_PORT: '8080'
+      SIMULATOR_DATABASE_URL: postgresql://financial_simulator_app:${FINAPP_SIMULATOR_DB_PASSWORD:?required}@postgres:5432/financial_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '8082:8080'
+    networks:
+      - finapp_local_network
+
+  platform-migrate:
+    image: finapp-platform-api:local
+    profiles: ['tools']
+    command: ['node', 'services/platform-api/dist/database/migrate-cli.js']
+    environment:
+      PLATFORM_MIGRATION_DATABASE_URL: postgresql://financial_migration:${FINAPP_MIGRATION_DB_PASSWORD:?required}@postgres:5432/financial_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - finapp_local_network
+
+  simulator-migrate:
+    image: finapp-institution-simulator:local
+    profiles: ['tools']
+    command:
+      ['node', 'services/institution-simulator/dist/database/migrate-cli.js']
+    environment:
+      SIMULATOR_MIGRATION_DATABASE_URL: postgresql://financial_migration:${FINAPP_MIGRATION_DB_PASSWORD:?required}@postgres:5432/financial_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - finapp_local_network
+
+  simulator-seed:
+    image: finapp-institution-simulator:local
+    profiles: ['tools']
+    command:
+      ['node', 'services/institution-simulator/dist/database/seed-cli.js']
+    environment:
+      SIMULATOR_DATABASE_URL: postgresql://financial_simulator_app:${FINAPP_SIMULATOR_DB_PASSWORD:?required}@postgres:5432/financial_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - finapp_local_network
+
+networks:
+  finapp_local_network:
+    name: finapp_local_network
+
+volumes:
+  finapp_postgres_data:
+    name: finapp_postgres_data
