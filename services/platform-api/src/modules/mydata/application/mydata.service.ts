@@ -62,11 +62,17 @@ export class MyDataService {
       principal.issuer,
       principal.subject,
     );
-    const encrypted = this.sensitiveData.encrypt(SYNTHETIC_CUSTOMER);
+    const encrypted = await this.sensitiveData.encrypt(
+      SYNTHETIC_CUSTOMER,
+      user.userId,
+    );
     const connection = await this.repository.createConnection({
       userId: user.userId,
       institutionCode,
-      externalCustomerIdHash: this.sensitiveData.lookupHash(SYNTHETIC_CUSTOMER),
+      externalCustomerIdHash: await this.sensitiveData.lookupHash(
+        SYNTHETIC_CUSTOMER,
+        user.userId,
+      ),
       externalCustomerIdCiphertext: encrypted.ciphertext,
       encryptionKeyVersion: encrypted.keyVersion,
       maskedExternalCustomerId: 'SYNTH-****-A',
@@ -137,9 +143,10 @@ export class MyDataService {
         traceId,
         metadata: { status: 'FETCHING', syntheticData: true },
       });
-      const customerId = this.sensitiveData.decrypt(
+      const customerId = await this.sensitiveData.decrypt(
         connection.ciphertext,
         connection.encryptionKeyVersion,
+        connection.userId,
       );
       const dataset = await this.institution.fetchDataset(customerId);
       await this.repository.completeSync(syncId, dataset);

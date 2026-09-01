@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { migratePlatformDatabase } from '../../src/database/migrate.js';
 import { DrizzleIdentityRepository } from '../../src/modules/identity/infrastructure/persistence/drizzle-identity.repository.js';
 import { AesSensitiveDataAdapter } from '../../src/modules/mydata/infrastructure/crypto/aes-sensitive-data.adapter.js';
+import { LocalDataKeyProvider } from '../../src/modules/mydata/infrastructure/crypto/local-data-key.provider.js';
 import { MyDataConnectionConflictError } from '../../src/modules/mydata/domain/mydata-errors.js';
 import { DrizzleMyDataRepository } from '../../src/modules/mydata/infrastructure/persistence/drizzle-mydata.repository.js';
 import { runSimulation } from '../../src/modules/simulation/domain/simulation-engine.js';
@@ -231,7 +232,7 @@ describe('platform Drizzle migration', () => {
     const identity = new DrizzleIdentityRepository(pool);
     const repository = new DrizzleMyDataRepository(pool);
     const wealth = new DrizzleWealthRepository(pool);
-    const cipher = new AesSensitiveDataAdapter();
+    const cipher = new AesSensitiveDataAdapter(new LocalDataKeyProvider());
     const previousKey = process.env.FINAPP_MYDATA_ENCRYPTION_KEY_BASE64;
     const previousVersion = process.env.FINAPP_MYDATA_ENCRYPTION_KEY_VERSION;
     process.env.FINAPP_MYDATA_ENCRYPTION_KEY_BASE64 = Buffer.alloc(
@@ -245,14 +246,20 @@ describe('platform Drizzle migration', () => {
         'https://issuer.example/realms/finapp',
         'sync-user-a',
       );
-      const encrypted = cipher.encrypt('SYNTH-CUSTOMER-A');
+      const encrypted = await cipher.encrypt('SYNTH-CUSTOMER-A', user.userId);
       expect(encrypted.ciphertext.toString('utf8')).not.toContain(
         'SYNTH-CUSTOMER-A',
+      );
+      expect(encrypted.ciphertext.subarray(0, 4).toString('ascii')).toBe(
+        'FAE2',
       );
       const connection = await repository.createConnection({
         userId: user.userId,
         institutionCode: 'SYNTH_WEALTH_001',
-        externalCustomerIdHash: cipher.lookupHash('SYNTH-CUSTOMER-A'),
+        externalCustomerIdHash: await cipher.lookupHash(
+          'SYNTH-CUSTOMER-A',
+          user.userId,
+        ),
         externalCustomerIdCiphertext: encrypted.ciphertext,
         encryptionKeyVersion: encrypted.keyVersion,
         maskedExternalCustomerId: 'SYNTH-****-A',
@@ -262,7 +269,10 @@ describe('platform Drizzle migration', () => {
         repository.createConnection({
           userId: user.userId,
           institutionCode: 'SYNTH_WEALTH_001',
-          externalCustomerIdHash: cipher.lookupHash('SYNTH-CUSTOMER-A'),
+          externalCustomerIdHash: await cipher.lookupHash(
+            'SYNTH-CUSTOMER-A',
+            user.userId,
+          ),
           externalCustomerIdCiphertext: encrypted.ciphertext,
           encryptionKeyVersion: encrypted.keyVersion,
           maskedExternalCustomerId: 'SYNTH-****-A',
@@ -337,9 +347,10 @@ describe('platform Drizzle migration', () => {
         }
         const claimed = await repository.beginSync(created.sync.syncId);
         expect(
-          cipher.decrypt(
+          await cipher.decrypt(
             claimed?.ciphertext ?? Buffer.alloc(0),
             claimed?.encryptionKeyVersion ?? '',
+            user.userId,
           ),
         ).toBe('SYNTH-CUSTOMER-A');
         await repository.completeSync(created.sync.syncId, dataset);

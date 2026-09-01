@@ -69,12 +69,12 @@ describe('GET /api/v1/me OIDC boundary', () => {
     failSync: vi.fn(),
   };
   const sensitiveData = {
-    encrypt: vi.fn().mockReturnValue({
+    encrypt: vi.fn().mockResolvedValue({
       ciphertext: Buffer.from('encrypted-test-value'),
       keyVersion: 'test-v1',
     }),
     decrypt: vi.fn(),
-    lookupHash: vi.fn().mockReturnValue('a'.repeat(64)),
+    lookupHash: vi.fn().mockResolvedValue('a'.repeat(64)),
   };
   const wealthRepository = {
     summary: vi.fn().mockResolvedValue({

@@ -78,7 +78,7 @@ flowchart LR
 | `id` | connection UUID |
 | `user_id` | 소유자 |
 | `institution_code` | MVP `SYNTH_WEALTH_001` |
-| `external_customer_id_ciphertext` | 암호화된 simulator customer mapping |
+| `external_customer_id_ciphertext` | `FAE2` envelope: wrapped per-value DEK + AES-256-GCM IV/tag/ciphertext; legacy read는 local synthetic only |
 | `masked_external_customer_id` | 표시용 값 |
 | `status` | `ACTIVE`, `REVOKED`, `EXPIRED` |
 | `consent_expires_at` | 동의 만료 |

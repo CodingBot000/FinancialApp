@@ -6,7 +6,11 @@ export interface EncryptedValue {
 }
 
 export interface SensitiveDataPort {
-  encrypt(plaintext: string): EncryptedValue;
-  decrypt(ciphertext: Buffer, keyVersion: string): string;
-  lookupHash(value: string): string;
+  encrypt(plaintext: string, ownerId: string): Promise<EncryptedValue>;
+  decrypt(
+    ciphertext: Buffer,
+    keyVersion: string,
+    ownerId: string,
+  ): Promise<string>;
+  lookupHash(value: string, ownerId: string): Promise<string>;
 }

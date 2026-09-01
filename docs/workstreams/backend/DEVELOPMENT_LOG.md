@@ -1,7 +1,7 @@
 # Backend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `BE-0013`
+- 다음 ID: `BE-0014`
 - 운영 상태: `codex/backend`는 DEV-0006 통합 이력으로 보존, 신규 BE commit은 단일 `main`에서 수행
 - 활성 worktree: `/Users/switch/Development/Web/FinancialApp`
 - 통합 검토 기준: `main` at `2574ad0`, `platform-v1` at BE-0008, `institution-simulator-v1` at BE-0003
@@ -697,6 +697,47 @@
 ### 다음 작업
 
 - `BE-0013`: local DataKeyProvider/AWS KMS adapter boundary와 wrong AAD test
+
+## BE-0013 — Local Envelope Crypto와 AWS KMS Adapter Boundary
+
+- 날짜: 2026-09-02
+- Milestone: 6A local hardening
+- 상태: COMPLETED
+- base commit: `b18c40f5b167041e1331b32356ccd21e19b15d46`
+- contract revision: HTTP API/DB migration 변경 없음; ciphertext envelope revision `FAE2`
+- migration owner: schema/migration 변경 없음, local/Testcontainers만 검증
+- 예정 commit: `feat(be): harden data key provider boundary [BE-0013]`
+
+### 완료
+
+- application `DataKeyProvider` port와 local/AWS KMS infrastructure adapter를 분리했다.
+- local provider는 random DEK를 local KEK로 wrapping하고 owner/schema/table/column/scope AAD, stable HMAC lookup을 사용한다.
+- sensitive adapter는 wrapped DEK와 field IV/tag/ciphertext를 `FAE2` envelope로 저장하고 plaintext DEK를 use-after zero-fill한다.
+- AWS adapter는 SDK 비종속 client port에 GenerateDataKey/Decrypt/encryption context와 별도 HMAC GenerateMac을 매핑한다.
+- local provider와 legacy pre-envelope read는 demo/production에서 fail-closed한다.
+
+### 검증
+
+- crypto 관련 4 tests: roundtrip/plaintext 비노출, wrong AAD/tamper, legacy local-only, production 차단, fake AWS KMS mapping/MAC
+- 관련 MyData/OIDC 19 tests와 PostgreSQL 17.6 Testcontainers migration 8 tests 통과
+- 보존 local Compose actual OIDC/business smoke가 기존 합성 ciphertext read와 sync/simulation/order/outbox 3/3을 통과
+- root formatter/contract/secret/architecture/lint/typecheck, mobile 95/simulator 12/platform 68 총 175 tests와 두 backend build 통과
+- 실제 AWS endpoint, SDK client, credential과 KMS key는 사용하지 않음
+
+### 원격 DB
+
+- 사용 여부: 사용하지 않음
+- migration revision/dataset: DB 변경 없음 / `FINANCIAL_APP_DATASET_V1`
+- 결과: 원격 사전 검토, endpoint/credential 요청, 연결, catalog, migration, seed와 배포 모두 미실행
+
+### 이슈·누락·Handoff
+
+- `BE-ISSUE-0006` RESOLVED
+- AWS SDK binding/key policy/실제 KMS roundtrip은 현재 실행 제외인 Milestone 6B에서 새 승인을 받아 수행한다.
+
+### 다음 작업
+
+- `BE-0014`: security event, structured log/redaction와 production developer bootstrap 검증
 
 ## 새 기록 Template
 

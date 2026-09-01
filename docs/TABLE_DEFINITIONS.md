@@ -182,8 +182,8 @@ Constraints: `finapp_fk_risk_profile_user`, `finapp_ck_risk_profile_level`, `fin
 | `user_id` | `uuid` | N | - | FK app user |
 | `institution_code` | `varchar(50)` | N | - | MVP `SYNTH_WEALTH_001` |
 | `external_customer_id_hash` | `char(64)` | N | - | lookup/dedup hash |
-| `external_customer_id_ciphertext` | `bytea` | N | - | plaintext 금지 |
-| `encryption_key_version` | `varchar(32)` | N | - | local/KMS key version |
+| `external_customer_id_ciphertext` | `bytea` | N | - | `FAE2` wrapped-DEK envelope, plaintext 금지 |
+| `encryption_key_version` | `varchar(32)` | N | - | local wrapping/KMS key version |
 | `masked_external_customer_id` | `varchar(100)` | N | - | API 표시 가능 |
 | `status` | `varchar(20)` | N | `'ACTIVE'` | `ACTIVE`, `REVOKED`, `EXPIRED` |
 | `consent_expires_at` | `timestamptz` | N | - | |

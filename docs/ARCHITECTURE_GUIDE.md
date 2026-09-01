@@ -247,6 +247,14 @@ module composition ───────────────> api/applicatio
 - GET/status query만 제한적으로 retry하며 주문 POST는 자동 retry하지 않는다.
 - 외부 오류는 내부 application error code로 변환하고 원문 token/PII를 log하지 않는다.
 
+### 5.5.1 Data key provider
+
+- application port는 data-key generate/decrypt와 stable lookup MAC만 정의한다.
+- local adapter는 random DEK를 local KEK로 wrapping하고 `demo`/`production`에서 fail-closed한다.
+- AWS adapter는 KMS client port에 `GenerateDataKey`, encryption-context `Decrypt`, HMAC `GenerateMac`을 매핑하며 AWS SDK/credential 자체를 domain/application에 노출하지 않는다.
+- sensitive field adapter는 plaintext DEK를 사용 직후 zero-fill하고 versioned envelope와 owner/schema/table/column AAD를 검증한다.
+- 실제 AWS client binding, key policy와 원격 KMS 호출은 Milestone 6B 승인 전 수행하지 않는다.
+
 ### 5.6 Background job
 
 - MyData sync, reconciliation과 outbox 상태는 PostgreSQL job table이 소유한다.

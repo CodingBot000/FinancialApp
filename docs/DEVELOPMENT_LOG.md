@@ -2,7 +2,7 @@
 
 - 기록 방식: append-only
 - 마지막 DEV ID: `DEV-0011`
-- 다음 영역 ID: `BE-0013`
+- 다음 영역 ID: `BE-0014`
 
 모든 integration/shared commit은 하나의 `DEV-####`와 연결한다. frontend와 backend 영역 commit은 각각 `FE-####`, `BE-####`와 workstream 개발 로그를 사용한다. DEV-0006 이후에는 단일 main에서 작업하되 영역별 ID namespace와 기록은 유지한다. commit subject에도 같은 ID를 넣어 Git history와 문서 기록을 상호 추적할 수 있게 한다.
 
@@ -688,6 +688,25 @@
 
 - `ISSUE-0012`, `BE-ISSUE-0004`, `BE-ISSUE-0005` RESOLVED.
 - 다음은 `BE-0013` local DataKeyProvider/AWS KMS 경계와 wrong AAD test다.
+
+## BE-0013 — Local Envelope Crypto와 AWS KMS Adapter Boundary
+
+- 날짜: 2026-09-02
+- Milestone: 6A local hardening
+- 상태: COMPLETED
+- 예정 commit: `feat(be): harden data key provider boundary [BE-0013]`
+
+### 완료와 검증
+
+- MyData crypto를 async DataKeyProvider로 분리하고 local wrapped-DEK `FAE2` envelope, contextual AAD, stable lookup MAC과 plaintext key zero-fill을 구현했다.
+- AWS KMS GenerateDataKey/Decrypt/GenerateMac adapter는 fake client로만 검증했으며 실제 AWS 연결·credential은 사용하지 않았다.
+- wrong owner AAD/tamper/profile 차단, Testcontainers 신규 envelope와 보존 Compose legacy synthetic read actual smoke가 통과했다.
+- root verify는 mobile 95/simulator 12/platform 68 총 175 tests와 두 backend build를 통과했다.
+
+### 이슈와 다음 작업
+
+- `BE-ISSUE-0006` RESOLVED.
+- 다음은 `BE-0014` security event, structured log/redaction와 production bootstrap 검증이다.
 
 ## FE-0013 — Biometric BUY와 Recovery Mobile 통합
 

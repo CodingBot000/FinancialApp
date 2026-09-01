@@ -1,6 +1,6 @@
 # Backend Workstream Issue와 Gap Register
 
-- 다음 ISSUE ID: `BE-ISSUE-0006`
+- 다음 ISSUE ID: `BE-ISSUE-0007`
 - 다음 GAP ID: `BE-GAP-0003`
 - active issue: `BE-ISSUE-0001`
 - active gap: 없음
@@ -23,6 +23,19 @@ backend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한�
 - 검증: BE-0009 `npm audit --json` moderate 18/high 0/critical 0. simulator Docker runtime stage는 144 package, vulnerability 0을 보고했다.
 
 ## Resolved Issue History
+
+### BE-ISSUE-0006 — Tamper test의 strict indexed access type failure
+
+- 상태: RESOLVED
+- 심각도: LOW
+- 발견 BE: BE-0013 typecheck
+- 관련 contract/migration revision: `FAE2` ciphertext envelope / DB migration 없음
+- 내용: ciphertext 마지막 byte를 직접 XOR한 test가 `noUncheckedIndexedAccess`에서 possibly undefined로 판정돼 첫 platform typecheck가 실패했다.
+- 영향: production crypto 구현에는 영향이 없고 tamper test compile만 실패했다.
+- 해결 조건: bounded fallback으로 byte를 읽고 명시적으로 다시 써 strict typecheck와 crypto test를 통과할 것.
+- 목표 BE: BE-0013
+- 해결 BE: BE-0013
+- 검증: platform strict typecheck와 crypto/MyData/OIDC 관련 19 tests, Testcontainers 8 tests를 통과했다.
 
 ### BE-ISSUE-0005 — Standalone smoke의 stale host build
 
@@ -113,6 +126,7 @@ backend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한�
 - BE-0009 (2026-09-02): `BE-ISSUE-0001` 변화 없음. 중앙 `GAP-0005`를 RESOLVED 처리했다. simulator actual HTTP scenario, 10-way idempotency, clean migration/seed 2회, production admin 404/no-mutation, Compose smoke와 simulator runtime audit 0을 확인했다. 신규 backend issue/gap 없음.
 - BE-0010 (2026-09-02): `BE-ISSUE-0001` 변화 없음. 중앙 `GAP-0006`, `ISSUE-0005`~`ISSUE-0007`을 RESOLVED 처리했다. settlement/reconciliation concurrency, 동일 timestamp pagination, audit correlation/권한, production developer module 미등록, clean actual HTTP order flow와 두 runtime audit 0을 확인했다. 신규 active backend issue/gap 없음.
 - BE-0012 (2026-09-02): `BE-ISSUE-0004`, `BE-ISSUE-0005`와 중앙 `ISSUE-0012`를 해결했다. transactional outbox, durable duplicate receipt, Testcontainers/actual Compose smoke를 확인했고 원격 자원은 사용하지 않았다. `BE-ISSUE-0001`은 단계 10 dependency 재평가까지 유지한다.
+- BE-0013 (2026-09-02): `BE-ISSUE-0006`을 해결했다. local envelope/wrong AAD와 fake AWS KMS client boundary, Testcontainers 및 보존 Compose legacy-read를 검증했다. 실제 AWS/원격 자원은 사용하지 않았다.
 
 ## Issue Template
 

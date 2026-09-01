@@ -49,7 +49,7 @@
 | Simulator MVP | 계좌/보유/거래/시세/주문/status, 6개 장애 scenario, deterministic reset/reseed와 platform developer proxy | mobile 포함 전체 E2E에서 재검증 | DONE (local service boundary) |
 | Contract 품질 | OpenAPI 2개, 현재 operation 31개 controller/provider/fixture/consumer 추적과 호환성 gate | 이후 operation 추가 시 같은 coverage와 provider schema 검증 유지 | DONE (current surface) |
 | Local E2E | 서비스별 test와 수동 Compose smoke | mobile→IdP→platform→simulator→DB 전체 인수 시나리오 | NOT_STARTED |
-| Milestone 6A local | DEV-0011 인수와 BE-0012 outbox 완료 | local KMS adapter 경계, security event, 관측성 보강과 포트폴리오 문서 | IN_PROGRESS |
+| Milestone 6A local | DEV-0011 인수, BE-0012 outbox와 BE-0013 local/AWS KMS 경계 완료 | security event, 관측성 보강과 포트폴리오 문서 | IN_PROGRESS |
 | Milestone 6B remote | 없음 | Lightsail DB migration, AWS KMS, HTTPS/EAS와 원격 rollback | CURRENT_RUN_EXCLUDED |
 
 ### 3.1 최초 계획에서 누락되거나 약하게 연결된 항목

@@ -8,9 +8,11 @@ import { MyDataController } from './api/mydata.controller.js';
 import { MyDataService } from './application/mydata.service.js';
 import { MyDataSchedulerService } from './application/mydata-scheduler.service.js';
 import { INSTITUTION_PORT } from './application/ports/institution.port.js';
+import { DATA_KEY_PROVIDER } from './application/ports/data-key-provider.port.js';
 import { MYDATA_REPOSITORY } from './application/ports/mydata-repository.port.js';
 import { SENSITIVE_DATA_PORT } from './application/ports/sensitive-data.port.js';
 import { AesSensitiveDataAdapter } from './infrastructure/crypto/aes-sensitive-data.adapter.js';
+import { LocalDataKeyProvider } from './infrastructure/crypto/local-data-key.provider.js';
 import { SimulatorInstitutionAdapter } from './infrastructure/http/simulator-institution.adapter.js';
 import { DrizzleMyDataRepository } from './infrastructure/persistence/drizzle-mydata.repository.js';
 
@@ -22,6 +24,7 @@ import { DrizzleMyDataRepository } from './infrastructure/persistence/drizzle-my
     MyDataSchedulerService,
     { provide: MYDATA_REPOSITORY, useClass: DrizzleMyDataRepository },
     { provide: INSTITUTION_PORT, useClass: SimulatorInstitutionAdapter },
+    { provide: DATA_KEY_PROVIDER, useClass: LocalDataKeyProvider },
     { provide: SENSITIVE_DATA_PORT, useClass: AesSensitiveDataAdapter },
   ],
 })

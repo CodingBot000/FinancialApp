@@ -3,8 +3,8 @@
 - 현재 Milestone: 6A — 로컬 하드닝
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-02
-- 마지막 완료 ID: BE-0012
-- 다음 작업 ID: BE-0013
+- 마지막 완료 ID: BE-0013
+- 다음 작업 ID: BE-0014
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
@@ -38,7 +38,7 @@
 | 3. 동기화와 Dashboard | DONE | backend sync/raw/derived/조회·audit와 frontend connection/sync polling, Dashboard/Accounts/detail/chart, 부분 오류 UX 및 local actual API smoke 완료 |
 | 4. 서버 시뮬레이션 | DONE | deterministic server 저장/조회, frontend draft validation·persisted result·p10/p50/p90 chart와 local actual API smoke 완료 |
 | 5. BUY 주문과 복구 | DONE | quote/biometric/idempotent mobile BUY, backend reservation/simulator/settlement/reconciliation/audit, UNKNOWN GET recovery와 actual local smoke 완료; clean 전체 인수는 DEV-0011 |
-| 6A. 로컬 하드닝 | IN_PROGRESS | DEV-0011 local MVP 인수와 BE-0012 transactional outbox/idempotent publisher 완료; local KMS adapter 경계, security event/관측성, 최종 포트폴리오 문서 진행 |
+| 6A. 로컬 하드닝 | IN_PROGRESS | DEV-0011 local MVP, BE-0012 outbox와 BE-0013 local/AWS KMS adapter 경계 완료; security event/관측성, 최종 포트폴리오 문서 진행 |
 | 6B. 원격 데모 | CURRENT_RUN_EXCLUDED | Lightsail migration, 실제 AWS KMS, HTTPS/EAS와 원격 rollback은 향후 별도 실행 |
 
 ## DEV-0010 계약 Gate
@@ -89,6 +89,18 @@
 - [x] root verify: mobile 95/simulator 12/platform 64 총 171 tests와 두 backend build 통과
 - [x] `ISSUE-0012`, `BE-ISSUE-0004`, `BE-ISSUE-0005`를 같은 slice에서 수정·재검증
 - [x] 원격 DB/endpoint/credential/migration/deploy 미사용
+
+## BE-0013 Local Envelope Crypto와 AWS KMS 경계
+
+- [x] async `DataKeyProvider` port와 local/AWS KMS infrastructure adapter 분리
+- [x] random per-value DEK, AES-256-GCM wrapped-DEK `FAE2` envelope와 owner/schema/table/column AAD
+- [x] local stable HMAC lookup과 AWS KMS 별도 HMAC `GenerateMac` 경계
+- [x] plaintext DEK use-after zero-fill, tamper/wrong AAD/wrong profile fail-closed
+- [x] pre-envelope synthetic ciphertext는 local/test read-only 호환, demo/production 거부
+- [x] fake AWS client만 사용하고 AWS SDK/credential/endpoint/실제 KMS 호출 미사용
+- [x] Testcontainers 신규 envelope와 보존 Compose legacy-read actual smoke 통과
+- [x] `BE-ISSUE-0006` strict test type failure 해결·재검증
+- [x] root verify: mobile 95/simulator 12/platform 68 총 175 tests와 두 backend build 통과
 
 ## FE-0010 Live OIDC와 `/me`
 
@@ -216,6 +228,6 @@
 
 ## 다음 작업
 
-1. `BE-0013`: local `DataKeyProvider`, AWS KMS adapter boundary와 wrong AAD 검증
-2. 단계 10의 security/관측성/performance/문서 vertical slice를 순서대로 진행
+1. `BE-0014`: security event, structured log/redaction와 production developer bootstrap 검증
+2. 단계 10의 readiness/metrics/circuit breaker/performance/문서 vertical slice를 순서대로 진행
 3. 단계 10 완료 결과를 commit/push하고 Milestone 6B 원격 단계 전에 STOP

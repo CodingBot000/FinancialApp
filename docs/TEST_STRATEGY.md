@@ -62,6 +62,8 @@ BE-0010 자동 DB suite는 정상 fill, reject, UNKNOWN worker 두 개의 단일
 
 BE-0012는 terminal settlement 4건과 outbox 4건의 원자적 생성을 확인한다. 두 worker의 동시 claim은 서로 다른 event를 가져가야 하며, delivery 기록 뒤 complete 전에 lease가 만료된 event는 재claim되어 `DUPLICATE`로 처리되고 receipt는 한 건만 남아야 한다. 실패 publisher는 같은 tick에서 inline retry하지 않고 backoff 상태로 되돌린다.
 
+BE-0013은 local provider envelope roundtrip, plaintext 비노출, wrong owner AAD, ciphertext tamper, wrong key version, local provider의 demo/production 차단과 합성 local legacy-read 제한을 검증한다. AWS KMS adapter는 fake client로 key ID/spec, encryption context, MAC mapping과 wrong AAD failure만 검증하며 실제 AWS endpoint나 credential을 사용하지 않는다. 빈 Testcontainers DB의 신규 connection ciphertext가 `FAE2`인지 확인하고 보존 Compose DB smoke로 legacy local read도 회귀 검증한다.
+
 ### External integration
 
 platform-api와 실제 institution-simulator를 실행한다.

@@ -76,7 +76,7 @@ describe('MyData scheduler and retry coordination', () => {
     } as InstitutionPort;
     const sensitiveData = {
       encrypt: vi.fn(),
-      decrypt: vi.fn().mockReturnValue('synthetic-customer'),
+      decrypt: vi.fn().mockResolvedValue('synthetic-customer'),
       lookupHash: vi.fn(),
     } as SensitiveDataPort;
     const service = new MyDataService(

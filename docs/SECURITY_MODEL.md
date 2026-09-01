@@ -82,8 +82,9 @@ flowchart LR
 
 ### local/test
 
-- `LocalDataKeyProvider` 또는 deterministic test provider
-- production과 동일한 ciphertext envelope 구조 유지
+- `LocalDataKeyProvider`가 random 256-bit DEK를 만들고 local KEK로 AES-256-GCM wrapping
+- `FAE2` versioned envelope에 wrapped DEK, field IV/tag와 ciphertext를 저장해 production KMS 구조와 같은 경계를 유지
+- owner/schema/table/column/scope를 canonical AAD로 field와 wrapped DEK 양쪽에 적용
 - test key를 demo/production에 사용하지 않음
 
 ### demo/production
@@ -95,6 +96,8 @@ flowchart LR
 - plaintext DEK는 메모리에서만 짧게 사용
 
 KMS integration은 Milestone 6이며 원격 권한 확인 전에 실행하지 않는다.
+
+BE-0013의 `AwsKmsDataKeyProvider`는 `GenerateDataKey`, encryption-context `Decrypt`, 별도 HMAC key `GenerateMac` client port를 구현한다. 단위 test는 fake client만 사용한다. AWS SDK client/credential과 실제 KMS key binding은 이번 실행 범위 밖이며, local provider는 `demo`/`production` bootstrap과 operation에서 fail-closed한다. 기존 `FAE2` 이전 ciphertext read는 합성 local/test에서만 허용하고 demo/production에서는 거부한다.
 
 ## 7. 로그와 감사
 
