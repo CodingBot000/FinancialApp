@@ -36,7 +36,7 @@ Mobile 개발 서버는 `npm run start -w @finapp/mobile`, backend 서비스는 
 
 ## Development workflow
 
-frontend FE-0001~~FE-0009와 backend BE-0001~~BE-0008의 병렬 단계는 DEV-0006에서 main에 통합됐다. 이후 신규 개발은 main 한 곳에서 직렬 진행하되 FE/BE/DEV commit ID와 개발 로그를 유지한다. 과거 소유권과 재분리 기준은 `docs/PARALLEL_DEVELOPMENT_GUIDE.md`를 따른다. frontend는 PostgreSQL에 직접 연결하지 않고 canonical OpenAPI와 backend HTTP API를 사용한다.
+frontend FE-0001~~FE-0009와 backend BE-0001~~BE-0008의 병렬 단계는 DEV-0006에서 main에 통합됐다. 이후 신규 개발은 main 한 곳에서 직렬 진행하되 FE/BE/DEV commit ID와 개발 로그를 유지한다. 현재 순서와 완료 조건은 `docs/INTEGRATED_DEVELOPMENT_PLAN.md`, 과거 소유권과 재분리 기준은 `docs/PARALLEL_DEVELOPMENT_GUIDE.md`를 따른다. frontend는 PostgreSQL에 직접 연결하지 않고 canonical OpenAPI와 backend HTTP API를 사용한다.
 
 ## Remote database
 

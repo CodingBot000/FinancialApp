@@ -2,12 +2,12 @@
 
 - 기록 방식: append-only
 - 다음 ID: `BE-0009`
-- branch/worktree: `codex/backend` / `/Users/switch/Development/Web/FinancialApp-backend`
-- base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
-- contract revision: `platform-v1` at BE-0008, `institution-simulator-v1` at BE-0003
-- migration owner: backend session 또는 integration owner가 작업마다 기록
+- 운영 상태: `codex/backend`는 DEV-0006 통합 이력으로 보존, 신규 BE commit은 단일 `main`에서 수행
+- 활성 worktree: `/Users/switch/Development/Web/FinancialApp`
+- 통합 검토 기준: `main` at `2574ad0`, `platform-v1` at BE-0008, `institution-simulator-v1` at BE-0003
+- migration owner: 단일 main 작업자가 BE 단계마다 기록
 
-backend session은 `services/**`, `infra/**`, OpenAPI와 migration 변경을 commit 단위로 기록한다. 중앙 `DEVELOPMENT_LOG.md`는 integration owner 역할로 통합할 때만 수정한다.
+기존 BE-0001~BE-0008 항목의 base/contract revision은 분리 당시 사실로 보존한다. BE-0009 이후에는 `INTEGRATED_DEVELOPMENT_PLAN.md`에 따라 `main`의 `services/**`, `infra/**`, OpenAPI와 migration 변경을 commit 단위로 기록하고 중앙 상태·issue도 같은 단계에서 갱신한다.
 
 ## BE-0001 — Drizzle migration과 로컬 인프라 격리 기준선
 

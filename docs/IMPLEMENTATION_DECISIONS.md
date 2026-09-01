@@ -52,6 +52,7 @@
 | D-041 | ACCEPTED | DEV-0006 이후 frontend/backend 병렬 worktree 단계는 종료하고 모든 신규 개발과 통합 책임을 단일 `main` 작업 흐름으로 전환한다. 기존 `codex/frontend`와 `codex/backend`는 원격에 보존한다. |
 | D-042 | ACCEPTED | mobile import boundary와 두 backend dependency-cruiser 검사를 root `verify`와 CI의 필수 gate로 실행한다. |
 | D-043 | ACCEPTED | npm install script는 version-pinned allow/deny policy로 관리한다. Docker build context는 `.dockerignore`로 제한하고 backend image build는 해당 workspace와 root build tool만 clean install한다. |
+| D-044 | ACCEPTED | DEV-0007 이후 `INTEGRATED_DEVELOPMENT_PLAN.md`를 단일 `main`의 활성 실행 순서로 사용한다. 기존 분리 branch는 이력으로 보존하고 FE/BE ID와 lane log는 영역별 추적을 위해 main에서도 유지한다. |
 
 ## 정정 이력
 

@@ -1,10 +1,11 @@
 # 구현 상태
 
-- 현재 Milestone: 2 — OIDC와 App Lock 통합
+- 현재 Milestone: 2~5 — 단일 Main 로컬 MVP 통합
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-02
-- 마지막 DEV ID: DEV-0006
-- 다음 DEV ID: DEV-0007
+- 마지막 DEV ID: DEV-0007
+- 다음 DEV ID: DEV-0008
+- 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 
 ## 상태 표기
 
@@ -22,6 +23,7 @@
 - frontend merge commit: `2926278`
 - 운영 방식: 병렬 worktree 단계 종료, 이후 작업은 `main` 한 곳에서 직렬 진행
 - 원격 보존 branch: `origin/codex/backend`, `origin/codex/frontend`
+- 통합 계획 검토 기준: `2574ad0`; 분리 commit 유실 없음
 
 ## Milestone 요약
 
@@ -29,10 +31,10 @@
 |---|---|---|
 | 0. 저장소와 결정 기준선 | DONE | 문서, Node.js 24, workspace, 공통 품질 gate 완료 |
 | 1. 실행 가능한 골격 | DONE | Expo, 두 NestJS/Fastify 서비스, Compose, PostgreSQL/Keycloak, health, CI 완료 |
-| 2. OIDC와 App Lock | IN_PROGRESS | backend JWT·`/me`, frontend PKCE/session/App Lock 완료; live OIDC·실기기 검증 남음 |
-| 3. 동기화와 Dashboard | IN_PROGRESS | backend sync/raw/derived/조회 완료; frontend Dashboard와 실제 API 소비 남음 |
+| 2. OIDC와 App Lock | IN_PROGRESS | backend JWT·`/me`, frontend PKCE/session/App Lock 완료; live OIDC `/me`·restart·실기기 검증 남음 |
+| 3. 동기화와 Dashboard | IN_PROGRESS | backend sync/raw/derived/조회 완료; frontend Dashboard/Accounts/sync UX와 최소 audit 남음 |
 | 4. 서버 시뮬레이션 | IN_PROGRESS | deterministic server simulation 완료; frontend 입력·결과 화면 남음 |
-| 5. BUY 주문과 복구 | IN_PROGRESS | quote/idempotency/reservation 완료; BE-0009 settlement/reconciliation과 frontend 주문 화면 남음 |
+| 5. BUY 주문과 복구 | IN_PROGRESS | quote/idempotency/reservation 완료; simulator brokerage/scenario, settlement/reconciliation/audit와 frontend 주문 화면 남음 |
 | 6. 하드닝과 원격 데모 | NOT_STARTED | KMS, Lightsail, HTTPS, EAS와 preview/demo release gate |
 
 ## 완료된 통합 기준선
@@ -85,14 +87,18 @@
 - `GAP-0001`: live OIDC 로그인→refresh→`/me`와 native restart 검증
 - `GAP-0002`: iOS Development Build runtime 검증
 - `GAP-0003`: 실제 기기 biometric/background App Lock 검증
+- `GAP-0004`: controller–OpenAPI–frontend mock/API 전체 계약 추적 미완료
+- `GAP-0005`: simulator 시세·brokerage·scenario·reset/reseed 미구현
+- `GAP-0006`: 로컬 MVP append-only 최소 audit event 미구현
+- `GAP-0007`: 실제 전체 서비스 E2E와 fresh-clone 인수 명령 미완료
 
 통합 `npm audit` 결과는 moderate 18, high 0, critical 0이다. 두 production backend image의 runtime workspace audit은 0이다.
 
 ## 다음 작업
 
-1. `BE-0009`: simulator brokerage submit, FILLED/REJECTED settlement와 UNKNOWN reconciliation
-2. `FE-0010`: 최종 OpenAPI 기준 OIDC `/me`와 authenticated API adapter 통합
-3. frontend Milestone 3 Dashboard/MyData sync 화면
-4. frontend Milestone 4 simulation 입력·percentile 결과 화면
-5. frontend Milestone 5 idempotent BUY 주문·상태 복구 화면
-6. local full-stack E2E 후 Milestone 6 외부 조건을 재확인
+1. `DEV-0008`: 모든 canonical operation의 provider/consumer 계약 추적과 CI gate
+2. `BE-0009`: simulator 시세·brokerage·scenario·reset/reseed 경계
+3. `BE-0010`: platform external submit, settlement, reconciliation, order 조회와 최소 audit
+4. `FE-0010`: 현재 OpenAPI 기준 live OIDC `/me`와 authenticated adapter 통합
+5. `FE-0011`~`FE-0014`: Dashboard/MyData, simulation, order, Settings/developer scenario
+6. `DEV-0009`: local full-stack E2E와 fresh-clone 인수 후 Milestone 6 진행

@@ -1,8 +1,8 @@
 # 개발 로그
 
 - 기록 방식: append-only
-- 마지막 DEV ID: `DEV-0006`
-- 다음 DEV ID: `DEV-0007`
+- 마지막 DEV ID: `DEV-0007`
+- 다음 DEV ID: `DEV-0008`
 
 모든 integration/shared commit은 하나의 `DEV-####`와 연결한다. frontend와 backend 영역 commit은 각각 `FE-####`, `BE-####`와 workstream 개발 로그를 사용한다. DEV-0006 이후에는 단일 main에서 작업하되 영역별 ID namespace와 기록은 유지한다. commit subject에도 같은 ID를 넣어 Git history와 문서 기록을 상호 추적할 수 있게 한다.
 
@@ -337,6 +337,54 @@
 - `BE-0009`: simulator order submit, settlement와 reconciliation
 - `FE-0010`: 최종 backend OpenAPI 기준 OIDC `/me`와 authenticated API 통합
 - 이후 Milestone 3 Dashboard, Milestone 4 simulation UI, Milestone 5 order UI를 단일 main에서 직렬 진행
+
+## DEV-0007 — 단일 Main 통합 개발계획 기준선
+
+- 날짜: 2026-09-02
+- Milestone: 2~5 통합 계획
+- 상태: COMPLETED
+- 예정 commit: `docs(integration): establish unified development plan [DEV-0007]`
+
+### 완료
+
+- 공통 base `5ffc23e`, backend BE-0001~BE-0008, frontend FE-0001~FE-0009와 DEV-0006 통합 결과를 최초 계획·MVP·계약·테스트 문서와 대조
+- 양쪽 분리 commit의 Git 이력 유실이 없고 local/remote `main` 기준선이 같은 상태임을 확인
+- 기존 계획과 병렬 지침은 이력으로 보존하고 `INTEGRATED_DEVELOPMENT_PLAN.md`를 단일 main 활성 실행계획으로 작성
+- 완료 기준을 Git 통합, 기능 구현, 계약 일치, local E2E와 외부 수동 검증으로 구분
+- 기존 다음 작업을 계약 gate, simulator 경계, platform settlement/reconciliation/audit, mobile M2~M5 vertical slice와 local E2E 순으로 재구성
+- frontend/backend workstream 로그의 branch/base 표기를 역사적 분리 상태와 현재 main 작업 상태로 정정
+- `GAP-0004`~`GAP-0007`을 등록해 계약 추적, simulator MVP 표면, 최소 audit와 full-stack/fresh-clone 인수를 추적
+
+### 변경 파일
+
+- root 안내: `README.md`
+- 활성 계획: `docs/INTEGRATED_DEVELOPMENT_PLAN.md`
+- 인덱스/기존 계획: `docs/README.md`, `docs/CODEX_IMPLEMENTATION_PLAN.md`, `docs/PARALLEL_DEVELOPMENT_GUIDE.md`
+- 추적: `docs/IMPLEMENTATION_STATUS.md`, `docs/IMPLEMENTATION_DECISIONS.md`, `docs/ISSUE_REGISTER.md`, `docs/DEVELOPMENT_LOG.md`
+- 영역 이력: `docs/workstreams/frontend/DEVELOPMENT_LOG.md`, `docs/workstreams/backend/DEVELOPMENT_LOG.md`
+
+### 검증
+
+- Git: `main`과 `origin/main`이 검토 기준 `2574ad0`에서 일치하고 backend/frontend head와 merge commit이 모두 이력에 존재함을 확인
+- 구현 대조: platform OpenAPI 15개 path, simulator OpenAPI 4개 path, mobile feature가 health/login/app-lock까지인 상태를 source와 대조
+- 계약 gap: root fixture validator가 `HealthResponse` 1건만 검사하고 controller 기반 OpenAPI 생성/전체 route 대조가 없음을 확인
+- DB/기능 gap: audit table/module, simulator market/order/scenario와 platform settlement/reconciliation source가 아직 없음을 확인
+- 문서: Prettier format check, Markdown 참조 경로 검사와 `git diff --check` 통과
+- 보안: root `security:secrets` 통과
+
+### 이슈와 누락
+
+- 기존 `ISSUE-0002`, `ISSUE-0003`, `GAP-0001`~`GAP-0003` 유지
+- 신규 `GAP-0004`: controller–OpenAPI–consumer 전체 계약 추적
+- 신규 `GAP-0005`: simulator 시세·brokerage·scenario·reset/reseed
+- 신규 `GAP-0006`: local MVP 최소 append-only audit event
+- 신규 `GAP-0007`: local full-stack E2E와 fresh-clone 인수
+- portfolio 추천, outbox, KMS와 원격 배포는 누락이 아니라 `MVP_SCOPE.md`에 따라 Milestone 6으로 유지
+
+### 다음 작업
+
+- `DEV-0008`: canonical OpenAPI 전체 operation의 provider/consumer 계약 추적과 CI gate 구현
+- 이후 `BE-0009`, `BE-0010`, `FE-0010`~`FE-0014`, `DEV-0009` 순으로 local MVP 완성
 
 ## 새 기록 Template
 

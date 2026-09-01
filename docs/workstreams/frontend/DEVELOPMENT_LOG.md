@@ -2,11 +2,11 @@
 
 - 기록 방식: append-only
 - 다음 ID: `FE-0010`
-- branch/worktree: `codex/frontend` / `/Users/switch/Development/Web/FinancialApp-frontend`
-- base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
-- contract revision: `platform-v1` at base commit (blob `8942e08342cd78f7e251f09b8a3005c9e797d93f`)
+- 운영 상태: `codex/frontend`는 DEV-0006 통합 이력으로 보존, 신규 FE commit은 단일 `main`에서 수행
+- 활성 worktree: `/Users/switch/Development/Web/FinancialApp`
+- 통합 검토 기준: `main` at `2574ad0`, `platform-v1` at DEV-0006
 
-frontend session은 `apps/mobile/**` 변경을 commit 단위로 기록한다. 중앙 `DEVELOPMENT_LOG.md`는 integration owner만 수정한다.
+기존 FE-0001~FE-0009 항목의 base/contract revision은 분리 당시 사실로 보존한다. FE-0010 이후에는 `INTEGRATED_DEVELOPMENT_PLAN.md`에 따라 `main`의 `apps/mobile/**` 변경을 commit 단위로 기록하고 중앙 상태·issue도 같은 단계에서 갱신한다.
 
 ## 새 기록 Template
 
