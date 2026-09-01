@@ -3,6 +3,7 @@ import { useReducedMotion } from 'react-native-reanimated';
 
 import type { Allocation, AssetHistoryPoint } from '../../../shared/api';
 import { formatCompactWon } from '../../../shared/format/finance-format';
+import { useMoneyVisibilityStore } from '../../../shared/privacy';
 
 export function AssetCharts({
   allocation,
@@ -12,6 +13,7 @@ export function AssetCharts({
   readonly history: readonly AssetHistoryPoint[];
 }) {
   const reduceMotion = useReducedMotion();
+  const amountsHidden = useMoneyVisibilityStore((state) => state.hidden);
   const maximum = Math.max(
     ...history.map((point) => Number(point.totalAssets)),
     1,
@@ -25,7 +27,7 @@ export function AssetCharts({
       <View style={styles.trend}>
         {history.map((point) => (
           <View
-            accessibilityLabel={`${point.date} ${formatCompactWon(point.totalAssets)}`}
+            accessibilityLabel={`${point.date} ${formatCompactWon(point.totalAssets, amountsHidden)}`}
             key={point.date}
             style={[
               styles.trendBar,

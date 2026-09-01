@@ -7,8 +7,8 @@
 - 활성 branch/worktree: `main` / `/Users/switch/Development/Web/FinancialApp`
 - 현재 실행 종료선: 단계 10 로컬 하드닝 완료 후 STOP
 - 현재 실행 제외: 원격 DB 접속·사전점검·migration/seed와 원격 배포
-- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`, 단계 3 `BE-0010`, 단계 4 `FE-0010`, 단계 5 `FE-0011`, 단계 6 `FE-0012`, FE-0013 진입 보강 `BE-0011`, 단계 7 `FE-0013`
-- 다음 작업 ID: `FE-0014`
+- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`, 단계 3 `BE-0010`, 단계 4 `FE-0010`, 단계 5 `FE-0011`, 단계 6 `FE-0012`, FE-0013 진입 보강 `BE-0011`, 단계 7 `FE-0013`, 단계 8 `FE-0014`
+- 다음 작업 ID: `DEV-0011`
 
 ## 1. 목적과 문서 권한
 
@@ -308,6 +308,14 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - 장애 scenario를 앱에서 선택해 timeout/500/malformed/reject/unknown 흐름을 재현할 수 있다.
 - production build/config에는 dev route 진입점이 없다.
 - 핵심 화면의 접근성, Reduce Motion과 민감정보 가리기 검토가 완료된다.
+
+완료 증거:
+
+- `EXPO_PUBLIC_APP_ENV` 값을 local/demo로 명시한 경우에만 developer panel을 렌더링하고 누락·미지값·production은 fail-closed 처리했다.
+- scenario PUT과 bodyless reset POST를 strict response guard·mock·unavailable adapter와 함께 연결하고 production component test에서 UI 진입점이 없음을 확인했다.
+- 금액 숨기기는 자산·차트 accessibility label·시뮬레이션 입력/결과·주문 금액에 공통 적용하고 기존 Reduce Motion 차트 분기와 48px interaction을 재검증했다.
+- mobile architecture/lint/strict typecheck와 31 files/95 tests, canonical contract consumer coverage, actual local FILLED/REJECTED/UNKNOWN→FILLED/reset smoke가 통과했다.
+- Colima host/container socket을 명시한 root `npm run verify`에서 mobile 95/simulator 12/platform 61, 총 168 tests와 두 backend build가 통과했다.
 
 ### 단계 9 — 로컬 MVP 전체 인수 (`DEV-0011`)
 

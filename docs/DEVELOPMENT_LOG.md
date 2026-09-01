@@ -661,6 +661,35 @@
 
 - `FE-0014`: Settings/developer scenario/accessibility
 
+## FE-0014 — Safe Settings와 Local/Demo Scenario Control
+
+- 날짜: 2026-09-02
+- Milestone: 2~5 local MVP
+- 상태: COMPLETED
+- 예정 commit: `feat(fe): add safe settings and scenario controls [FE-0014]`
+
+### 완료
+
+- dataset/synthetic 안내, logout, 핵심 화면·차트 접근성 텍스트를 포함한 금액 숨기기와 설정 tab 완성
+- local/demo 명시 profile에서만 scenario/reset panel을 노출하고 production·누락·미지 환경을 fail-closed 처리
+- developer 2 operation consumer를 canonical strict HTTP/mock port로 전환하고 private simulator instrument endpoint의 mobile 직접 소비를 금지
+
+### 검증
+
+- mobile architecture/lint/strict typecheck, 31 files/95 tests 통과
+- actual local Compose sync/simulation/FILLED/REJECTED/UNKNOWN reconciliation/reset smoke 통과
+- production component에 developer UI/route 진입점이 없고 reset HTTP가 bodyless POST임을 검증
+- 첫 root verify의 기존 Colima Ryuk socket mount 실패는 host·container socket 두 환경 값을 모두 지정해 해소하고, 최종 mobile 95/simulator 12/platform 61 총 168 tests와 두 backend build 통과
+
+### 이슈와 누락
+
+- `ISSUE-0010` synthetic session fixture secret scan 오탐을 placeholder로 해소; 기존 Expo advisory, iOS/physical biometric gap은 유지
+- 원격 작업은 실행하지 않음
+
+### 다음 작업
+
+- `DEV-0011`: clean local full-stack 12-step acceptance
+
 ## BE-0011 — FE-0013 Contract Entry Repair
 
 - 날짜: 2026-09-02

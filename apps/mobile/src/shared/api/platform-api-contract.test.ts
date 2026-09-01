@@ -7,6 +7,8 @@ import {
   isAccount,
   isAccountPage,
   isConnections,
+  isDeveloperReset,
+  isDeveloperScenario,
   isHistory,
   isOrder,
   isOrderPage,
@@ -39,6 +41,16 @@ describe('platform-v1 wealth response guards', () => {
     expect(isOrderPage({ items: [orderFixture.order], nextCursor: null })).toBe(
       true,
     );
+    expect(isDeveloperScenario({ mode: 'TIMEOUT', scope: 'GLOBAL' })).toBe(
+      true,
+    );
+    expect(
+      isDeveloperReset({
+        datasetVersion: 'baseline-v1',
+        scenarioMode: 'NORMAL',
+        syntheticData: true,
+      }),
+    ).toBe(true);
   });
 
   it('rejects non-canonical money, cursors, extra keys, and raw identifiers', () => {
@@ -62,5 +74,15 @@ describe('platform-v1 wealth response guards', () => {
       }),
     ).toBe(false);
     expect(isOrder({ ...orderFixture.order, quantity: '3.0' })).toBe(false);
+    expect(
+      isDeveloperScenario({ mode: 'TIMEOUT', scope: 'CURRENT_USER' }),
+    ).toBe(false);
+    expect(
+      isDeveloperReset({
+        datasetVersion: 'baseline-v1',
+        scenarioMode: 'NORMAL',
+        syntheticData: false,
+      }),
+    ).toBe(false);
   });
 });

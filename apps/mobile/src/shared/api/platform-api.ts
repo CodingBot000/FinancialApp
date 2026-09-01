@@ -186,6 +186,25 @@ export interface OrderPage {
   readonly nextCursor: string | null;
 }
 
+export type DeveloperScenarioMode =
+  | 'NORMAL'
+  | 'TIMEOUT'
+  | 'HTTP_500'
+  | 'MALFORMED_RESPONSE'
+  | 'ORDER_REJECT'
+  | 'ORDER_UNKNOWN_THEN_FILLED';
+
+export interface DeveloperScenarioResponse {
+  readonly mode: DeveloperScenarioMode;
+  readonly scope: 'GLOBAL';
+}
+
+export interface DeveloperResetResponse {
+  readonly datasetVersion: string;
+  readonly scenarioMode: 'NORMAL';
+  readonly syntheticData: true;
+}
+
 export interface PlatformApi {
   createSimulation(
     input: CreateSimulationInput,
@@ -246,6 +265,13 @@ export interface PlatformApi {
     input: BuyOrderInput,
     options?: PlatformRequestOptions,
   ): Promise<Quote>;
+  resetDeveloperDataset(
+    options?: PlatformRequestOptions,
+  ): Promise<DeveloperResetResponse>;
+  setDeveloperScenario(
+    mode: DeveloperScenarioMode,
+    options?: PlatformRequestOptions,
+  ): Promise<DeveloperScenarioResponse>;
 }
 
 export type PlatformApiErrorKind =

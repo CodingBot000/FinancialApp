@@ -52,6 +52,7 @@
 
 ### 모바일에 포함 가능한 값
 
+- `EXPO_PUBLIC_APP_ENV` (`local`, `demo`, `production`; 누락·미지값은 `production`)
 - `EXPO_PUBLIC_API_BASE_URL`
 - `EXPO_PUBLIC_OIDC_ISSUER`
 - `EXPO_PUBLIC_OIDC_CLIENT_ID`
@@ -60,6 +61,8 @@
 - synthetic dataset version
 
 `EXPO_PUBLIC_*`에는 secret을 넣지 않는다.
+
+모바일 developer panel은 `EXPO_PUBLIC_APP_ENV=local|demo`로 명시한 빌드에서만 활성화한다. production과 환경 값 누락 시 UI 진입점이 없으며, backend도 production에서 developer module을 등록하지 않아 route를 404로 처리한다.
 
 ### 서버 비밀정보
 

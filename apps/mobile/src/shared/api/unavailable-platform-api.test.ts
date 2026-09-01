@@ -18,6 +18,12 @@ describe('UnavailablePlatformApi', () => {
       kind: 'configuration',
       retryable: false,
     });
+    await expect(api.setDeveloperScenario('TIMEOUT')).rejects.toMatchObject({
+      kind: 'configuration',
+    });
+    await expect(api.resetDeveloperDataset()).rejects.toMatchObject({
+      kind: 'configuration',
+    });
     await expect(
       api.createSimulation({
         allocation: [{ assetClass: 'CASH', weight: 1 }],

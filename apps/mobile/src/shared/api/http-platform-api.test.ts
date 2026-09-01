@@ -7,6 +7,50 @@ import simulationFixture from './mock/fixtures/simulation.success.json';
 import orderFixture from './mock/fixtures/order-flow.success.json';
 
 describe('HttpPlatformApi', () => {
+  it('uses PUT for scenarios and a bodyless POST for dataset reset', async () => {
+    const authenticatedFetch = vi.fn(
+      async (url: string, init?: RequestInit) => {
+        void init;
+        return url.endsWith('/scenario')
+          ? Response.json({ mode: 'ORDER_REJECT', scope: 'GLOBAL' })
+          : Response.json({
+              datasetVersion: 'baseline-v1',
+              scenarioMode: 'NORMAL',
+              syntheticData: true,
+            });
+      },
+    );
+    const api = new HttpPlatformApi({
+      authenticatedFetch,
+      baseUrl: 'https://platform.example',
+      requestId: () => 'request-fe-0014',
+    });
+
+    await expect(api.setDeveloperScenario('ORDER_REJECT')).resolves.toEqual({
+      mode: 'ORDER_REJECT',
+      scope: 'GLOBAL',
+    });
+    await expect(api.resetDeveloperDataset()).resolves.toMatchObject({
+      scenarioMode: 'NORMAL',
+      syntheticData: true,
+    });
+    expect(authenticatedFetch).toHaveBeenNthCalledWith(
+      1,
+      'https://platform.example/api/v1/dev/scenario',
+      expect.objectContaining({
+        body: JSON.stringify({
+          mode: 'ORDER_REJECT',
+          correlationScope: 'CURRENT_USER',
+        }),
+        method: 'PUT',
+      }),
+    );
+    const resetInit = authenticatedFetch.mock.calls[1]?.[1];
+    expect(resetInit).toMatchObject({ method: 'POST' });
+    expect(resetInit?.body).toBeUndefined();
+    expect(resetInit?.headers).not.toHaveProperty('Content-Type');
+  });
+
   it('maps quote/order/history and sends one caller-owned idempotency key', async () => {
     const authenticatedFetch = vi.fn(
       async (url: string, init?: RequestInit) => {

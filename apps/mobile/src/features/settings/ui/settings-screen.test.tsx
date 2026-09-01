@@ -1,0 +1,109 @@
+import { QueryClientProvider } from '@tanstack/react-query';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('expo-secure-store', () => ({
+  WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'device-only',
+  deleteItemAsync: vi.fn(),
+  getItemAsync: vi.fn(),
+  setItemAsync: vi.fn(),
+}));
+
+import { PlatformApiProvider } from '../../../shared/api';
+import { ContractMockPlatformApi } from '../../../shared/api/mock/contract-mock-platform-api';
+import { MemoryAccessTokenStore } from '../../../shared/auth/access-token-store';
+import { AuthSessionProvider } from '../../../shared/auth/auth-session-context';
+import { AuthSessionManager } from '../../../shared/auth/auth-session-manager';
+import type { RefreshTokenStore } from '../../../shared/auth/refresh-token-store';
+import { useMoneyVisibilityStore } from '../../../shared/privacy';
+import { createMobileQueryClient } from '../../../shared/query/query-client';
+import { SettingsScreen } from './settings-screen';
+
+class MemoryRefreshTokenStore implements RefreshTokenStore {
+  private token: string | undefined;
+  clear() {
+    this.token = undefined;
+    return Promise.resolve();
+  }
+  read() {
+    return Promise.resolve(this.token);
+  }
+  write(token: string) {
+    this.token = token;
+    return Promise.resolve();
+  }
+}
+
+async function renderSettings(
+  api: ContractMockPlatformApi,
+  developerToolsEnabled: boolean,
+) {
+  const manager = new AuthSessionManager(
+    new MemoryAccessTokenStore(),
+    new MemoryRefreshTokenStore(),
+  );
+  await manager.establish({
+    accessToken: '<synthetic-access-token>',
+    refreshToken: '<synthetic-refresh-token>',
+  });
+  const queryClient = createMobileQueryClient();
+  queryClient.setDefaultOptions({ queries: { retry: false } });
+  const view = await render(
+    <AuthSessionProvider manager={manager}>
+      <PlatformApiProvider api={api}>
+        <QueryClientProvider client={queryClient}>
+          <SettingsScreen developerToolsEnabled={developerToolsEnabled} />
+        </QueryClientProvider>
+      </PlatformApiProvider>
+    </AuthSessionProvider>,
+  );
+  return { manager, view };
+}
+
+describe('SettingsScreen', () => {
+  beforeEach(() => useMoneyVisibilityStore.setState({ hidden: false }));
+
+  it('fails closed in production while providing privacy and logout controls', async () => {
+    const { manager, view } = await renderSettings(
+      new ContractMockPlatformApi({ latencyMs: 0 }),
+      false,
+    );
+    expect(
+      await view.findByText('데이터셋 FINANCIAL_APP_DATASET_V1'),
+    ).toBeTruthy();
+    expect(
+      view.getByText('합성 데이터 · 실제 개인정보·계좌정보 없음'),
+    ).toBeTruthy();
+    expect(view.queryByText('개발자 도구')).toBeNull();
+    expect(view.queryByText('시나리오 TIMEOUT')).toBeNull();
+
+    fireEvent.press(view.getByRole('switch', { name: '금액 숨기기' }));
+    expect(useMoneyVisibilityStore.getState().hidden).toBe(true);
+    await waitFor(() => expect(view.getByText('켜짐')).toBeTruthy());
+
+    fireEvent.press(view.getByRole('button', { name: '로컬 세션 로그아웃' }));
+    await waitFor(() => expect(manager.getSessionPresence()).toBe('absent'));
+  });
+
+  it('reproduces scenarios and reset only when explicitly enabled', async () => {
+    const api = new ContractMockPlatformApi({ latencyMs: 0 });
+    const scenarioSpy = vi.spyOn(api, 'setDeveloperScenario');
+    const resetSpy = vi.spyOn(api, 'resetDeveloperDataset');
+    const { view } = await renderSettings(api, true);
+    expect(await view.findByText('개발자 도구')).toBeTruthy();
+
+    fireEvent.press(
+      view.getByRole('button', { name: '시나리오 ORDER_REJECT' }),
+    );
+    await waitFor(() =>
+      expect(scenarioSpy).toHaveBeenCalledWith('ORDER_REJECT'),
+    );
+    expect(await view.findByText('시나리오 ORDER_REJECT 적용')).toBeTruthy();
+
+    fireEvent.press(view.getByRole('button', { name: '합성 데이터셋 초기화' }));
+    await waitFor(() => expect(resetSpy).toHaveBeenCalledOnce());
+    expect(
+      await view.findByText('합성 데이터 FINANCIAL_APP_DATASET_V1 초기화'),
+    ).toBeTruthy();
+  });
+});

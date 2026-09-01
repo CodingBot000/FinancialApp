@@ -4,6 +4,7 @@ import { useReducedMotion } from 'react-native-reanimated';
 
 import type { SimulationPoint } from '../../../shared/api';
 import { formatCompactWon } from '../../../shared/format/finance-format';
+import { useMoneyVisibilityStore } from '../../../shared/privacy';
 
 function samples(series: readonly SimulationPoint[]) {
   if (series.length <= 6) return series;
@@ -19,6 +20,7 @@ export function PercentileChart({
   readonly series: readonly SimulationPoint[];
 }) {
   const reduceMotion = useReducedMotion();
+  const amountsHidden = useMoneyVisibilityStore((state) => state.hidden);
   const points = useMemo(() => samples(series), [series]);
   const [selected, setSelected] = useState(points.at(-1));
   const maximum = Math.max(...points.map((point) => Number(point.p90)), 1);
@@ -61,9 +63,10 @@ export function PercentileChart({
       </View>
       {selected ? (
         <Text accessibilityLiveRegion="polite" style={styles.tooltip}>
-          {selected.month}개월 · p10 {formatCompactWon(selected.p10)} · p50{' '}
-          {formatCompactWon(selected.p50)} · p90{' '}
-          {formatCompactWon(selected.p90)}
+          {selected.month}개월 · p10{' '}
+          {formatCompactWon(selected.p10, amountsHidden)} · p50{' '}
+          {formatCompactWon(selected.p50, amountsHidden)} · p90{' '}
+          {formatCompactWon(selected.p90, amountsHidden)}
         </Text>
       ) : null}
     </View>

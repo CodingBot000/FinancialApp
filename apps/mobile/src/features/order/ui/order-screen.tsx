@@ -14,6 +14,7 @@ import { PlatformApiError } from '../../../shared/api';
 import type { BiometricGate } from '../../../shared/auth/biometric-gate';
 import { ExpoBiometricGate } from '../../../shared/auth/expo-biometric-gate';
 import { formatWon } from '../../../shared/format/finance-format';
+import { useMoneyVisibilityStore } from '../../../shared/privacy';
 import { useOrderFlow } from '../hooks/use-order-flow';
 
 function errorMessage(error: unknown) {
@@ -41,6 +42,7 @@ export function OrderScreen({
 }: {
   readonly biometricGate?: BiometricGate;
 }) {
+  const amountsHidden = useMoneyVisibilityStore((state) => state.hidden);
   const [quantity, setQuantity] = useState('1.00000000');
   const [defaultGate] = useState(
     () =>
@@ -92,10 +94,10 @@ export function OrderScreen({
           <View style={styles.card}>
             <Text style={styles.heading}>60초 합성 견적</Text>
             <Text style={styles.amount}>
-              {formatWon(flow.quote.estimatedAmount)}
+              {formatWon(flow.quote.estimatedAmount, amountsHidden)}
             </Text>
             <Text style={styles.muted}>
-              단가 {formatWon(flow.quote.unitPrice)} · 만료{' '}
+              단가 {formatWon(flow.quote.unitPrice, amountsHidden)} · 만료{' '}
               {flow.quote.expiresAt}
             </Text>
             <Pressable
@@ -117,7 +119,7 @@ export function OrderScreen({
           <View style={styles.card}>
             <Text style={styles.heading}>주문 상태 · {flow.status.status}</Text>
             <Text accessibilityLiveRegion="polite" style={styles.amount}>
-              {formatWon(flow.status.estimatedAmount)}
+              {formatWon(flow.status.estimatedAmount, amountsHidden)}
             </Text>
             {flow.status.status === 'UNKNOWN' ? (
               <Text style={styles.warning}>
@@ -141,7 +143,7 @@ export function OrderScreen({
               <View key={order.orderId} style={styles.row}>
                 <Text style={styles.value}>{order.status}</Text>
                 <Text style={styles.muted}>
-                  {formatWon(order.estimatedAmount)}
+                  {formatWon(order.estimatedAmount, amountsHidden)}
                 </Text>
               </View>
             ))

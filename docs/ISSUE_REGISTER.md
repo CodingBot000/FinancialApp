@@ -1,7 +1,7 @@
 # 이슈와 누락 Register
 
 - 마지막 갱신: 2026-09-02
-- 다음 ISSUE ID: `ISSUE-0010`
+- 다음 ISSUE ID: `ISSUE-0011`
 - 다음 GAP ID: `GAP-0009`
 
 이 문서는 defect, blocker, 위험과 불가피한 누락을 삭제하지 않고 추적한다.
@@ -100,6 +100,19 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 검증: DEV-0007에서 mobile feature가 health/login/app-lock에 한정되고 Makefile은 bootstrap/build/contract/format/lint/test/typecheck/verify target만 제공함을 확인했다.
 
 ## Resolved History
+
+### ISSUE-0010 — FE-0014 session fixture의 secret scan 오탐
+
+- 상태: RESOLVED
+- 심각도: LOW
+- 최초 발견: 2026-09-02
+- 마지막 갱신: 2026-09-02
+- 발견 DEV: FE-0014 root verify
+- 원래 영향 Milestone: 2 settings logout test
+- 원래 내용: settings component test의 합성 session 문자열이 credential literal 규칙에 일치해 secret gate가 의도대로 실패했다. 실제 credential은 아니다.
+- 해결 DEV: FE-0014
+- 해결 내용: detector를 제외하지 않고 명시적 `<synthetic-*-token>` placeholder로 변경했다.
+- 검증: `npm run security:secrets`와 FE-0014 최종 root `npm run verify`로 재검증했다.
 
 ### GAP-0008 — Mobile 주문에 필요한 instrument UUID 조회 계약 누락
 

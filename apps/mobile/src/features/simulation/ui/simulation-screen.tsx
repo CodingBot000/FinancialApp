@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PlatformApiError } from '../../../shared/api';
 import { formatWon } from '../../../shared/format/finance-format';
+import { useMoneyVisibilityStore } from '../../../shared/privacy';
 import { useSimulation } from '../hooks/use-simulation';
 import {
   toSimulationInput,
@@ -32,6 +33,7 @@ const fields: readonly {
 ];
 
 export function SimulationScreen() {
+  const amountsHidden = useMoneyVisibilityStore((state) => state.hidden);
   const draft = useSimulationDraftStore();
   const simulation = useSimulation();
   const [submitted, setSubmitted] = useState(false);
@@ -62,6 +64,7 @@ export function SimulationScreen() {
                 accessibilityLabel={label}
                 keyboardType="decimal-pad"
                 onChangeText={(value) => draft.setField(field, value)}
+                secureTextEntry={amountsHidden && field !== 'durationMonths'}
                 style={styles.input}
                 value={draft[field]}
               />
@@ -114,7 +117,7 @@ export function SimulationScreen() {
               목표 달성 확률 {Math.round(result.goalProbability * 100)}%
             </Text>
             <Text style={styles.muted}>
-              최종 중앙값 {formatWon(result.finalValue.p50)}
+              최종 중앙값 {formatWon(result.finalValue.p50, amountsHidden)}
             </Text>
             <Text style={styles.version}>
               Engine {result.engineVersion} · Assumptions{' '}

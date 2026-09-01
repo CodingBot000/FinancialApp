@@ -7,6 +7,9 @@ import {
   type CreateOrderInput,
   type CreateSimulationInput,
   type CurrentUserResponse,
+  type DeveloperResetResponse,
+  type DeveloperScenarioMode,
+  type DeveloperScenarioResponse,
   type Holding,
   type MyDataConnection,
   type MyDataSync,
@@ -26,6 +29,8 @@ import {
   isConnection,
   isConnections,
   isCurrentUser,
+  isDeveloperReset,
+  isDeveloperScenario,
   isHistory,
   isHoldingPage,
   isPlatformHealth,
@@ -290,6 +295,35 @@ export class HttpPlatformApi implements PlatformApi {
     );
   }
 
+  resetDeveloperDataset(
+    options: PlatformRequestOptions = {},
+  ): Promise<DeveloperResetResponse> {
+    return this.requestJson(
+      '/api/v1/dev/dataset/reset',
+      isDeveloperReset,
+      options,
+      this.authenticatedFetch,
+      undefined,
+      {},
+      'POST',
+    );
+  }
+
+  setDeveloperScenario(
+    mode: DeveloperScenarioMode,
+    options: PlatformRequestOptions = {},
+  ): Promise<DeveloperScenarioResponse> {
+    return this.requestJson(
+      '/api/v1/dev/scenario',
+      isDeveloperScenario,
+      options,
+      this.authenticatedFetch,
+      { mode, correlationScope: 'CURRENT_USER' },
+      {},
+      'PUT',
+    );
+  }
+
   private async requestJson<T>(
     path: string,
     validate: (value: unknown) => value is T,
@@ -297,6 +331,7 @@ export class HttpPlatformApi implements PlatformApi {
     fetch: FetchLike,
     body?: unknown,
     extraHeaders: Readonly<Record<string, string>> = {},
+    methodOverride?: 'POST' | 'PUT',
   ): Promise<T> {
     let response: Response;
 
@@ -308,7 +343,7 @@ export class HttpPlatformApi implements PlatformApi {
           ...extraHeaders,
           'X-Request-Id': this.requestId(),
         },
-        method: body === undefined ? 'GET' : 'POST',
+        method: methodOverride ?? (body === undefined ? 'GET' : 'POST'),
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
         ...(options.signal === undefined ? {} : { signal: options.signal }),
       });

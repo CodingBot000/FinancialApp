@@ -3,8 +3,8 @@
 - 현재 Milestone: 2~5 — 단일 Main 로컬 MVP 통합
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-02
-- 마지막 완료 ID: FE-0013
-- 다음 작업 ID: FE-0014
+- 마지막 완료 ID: FE-0014
+- 다음 작업 ID: DEV-0011
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
@@ -128,6 +128,17 @@
 - [x] mobile 29 files/88 tests와 actual FILLED/REJECTED/UNKNOWN→FILLED smoke 통과
 - [x] root `npm run verify`: mobile 88/simulator 12/platform 61, 총 161 tests와 두 backend build 통과
 
+## FE-0014 Settings·Developer Scenario·접근성
+
+- [x] logout, canonical current-user dataset/synthetic 안내와 설정 tab 구현
+- [x] 자산·시뮬레이션·주문 화면과 차트 accessibility label의 금액 가리기
+- [x] local/demo 명시 설정에서만 6개 simulator scenario와 deterministic reset 노출
+- [x] 누락·미지·production app environment fail-closed과 developer UI 미노출 component test
+- [x] developer PUT/bodyless POST strict HTTP adapter, mock/unavailable port, canonical consumer coverage 갱신
+- [x] mobile architecture/lint/strict typecheck와 31 files/95 tests 통과
+- [x] actual local scenario/reset·FILLED/REJECTED/UNKNOWN→FILLED smoke 통과
+- [x] root `npm run verify`: mobile 95/simulator 12/platform 61, 총 168 tests와 두 backend build 통과
+
 ## 완료된 통합 기준선
 
 - [x] root npm workspace와 통합 `package-lock.json`
@@ -183,6 +194,6 @@
 
 ## 다음 작업
 
-1. `FE-0014`: Settings/developer scenario와 접근성
-2. `DEV-0011`: local full-stack E2E와 fresh-clone 인수 후 Milestone 6A local hardening 진행
-3. 단계 10 local hardening 완료 결과를 commit/push하고 Milestone 6B 원격 단계 전에 STOP
+1. `DEV-0011`: local full-stack E2E와 fresh-clone 인수
+2. 단계 10 Milestone 6A local hardening 진행
+3. 단계 10 완료 결과를 commit/push하고 Milestone 6B 원격 단계 전에 STOP

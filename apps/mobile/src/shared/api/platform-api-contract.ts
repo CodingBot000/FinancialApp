@@ -3,6 +3,8 @@ import type {
   AssetHistoryPoint,
   AssetSummary,
   CurrentUserResponse,
+  DeveloperResetResponse,
+  DeveloperScenarioResponse,
   Holding,
   MyDataConnection,
   MyDataSync,
@@ -413,5 +415,41 @@ export function isOrderPage(value: unknown): value is OrderPage {
     Array.isArray(item.items) &&
     item.items.every(isOrder) &&
     (item.nextCursor === null || uuid(item.nextCursor))
+  );
+}
+
+const DEVELOPER_SCENARIOS = [
+  'NORMAL',
+  'TIMEOUT',
+  'HTTP_500',
+  'MALFORMED_RESPONSE',
+  'ORDER_REJECT',
+  'ORDER_UNKNOWN_THEN_FILLED',
+] as const;
+
+export function isDeveloperScenario(
+  value: unknown,
+): value is DeveloperScenarioResponse {
+  const item = record(value);
+  return (
+    !!item &&
+    exact(item, ['mode', 'scope']) &&
+    DEVELOPER_SCENARIOS.includes(
+      item.mode as (typeof DEVELOPER_SCENARIOS)[number],
+    ) &&
+    item.scope === 'GLOBAL'
+  );
+}
+
+export function isDeveloperReset(
+  value: unknown,
+): value is DeveloperResetResponse {
+  const item = record(value);
+  return (
+    !!item &&
+    exact(item, ['datasetVersion', 'scenarioMode', 'syntheticData']) &&
+    text(item.datasetVersion) &&
+    item.scenarioMode === 'NORMAL' &&
+    item.syntheticData === true
   );
 }

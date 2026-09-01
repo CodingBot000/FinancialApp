@@ -7,6 +7,9 @@ import {
   type CreateOrderInput,
   type CurrentUserResponse,
   type CreateSimulationInput,
+  type DeveloperResetResponse,
+  type DeveloperScenarioMode,
+  type DeveloperScenarioResponse,
   type Holding,
   type MyDataConnection,
   type MyDataSync,
@@ -77,6 +80,7 @@ function waitForMockLatency(milliseconds: number, signal?: AbortSignal) {
 export class ContractMockPlatformApi implements PlatformApi {
   private readonly latencyMs: number;
   private readonly scenario: ContractMockHealthScenario;
+  private developerScenario: DeveloperScenarioMode = 'NORMAL';
 
   constructor(options: ContractMockPlatformApiOptions = {}) {
     this.latencyMs = options.latencyMs ?? 250;
@@ -250,5 +254,26 @@ export class ContractMockPlatformApi implements PlatformApi {
   ) {
     await waitForMockLatency(this.latencyMs, options.signal);
     return structuredClone(orderFlow.quote);
+  }
+
+  async resetDeveloperDataset(
+    options: PlatformRequestOptions = {},
+  ): Promise<DeveloperResetResponse> {
+    await waitForMockLatency(this.latencyMs, options.signal);
+    this.developerScenario = 'NORMAL';
+    return {
+      datasetVersion: currentUser.datasetVersion,
+      scenarioMode: 'NORMAL',
+      syntheticData: true,
+    };
+  }
+
+  async setDeveloperScenario(
+    mode: DeveloperScenarioMode,
+    options: PlatformRequestOptions = {},
+  ): Promise<DeveloperScenarioResponse> {
+    await waitForMockLatency(this.latencyMs, options.signal);
+    this.developerScenario = mode;
+    return { mode: this.developerScenario, scope: 'GLOBAL' };
   }
 }

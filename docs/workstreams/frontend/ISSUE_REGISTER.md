@@ -1,6 +1,6 @@
 # Frontend Workstream Issue와 Gap Register
 
-- 다음 ISSUE ID: `FE-ISSUE-0010`
+- 다음 ISSUE ID: `FE-ISSUE-0011`
 - 다음 GAP ID: `FE-GAP-0005`
 - active issue: `FE-ISSUE-0001`
 - active gap: `FE-GAP-0002`, `FE-GAP-0004`
@@ -51,6 +51,20 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 검증: FE-0006 자동/native build에 더해 FE-0010 Android API 36 Development Build에서 fingerprint enrollment, OS prompt, unlock, process restart 뒤 재인증과 실제 `/me` 복구를 통과했다. UI는 생체인증을 server MFA로 표현하지 않는다.
 
 ## Resolved History
+
+### FE-ISSUE-0010 — Settings session fixture의 secret scan 오탐
+
+- 상태: RESOLVED
+- 심각도: LOW
+- 발견 FE: FE-0014 root verify
+- 관련 contract revision: `platform-v1`
+- 중앙 연결: `ISSUE-0010`
+- 내용: settings logout component test의 합성 session token 문자열이 credential literal secret 탐지 규칙에 일치했다.
+- 영향: 실제 secret 노출은 없었지만 root release gate가 중단됐다.
+- 해결 조건: detector/file을 제외하지 않고 명시적 synthetic placeholder로 통과할 것.
+- 목표 FE: FE-0014
+- 해결 FE: FE-0014
+- 검증: `<synthetic-access-token>`/`<synthetic-refresh-token>`으로 변경한 뒤 secret scan과 root verify를 재실행했다.
 
 ### FE-ISSUE-0009 — Order component test의 native auth barrel eager import
 

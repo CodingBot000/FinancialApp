@@ -1,7 +1,7 @@
 # Frontend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `FE-0014`
+- 다음 ID: Milestone 6A frontend 보강 발견 시 배정
 - 운영 상태: `codex/frontend`는 DEV-0006 통합 이력으로 보존, 신규 FE commit은 단일 `main`에서 수행
 - 활성 worktree: `/Users/switch/Development/Web/FinancialApp`
 - 통합 검토 기준: `main` at `2574ad0`, `platform-v1` at DEV-0006
@@ -736,3 +736,38 @@
 ### 다음 작업
 
 - FE-0014: Settings, synthetic/dataset, money hide, developer scenario/reset와 accessibility review
+
+## FE-0014 — Settings·Developer Scenario·접근성
+
+- 날짜: 2026-09-02
+- Milestone: 2~5 로컬 MVP 마무리
+- 상태: COMPLETED
+- base commit: `229fe4dd40246661659e0a7bd366a71b38b56ff3`
+- contract revision: `platform-v1`
+- 예정 commit: `feat(fe): add safe settings and scenario controls [FE-0014]`
+
+### 완료
+
+- 설정 tab에 current-user dataset/synthetic 안내, 로컬 session logout과 공통 금액 숨기기를 구현
+- 금액 숨기기를 Dashboard/account/holding/transaction/chart accessibility label, simulation input/result/chart와 order quote/status/history에 적용
+- Expo가 정적 치환하는 `EXPO_PUBLIC_APP_ENV` 명시 값으로 local/demo만 developer panel을 열고 production·누락·미지값을 fail-closed 처리
+- 6개 canonical scenario PUT과 bodyless reset POST를 strict guard, HTTP/mock/unavailable adapter와 연결
+- simulator instrument 목록은 mobile이 private simulator를 직접 소비하지 않도록 operation coverage를 internal platform boundary `not-applicable`로 정정
+
+### 검증
+
+- mobile architecture 102 source files, lint, strict typecheck 통과
+- mobile 31 files/95 tests: environment fail-closed, production UI 미노출, logout/money toggle, scenario/reset, HTTP method/body/header와 exact response guard 포함
+- actual local Compose 상태에서 sync/simulation/NORMAL FILLED/REJECTED/UNKNOWN→FILLED/developer reset smoke 통과
+- 최초 root verify에서 기존 Colima 환경 계약 중 host `DOCKER_HOST`만 지정해 Ryuk socket mount가 실패했고 test를 비활성화하지 않음. 기존 문서화된 `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock`를 함께 지정해 재실행
+- 최종 root `npm run verify`: mobile 95/simulator 12/platform 61, 총 168 tests와 두 backend build 통과
+
+### 이슈·누락·Handoff
+
+- `FE-ISSUE-0010` synthetic session fixture secret scan 오탐은 명시적 placeholder로 교체해 RESOLVED. iOS/physical biometric과 Expo advisory는 기존 active gap/issue를 유지
+- production은 developer UI 진입점이 없고 backend developer module도 미등록이며, mobile은 simulator private endpoint를 직접 호출하지 않음
+- 원격 DB·credential·migration·deploy는 실행하지 않음
+
+### 다음 작업
+
+- DEV-0011: clean local MVP 12-step acceptance와 fresh-clone/release gate

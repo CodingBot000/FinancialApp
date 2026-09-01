@@ -6,14 +6,16 @@ function decimal(value: string) {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-export function formatWon(value: string) {
+export function formatWon(value: string, hidden = false) {
+  if (hidden) return '••••원';
   const parsed = decimal(value);
   return parsed === undefined
     ? '금액 확인 필요'
     : `${Math.round(parsed).toLocaleString('ko-KR')}원`;
 }
 
-export function formatCompactWon(value: string) {
+export function formatCompactWon(value: string, hidden = false) {
+  if (hidden) return '••••만원';
   const parsed = decimal(value);
   return parsed === undefined
     ? '금액 확인 필요'

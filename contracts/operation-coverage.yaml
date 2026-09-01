@@ -247,7 +247,12 @@ contracts:
           ]
         providerTests:
           [services/platform-api/test/developer/developer.e2e.test.ts]
-        consumer: { status: planned, target: FE-0014 }
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-0014,
+          }
       resetDeveloperDataset:
         implementation:
           [
@@ -256,7 +261,12 @@ contracts:
           ]
         providerTests:
           [services/platform-api/test/developer/developer.e2e.test.ts]
-        consumer: { status: planned, target: FE-0014 }
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-0014,
+          }
   institution-simulator-v1:
     openapi: contracts/openapi/institution-simulator-v1.yaml
     controllerRoots: [services/institution-simulator/src]
@@ -319,7 +329,7 @@ contracts:
           ]
         providerTests:
           [services/institution-simulator/test/trading/trading.e2e.test.ts]
-        consumer: { status: planned, target: FE-0014 }
+        consumer: { status: not-applicable, target: internal-platform-boundary }
       getSimulatorPrices:
         implementation:
           [

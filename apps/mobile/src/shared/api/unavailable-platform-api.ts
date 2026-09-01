@@ -7,6 +7,9 @@ import {
   type CreateOrderInput,
   type CreateSimulationInput,
   type CurrentUserResponse,
+  type DeveloperResetResponse,
+  type DeveloperScenarioMode,
+  type DeveloperScenarioResponse,
   type Holding,
   type MyDataConnection,
   type MyDataSync,
@@ -86,6 +89,15 @@ export class UnavailablePlatformApi implements PlatformApi {
   }
   previewBuyOrder(input: BuyOrderInput): Promise<Quote> {
     void input;
+    return this.reject();
+  }
+  resetDeveloperDataset(): Promise<DeveloperResetResponse> {
+    return this.reject();
+  }
+  setDeveloperScenario(
+    mode: DeveloperScenarioMode,
+  ): Promise<DeveloperScenarioResponse> {
+    void mode;
     return this.reject();
   }
 

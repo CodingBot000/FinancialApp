@@ -3,6 +3,18 @@ import { describe, expect, it } from 'vitest';
 import { ContractMockPlatformApi } from './contract-mock-platform-api';
 
 describe('ContractMockPlatformApi', () => {
+  it('sets and resets deterministic developer scenarios', async () => {
+    const api = new ContractMockPlatformApi({ latencyMs: 0 });
+    await expect(api.setDeveloperScenario('HTTP_500')).resolves.toEqual({
+      mode: 'HTTP_500',
+      scope: 'GLOBAL',
+    });
+    await expect(api.resetDeveloperDataset()).resolves.toMatchObject({
+      scenarioMode: 'NORMAL',
+      syntheticData: true,
+    });
+  });
+
   it('returns the canonical FE-0011 wealth fixtures', async () => {
     const api = new ContractMockPlatformApi({ latencyMs: 0 });
     const accounts = await api.listAccounts();

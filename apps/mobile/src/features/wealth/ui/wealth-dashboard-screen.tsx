@@ -15,6 +15,7 @@ import {
   formatWon,
   isMaskedAccountIdentifier,
 } from '../../../shared/format/finance-format';
+import { useMoneyVisibilityStore } from '../../../shared/privacy';
 import { useWealthDashboard } from '../hooks/use-wealth-dashboard';
 import { AssetCharts } from './asset-charts';
 
@@ -45,9 +46,11 @@ function Action({
 
 function AccountDetail({
   account,
+  amountsHidden,
   holdings,
 }: {
   readonly account: Account;
+  readonly amountsHidden: boolean;
   readonly holdings: ReturnType<typeof useWealthDashboard>['data']['holdings'];
 }) {
   const accountHoldings = holdings.filter(
@@ -58,7 +61,9 @@ function AccountDetail({
       <Text style={styles.sectionTitle}>
         계좌 상세 · {account.maskedAccountNumber}
       </Text>
-      <Text style={styles.amount}>{formatWon(account.cashBalance)}</Text>
+      <Text style={styles.amount}>
+        {formatWon(account.cashBalance, amountsHidden)}
+      </Text>
       {accountHoldings.map((holding) => (
         <View key={holding.holdingId} style={styles.row}>
           <View>
@@ -67,7 +72,9 @@ function AccountDetail({
               {formatQuantity(holding.quantity)} · {holding.assetClass}
             </Text>
           </View>
-          <Text style={styles.rowValue}>{formatWon(holding.marketValue)}</Text>
+          <Text style={styles.rowValue}>
+            {formatWon(holding.marketValue, amountsHidden)}
+          </Text>
         </View>
       ))}
     </View>
@@ -75,6 +82,7 @@ function AccountDetail({
 }
 
 export function WealthDashboardScreen() {
+  const amountsHidden = useMoneyVisibilityStore((state) => state.hidden);
   const [selected, setSelected] = useState<string>();
   const dashboard = useWealthDashboard(selected);
   if (dashboard.pending)
@@ -182,10 +190,12 @@ export function WealthDashboardScreen() {
             {summary.lastSyncedAt === null ? (
               <Text style={styles.stale}>동기화 전 데이터</Text>
             ) : null}
-            <Text style={styles.total}>{formatWon(summary.totalAssets)}</Text>
+            <Text style={styles.total}>
+              {formatWon(summary.totalAssets, amountsHidden)}
+            </Text>
             <Text style={styles.muted}>
-              현금 {formatWon(summary.cash)} · 투자{' '}
-              {formatWon(summary.investments)}
+              현금 {formatWon(summary.cash, amountsHidden)} · 투자{' '}
+              {formatWon(summary.investments, amountsHidden)}
             </Text>
             <AssetCharts
               allocation={summary.allocation}
@@ -217,7 +227,7 @@ export function WealthDashboardScreen() {
                   </Text>
                 </View>
                 <Text style={styles.rowValue}>
-                  {formatWon(account.cashBalance)}
+                  {formatWon(account.cashBalance, amountsHidden)}
                 </Text>
               </Pressable>
             ))
@@ -243,6 +253,7 @@ export function WealthDashboardScreen() {
         {selectedAccount ? (
           <AccountDetail
             account={selectedAccount}
+            amountsHidden={amountsHidden}
             holdings={dashboard.data.holdings}
           />
         ) : null}
@@ -260,7 +271,7 @@ export function WealthDashboardScreen() {
                   <Text style={styles.muted}>{transaction.occurredAt}</Text>
                 </View>
                 <Text style={styles.rowValue}>
-                  {formatWon(transaction.amount)}
+                  {formatWon(transaction.amount, amountsHidden)}
                 </Text>
               </View>
             ))

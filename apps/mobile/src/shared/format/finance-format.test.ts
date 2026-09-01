@@ -11,6 +11,8 @@ describe('wealth contract formatters', () => {
   it('maps canonical decimal strings without floating-point display artifacts', () => {
     expect(formatWon('185400000.0000')).toBe('185,400,000원');
     expect(formatCompactWon('185400000.0000')).toBe('18,540만원');
+    expect(formatWon('185400000.0000', true)).toBe('••••원');
+    expect(formatCompactWon('185400000.0000', true)).toBe('••••만원');
     expect(formatQuantity('1360.00000000')).toBe('1,360');
     expect(formatQuantity('0.12345678')).toBe('0.12345678');
   });
