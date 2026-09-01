@@ -1,7 +1,7 @@
 # Frontend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `FE-0013`
+- 다음 ID: `FE-0014`
 - 운영 상태: `codex/frontend`는 DEV-0006 통합 이력으로 보존, 신규 FE commit은 단일 `main`에서 수행
 - 활성 worktree: `/Users/switch/Development/Web/FinancialApp`
 - 통합 검토 기준: `main` at `2574ad0`, `platform-v1` at DEV-0006
@@ -701,3 +701,38 @@
 ### 다음 작업
 
 - FE-0013: quote/biometric/idempotent BUY, order status/history와 UNKNOWN recovery
+
+## FE-0013 — BUY Order와 UNKNOWN Recovery
+
+- 날짜: 2026-09-02
+- Milestone: 5
+- 상태: COMPLETED
+- base commit: `24e2162edcb6d3a90d498ca669da50cd0ed9a8c2`
+- contract revision: additive Holding `instrumentId`, platform-v1
+- 예정 commit: `feat(fe): add biometric BUY recovery flow [FE-0013]`
+
+### 완료
+
+- quote/order/list/detail canonical types와 strict guards, mock/HTTP/unavailable adapter를 구현하고 4개 consumer coverage를 implemented로 전환
+- holding의 opaque instrument UUID, 입력 수량과 60초 expiry를 사용해 preview하고 local biometric 성공 전에는 submit하지 않는 화면 구현
+- 각 preview 사용자 action에서 UUID idempotency key를 한 번 만들고 order mutation retry를 false로 고정
+- POST 401 automatic replay 금지 foundation을 유지하고 UNKNOWN은 GET status polling만 수행
+- FILLED 뒤 summary/accounts/holdings/history/order list exact invalidation과 order history, REJECTED/FAILED/UNKNOWN/error code UX 구현
+
+### 검증
+
+- mobile architecture 95 files, lint, strict typecheck와 29 files/88 tests 통과
+- component/adapter: expiry 전 biometric, cancel 차단, 단일 POST, UUID header, UNKNOWN GET polling과 response exact guard 통과
+- 첫 component run의 native auth barrel eager import와 history amount를 quote로 오인한 async assertion을 각각 direct import/role wait로 해결
+- actual local FILLED, REJECTED, UNKNOWN→FILLED와 duplicate connection 409, sync/simulation smoke 통과
+- root `npm run verify`: mobile 88/simulator 12/platform 61 총 161 tests와 두 backend build 통과
+
+### 이슈·누락·Handoff
+
+- `FE-ISSUE-0009`: native barrel eager import RESOLVED
+- 주문 POST 자동 retry/replay, biometric 전 submit과 code→instrument ID 추측 없음
+- 원격 DB·credential·migration·deploy는 실행하지 않음
+
+### 다음 작업
+
+- FE-0014: Settings, synthetic/dataset, money hide, developer scenario/reset와 accessibility review

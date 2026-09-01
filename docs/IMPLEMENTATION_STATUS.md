@@ -3,8 +3,8 @@
 - 현재 Milestone: 2~5 — 단일 Main 로컬 MVP 통합
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-02
-- 마지막 완료 ID: BE-0011
-- 다음 작업 ID: FE-0013
+- 마지막 완료 ID: FE-0013
+- 다음 작업 ID: FE-0014
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
@@ -37,7 +37,7 @@
 | 2. OIDC와 App Lock | DONE | Android Development Build에서 live PKCE→App Lock→`/me`, process restart refresh와 logout/cache clear 완료; iOS·물리 기기 edge case는 GAP-0002/0003으로 분리 |
 | 3. 동기화와 Dashboard | DONE | backend sync/raw/derived/조회·audit와 frontend connection/sync polling, Dashboard/Accounts/detail/chart, 부분 오류 UX 및 local actual API smoke 완료 |
 | 4. 서버 시뮬레이션 | DONE | deterministic server 저장/조회, frontend draft validation·persisted result·p10/p50/p90 chart와 local actual API smoke 완료 |
-| 5. BUY 주문과 복구 | IN_PROGRESS | backend quote/reservation/simulator/settlement/reconciliation/audit 완료; frontend 주문 화면과 전체 E2E 남음 |
+| 5. BUY 주문과 복구 | DONE | quote/biometric/idempotent mobile BUY, backend reservation/simulator/settlement/reconciliation/audit, UNKNOWN GET recovery와 actual local smoke 완료; clean 전체 인수는 DEV-0011 |
 | 6A. 로컬 하드닝 | NOT_STARTED | outbox, local KMS adapter 경계, security event/관측성, 최종 포트폴리오 문서 |
 | 6B. 원격 데모 | CURRENT_RUN_EXCLUDED | Lightsail migration, 실제 AWS KMS, HTTPS/EAS와 원격 rollback은 향후 별도 실행 |
 
@@ -118,6 +118,16 @@
 - [x] Drizzle wrapped unique violation을 bounded cause-chain에서 식별해 duplicate connection 500을 canonical 409로 복구
 - [x] Testcontainers duplicate conflict/instrument mapping과 actual local 409/sync/simulation/order smoke 통과
 
+## FE-0013 BUY Order와 Recovery
+
+- [x] canonical quote/order/history/status 4개 operation strict adapter와 fixture 구현
+- [x] quote expiry 검증 뒤 local biometric success 전 submit 금지
+- [x] 사용자 action별 UUID idempotency key와 mutation/AuthenticatedFetch POST no-retry 보장
+- [x] UNKNOWN은 POST replay 없이 GET polling, FILLED 뒤 wealth/order exact invalidation
+- [x] QUOTE_EXPIRED/INSUFFICIENT_FUNDS/IDEMPOTENCY_CONFLICT/UNKNOWN/REJECTED/FAILED UX
+- [x] mobile 29 files/88 tests와 actual FILLED/REJECTED/UNKNOWN→FILLED smoke 통과
+- [x] root `npm run verify`: mobile 88/simulator 12/platform 61, 총 161 tests와 두 backend build 통과
+
 ## 완료된 통합 기준선
 
 - [x] root npm workspace와 통합 `package-lock.json`
@@ -173,6 +183,6 @@
 
 ## 다음 작업
 
-1. `FE-0013`~`FE-0014`: order, Settings/developer scenario
+1. `FE-0014`: Settings/developer scenario와 접근성
 2. `DEV-0011`: local full-stack E2E와 fresh-clone 인수 후 Milestone 6A local hardening 진행
 3. 단계 10 local hardening 완료 결과를 commit/push하고 Milestone 6B 원격 단계 전에 STOP

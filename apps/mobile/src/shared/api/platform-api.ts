@@ -143,6 +143,49 @@ export interface Simulation {
   readonly simulationId: string;
 }
 
+export interface BuyOrderInput {
+  readonly accountId: string;
+  readonly instrumentId: string;
+  readonly quantity: string;
+  readonly side: 'BUY';
+}
+
+export interface CreateOrderInput extends BuyOrderInput {
+  readonly quoteId: string;
+}
+
+export interface Quote {
+  readonly currency: 'KRW';
+  readonly estimatedAmount: Money;
+  readonly expiresAt: string;
+  readonly fee: Money;
+  readonly quantity: string;
+  readonly quoteId: string;
+  readonly side: 'BUY';
+  readonly syntheticQuote: true;
+  readonly unitPrice: Money;
+}
+
+export type OrderStatus =
+  'FAILED' | 'FILLED' | 'PENDING_SUBMISSION' | 'REJECTED' | 'UNKNOWN';
+
+export interface Order {
+  readonly createdAt: string;
+  readonly estimatedAmount: Money;
+  readonly filledAmount: Money | null;
+  readonly orderId: string;
+  readonly quantity: string;
+  readonly side: 'BUY';
+  readonly status: OrderStatus;
+  readonly statusRefreshRecommendedAfterMs: 2000 | null;
+  readonly updatedAt: string;
+}
+
+export interface OrderPage {
+  readonly items: readonly Order[];
+  readonly nextCursor: string | null;
+}
+
 export interface PlatformApi {
   createSimulation(
     input: CreateSimulationInput,
@@ -177,6 +220,7 @@ export interface PlatformApi {
     simulationId: string,
     options?: PlatformRequestOptions,
   ): Promise<Simulation>;
+  getOrder(orderId: string, options?: PlatformRequestOptions): Promise<Order>;
   listAccounts(options?: PlatformRequestOptions): Promise<Page<Account>>;
   listHoldings(
     accountId?: string,
@@ -188,6 +232,20 @@ export interface PlatformApi {
   listTransactions(
     options?: PlatformRequestOptions,
   ): Promise<Page<Transaction>>;
+  listOrders(
+    cursor?: string,
+    limit?: number,
+    options?: PlatformRequestOptions,
+  ): Promise<OrderPage>;
+  prepareBuyOrder(
+    input: CreateOrderInput,
+    idempotencyKey: string,
+    options?: PlatformRequestOptions,
+  ): Promise<Order>;
+  previewBuyOrder(
+    input: BuyOrderInput,
+    options?: PlatformRequestOptions,
+  ): Promise<Quote>;
 }
 
 export type PlatformApiErrorKind =

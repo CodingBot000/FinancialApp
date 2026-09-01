@@ -4,8 +4,59 @@ import { HttpPlatformApi } from './http-platform-api';
 import type { PlatformApiError } from './platform-api';
 import wealthFixture from './mock/fixtures/wealth-dashboard.success.json';
 import simulationFixture from './mock/fixtures/simulation.success.json';
+import orderFixture from './mock/fixtures/order-flow.success.json';
 
 describe('HttpPlatformApi', () => {
+  it('maps quote/order/history and sends one caller-owned idempotency key', async () => {
+    const authenticatedFetch = vi.fn(
+      async (url: string, init?: RequestInit) => {
+        if (url.endsWith('/orders/preview'))
+          return Response.json(orderFixture.quote, { status: 201 });
+        if (url.includes('/orders?'))
+          return Response.json({
+            items: [orderFixture.order],
+            nextCursor: null,
+          });
+        return Response.json(orderFixture.order, {
+          status: init?.method === 'POST' ? 201 : 200,
+        });
+      },
+    );
+    const api = new HttpPlatformApi({
+      authenticatedFetch,
+      baseUrl: 'https://platform.example',
+    });
+    const input = {
+      accountId: '688c601b-ab70-4683-9dd4-6a1174550653',
+      instrumentId: 'c805563c-148c-4451-8a9a-4808da7b32ae',
+      quantity: '3.00000000',
+      side: 'BUY' as const,
+    };
+    const quote = await api.previewBuyOrder(input);
+    await expect(
+      api.prepareBuyOrder(
+        { ...input, quoteId: quote.quoteId },
+        '92000000-0000-4000-8000-000000000001',
+      ),
+    ).resolves.toMatchObject({ status: 'FILLED' });
+    await expect(
+      api.getOrder(orderFixture.order.orderId),
+    ).resolves.toMatchObject({ status: 'FILLED' });
+    await expect(api.listOrders(undefined, 20)).resolves.toMatchObject({
+      nextCursor: null,
+    });
+    expect(authenticatedFetch).toHaveBeenNthCalledWith(
+      2,
+      'https://platform.example/api/v1/orders',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'Idempotency-Key': '92000000-0000-4000-8000-000000000001',
+        }),
+        method: 'POST',
+      }),
+    );
+  });
+
   it('creates and reads only canonical persisted simulation results', async () => {
     const authenticatedFetch = vi.fn(async () =>
       Response.json(simulationFixture, { status: 201 }),

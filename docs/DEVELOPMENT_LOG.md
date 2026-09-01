@@ -633,6 +633,34 @@
 
 - `FE-0013`: BUY order와 UNKNOWN recovery mobile vertical slice
 
+## FE-0013 — Biometric BUY와 Recovery Mobile 통합
+
+- 날짜: 2026-09-02
+- Milestone: 5
+- 상태: COMPLETED
+- 예정 commit: `feat(fe): add biometric BUY recovery flow [FE-0013]`
+
+### 완료
+
+- opaque instrument ID 기반 preview, expiry와 biometric gate 뒤 idempotent BUY를 구현
+- POST no-retry, UNKNOWN GET polling과 FILLED wealth/order invalidation 및 order history/error 상태 구현
+- canonical quote/order 4 operation consumer와 strict response/cursor guard 연결
+
+### 검증
+
+- mobile architecture 95 files, lint, strict typecheck와 29 files/88 tests 통과
+- actual local FILLED/REJECTED/UNKNOWN→FILLED full smoke 통과
+- root `npm run verify`: mobile 88/simulator 12/platform 61 총 161 tests와 두 backend build 통과
+
+### 이슈와 누락
+
+- `FE-ISSUE-0009` RESOLVED
+- 원격 DB와 배포 작업은 실행하지 않음
+
+### 다음 작업
+
+- `FE-0014`: Settings/developer scenario/accessibility
+
 ## BE-0011 — FE-0013 Contract Entry Repair
 
 - 날짜: 2026-09-02

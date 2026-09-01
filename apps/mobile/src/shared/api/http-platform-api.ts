@@ -3,15 +3,20 @@ import {
   type Account,
   type AssetHistoryPoint,
   type AssetSummary,
+  type BuyOrderInput,
+  type CreateOrderInput,
   type CreateSimulationInput,
   type CurrentUserResponse,
   type Holding,
   type MyDataConnection,
   type MyDataSync,
+  type Order,
+  type OrderPage,
   type Page,
   type PlatformApi,
   type PlatformHealthResponse,
   type PlatformRequestOptions,
+  type Quote,
   type Simulation,
   type Transaction,
 } from './platform-api';
@@ -24,6 +29,9 @@ import {
   isHistory,
   isHoldingPage,
   isPlatformHealth,
+  isOrder,
+  isOrderPage,
+  isQuote,
   isSimulation,
   isSummary,
   isSync,
@@ -168,6 +176,18 @@ export class HttpPlatformApi implements PlatformApi {
     );
   }
 
+  getOrder(
+    orderId: string,
+    options: PlatformRequestOptions = {},
+  ): Promise<Order> {
+    return this.requestJson(
+      `/api/v1/orders/${encodeURIComponent(orderId)}`,
+      isOrder,
+      options,
+      this.authenticatedFetch,
+    );
+  }
+
   getSimulation(
     simulationId: string,
     options: PlatformRequestOptions = {},
@@ -216,6 +236,21 @@ export class HttpPlatformApi implements PlatformApi {
     );
   }
 
+  listOrders(
+    cursor?: string,
+    limit = 20,
+    options: PlatformRequestOptions = {},
+  ): Promise<OrderPage> {
+    const search = new URLSearchParams({ limit: String(limit) });
+    if (cursor !== undefined) search.set('cursor', cursor);
+    return this.requestJson(
+      `/api/v1/orders?${search.toString()}`,
+      isOrderPage,
+      options,
+      this.authenticatedFetch,
+    );
+  }
+
   listTransactions(
     options: PlatformRequestOptions = {},
   ): Promise<Page<Transaction>> {
@@ -227,12 +262,41 @@ export class HttpPlatformApi implements PlatformApi {
     );
   }
 
+  prepareBuyOrder(
+    input: CreateOrderInput,
+    idempotencyKey: string,
+    options: PlatformRequestOptions = {},
+  ): Promise<Order> {
+    return this.requestJson(
+      '/api/v1/orders',
+      isOrder,
+      options,
+      this.authenticatedFetch,
+      input,
+      { 'Idempotency-Key': idempotencyKey },
+    );
+  }
+
+  previewBuyOrder(
+    input: BuyOrderInput,
+    options: PlatformRequestOptions = {},
+  ): Promise<Quote> {
+    return this.requestJson(
+      '/api/v1/orders/preview',
+      isQuote,
+      options,
+      this.authenticatedFetch,
+      input,
+    );
+  }
+
   private async requestJson<T>(
     path: string,
     validate: (value: unknown) => value is T,
     options: PlatformRequestOptions,
     fetch: FetchLike,
     body?: unknown,
+    extraHeaders: Readonly<Record<string, string>> = {},
   ): Promise<T> {
     let response: Response;
 
@@ -241,6 +305,7 @@ export class HttpPlatformApi implements PlatformApi {
         headers: {
           Accept: 'application/json',
           ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+          ...extraHeaders,
           'X-Request-Id': this.requestId(),
         },
         method: body === undefined ? 'GET' : 'POST',

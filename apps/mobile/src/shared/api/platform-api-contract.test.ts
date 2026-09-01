@@ -2,11 +2,15 @@ import { describe, expect, it } from 'vitest';
 
 import fixture from './mock/fixtures/wealth-dashboard.success.json';
 import simulationFixture from './mock/fixtures/simulation.success.json';
+import orderFixture from './mock/fixtures/order-flow.success.json';
 import {
   isAccount,
   isAccountPage,
   isConnections,
   isHistory,
+  isOrder,
+  isOrderPage,
+  isQuote,
   isHoldingPage,
   isSummary,
   isSimulation,
@@ -30,6 +34,11 @@ describe('platform-v1 wealth response guards', () => {
     ).toBe(true);
     expect(isHistory({ points: fixture.history })).toBe(true);
     expect(isSimulation(simulationFixture)).toBe(true);
+    expect(isQuote(orderFixture.quote)).toBe(true);
+    expect(isOrder(orderFixture.order)).toBe(true);
+    expect(isOrderPage({ items: [orderFixture.order], nextCursor: null })).toBe(
+      true,
+    );
   });
 
   it('rejects non-canonical money, cursors, extra keys, and raw identifiers', () => {
@@ -52,5 +61,6 @@ describe('platform-v1 wealth response guards', () => {
         maskedAccountNumber: '1234567890',
       }),
     ).toBe(false);
+    expect(isOrder({ ...orderFixture.order, quantity: '3.0' })).toBe(false);
   });
 });

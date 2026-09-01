@@ -3,14 +3,19 @@ import {
   type Account,
   type AssetHistoryPoint,
   type AssetSummary,
+  type BuyOrderInput,
+  type CreateOrderInput,
   type CreateSimulationInput,
   type CurrentUserResponse,
   type Holding,
   type MyDataConnection,
   type MyDataSync,
+  type Order,
+  type OrderPage,
   type Page,
   type PlatformApi,
   type PlatformHealthResponse,
+  type Quote,
   type Simulation,
   type Transaction,
 } from './platform-api';
@@ -50,6 +55,9 @@ export class UnavailablePlatformApi implements PlatformApi {
   getMyDataSync(): Promise<MyDataSync> {
     return this.reject();
   }
+  getOrder(): Promise<Order> {
+    return this.reject();
+  }
   getSimulation(): Promise<Simulation> {
     return this.reject();
   }
@@ -62,7 +70,22 @@ export class UnavailablePlatformApi implements PlatformApi {
   listMyDataConnections(): Promise<readonly MyDataConnection[]> {
     return this.reject();
   }
+  listOrders(): Promise<OrderPage> {
+    return this.reject();
+  }
   listTransactions(): Promise<Page<Transaction>> {
+    return this.reject();
+  }
+  prepareBuyOrder(
+    input: CreateOrderInput,
+    idempotencyKey: string,
+  ): Promise<Order> {
+    void input;
+    void idempotencyKey;
+    return this.reject();
+  }
+  previewBuyOrder(input: BuyOrderInput): Promise<Quote> {
+    void input;
     return this.reject();
   }
 

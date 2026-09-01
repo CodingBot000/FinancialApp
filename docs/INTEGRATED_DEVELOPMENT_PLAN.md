@@ -7,8 +7,8 @@
 - 활성 branch/worktree: `main` / `/Users/switch/Development/Web/FinancialApp`
 - 현재 실행 종료선: 단계 10 로컬 하드닝 완료 후 STOP
 - 현재 실행 제외: 원격 DB 접속·사전점검·migration/seed와 원격 배포
-- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`, 단계 3 `BE-0010`, 단계 4 `FE-0010`, 단계 5 `FE-0011`, 단계 6 `FE-0012`, FE-0013 진입 보강 `BE-0011`
-- 다음 작업 ID: `FE-0013`
+- 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`, 단계 3 `BE-0010`, 단계 4 `FE-0010`, 단계 5 `FE-0011`, 단계 6 `FE-0012`, FE-0013 진입 보강 `BE-0011`, 단계 7 `FE-0013`
+- 다음 작업 ID: `FE-0014`
 
 ## 1. 목적과 문서 권한
 
@@ -45,7 +45,7 @@
 | Milestone 2 | backend JWT와 `/me`, mobile PKCE/session/App Lock/401 lifecycle | 실제 local Keycloak 로그인, `/me`, restart refresh, 실기기 항목 | IN_PROGRESS |
 | Milestone 3 | simulator 원천 데이터, manual/scheduled sync, raw/derived, 자산 조회, 최소 audit, mobile Dashboard/Accounts/sync UX | local actual API smoke 완료 | DONE |
 | Milestone 4 | deterministic simulation engine와 저장/조회, mobile 입력·저장결과·백분위 chart와 disclaimer | local actual API smoke 완료 | DONE |
-| Milestone 5 | quote, reservation, simulator brokerage/scenario, settlement/reconciliation/ledger/position/execution/audit와 주문 조회 | mobile 주문 흐름과 full-stack E2E | IN_PROGRESS |
+| Milestone 5 | quote, biometric/idempotent mobile BUY, simulator brokerage/scenario, settlement/reconciliation/ledger/position/execution/audit와 UNKNOWN GET recovery | 단계 9 clean full-stack acceptance | DONE (기능) |
 | Simulator MVP | 계좌/보유/거래/시세/주문/status, 6개 장애 scenario, deterministic reset/reseed와 platform developer proxy | mobile 포함 전체 E2E에서 재검증 | DONE (local service boundary) |
 | Contract 품질 | OpenAPI 2개, 현재 operation 31개 controller/provider/fixture/consumer 추적과 호환성 gate | 이후 operation 추가 시 같은 coverage와 provider schema 검증 유지 | DONE (current surface) |
 | Local E2E | 서비스별 test와 수동 Compose smoke | mobile→IdP→platform→simulator→DB 전체 인수 시나리오 | NOT_STARTED |
@@ -267,7 +267,7 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - strict response guard가 exact key, version, point count/range와 모든 시점의 `p10 <= p50 <= p90`를 검증한다.
 - 실제 local Platform API에서 12개월 simulation을 생성·재조회해 13개 persisted point와 version을 확인했다.
 
-### 단계 7 — Order와 복구 Vertical Slice (`FE-0013`)
+### 단계 7 — Order와 복구 Vertical Slice (`FE-0013`) ✅ 완료
 
 진입 보강 (`BE-0011`) 완료:
 
@@ -286,6 +286,14 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - 동일 사용자 action의 불명확 응답에서 새 key/새 POST를 자동 생성하지 않는다.
 - `QUOTE_EXPIRED`, `INSUFFICIENT_FUNDS`, `IDEMPOTENCY_CONFLICT`, `UNKNOWN`, `REJECTED` UX가 있다.
 - 주문 POST no-retry와 biometric 성공 전 submit 금지를 component/network test로 검증한다.
+
+완료 증거:
+
+- holding의 opaque `instrumentId`로 quote preview를 만들고 local expiry validation 뒤 기기 biometric success일 때만 BUY POST를 실행한다.
+- 사용자 action마다 UUID idempotency key를 한 번 생성해 같은 submit 수명주기에 유지하고 mutation retry를 명시적으로 비활성화했다.
+- `AuthenticatedFetch`는 POST 401도 자동 replay하지 않으며 UNKNOWN은 `statusRefreshRecommendedAfterMs`에 따른 owner-scoped GET만 polling한다.
+- FILLED 뒤 summary/accounts/holdings/history/order list를 exact invalidate하고 REJECTED/FAILED/UNKNOWN과 canonical error code UX를 표시한다.
+- component/adapter test가 만료 견적, biometric cancel, 단일 POST, idempotency header, UNKNOWN GET recovery를 검증했고 actual local flow가 FILLED/REJECTED/UNKNOWN→FILLED를 통과했다.
 
 ### 단계 8 — Settings·Developer Scenario·접근성 (`FE-0014`)
 

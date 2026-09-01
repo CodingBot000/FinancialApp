@@ -30,6 +30,22 @@ describe('ContractMockPlatformApi', () => {
       created,
     );
   });
+  it('previews, submits, reads, and lists a deterministic BUY order', async () => {
+    const api = new ContractMockPlatformApi({ latencyMs: 0 });
+    const input = {
+      accountId: '688c601b-ab70-4683-9dd4-6a1174550653',
+      instrumentId: 'c805563c-148c-4451-8a9a-4808da7b32ae',
+      quantity: '3.00000000',
+      side: 'BUY' as const,
+    };
+    const quote = await api.previewBuyOrder(input);
+    const order = await api.prepareBuyOrder(
+      { ...input, quoteId: quote.quoteId },
+      '92000000-0000-4000-8000-000000000001',
+    );
+    await expect(api.getOrder(order.orderId)).resolves.toEqual(order);
+    await expect(api.listOrders()).resolves.toMatchObject({ items: [order] });
+  });
   it('returns the canonical synthetic current user fixture', async () => {
     const api = new ContractMockPlatformApi({ latencyMs: 0 });
 

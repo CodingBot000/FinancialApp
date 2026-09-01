@@ -1,6 +1,6 @@
 # Frontend Workstream Issue와 Gap Register
 
-- 다음 ISSUE ID: `FE-ISSUE-0009`
+- 다음 ISSUE ID: `FE-ISSUE-0010`
 - 다음 GAP ID: `FE-GAP-0005`
 - active issue: `FE-ISSUE-0001`
 - active gap: `FE-GAP-0002`, `FE-GAP-0004`
@@ -51,6 +51,19 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 검증: FE-0006 자동/native build에 더해 FE-0010 Android API 36 Development Build에서 fingerprint enrollment, OS prompt, unlock, process restart 뒤 재인증과 실제 `/me` 복구를 통과했다. UI는 생체인증을 server MFA로 표현하지 않는다.
 
 ## Resolved History
+
+### FE-ISSUE-0009 — Order component test의 native auth barrel eager import
+
+- 상태: RESOLVED
+- 심각도: LOW
+- 발견 FE: FE-0013 mobile test
+- 관련 contract revision: additive Holding `instrumentId` at `24e2162edcb6d3a90d498ca669da50cd0ed9a8c2`
+- 내용: Order screen이 `shared/auth` barrel에서 biometric adapter를 가져오며 test에 불필요한 SecureStore native module까지 eager import해 `__DEV__` 초기화 오류가 발생했다.
+- 영향: production 주문 로직이 아니라 component test/runtime composition 경계가 오염돼 suite가 시작되지 않았다.
+- 해결 조건: order feature가 필요한 biometric port/adapter 파일만 import하고 전체 mobile suite가 경고 없이 통과할 것.
+- 목표 FE: FE-0013
+- 해결 FE: FE-0013
+- 검증: direct shared module import로 분리하고 mobile 29 files/88 tests를 통과했다. 이후 async quote assertion도 history amount와 구분해 안정화했다.
 
 ### FE-ISSUE-0008 — Local smoke 고정 생성값의 재실행 충돌
 

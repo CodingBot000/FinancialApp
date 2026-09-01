@@ -3,15 +3,20 @@ import {
   type Account,
   type AssetHistoryPoint,
   type AssetSummary,
+  type BuyOrderInput,
+  type CreateOrderInput,
   type CurrentUserResponse,
   type CreateSimulationInput,
   type Holding,
   type MyDataConnection,
   type MyDataSync,
+  type Order,
+  type OrderPage,
   type Page,
   type PlatformApi,
   type PlatformHealthResponse,
   type PlatformRequestOptions,
+  type Quote,
   type Simulation,
   type Transaction,
 } from '../platform-api';
@@ -19,10 +24,15 @@ import currentUserFixture from './fixtures/current-user.success.json';
 import fixture from './fixtures/platform-health.success.json';
 import wealthFixture from './fixtures/wealth-dashboard.success.json';
 import simulationFixture from './fixtures/simulation.success.json';
+import orderFixture from './fixtures/order-flow.success.json';
 
 const platformHealthFixture = fixture as PlatformHealthResponse;
 const currentUser = currentUserFixture as CurrentUserResponse;
 const simulation = simulationFixture as Simulation;
+const orderFlow = orderFixture as {
+  readonly order: Order;
+  readonly quote: Quote;
+};
 const wealth = wealthFixture as unknown as {
   accounts: readonly Account[];
   connection: MyDataConnection;
@@ -163,6 +173,11 @@ export class ContractMockPlatformApi implements PlatformApi {
     return structuredClone(wealth.sync);
   }
 
+  async getOrder(_orderId: string, options: PlatformRequestOptions = {}) {
+    await waitForMockLatency(this.latencyMs, options.signal);
+    return structuredClone(orderFlow.order);
+  }
+
   async getSimulation(
     simulationId: string,
     options: PlatformRequestOptions = {},
@@ -202,10 +217,38 @@ export class ContractMockPlatformApi implements PlatformApi {
     return [structuredClone(wealth.connection)];
   }
 
+  async listOrders(
+    cursor?: string,
+    limit = 20,
+    options: PlatformRequestOptions = {},
+  ): Promise<OrderPage> {
+    void cursor;
+    void limit;
+    await waitForMockLatency(this.latencyMs, options.signal);
+    return { items: [structuredClone(orderFlow.order)], nextCursor: null };
+  }
+
   async listTransactions(
     options: PlatformRequestOptions = {},
   ): Promise<Page<Transaction>> {
     await waitForMockLatency(this.latencyMs, options.signal);
     return { items: structuredClone(wealth.transactions), nextCursor: null };
+  }
+
+  async prepareBuyOrder(
+    _input: CreateOrderInput,
+    _idempotencyKey: string,
+    options: PlatformRequestOptions = {},
+  ) {
+    await waitForMockLatency(this.latencyMs, options.signal);
+    return structuredClone(orderFlow.order);
+  }
+
+  async previewBuyOrder(
+    _input: BuyOrderInput,
+    options: PlatformRequestOptions = {},
+  ) {
+    await waitForMockLatency(this.latencyMs, options.signal);
+    return structuredClone(orderFlow.quote);
   }
 }

@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { SimulationScreen } from '../features/simulation';
+import { OrderScreen } from '../features/order';
 import { WealthDashboardScreen } from '../features/wealth';
 
 export default function HomeRoute() {
-  const [section, setSection] = useState<'simulation' | 'wealth'>('wealth');
+  const [section, setSection] = useState<'order' | 'simulation' | 'wealth'>(
+    'wealth',
+  );
   return (
     <View style={styles.shell}>
       <View accessibilityRole="tablist" style={styles.tabs}>
@@ -19,6 +22,14 @@ export default function HomeRoute() {
         </Pressable>
         <Pressable
           accessibilityRole="tab"
+          accessibilityState={{ selected: section === 'order' }}
+          onPress={() => setSection('order')}
+          style={styles.tab}
+        >
+          <Text style={styles.tabText}>주문</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="tab"
           accessibilityState={{ selected: section === 'simulation' }}
           onPress={() => setSection('simulation')}
           style={styles.tab}
@@ -29,8 +40,10 @@ export default function HomeRoute() {
       <View style={styles.content}>
         {section === 'wealth' ? (
           <WealthDashboardScreen />
-        ) : (
+        ) : section === 'simulation' ? (
           <SimulationScreen />
+        ) : (
+          <OrderScreen />
         )}
       </View>
     </View>

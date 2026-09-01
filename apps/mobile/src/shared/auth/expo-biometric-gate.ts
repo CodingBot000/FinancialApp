@@ -50,6 +50,14 @@ function mapAuthenticationError(
 }
 
 export class ExpoBiometricGate implements BiometricGate {
+  constructor(
+    private readonly prompt: Readonly<{
+      description?: string;
+      message?: string;
+      subtitle?: string;
+    }> = {},
+  ) {}
+
   async authenticate(): Promise<BiometricGateResult> {
     const hasHardware = await LocalAuthentication.hasHardwareAsync();
     if (!hasHardware) {
@@ -72,9 +80,11 @@ export class ExpoBiometricGate implements BiometricGate {
       cancelLabel: '취소',
       disableDeviceFallback: true,
       fallbackLabel: '',
-      promptDescription: '이 인증은 기기 안에서만 앱 잠금을 해제합니다.',
-      promptMessage: 'Wealth Sandbox 잠금 해제',
-      promptSubtitle: '로컬 생체인증',
+      promptDescription:
+        this.prompt.description ??
+        '이 인증은 기기 안에서만 앱 잠금을 해제합니다.',
+      promptMessage: this.prompt.message ?? 'Wealth Sandbox 잠금 해제',
+      promptSubtitle: this.prompt.subtitle ?? '로컬 생체인증',
       requireConfirmation: true,
     });
 

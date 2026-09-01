@@ -6,8 +6,11 @@ import type {
   Holding,
   MyDataConnection,
   MyDataSync,
+  Order,
+  OrderPage,
   Page,
   PlatformHealthResponse,
+  Quote,
   Simulation,
   Transaction,
 } from './platform-api';
@@ -15,6 +18,7 @@ import type {
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MONEY = /^-?[0-9]+\.[0-9]{4}$/;
+const QUANTITY = /^[0-9]+\.[0-9]{8}$/;
 
 function record(value: unknown): Record<string, unknown> | undefined {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -339,5 +343,75 @@ export function isSimulation(value: unknown): value is Simulation {
     }) &&
     item.disclaimer ===
       'Synthetic financial simulation for technical demonstration only.'
+  );
+}
+
+export function isQuote(value: unknown): value is Quote {
+  const item = record(value);
+  return (
+    !!item &&
+    exact(item, [
+      'quoteId',
+      'side',
+      'quantity',
+      'unitPrice',
+      'estimatedAmount',
+      'fee',
+      'currency',
+      'expiresAt',
+      'syntheticQuote',
+    ]) &&
+    uuid(item.quoteId) &&
+    item.side === 'BUY' &&
+    typeof item.quantity === 'string' &&
+    QUANTITY.test(item.quantity) &&
+    money(item.unitPrice) &&
+    money(item.estimatedAmount) &&
+    money(item.fee) &&
+    item.currency === 'KRW' &&
+    text(item.expiresAt) &&
+    item.syntheticQuote === true
+  );
+}
+
+export function isOrder(value: unknown): value is Order {
+  const item = record(value);
+  return (
+    !!item &&
+    exact(item, [
+      'orderId',
+      'status',
+      'side',
+      'quantity',
+      'estimatedAmount',
+      'filledAmount',
+      'createdAt',
+      'updatedAt',
+      'statusRefreshRecommendedAfterMs',
+    ]) &&
+    uuid(item.orderId) &&
+    ['PENDING_SUBMISSION', 'UNKNOWN', 'FILLED', 'REJECTED', 'FAILED'].includes(
+      String(item.status),
+    ) &&
+    item.side === 'BUY' &&
+    typeof item.quantity === 'string' &&
+    QUANTITY.test(item.quantity) &&
+    money(item.estimatedAmount) &&
+    (item.filledAmount === null || money(item.filledAmount)) &&
+    text(item.createdAt) &&
+    text(item.updatedAt) &&
+    (item.statusRefreshRecommendedAfterMs === null ||
+      item.statusRefreshRecommendedAfterMs === 2000)
+  );
+}
+
+export function isOrderPage(value: unknown): value is OrderPage {
+  const item = record(value);
+  return (
+    !!item &&
+    exact(item, ['items', 'nextCursor']) &&
+    Array.isArray(item.items) &&
+    item.items.every(isOrder) &&
+    (item.nextCursor === null || uuid(item.nextCursor))
   );
 }
