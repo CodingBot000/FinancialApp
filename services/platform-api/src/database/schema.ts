@@ -1206,3 +1206,45 @@ export const finappAuditEvent = finappAuditSchema.table(
     index('finapp_idx_audit_action_time').on(table.action, table.occurredAt),
   ],
 );
+
+export const finappSecurityEvent = finappAuditSchema.table(
+  'finapp_security_event',
+  {
+    id: uuid('id').notNull(),
+    occurredAt: timestamp('occurred_at', {
+      withTimezone: true,
+      mode: 'date',
+    }).notNull(),
+    userId: uuid('user_id'),
+    eventType: varchar('event_type', { length: 80 }).notNull(),
+    result: varchar('result', { length: 20 }).notNull(),
+    reasonCode: varchar('reason_code', { length: 80 }).notNull(),
+    traceId: varchar('trace_id', { length: 100 }).notNull(),
+    sourceIpHash: varchar('source_ip_hash', { length: 64 }),
+    metadata: jsonb('metadata').notNull().default({}),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_security_event', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_security_event_user',
+      columns: [table.userId],
+      foreignColumns: [finappAppUser.id],
+    }).onDelete('restrict'),
+    check(
+      'finapp_ck_security_event_type',
+      sql`${table.eventType} IN ('AUTHENTICATION_FAILURE', 'AUTHORIZATION_FAILURE', 'SUSPICIOUS_REQUEST')`,
+    ),
+    check(
+      'finapp_ck_security_event_result',
+      sql`${table.result} IN ('SUCCESS', 'FAILURE')`,
+    ),
+    index('finapp_idx_security_event_type_time').on(
+      table.eventType,
+      table.occurredAt,
+    ),
+    index('finapp_idx_security_event_source_time').on(
+      table.sourceIpHash,
+      table.occurredAt,
+    ),
+  ],
+);

@@ -1,7 +1,7 @@
 # Backend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `BE-0014`
+- 다음 ID: `BE-0015`
 - 운영 상태: `codex/backend`는 DEV-0006 통합 이력으로 보존, 신규 BE commit은 단일 `main`에서 수행
 - 활성 worktree: `/Users/switch/Development/Web/FinancialApp`
 - 통합 검토 기준: `main` at `2574ad0`, `platform-v1` at BE-0008, `institution-simulator-v1` at BE-0003
@@ -738,6 +738,41 @@
 ### 다음 작업
 
 - `BE-0014`: security event, structured log/redaction와 production developer bootstrap 검증
+
+## BE-0014 — Security Event, Structured Log와 Production Isolation
+
+- 날짜: 2026-09-02
+- Milestone: 6A local hardening
+- 상태: COMPLETED
+- base commit: `e1adec8f5564f4cec03222d7c82f5db11d490281`
+- contract revision: HTTP response 변경 없음 / migration `0008_finapp_security_event`
+- migration owner: single main, local/Testcontainers only
+- 예정 commit: `feat(be): add security event observability [BE-0014]`
+
+### 완료
+
+- `finapp_security_event`와 type/result check, type/source time index, runtime SELECT/INSERT-only 권한을 추가했다.
+- OIDC guard가 missing/invalid token과 missing scope를 stable reason으로 기록하되 token/subject/raw IP를 저장하지 않는다.
+- source IP는 별도 32-byte local HMAC key로 hash하고 security metadata는 숫자/boolean allowlist만 허용한다.
+- HTTP completion log는 query-free path와 8개 allowlist field만 JSON line으로 출력한다.
+- production AppModule actual bootstrap에서 developer controller/provider/route가 없고 POST가 404임을 검증했다.
+
+### 검증
+
+- platform architecture/lint/strict typecheck, non-integration 62 tests 통과
+- PostgreSQL 17.6 Testcontainers migration 9 tests: hashed source, metadata rejection, prefix와 security event UPDATE/DELETE false
+- local Compose forward migration 뒤 invalid-token security event 1건, structured JSON log와 secret keyword 0, 12단계 actual smoke 통과
+- root formatter/contract/secret/architecture/lint/typecheck, mobile 95/simulator 12/platform 71 총 178 tests와 두 backend build 통과
+- 원격 DB와 원격 배포는 사용하지 않음
+
+### 이슈·누락·Handoff
+
+- `BE-ISSUE-0007` RESOLVED
+- 실제 운영 log collector/SIEM 연동은 원격 배포 범위이며 현재 local JSON stdout까지 검증했다.
+
+### 다음 작업
+
+- `BE-0015`: readiness/metrics와 external HTTP circuit breaker
 
 ## 새 기록 Template
 

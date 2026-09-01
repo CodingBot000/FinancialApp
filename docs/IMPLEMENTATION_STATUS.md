@@ -3,8 +3,8 @@
 - 현재 Milestone: 6A — 로컬 하드닝
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-02
-- 마지막 완료 ID: BE-0013
-- 다음 작업 ID: BE-0014
+- 마지막 완료 ID: BE-0014
+- 다음 작업 ID: BE-0015
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
@@ -38,7 +38,7 @@
 | 3. 동기화와 Dashboard | DONE | backend sync/raw/derived/조회·audit와 frontend connection/sync polling, Dashboard/Accounts/detail/chart, 부분 오류 UX 및 local actual API smoke 완료 |
 | 4. 서버 시뮬레이션 | DONE | deterministic server 저장/조회, frontend draft validation·persisted result·p10/p50/p90 chart와 local actual API smoke 완료 |
 | 5. BUY 주문과 복구 | DONE | quote/biometric/idempotent mobile BUY, backend reservation/simulator/settlement/reconciliation/audit, UNKNOWN GET recovery와 actual local smoke 완료; clean 전체 인수는 DEV-0011 |
-| 6A. 로컬 하드닝 | IN_PROGRESS | DEV-0011 local MVP, BE-0012 outbox와 BE-0013 local/AWS KMS adapter 경계 완료; security event/관측성, 최종 포트폴리오 문서 진행 |
+| 6A. 로컬 하드닝 | IN_PROGRESS | DEV-0011 local MVP, BE-0012 outbox, BE-0013 crypto와 BE-0014 security event/log/production isolation 완료; readiness/metrics/resilience, 최종 포트폴리오 문서 진행 |
 | 6B. 원격 데모 | CURRENT_RUN_EXCLUDED | Lightsail migration, 실제 AWS KMS, HTTPS/EAS와 원격 rollback은 향후 별도 실행 |
 
 ## DEV-0010 계약 Gate
@@ -101,6 +101,18 @@
 - [x] Testcontainers 신규 envelope와 보존 Compose legacy-read actual smoke 통과
 - [x] `BE-ISSUE-0006` strict test type failure 해결·재검증
 - [x] root verify: mobile 95/simulator 12/platform 68 총 175 tests와 두 backend build 통과
+
+## BE-0014 Security Event와 Structured Log
+
+- [x] migration `0008_finapp_security_event`, 모든 schema/table/index/constraint/history `finapp_` prefix
+- [x] authn/authz 실패 stable reason, trace, keyed source IP hash와 allowlist metadata append-only 저장
+- [x] token/subject/raw IP 미저장, runtime security event UPDATE/DELETE 거부
+- [x] query/header/body를 입력받지 않는 allowlist JSON HTTP completion log와 안전 trace header
+- [x] actual production AppModule bootstrap의 developer route 404/route tree 미등록
+- [x] `BE-ISSUE-0007` AuditModule DI scope defect 해결·재검증
+- [x] Testcontainers migration 9 tests와 local Compose security event 1건/structured logs/12단계 smoke 통과
+- [x] root verify: mobile 95/simulator 12/platform 71 총 178 tests와 두 backend build 통과
+- [x] 원격 DB/credential/deploy 미사용
 
 ## FE-0010 Live OIDC와 `/me`
 
@@ -228,6 +240,6 @@
 
 ## 다음 작업
 
-1. `BE-0014`: security event, structured log/redaction와 production developer bootstrap 검증
-2. 단계 10의 readiness/metrics/circuit breaker/performance/문서 vertical slice를 순서대로 진행
+1. `BE-0015`: readiness/metrics와 external HTTP circuit breaker
+2. 단계 10의 product scope 재결정, performance/dependency/final 문서 slice를 순서대로 진행
 3. 단계 10 완료 결과를 commit/push하고 Milestone 6B 원격 단계 전에 STOP

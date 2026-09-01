@@ -17,9 +17,11 @@ import {
 
 import type { AuthenticatedPrincipal } from './authenticated-principal.js';
 import { REQUIRED_SCOPES_METADATA } from './required-scopes.decorator.js';
+import { SecurityEventService } from '../../modules/audit/security-event.service.js';
 
 interface GuardRequest {
   readonly headers: Record<string, string | string[] | undefined>;
+  readonly ip?: string;
   user?: AuthenticatedPrincipal;
 }
 
@@ -69,13 +71,22 @@ export class OidcJwtGuard implements CanActivate {
   private jwksUri?: string;
   private remoteJwks?: JWTVerifyGetKey;
 
-  constructor(@Inject(ReflectorToken) private readonly reflector: Reflector) {}
+  constructor(
+    @Inject(ReflectorToken) private readonly reflector: Reflector,
+    @Inject(SecurityEventService)
+    private readonly securityEvents: SecurityEventService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<GuardRequest>();
     const authorization = readHeader(request.headers, 'authorization');
 
     if (authorization === undefined || !authorization.startsWith('Bearer ')) {
+      await this.recordFailure(
+        request,
+        'AUTHENTICATION_FAILURE',
+        'AUTH_HEADER_MISSING',
+      );
       throw new UnauthorizedException(
         problem(
           request,
@@ -96,6 +107,11 @@ export class OidcJwtGuard implements CanActivate {
       audience === undefined ||
       jwksUri === undefined
     ) {
+      await this.recordFailure(
+        request,
+        'AUTHENTICATION_FAILURE',
+        'OIDC_NOT_CONFIGURED',
+      );
       throw new UnauthorizedException(
         problem(
           request,
@@ -138,6 +154,12 @@ export class OidcJwtGuard implements CanActivate {
       );
 
       if (missingScopes.length > 0) {
+        await this.recordFailure(
+          request,
+          'AUTHORIZATION_FAILURE',
+          'AUTH_SCOPE_MISSING',
+          { requiredScopeCount: missingScopes.length },
+        );
         throw new ForbiddenException(
           problem(
             request,
@@ -160,6 +182,12 @@ export class OidcJwtGuard implements CanActivate {
         throw error;
       }
 
+      await this.recordFailure(
+        request,
+        'AUTHENTICATION_FAILURE',
+        'AUTH_TOKEN_INVALID',
+      );
+
       throw new UnauthorizedException(
         problem(
           request,
@@ -179,5 +207,23 @@ export class OidcJwtGuard implements CanActivate {
     }
 
     return this.remoteJwks;
+  }
+
+  private recordFailure(
+    request: GuardRequest,
+    eventType: 'AUTHENTICATION_FAILURE' | 'AUTHORIZATION_FAILURE',
+    reasonCode: string,
+    metadata?: Readonly<Record<string, number | boolean>>,
+  ): Promise<void> {
+    return this.securityEvents.recordSafely({
+      eventType,
+      reasonCode,
+      traceId:
+        readHeader(request.headers, 'x-correlation-id') ??
+        readHeader(request.headers, 'x-request-id') ??
+        'unavailable',
+      ...(request.ip === undefined ? {} : { sourceIp: request.ip }),
+      ...(metadata === undefined ? {} : { metadata }),
+    });
   }
 }

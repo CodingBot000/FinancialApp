@@ -118,4 +118,46 @@ describe('developer scenario boundary', () => {
     expect(imports?.map((item) => item.name)).not.toContain('DeveloperModule');
     process.env.APP_ENV = 'local';
   });
+
+  it('returns 404 for developer routes from an actual production AppModule bootstrap', async () => {
+    process.env.APP_ENV = 'production';
+    vi.resetModules();
+    const [{ AppModule }, { PLATFORM_DATABASE_POOL }, { DATA_KEY_PROVIDER }] =
+      await Promise.all([
+        import('../../src/app.module.js'),
+        import('../../src/core/database/database.tokens.js'),
+        import('../../src/modules/mydata/application/ports/data-key-provider.port.js'),
+      ]);
+    const pool = { end: vi.fn().mockResolvedValue(undefined) };
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(PLATFORM_DATABASE_POOL)
+      .useValue(pool)
+      .overrideProvider(DATA_KEY_PROVIDER)
+      .useValue({
+        generateDataKey: vi.fn(),
+        decryptDataKey: vi.fn(),
+        lookupHash: vi.fn(),
+      })
+      .compile();
+    const productionApp =
+      moduleRef.createNestApplication<NestFastifyApplication>(
+        createFastifyAdapter(),
+      );
+    await productionApp.init();
+    await productionApp.getHttpAdapter().getInstance().ready();
+
+    try {
+      const response = await productionApp
+        .getHttpAdapter()
+        .getInstance()
+        .inject({ method: 'POST', url: '/api/v1/dev/dataset/reset' });
+      expect(response.statusCode).toBe(404);
+      expect(
+        productionApp.getHttpAdapter().getInstance().printRoutes(),
+      ).not.toContain('/api/v1/dev');
+    } finally {
+      await productionApp.close();
+      process.env.APP_ENV = 'local';
+    }
+  });
 });

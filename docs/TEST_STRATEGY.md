@@ -64,6 +64,8 @@ BE-0012는 terminal settlement 4건과 outbox 4건의 원자적 생성을 확인
 
 BE-0013은 local provider envelope roundtrip, plaintext 비노출, wrong owner AAD, ciphertext tamper, wrong key version, local provider의 demo/production 차단과 합성 local legacy-read 제한을 검증한다. AWS KMS adapter는 fake client로 key ID/spec, encryption context, MAC mapping과 wrong AAD failure만 검증하며 실제 AWS endpoint나 credential을 사용하지 않는다. 빈 Testcontainers DB의 신규 connection ciphertext가 `FAE2`인지 확인하고 보존 Compose DB smoke로 legacy local read도 회귀 검증한다.
 
+BE-0014는 auth guard의 missing/invalid token과 missing scope가 token/subject 없이 security recorder로 전달되는지 검증한다. PostgreSQL에서는 source IP가 64자리 HMAC이고 raw IP가 없으며 metadata allowlist와 runtime UPDATE/DELETE 거부를 확인한다. Structured log unit test는 query에 token/full ID가 있어도 query-free path와 allowlist field만 직렬화하는지 확인한다. Production `AppModule`을 실제 init해 developer route 404와 route tree 미등록을 검증한다.
+
 ### External integration
 
 platform-api와 실제 institution-simulator를 실행한다.

@@ -342,7 +342,7 @@ app role은 INSERT/SELECT만 가능하며 UPDATE/DELETE 권한이 없다. token,
 
 ### `finapp_audit.finapp_security_event` — Milestone 6
 
-인증·인가·비정상 접근 이벤트를 append-only로 저장한다.
+인증·인가·비정상 접근 이벤트를 append-only로 저장한다. Token/subject/raw IP는 저장하지 않고 stable reason code, trace ID, keyed source-IP hash와 `requiredScopeCount`/`syntheticData` allowlist metadata만 허용한다.
 
 ### `finapp_crypto.finapp_data_keyring` — Milestone 6
 

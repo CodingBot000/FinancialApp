@@ -255,6 +255,13 @@ module composition ───────────────> api/applicatio
 - sensitive field adapter는 plaintext DEK를 사용 직후 zero-fill하고 versioned envelope와 owner/schema/table/column AAD를 검증한다.
 - 실제 AWS client binding, key policy와 원격 KMS 호출은 Milestone 6B 승인 전 수행하지 않는다.
 
+### 5.5.2 Audit와 structured log
+
+- `AuditModule`은 business audit와 security event recorder를 제공하는 global cross-cutting module이다.
+- auth guard는 missing/invalid token과 missing scope를 stable reason code로 기록하되 token, subject, raw IP를 recorder에 전달하지 않는다.
+- request logger는 allowlist 구조체만 만들고 URL query, headers와 body를 API로 받지 않는다.
+- security persistence 오류는 authorization 결과를 완화하지 않으며 요청은 원래 401/403으로 fail-closed한다.
+
 ### 5.6 Background job
 
 - MyData sync, reconciliation과 outbox 상태는 PostgreSQL job table이 소유한다.

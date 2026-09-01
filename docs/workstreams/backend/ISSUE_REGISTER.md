@@ -1,6 +1,6 @@
 # Backend Workstream Issue와 Gap Register
 
-- 다음 ISSUE ID: `BE-ISSUE-0007`
+- 다음 ISSUE ID: `BE-ISSUE-0008`
 - 다음 GAP ID: `BE-GAP-0003`
 - active issue: `BE-ISSUE-0001`
 - active gap: 없음
@@ -23,6 +23,19 @@ backend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한�
 - 검증: BE-0009 `npm audit --json` moderate 18/high 0/critical 0. simulator Docker runtime stage는 144 package, vulnerability 0을 보고했다.
 
 ## Resolved Issue History
+
+### BE-ISSUE-0007 — Feature guard 문맥에서 SecurityEventService DI 실패
+
+- 상태: RESOLVED
+- 심각도: HIGH
+- 발견 BE: BE-0014 non-integration suite
+- 관련 contract/migration revision: platform auth guards / `0008_finapp_security_event`
+- 내용: auth guard가 controller 소유 feature module 문맥에서 생성될 때 AuthModule import만으로는 새 SecurityEventService dependency를 resolve하지 못해 health/identity/developer suites가 bootstrap 실패했다.
+- 영향: 수정 전 상태로는 platform application bootstrap 자체가 실패한다.
+- 해결 조건: audit/security module을 명시적 global cross-cutting module로 제공하고 모든 AppModule/feature tests가 통과할 것.
+- 목표 BE: BE-0014
+- 해결 BE: BE-0014
+- 검증: non-integration 14 files/62 tests, production AppModule actual bootstrap과 Testcontainers 9 tests를 통과했다.
 
 ### BE-ISSUE-0006 — Tamper test의 strict indexed access type failure
 
@@ -127,6 +140,7 @@ backend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한�
 - BE-0010 (2026-09-02): `BE-ISSUE-0001` 변화 없음. 중앙 `GAP-0006`, `ISSUE-0005`~`ISSUE-0007`을 RESOLVED 처리했다. settlement/reconciliation concurrency, 동일 timestamp pagination, audit correlation/권한, production developer module 미등록, clean actual HTTP order flow와 두 runtime audit 0을 확인했다. 신규 active backend issue/gap 없음.
 - BE-0012 (2026-09-02): `BE-ISSUE-0004`, `BE-ISSUE-0005`와 중앙 `ISSUE-0012`를 해결했다. transactional outbox, durable duplicate receipt, Testcontainers/actual Compose smoke를 확인했고 원격 자원은 사용하지 않았다. `BE-ISSUE-0001`은 단계 10 dependency 재평가까지 유지한다.
 - BE-0013 (2026-09-02): `BE-ISSUE-0006`을 해결했다. local envelope/wrong AAD와 fake AWS KMS client boundary, Testcontainers 및 보존 Compose legacy-read를 검증했다. 실제 AWS/원격 자원은 사용하지 않았다.
+- BE-0014 (2026-09-02): `BE-ISSUE-0007`을 해결했다. append-only security event, auth failure redaction, structured log와 actual production developer 404를 Testcontainers/Compose에서 검증했다.
 
 ## Issue Template
 

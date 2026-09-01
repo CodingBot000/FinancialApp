@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { migratePlatformDatabase } from '../../src/database/migrate.js';
 import { DrizzleIdentityRepository } from '../../src/modules/identity/infrastructure/persistence/drizzle-identity.repository.js';
+import { SecurityEventService } from '../../src/modules/audit/security-event.service.js';
 import { AesSensitiveDataAdapter } from '../../src/modules/mydata/infrastructure/crypto/aes-sensitive-data.adapter.js';
 import { LocalDataKeyProvider } from '../../src/modules/mydata/infrastructure/crypto/local-data-key.provider.js';
 import { MyDataConnectionConflictError } from '../../src/modules/mydata/domain/mydata-errors.js';
@@ -88,7 +89,7 @@ describe('platform Drizzle migration', () => {
         SELECT count(*)::text AS count
         FROM finapp_meta.finapp_platform_drizzle_migrations
       `);
-      expect(history.rows[0]?.count).toBe('8');
+      expect(history.rows[0]?.count).toBe('9');
     } finally {
       await client.end();
     }
@@ -183,6 +184,63 @@ describe('platform Drizzle migration', () => {
       });
     } finally {
       await Promise.all([platformClient.end(), simulatorClient.end()]);
+    }
+  });
+
+  it('records hashed append-only security events with allowlisted metadata', async () => {
+    const platformUrl = new URL(connectionString);
+    platformUrl.username = 'financial_platform_app';
+    platformUrl.password = 'example-platform-test-only';
+    const pool = new Pool({ connectionString: platformUrl.toString(), max: 2 });
+    const service = new SecurityEventService(pool);
+    const previousHashKey = process.env.FINAPP_SECURITY_EVENT_HASH_KEY_BASE64;
+    process.env.FINAPP_SECURITY_EVENT_HASH_KEY_BASE64 = Buffer.alloc(
+      32,
+      5,
+    ).toString('base64');
+
+    try {
+      await service.record({
+        eventType: 'AUTHENTICATION_FAILURE',
+        reasonCode: 'AUTH_TOKEN_INVALID',
+        traceId: 'security-trace-1',
+        sourceIp: '127.0.0.1',
+        metadata: { requiredScopeCount: 0, syntheticData: true },
+      });
+      await expect(
+        service.record({
+          eventType: 'SUSPICIOUS_REQUEST',
+          reasonCode: 'UNSAFE_METADATA',
+          traceId: 'security-trace-2',
+          metadata: { token: true } as never,
+        }),
+      ).rejects.toThrow('non-allowlisted');
+      const result = await pool.query<{
+        can_delete: boolean;
+        can_update: boolean;
+        metadata: Record<string, unknown>;
+        reason_code: string;
+        source_ip_hash: string;
+      }>(`
+        SELECT e.reason_code, e.source_ip_hash, e.metadata,
+          has_table_privilege(current_user, 'finapp_audit.finapp_security_event', 'UPDATE') AS can_update,
+          has_table_privilege(current_user, 'finapp_audit.finapp_security_event', 'DELETE') AS can_delete
+        FROM finapp_audit.finapp_security_event e
+        WHERE e.trace_id = 'security-trace-1'
+      `);
+      expect(result.rows[0]).toMatchObject({
+        can_delete: false,
+        can_update: false,
+        metadata: { requiredScopeCount: 0, syntheticData: true },
+        reason_code: 'AUTH_TOKEN_INVALID',
+        source_ip_hash: expect.stringMatching(/^[0-9a-f]{64}$/),
+      });
+      expect(JSON.stringify(result.rows[0])).not.toContain('127.0.0.1');
+    } finally {
+      if (previousHashKey === undefined)
+        delete process.env.FINAPP_SECURITY_EVENT_HASH_KEY_BASE64;
+      else process.env.FINAPP_SECURITY_EVENT_HASH_KEY_BASE64 = previousHashKey;
+      await pool.end();
     }
   });
 

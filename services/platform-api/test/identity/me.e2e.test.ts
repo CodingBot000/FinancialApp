@@ -20,6 +20,7 @@ import { MARKET_PRICE_PORT } from '../../src/modules/trading/application/ports/m
 import { BROKERAGE_PORT } from '../../src/modules/trading/application/ports/brokerage.port.js';
 import { TRADING_REPOSITORY } from '../../src/modules/trading/application/ports/trading-repository.port.js';
 import { AuditService } from '../../src/modules/audit/audit.service.js';
+import { SecurityEventService } from '../../src/modules/audit/security-event.service.js';
 import { WEALTH_REPOSITORY } from '../../src/modules/wealth/application/ports/wealth-repository.port.js';
 
 describe('GET /api/v1/me OIDC boundary', () => {
@@ -314,6 +315,7 @@ describe('GET /api/v1/me OIDC boundary', () => {
     find: vi.fn(),
   };
   const audit = { record: vi.fn().mockResolvedValue(undefined) };
+  const securityEvents = { recordSafely: vi.fn().mockResolvedValue(undefined) };
   let app: NestFastifyApplication;
   let issuer: string;
   let privateKey: CryptoKey;
@@ -380,6 +382,8 @@ describe('GET /api/v1/me OIDC boundary', () => {
       .useValue({ price: vi.fn().mockResolvedValue('125000.0000') })
       .overrideProvider(AuditService)
       .useValue(audit)
+      .overrideProvider(SecurityEventService)
+      .useValue(securityEvents)
       .compile();
     app = moduleRef.createNestApplication<NestFastifyApplication>(
       createFastifyAdapter(),
@@ -444,6 +448,13 @@ describe('GET /api/v1/me OIDC boundary', () => {
     expect(response.statusCode).toBe(401);
     validateResponse('getCurrentUser', response);
     expect(response.json().code).toBe('AUTH_TOKEN_INVALID');
+    expect(securityEvents.recordSafely).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: 'AUTHENTICATION_FAILURE',
+        reasonCode: 'AUTH_HEADER_MISSING',
+        traceId: 'identity-request-1',
+      }),
+    );
   });
 
   it('rejects a token with the wrong issuer', async () => {
@@ -477,6 +488,13 @@ describe('GET /api/v1/me OIDC boundary', () => {
     expect(response.statusCode).toBe(403);
     validateResponse('getCurrentUser', response);
     expect(response.json().code).toBe('AUTH_SCOPE_MISSING');
+    expect(securityEvents.recordSafely).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: 'AUTHORIZATION_FAILURE',
+        reasonCode: 'AUTH_SCOPE_MISSING',
+        metadata: { requiredScopeCount: 1 },
+      }),
+    );
   });
 
   it('maps a verified OIDC subject to the application user', async () => {

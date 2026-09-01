@@ -103,6 +103,10 @@ BE-0013의 `AwsKmsDataKeyProvider`는 `GenerateDataKey`, encryption-context `Dec
 
 일반 application log, audit event, security event를 구분한다.
 
+BE-0014 기준 일반 HTTP log는 JSON line의 timestamp/level/event/requestId/correlationId/method/query-free path/statusCode/durationMs만 출력한다. Authorization/cookie/header, body, query string과 principal subject는 logger 입력에 포함하지 않는다. trace header는 길이와 안전 문자 allowlist를 통과하지 않으면 server-generated request ID로 교체한다.
+
+인증·인가 실패는 `finapp_security_event`에 append-only 기록한다. raw source IP 대신 별도 local HMAC key의 SHA-256 결과를 사용하고 token/subject/전체 scope는 저장하지 않는다. Security event DB 저장 실패가 발생해도 요청은 계속 거부되며 인증 우회로 전환되지 않는다.
+
 로그 금지:
 
 - access/refresh token
@@ -152,5 +156,7 @@ BE-0010 기준 `finapp_audit_event`는 runtime role에 SELECT/INSERT만 허용�
 - 로그 token/full identifier 검색 실패
 - refresh 실패 후 cache와 token 제거
 - 잘못된 AAD decrypt 실패
+- authn/authz 실패 security event의 token/raw IP 비노출과 UPDATE/DELETE 거부
+- structured HTTP log에서 query/header/body/token 문자열 부재
 - platform role의 `finapp_simulator` schema SELECT 실패
 - simulator role의 `finapp_*` platform schema SELECT 실패

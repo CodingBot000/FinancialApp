@@ -632,7 +632,19 @@ Indexes: `finapp_idx_audit_user_time`, `finapp_idx_audit_action_time`. App role�
 
 ### `finapp_audit.finapp_security_event` — Milestone 6
 
-`id`, `occurred_at`, `user_id`, `event_type`, `result`, `reason_code`, `trace_id`, `source_ip_hash`, `metadata`를 저장한다. 모든 객체와 constraint/index는 `finapp_` prefix를 사용하고 append-only 권한을 적용한다.
+| Column | Type | Null | Default | Key/Rule |
+|---|---|---:|---|---|
+| `id` | `uuid` | N | - | PK |
+| `occurred_at` | `timestamptz` | N | - | |
+| `user_id` | `uuid` | Y | - | FK, pre-auth failure는 null |
+| `event_type` | `varchar(80)` | N | - | authn/authz/suspicious allowlist |
+| `result` | `varchar(20)` | N | - | success/failure |
+| `reason_code` | `varchar(80)` | N | - | stable internal code |
+| `trace_id` | `varchar(100)` | N | - | |
+| `source_ip_hash` | `varchar(64)` | Y | - | raw IP 금지, keyed HMAC |
+| `metadata` | `jsonb` | N | `'{}'` | allowlist only |
+
+Constraints/indexes: `finapp_ck_security_event_type`, `finapp_ck_security_event_result`, `finapp_idx_security_event_type_time`, `finapp_idx_security_event_source_time`. Runtime role은 SELECT/INSERT만 가능하고 UPDATE/DELETE는 거부한다.
 
 ### `finapp_crypto.finapp_data_keyring` — Milestone 6
 

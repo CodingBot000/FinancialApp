@@ -56,6 +56,7 @@ services:
       FINAPP_DATASET_VERSION: ${FINAPP_DATASET_VERSION:-FINANCIAL_APP_DATASET_V1}
       FINAPP_MYDATA_ENCRYPTION_KEY_BASE64: ${FINAPP_MYDATA_ENCRYPTION_KEY_BASE64:?required}
       FINAPP_MYDATA_ENCRYPTION_KEY_VERSION: ${FINAPP_MYDATA_ENCRYPTION_KEY_VERSION:-local-v1}
+      FINAPP_SECURITY_EVENT_HASH_KEY_BASE64: ${FINAPP_SECURITY_EVENT_HASH_KEY_BASE64:?required}
       INSTITUTION_SIMULATOR_BASE_URL: http://institution-simulator:8080
       INSTITUTION_SIMULATOR_TIMEOUT_MS: '5000'
       MYDATA_SCHEDULER_ENABLED: 'true'
@@ -82,6 +83,7 @@ services:
       OIDC_JWKS_URI: http://keycloak:8080/realms/finapp/protocol/openid-connect/certs
       PLATFORM_API_PORT: '8080'
       PLATFORM_DATABASE_URL: postgresql://financial_platform_app:${FINAPP_PLATFORM_DB_PASSWORD:?required}@postgres:5432/financial_app
+      STRUCTURED_HTTP_LOG_ENABLED: 'true'
     depends_on:
       postgres:
         condition: service_healthy

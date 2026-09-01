@@ -57,6 +57,7 @@
 | D-046 | ACCEPTED | local Keycloak mobile client는 PKCE S256 public client, `basic` subject default scope와 `offline_access` optional scope를 사용한다. 합성 test user password는 실행 환경변수로만 주입하고 source/fixture/log에 저장하지 않는다. |
 | D-047 | ACCEPTED | settlement는 같은 DB transaction에 redacted `ORDER_SETTLED` outbox를 기록한다. local publisher는 `SKIP LOCKED` lease와 `(event_id, consumer_name)` durable receipt로 crash-window 중복을 억제하며 Kafka나 원격 broker를 도입하지 않는다. |
 | D-048 | ACCEPTED | MyData customer identifier는 `DataKeyProvider`가 제공한 per-value DEK와 owner/schema/table/column AAD로 AES-256-GCM 암호화하고 encrypted DEK를 versioned ciphertext envelope에 포함한다. local provider는 demo/production에서 fail-closed하며 AWS KMS client binding과 실제 KMS 검증은 별도 승인된 원격 단계에서만 수행한다. |
+| D-049 | ACCEPTED | 인증·인가 실패는 append-only security event에 stable reason code, trace ID, HMAC source IP와 allowlist metadata만 저장한다. 일반 HTTP log는 query/header/body를 받지 않는 구조화 allowlist event만 출력하며 보안 이벤트 저장 실패가 인증 fail-closed 결정을 바꾸지 않는다. |
 
 ## 정정 이력
 

@@ -275,6 +275,7 @@ try {
       (SELECT count(*) FROM finapp_trading.finapp_cash_ledger_entry WHERE order_id IN ($1, $2, $3))::int AS ledger_entries,
       (SELECT count(*) FROM finapp_trading.finapp_position WHERE account_id = $4)::int AS positions,
       (SELECT count(*) FROM finapp_audit.finapp_audit_event WHERE resource_id IN ($1, $2, $3))::int AS audit_events,
+      (SELECT count(*) FROM finapp_audit.finapp_security_event WHERE event_type = 'AUTHENTICATION_FAILURE')::int AS security_events,
       (SELECT count(*) FROM finapp_trading.finapp_outbox_event WHERE aggregate_id IN ($1, $2, $3) AND status = 'PROCESSED')::int AS outbox_events,
       (SELECT count(*) FROM finapp_trading.finapp_outbox_delivery d JOIN finapp_trading.finapp_outbox_event e ON e.id = d.event_id WHERE e.aggregate_id IN ($1, $2, $3))::int AS outbox_deliveries`,
         [
@@ -299,6 +300,7 @@ try {
     evidence.ledger_entries < 3 ||
     evidence.positions < 1 ||
     evidence.audit_events < 3 ||
+    evidence.security_events < 1 ||
     evidence.outbox_events !== 3 ||
     evidence.outbox_deliveries !== 3
   ) {
@@ -308,7 +310,7 @@ try {
   }
   await request('/api/v1/dev/dataset/reset', { method: 'POST' }, 200);
   process.stdout.write(
-    `${JSON.stringify({ acceptanceSteps: 12, accounts: accounts.items.length, auditEvents: evidence.audit_events, executions: evidence.executions, historyPoints: history.points.length, idempotentReplay: true, normal: normal.order.status, outboxDeliveries: evidence.outbox_deliveries, outboxEvents: evidence.outbox_events, processedRecords: evidence.processed_records, rawRecords: evidence.raw_records, rejected: rejected.order.status, reconciled: reconciled.status, simulationPoints: persistedSimulation.series.length, syntheticData: true, transactions: transactions.items.length })}\n`,
+    `${JSON.stringify({ acceptanceSteps: 12, accounts: accounts.items.length, auditEvents: evidence.audit_events, executions: evidence.executions, historyPoints: history.points.length, idempotentReplay: true, normal: normal.order.status, outboxDeliveries: evidence.outbox_deliveries, outboxEvents: evidence.outbox_events, processedRecords: evidence.processed_records, rawRecords: evidence.raw_records, rejected: rejected.order.status, reconciled: reconciled.status, securityEvents: evidence.security_events, simulationPoints: persistedSimulation.series.length, syntheticData: true, transactions: transactions.items.length })}\n`,
   );
 } finally {
   platform.kill('SIGTERM');

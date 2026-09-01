@@ -2,7 +2,7 @@
 
 - 기록 방식: append-only
 - 마지막 DEV ID: `DEV-0011`
-- 다음 영역 ID: `BE-0014`
+- 다음 영역 ID: `BE-0015`
 
 모든 integration/shared commit은 하나의 `DEV-####`와 연결한다. frontend와 backend 영역 commit은 각각 `FE-####`, `BE-####`와 workstream 개발 로그를 사용한다. DEV-0006 이후에는 단일 main에서 작업하되 영역별 ID namespace와 기록은 유지한다. commit subject에도 같은 ID를 넣어 Git history와 문서 기록을 상호 추적할 수 있게 한다.
 
@@ -707,6 +707,25 @@
 
 - `BE-ISSUE-0006` RESOLVED.
 - 다음은 `BE-0014` security event, structured log/redaction와 production bootstrap 검증이다.
+
+## BE-0014 — Security Event, Structured Log와 Production Isolation
+
+- 날짜: 2026-09-02
+- Milestone: 6A local hardening
+- 상태: COMPLETED
+- 예정 commit: `feat(be): add security event observability [BE-0014]`
+
+### 완료와 검증
+
+- authn/authz 실패를 append-only security event로 기록하고 raw IP/token/subject 대신 keyed hash와 allowlist metadata만 저장한다.
+- query/header/body 비수집 structured HTTP log와 actual production bootstrap developer route 404를 구현·검증했다.
+- migration 9 tests, non-integration 62 tests와 actual Compose security event 1건/structured logs/12단계 smoke가 통과했다.
+- root verify는 mobile 95/simulator 12/platform 71 총 178 tests와 두 backend build를 통과했다.
+
+### 이슈와 다음 작업
+
+- `BE-ISSUE-0007` RESOLVED.
+- 다음은 `BE-0015` readiness/metrics와 external HTTP circuit breaker다.
 
 ## FE-0013 — Biometric BUY와 Recovery Mobile 통합
 
