@@ -1,10 +1,10 @@
 # Backend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: `BE-0003`
+- 다음 ID: `BE-0004`
 - branch/worktree: `codex/backend` / `/Users/switch/Development/Web/FinancialApp-backend`
 - base commit: `5ffc23edf403c56b95d15656724a23f7a62546af`
-- contract revision: `platform-v1` at BE-0002, `institution-simulator-v1` at BE-0001
+- contract revision: `platform-v1` at BE-0002, `institution-simulator-v1` at BE-0003
 - migration owner: backend session 또는 integration owner가 작업마다 기록
 
 backend session은 `services/**`, `infra/**`, OpenAPI와 migration 변경을 commit 단위로 기록한다. 중앙 `DEVELOPMENT_LOG.md`는 integration owner 역할로 통합할 때만 수정한다.
@@ -126,6 +126,63 @@ backend session은 `services/**`, `infra/**`, OpenAPI와 migration 변경을 com
 ### 다음 작업
 
 - BE-0003: simulator source schema, deterministic `BALANCED_WORKER` seed와 account/holding/transaction HTTP API 구현
+
+## BE-0003 — 결정적 institution simulator 원천 데이터
+
+- 날짜: 2026-09-02
+- Milestone: 2
+- 상태: COMPLETED
+- base commit: `db374e1` (`BE-0002`)
+- contract revision: `institution-simulator-v1` (account/holding/transaction 조회 추가)
+- migration owner: backend session; local Compose/Testcontainers만 적용
+- commit: `feat(be): add deterministic simulator data [BE-0003]`
+
+### 완료
+
+- `finapp_simulator`에 customer, account, instrument, holding, transaction Drizzle schema와 forward-only migration을 추가했다.
+- 모든 table, index, PK/FK/unique/check constraint를 명시적인 `finapp_` 이름으로 생성했다.
+- 합성 persona `BALANCED_WORKER`의 고정 UUID, 외부 식별자, 금액, 시점과 dataset version을 사용하는 멱등 seed CLI를 추가했다.
+- 동일 seed를 반복 실행해도 customer/account/instrument/holding/transaction이 각각 한 행만 유지된다.
+- simulator runtime role에는 simulator schema의 DML만 부여하고 database DDL 및 platform schema 접근을 차단했다.
+- customer 외부 식별자로 account, holding, transaction을 조회하는 세 개의 MyData simulator API와 canonical OpenAPI response를 구현했다.
+
+### 변경 파일
+
+- `services/institution-simulator/src/core/database/**`
+- `services/institution-simulator/src/modules/account/**`
+- `services/institution-simulator/src/database/schema.ts`, `seed-cli.ts`
+- `services/institution-simulator/drizzle/0001_finapp_simulator_source.sql`, migration journal
+- `services/institution-simulator/test/account/**`, migration integration test
+- `infra/docker/compose.yaml`
+- `contracts/openapi/institution-simulator-v1.yaml`
+- `docs/workstreams/backend/**`
+
+### 검증
+
+- 명령: simulator lint, strict typecheck, dependency-cruiser, Vitest, Nest build
+- 결과: 3 test files / 7 tests 통과. PostgreSQL 17.6 Testcontainers migration, prefix, role isolation과 seed 멱등성 검증 포함
+- 명령: root `npm run verify` (Node 24.19.0, Colima socket 명시)
+- 결과: formatter, OpenAPI/fixture, Expo dependency, secret scan, 전체 lint/typecheck/test/build 통과; 전체 7 test files / 20 tests 통과
+- 명령: simulator production Docker image build
+- 결과: Node 24.19.0 build 성공, runtime 144 package audit vulnerability 0
+- 명령: clean Compose migration 및 동일 seed 2회, API/catalog/role query
+- 결과: simulator history 2, source table 5, 각 seed entity 1행, prefix 위반 relation/constraint 0, runtime database CREATE와 wealth schema USAGE 모두 false; 세 API의 결정적 응답 확인
+
+### 원격 DB
+
+- 사용 여부: 사용하지 않음
+- migration commit/dataset version: local/Testcontainers `0001_finapp_simulator_source` / `FINANCIAL_APP_DATASET_V1`
+- 결과: Lightsail 연결, migration과 seed 모두 미실행
+
+### 이슈·누락·Handoff
+
+- `BE-ISSUE-0001`: 변화 없음. build-time only이며 simulator production image audit은 0이다.
+- 신규 backend issue/gap: 없음.
+- Handoff: frontend/platform은 `SYNTH-CUSTOMER-A`에 대한 세 simulator endpoint의 `simulator-v1` canonical response를 BE-0003 revision으로 소비할 수 있다.
+
+### 다음 작업
+
+- BE-0004: platform MyData connection/raw/sync/normalization과 asset summary API 구현
 
 ## 새 기록 Template
 

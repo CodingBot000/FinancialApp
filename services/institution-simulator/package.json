@@ -8,6 +8,7 @@
     "build": "nest build",
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
     "db:migrate": "npm run build && node dist/database/migrate-cli.js",
+    "db:seed": "npm run build && node dist/database/seed-cli.js",
     "lint": "eslint src test vitest.config.ts",
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",

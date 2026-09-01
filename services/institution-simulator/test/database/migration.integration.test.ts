@@ -1,8 +1,9 @@
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
-import { Client } from 'pg';
+import { Client, Pool } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { migrateSimulatorDatabase } from '../../src/database/migrate.js';
+import { AccountRepository } from '../../src/modules/account/account.repository.js';
 
 const POSTGRES_IMAGE =
   'postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94';
@@ -18,6 +19,17 @@ describe('simulator Drizzle migration', () => {
       .withPassword('test-only-password')
       .start();
     connectionString = container.getConnectionUri();
+    const adminClient = new Client({ connectionString });
+    await adminClient.connect();
+    try {
+      await adminClient.query(`
+        CREATE ROLE financial_simulator_app LOGIN PASSWORD 'example-simulator-test-only'
+          NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT;
+        GRANT CONNECT ON DATABASE financial_app TO financial_simulator_app;
+      `);
+    } finally {
+      await adminClient.end();
+    }
     await migrateSimulatorDatabase(connectionString);
   }, 120_000);
 
@@ -80,6 +92,43 @@ describe('simulator Drizzle migration', () => {
       expect(invalidConstraints.rows).toEqual([]);
     } finally {
       await client.end();
+    }
+  });
+
+  it('seeds the deterministic BALANCED_WORKER dataset idempotently', async () => {
+    const simulatorUrl = new URL(connectionString);
+    simulatorUrl.username = 'financial_simulator_app';
+    simulatorUrl.password = 'example-simulator-test-only';
+    const pool = new Pool({
+      connectionString: simulatorUrl.toString(),
+      max: 2,
+    });
+    const repository = new AccountRepository(pool);
+
+    try {
+      await repository.seedBalancedWorker();
+      await repository.seedBalancedWorker();
+
+      expect(await repository.accounts('SYNTH-CUSTOMER-A')).toEqual([
+        {
+          externalAccountId: 'SYNTH-ACCOUNT-A-001',
+          maskedAccountNumber: 'SYNTH-****-0001',
+          accountType: 'BROKERAGE',
+          currency: 'KRW',
+          cashBalance: '15400000.0000',
+          status: 'ACTIVE',
+        },
+      ]);
+      expect(await repository.holdings('SYNTH-CUSTOMER-A')).toHaveLength(1);
+      expect(await repository.transactions('SYNTH-CUSTOMER-A')).toHaveLength(1);
+      const counts = await pool.query<{ accounts: string; customers: string }>(`
+        SELECT
+          (SELECT count(*) FROM finapp_simulator.finapp_sim_customer)::text AS customers,
+          (SELECT count(*) FROM finapp_simulator.finapp_sim_account)::text AS accounts
+      `);
+      expect(counts.rows[0]).toEqual({ accounts: '1', customers: '1' });
+    } finally {
+      await pool.end();
     }
   });
 });

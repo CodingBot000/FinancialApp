@@ -22,6 +22,10 @@ backend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한�
 - 해결 BE:
 - 검증: `npm audit --json` moderate 17/high 0/critical 0. Docker runtime stage는 platform/simulator 각각 144 package, vulnerability 0을 보고했다.
 
+## 단계별 검토 이력
+
+- BE-0003 (2026-09-02): `BE-ISSUE-0001` 변화 없음. 신규 issue/gap 없음. clean PostgreSQL migration과 seed 2회, prefix/권한 catalog 검사, 전체 `npm run verify`, simulator runtime audit 0으로 확인했다.
+
 ## Issue Template
 
 ```markdown

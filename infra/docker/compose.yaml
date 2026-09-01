@@ -110,6 +110,19 @@ services:
     networks:
       - finapp_local_network
 
+  simulator-seed:
+    image: finapp-institution-simulator:local
+    profiles: ['tools']
+    command:
+      ['node', 'services/institution-simulator/dist/database/seed-cli.js']
+    environment:
+      SIMULATOR_DATABASE_URL: postgresql://financial_simulator_app:${FINAPP_SIMULATOR_DB_PASSWORD:?required}@postgres:5432/financial_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - finapp_local_network
+
 networks:
   finapp_local_network:
     name: finapp_local_network
