@@ -21,6 +21,7 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" options={{ title: '홈' }} />
       <Tabs.Screen name="market" options={{ title: '종목' }} />
+      <Tabs.Screen name="order" options={{ title: '주문' }} />
       <Tabs.Screen name="plan" options={{ title: '플랜' }} />
       <Tabs.Screen name="me" options={{ title: '내 정보' }} />
     </Tabs>

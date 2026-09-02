@@ -11,6 +11,7 @@ const routeFiles = [
   'src/app/(tabs)/_layout.tsx',
   'src/app/(tabs)/index.tsx',
   'src/app/(tabs)/market.tsx',
+  'src/app/(tabs)/order.tsx',
   'src/app/(tabs)/plan.tsx',
   'src/app/(tabs)/me.tsx',
 ];
@@ -27,7 +28,7 @@ const tabsLayout = await readFile(
   join(appRoot, 'src/app/(tabs)/_layout.tsx'),
   'utf8',
 );
-for (const label of ['홈', '종목', '플랜', '내 정보']) {
+for (const label of ['홈', '종목', '주문', '플랜', '내 정보']) {
   if (!tabsLayout.includes(`title: '${label}'`)) {
     throw new Error(`필수 bottom tab label이 없습니다: ${label}`);
   }

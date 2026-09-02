@@ -28,6 +28,31 @@ import { useMoneyVisibilityStore } from '../../../shared/privacy';
 import { useWealthDashboard } from '../hooks/use-wealth-dashboard';
 import { AssetCharts } from './asset-charts';
 
+function syncStatusTitle(status: string): string {
+  switch (status) {
+    case 'QUEUED':
+      return '업데이트를 준비하고 있어요.';
+    case 'FETCHING':
+      return '기관에서 자산 정보를 가져오고 있어요.';
+    case 'RAW_STORED':
+      return '가져온 정보를 저장했어요.';
+    case 'NORMALIZING':
+      return '자산 정보를 정리하고 있어요.';
+    case 'COMPLETED':
+      return '자산 정보를 업데이트했어요.';
+    case 'FAILED':
+      return '자산 정보를 업데이트하지 못했습니다.';
+    default:
+      return '자산 정보를 업데이트하고 있어요.';
+  }
+}
+
+function syncStatusVariant(status: string): 'danger' | 'info' | 'success' {
+  if (status === 'FAILED') return 'danger';
+  if (status === 'COMPLETED') return 'success';
+  return 'info';
+}
+
 function AccountDetail({
   account,
   amountsHidden,
@@ -173,15 +198,21 @@ export function WealthDashboardScreen() {
             지금 업데이트
           </Button>
           {dashboard.sync ? (
-            <AppText
-              accessibilityLiveRegion="polite"
-              tone="secondary"
-              variant="caption"
+            <NoticeBanner
+              title={syncStatusTitle(dashboard.sync.status)}
+              variant={syncStatusVariant(dashboard.sync.status)}
             >
-              {displayLabel(dashboard.sync.status)} · 계좌{' '}
-              {dashboard.sync.counts.accounts}개 · 보유 자산{' '}
-              {dashboard.sync.counts.holdings}개
-            </AppText>
+              <AppText
+                accessibilityLiveRegion="polite"
+                tone="secondary"
+                variant="caption"
+              >
+                동기화 {displayLabel(dashboard.sync.status)} · 계좌{' '}
+                {dashboard.sync.counts.accounts} / 보유{' '}
+                {dashboard.sync.counts.holdings} / 거래{' '}
+                {dashboard.sync.counts.transactions}
+              </AppText>
+            </NoticeBanner>
           ) : null}
         </Card>
       )}

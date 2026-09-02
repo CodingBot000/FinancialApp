@@ -49,7 +49,10 @@ describe('WealthDashboardScreen', () => {
 
     const invalidation = vi.spyOn(queryClient, 'invalidateQueries');
     fireEvent.press(view.getByRole('button', { name: '지금 업데이트' }));
-    expect(await view.findByText(/완료 · 계좌/)).toBeTruthy();
+    expect(await view.findByText('자산 정보를 업데이트했어요.')).toBeTruthy();
+    expect(
+      view.getByText('동기화 완료 · 계좌 1 / 보유 1 / 거래 1'),
+    ).toBeTruthy();
     await waitFor(() => expect(invalidation).toHaveBeenCalledTimes(7));
     expect(invalidation).toHaveBeenCalledWith({
       exact: true,
