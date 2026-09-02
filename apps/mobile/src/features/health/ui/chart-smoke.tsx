@@ -9,7 +9,7 @@ export function ChartSmoke() {
 
   return (
     <View
-      accessibilityLabel="결정적 합성 자산 추이 차트. 100에서 151로 변화"
+      accessibilityLabel="재현 가능한 자산 추이 차트. 100에서 151로 변화"
       accessible
       style={styles.chart}
     >

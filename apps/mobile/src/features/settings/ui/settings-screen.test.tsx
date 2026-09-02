@@ -68,11 +68,9 @@ describe('SettingsScreen', () => {
       new ContractMockPlatformApi({ latencyMs: 0 }),
       false,
     );
+    expect(await view.findByText('데이터셋 기본 데이터셋 1')).toBeTruthy();
     expect(
-      await view.findByText('데이터셋 FINANCIAL_APP_DATASET_V1'),
-    ).toBeTruthy();
-    expect(
-      view.getByText('합성 데이터 · 실제 개인정보·계좌정보 없음'),
+      view.getByText('테스트 데이터 · 실제 개인정보·계좌정보 없음'),
     ).toBeTruthy();
     expect(view.queryByText('개발자 도구')).toBeNull();
     expect(view.queryByText('시나리오 TIMEOUT')).toBeNull();
@@ -81,7 +79,7 @@ describe('SettingsScreen', () => {
     expect(useMoneyVisibilityStore.getState().hidden).toBe(true);
     await waitFor(() => expect(view.getByText('켜짐')).toBeTruthy());
 
-    fireEvent.press(view.getByRole('button', { name: '로컬 세션 로그아웃' }));
+    fireEvent.press(view.getByRole('button', { name: '현재 세션 로그아웃' }));
     await waitFor(() => expect(manager.getSessionPresence()).toBe('absent'));
   });
 
@@ -93,17 +91,17 @@ describe('SettingsScreen', () => {
     expect(await view.findByText('개발자 도구')).toBeTruthy();
 
     fireEvent.press(
-      view.getByRole('button', { name: '시나리오 ORDER_REJECT' }),
+      view.getByRole('button', { name: '시나리오 주문 거절' }),
     );
     await waitFor(() =>
       expect(scenarioSpy).toHaveBeenCalledWith('ORDER_REJECT'),
     );
-    expect(await view.findByText('시나리오 ORDER_REJECT 적용')).toBeTruthy();
+    expect(await view.findByText('시나리오 주문 거절 적용')).toBeTruthy();
 
-    fireEvent.press(view.getByRole('button', { name: '합성 데이터셋 초기화' }));
+    fireEvent.press(view.getByRole('button', { name: '테스트 데이터 초기화' }));
     await waitFor(() => expect(resetSpy).toHaveBeenCalledOnce());
     expect(
-      await view.findByText('합성 데이터 FINANCIAL_APP_DATASET_V1 초기화'),
+      await view.findByText('테스트 데이터 기본 데이터셋 1 초기화'),
     ).toBeTruthy();
   });
 

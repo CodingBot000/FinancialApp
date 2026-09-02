@@ -28,5 +28,10 @@ export function LoginBoundary({ children }: PropsWithChildren) {
     );
   }
 
-  return <OidcLoginScreen login={() => composition.login.login()} />;
+  return (
+    <OidcLoginScreen
+      login={() => composition.login.login()}
+      loginMode={composition.loginMode}
+    />
+  );
 }

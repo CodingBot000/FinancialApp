@@ -13,7 +13,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PlatformApiError } from '../../../shared/api';
 import type { BiometricGate } from '../../../shared/auth/biometric-gate';
 import { ExpoBiometricGate } from '../../../shared/auth/expo-biometric-gate';
-import { formatWon } from '../../../shared/format/finance-format';
+import { LocalTestBiometricGate } from '../../../shared/auth/local-test-biometric-gate';
+import { isLocalBiometricBypassEnabled } from '../../../shared/config';
+import { displayLabel } from '../../../shared/format/display-labels';
+import {
+  formatDateTime,
+  formatWon,
+} from '../../../shared/format/finance-format';
 import { useMoneyVisibilityStore } from '../../../shared/privacy';
 import { useOrderFlow } from '../hooks/use-order-flow';
 
@@ -44,22 +50,24 @@ export function OrderScreen({
 }) {
   const amountsHidden = useMoneyVisibilityStore((state) => state.hidden);
   const [quantity, setQuantity] = useState('1.00000000');
-  const [defaultGate] = useState(
-    () =>
-      new ExpoBiometricGate({
-        description: 'BUY 주문 전 기기 소유자 확인입니다. 서버 MFA가 아닙니다.',
-        message: '합성 BUY 주문 확인',
-        subtitle: '기기 생체인증',
-      }),
+  const [defaultGate] = useState(() =>
+    isLocalBiometricBypassEnabled()
+      ? new LocalTestBiometricGate()
+      : new ExpoBiometricGate({
+          description:
+            '매수 주문 전 기기 소유자 확인입니다. 서버 다중 인증이 아닙니다.',
+          message: '매수 주문 확인',
+          subtitle: '기기 생체인증',
+        }),
   );
   const flow = useOrderFlow(quantity);
   const message = errorMessage(flow.error);
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.eyebrow}>SYNTHETIC BUY · NO AUTO RETRY</Text>
+        <Text style={styles.eyebrow}>매수 주문 · 자동 재시도 없음</Text>
         <Text accessibilityRole="header" style={styles.title}>
-          합성 자산 매수
+          자산 매수
         </Text>
         <Text style={styles.disclaimer}>
           실제 주문이나 투자 조언이 아닙니다. 외부 주문 POST는 자동 재시도하지
@@ -92,13 +100,13 @@ export function OrderScreen({
         </View>
         {flow.quote ? (
           <View style={styles.card}>
-            <Text style={styles.heading}>60초 합성 견적</Text>
+            <Text style={styles.heading}>60초 견적</Text>
             <Text style={styles.amount}>
               {formatWon(flow.quote.estimatedAmount, amountsHidden)}
             </Text>
             <Text style={styles.muted}>
               단가 {formatWon(flow.quote.unitPrice, amountsHidden)} · 만료{' '}
-              {flow.quote.expiresAt}
+              {formatDateTime(flow.quote.expiresAt)}
             </Text>
             <Pressable
               accessibilityRole="button"
@@ -106,7 +114,7 @@ export function OrderScreen({
               onPress={() => void flow.confirm(biometricGate ?? defaultGate)}
               style={styles.primary}
             >
-              <Text style={styles.primaryText}>생체인증 후 BUY 확정</Text>
+              <Text style={styles.primaryText}>생체인증 후 매수 확정</Text>
             </Pressable>
           </View>
         ) : null}
@@ -117,7 +125,9 @@ export function OrderScreen({
         ) : null}
         {flow.status ? (
           <View style={styles.card}>
-            <Text style={styles.heading}>주문 상태 · {flow.status.status}</Text>
+            <Text style={styles.heading}>
+              주문 상태 · {displayLabel(flow.status.status)}
+            </Text>
             <Text accessibilityLiveRegion="polite" style={styles.amount}>
               {formatWon(flow.status.estimatedAmount, amountsHidden)}
             </Text>
@@ -141,7 +151,7 @@ export function OrderScreen({
           ) : (
             flow.history.map((order) => (
               <View key={order.orderId} style={styles.row}>
-                <Text style={styles.value}>{order.status}</Text>
+                <Text style={styles.value}>{displayLabel(order.status)}</Text>
                 <Text style={styles.muted}>
                   {formatWon(order.estimatedAmount, amountsHidden)}
                 </Text>

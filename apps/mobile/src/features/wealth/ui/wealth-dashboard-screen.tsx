@@ -11,10 +11,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PlatformApiError, type Account } from '../../../shared/api';
 import {
+  formatDate,
+  formatDateTime,
   formatQuantity,
   formatWon,
   isMaskedAccountIdentifier,
 } from '../../../shared/format/finance-format';
+import { displayLabel } from '../../../shared/format/display-labels';
 import { useMoneyVisibilityStore } from '../../../shared/privacy';
 import { useWealthDashboard } from '../hooks/use-wealth-dashboard';
 import { AssetCharts } from './asset-charts';
@@ -69,7 +72,8 @@ function AccountDetail({
           <View>
             <Text style={styles.rowTitle}>{holding.displayName}</Text>
             <Text style={styles.muted}>
-              {formatQuantity(holding.quantity)} · {holding.assetClass}
+              {formatQuantity(holding.quantity)} ·{' '}
+              {displayLabel(holding.assetClass)}
             </Text>
           </View>
           <Text style={styles.rowValue}>
@@ -117,12 +121,12 @@ export function WealthDashboardScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.eyebrow}>WEALTH SANDBOX · DASHBOARD</Text>
+        <Text style={styles.eyebrow}>자산 샌드박스 · 대시보드</Text>
         <Text accessibilityRole="header" style={styles.title}>
-          합성 자산 현황
+          자산 현황
         </Text>
         <Text style={styles.disclaimer}>
-          SYNTHETIC DATA ONLY · 실제 금융서비스나 투자 조언이 아닙니다.
+          테스트 데이터만 사용합니다 · 실제 금융서비스나 투자 조언이 아닙니다.
         </Text>
         {dashboard.refreshing ? (
           <Text accessibilityLiveRegion="polite" style={styles.muted}>
@@ -146,11 +150,9 @@ export function WealthDashboardScreen() {
         {!connection ? (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>기관 연결이 필요합니다</Text>
-            <Text style={styles.muted}>
-              합성 기관 SYNTH_WEALTH_001만 연결됩니다.
-            </Text>
+            <Text style={styles.muted}>테스트 기관만 연결됩니다.</Text>
             <Action
-              label="합성 기관 연결"
+              label="기관 연결"
               pending={dashboard.createConnection.isPending}
               onPress={() => dashboard.createConnection.mutate()}
             />
@@ -158,10 +160,10 @@ export function WealthDashboardScreen() {
         ) : (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>
-              기관 연결 · {connection.status}
+              기관 연결 · {displayLabel(connection.status)}
             </Text>
             <Text style={styles.muted}>
-              마지막 동기화 {connection.lastSuccessfulSyncAt ?? '아직 없음'}
+              마지막 동기화 {formatDateTime(connection.lastSuccessfulSyncAt)}
             </Text>
             <Action
               label="지금 동기화"
@@ -176,7 +178,7 @@ export function WealthDashboardScreen() {
             />
             {dashboard.sync ? (
               <Text accessibilityLiveRegion="polite" style={styles.muted}>
-                동기화 {dashboard.sync.status} · 계좌{' '}
+                동기화 {displayLabel(dashboard.sync.status)} · 계좌{' '}
                 {dashboard.sync.counts.accounts} / 보유{' '}
                 {dashboard.sync.counts.holdings} / 거래{' '}
                 {dashboard.sync.counts.transactions}
@@ -223,7 +225,8 @@ export function WealthDashboardScreen() {
                       : '***-**-****'}
                   </Text>
                   <Text style={styles.muted}>
-                    {account.accountType} · {account.status}
+                    {displayLabel(account.accountType)} ·{' '}
+                    {displayLabel(account.status)}
                   </Text>
                 </View>
                 <Text style={styles.rowValue}>
@@ -266,9 +269,11 @@ export function WealthDashboardScreen() {
               <View key={transaction.transactionId} style={styles.row}>
                 <View>
                   <Text style={styles.rowTitle}>
-                    {transaction.transactionType}
+                    {displayLabel(transaction.transactionType)}
                   </Text>
-                  <Text style={styles.muted}>{transaction.occurredAt}</Text>
+                  <Text style={styles.muted}>
+                    {formatDate(transaction.occurredAt)}
+                  </Text>
                 </View>
                 <Text style={styles.rowValue}>
                   {formatWon(transaction.amount, amountsHidden)}

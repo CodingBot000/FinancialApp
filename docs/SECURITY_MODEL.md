@@ -97,7 +97,7 @@ flowchart LR
 
 KMS integration은 Milestone 6이며 원격 권한 확인 전에 실행하지 않는다.
 
-BE-0013의 `AwsKmsDataKeyProvider`는 `GenerateDataKey`, encryption-context `Decrypt`, 별도 HMAC key `GenerateMac` client port를 구현한다. 단위 test는 fake client만 사용한다. AWS SDK client/credential과 실제 KMS key binding은 이번 실행 범위 밖이며, local provider는 `demo`/`production` bootstrap과 operation에서 fail-closed한다. 기존 `FAE2` 이전 ciphertext read는 합성 local/test에서만 허용하고 demo/production에서는 거부한다.
+BE-0013의 `AwsKmsDataKeyProvider`는 `GenerateDataKey`, encryption-context `Decrypt`, 별도 HMAC key `GenerateMac` client port를 구현하고, backend의 AWS SDK adapter가 이를 KMS 명령으로 매핑한다. 단위 test는 fake client만 사용하며 실제 AWS credential, key policy와 원격 KMS roundtrip은 별도 remote 검증 단계로 둔다. local provider는 `demo`/`production` bootstrap과 operation에서 fail-closed한다. 기존 `FAE2` 이전 ciphertext read는 합성 local/test에서만 허용하고 demo/production에서는 거부한다.
 
 ## 7. 로그와 감사
 

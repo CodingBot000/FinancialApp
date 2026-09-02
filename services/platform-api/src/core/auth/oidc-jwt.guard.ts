@@ -36,6 +36,14 @@ interface ProblemDetails {
   readonly fieldErrors: readonly never[];
 }
 
+const LOCAL_TEST_SCOPES = new Set([
+  'financial.read',
+  'financial.write',
+  'simulation.execute',
+  'order.execute',
+  'scenario.admin',
+]);
+
 function readHeader(
   headers: GuardRequest['headers'],
   name: string,
@@ -98,6 +106,30 @@ export class OidcJwtGuard implements CanActivate {
       );
     }
 
+    const requiredScopes =
+      this.reflector.getAllAndOverride<readonly string[]>(
+        REQUIRED_SCOPES_METADATA,
+        [context.getHandler(), context.getClass()],
+      ) ?? [];
+    const localTestToken = process.env.FINAPP_LOCAL_TEST_ACCESS_TOKEN?.trim();
+
+    // This explicit test token is available only in the local profile. It is
+    // never accepted by demo or production, where OIDC verification remains
+    // mandatory.
+    if (
+      process.env.APP_ENV === 'local' &&
+      localTestToken !== undefined &&
+      authorization === `Bearer ${localTestToken}`
+    ) {
+      request.user = {
+        issuer:
+          process.env.OIDC_ISSUER ?? 'http://localhost:8083/realms/finapp',
+        subject: 'local-test-user',
+        scopes: LOCAL_TEST_SCOPES,
+      };
+      return true;
+    }
+
     const issuer = process.env.OIDC_ISSUER;
     const audience = process.env.OIDC_AUDIENCE;
     const jwksUri = process.env.OIDC_JWKS_URI;
@@ -144,11 +176,6 @@ export class OidcJwtGuard implements CanActivate {
           ? payload.scope.split(' ').filter((scope) => scope.length > 0)
           : [],
       );
-      const requiredScopes =
-        this.reflector.getAllAndOverride<readonly string[]>(
-          REQUIRED_SCOPES_METADATA,
-          [context.getHandler(), context.getClass()],
-        ) ?? [];
       const missingScopes = requiredScopes.filter(
         (scope) => !scopes.has(scope),
       );

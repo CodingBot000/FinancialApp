@@ -31,7 +31,7 @@ describe('WealthDashboardScreen', () => {
     const { queryClient, view } = await renderScreen(api);
 
     expect(await view.findByText('185,400,000원')).toBeTruthy();
-    expect(view.getByText(/SYNTHETIC DATA ONLY/)).toBeTruthy();
+    expect(view.getByText(/테스트 데이터만 사용/)).toBeTruthy();
     expect(view.getByText('자산 추이')).toBeTruthy();
     expect(view.getByText('자산 배분')).toBeTruthy();
     expect(view.getByLabelText(/모션 감소/)).toBeTruthy();
@@ -40,11 +40,11 @@ describe('WealthDashboardScreen', () => {
     expect(await view.findByText(/계좌 상세 · \*\*\*-\*\*-0001/)).toBeTruthy();
     expect(accountDetail).toHaveBeenCalledOnce();
     expect(view.getByText('Synthetic Equity Fund')).toBeTruthy();
-    expect(view.getByText(/1,360 · EQUITY/)).toBeTruthy();
+    expect(view.getByText(/1,360 · 주식/)).toBeTruthy();
 
     const invalidation = vi.spyOn(queryClient, 'invalidateQueries');
     fireEvent.press(view.getByRole('button', { name: '지금 동기화' }));
-    expect(await view.findByText(/동기화 COMPLETED/)).toBeTruthy();
+    expect(await view.findByText(/동기화 완료/)).toBeTruthy();
     await waitFor(() => expect(invalidation).toHaveBeenCalledTimes(7));
     expect(invalidation).toHaveBeenCalledWith({
       exact: true,
@@ -58,7 +58,7 @@ describe('WealthDashboardScreen', () => {
         return Promise.reject(
           new PlatformApiError({
             kind: 'network',
-            message: '합성 API 연결 실패',
+            message: '테스트 API 연결 실패',
             retryable: true,
           }),
         );

@@ -6,6 +6,12 @@ import type { SimulationPoint } from '../../../shared/api';
 import { formatCompactWon } from '../../../shared/format/finance-format';
 import { useMoneyVisibilityStore } from '../../../shared/privacy';
 
+const PERCENTILE_LABELS = {
+  p10: '하위 10%',
+  p50: '중앙값',
+  p90: '상위 90%',
+} as const;
+
 function samples(series: readonly SimulationPoint[]) {
   if (series.length <= 6) return series;
   return Array.from(
@@ -26,7 +32,7 @@ export function PercentileChart({
   const maximum = Math.max(...points.map((point) => Number(point.p90)), 1);
   return (
     <View
-      accessibilityLabel={`p10 p50 p90 백분위 차트. 모션 ${reduceMotion ? '감소' : '기본'}`}
+      accessibilityLabel={`하위 10%, 중앙값, 상위 90% 백분위 차트. 모션 ${reduceMotion ? '감소' : '기본'}`}
       accessible
       style={styles.chart}
     >
@@ -63,9 +69,11 @@ export function PercentileChart({
       </View>
       {selected ? (
         <Text accessibilityLiveRegion="polite" style={styles.tooltip}>
-          {selected.month}개월 · p10{' '}
-          {formatCompactWon(selected.p10, amountsHidden)} · p50{' '}
-          {formatCompactWon(selected.p50, amountsHidden)} · p90{' '}
+          {selected.month}개월 · {PERCENTILE_LABELS.p10}{' '}
+          {formatCompactWon(selected.p10, amountsHidden)} ·{' '}
+          {PERCENTILE_LABELS.p50}{' '}
+          {formatCompactWon(selected.p50, amountsHidden)} ·{' '}
+          {PERCENTILE_LABELS.p90}{' '}
           {formatCompactWon(selected.p90, amountsHidden)}
         </Text>
       ) : null}

@@ -5,7 +5,7 @@
   "registrationAllowed": false,
   "resetPasswordAllowed": false,
   "rememberMe": false,
-  "sslRequired": "external",
+  "sslRequired": "none",
   "clientScopes": [
     {
       "name": "basic",

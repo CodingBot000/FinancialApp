@@ -5,7 +5,7 @@ import { chartSmokeData } from '../model/chart-smoke-data';
 export function ChartSmoke() {
   return (
     <View
-      accessibilityLabel="결정적 합성 자산 추이 차트. 100에서 151로 변화"
+      accessibilityLabel="재현 가능한 자산 추이 차트. 100에서 151로 변화"
       accessible
       style={styles.chart}
     >
@@ -20,7 +20,7 @@ export function ChartSmoke() {
           />
         ))}
       </View>
-      <Text style={styles.caption}>100 → 151 · deterministic smoke series</Text>
+      <Text style={styles.caption}>100 → 151 · 재현 가능한 테스트 추이</Text>
     </View>
   );
 }

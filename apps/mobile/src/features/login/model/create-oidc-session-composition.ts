@@ -3,7 +3,11 @@ import type {
   RefreshCoordinator,
 } from '../../../shared/auth';
 import { ExpoOidcClient } from '../../../shared/auth/expo-oidc-client';
-import { readOidcPublicConfig } from '../../../shared/config';
+import { LocalTestOidcClient } from '../../../shared/auth/local-test-oidc-client';
+import {
+  isLocalTestLoginEnabled,
+  readOidcPublicConfig,
+} from '../../../shared/config';
 import { OidcLoginService } from './oidc-login-service';
 
 type PublicEnvironment = Readonly<Record<string, string | undefined>>;
@@ -18,12 +22,23 @@ export type OidcSessionComposition =
       login: OidcLoginService;
       refreshCoordinator: RefreshCoordinator;
       status: 'configured';
+      loginMode: 'oidc' | 'test';
     }>;
 
 export function createOidcSessionComposition(
   manager: AuthSessionManager,
   environment: PublicEnvironment = process.env,
 ): OidcSessionComposition {
+  if (isLocalTestLoginEnabled(environment)) {
+    const client = new LocalTestOidcClient();
+    return {
+      login: new OidcLoginService(client, manager),
+      refreshCoordinator: manager.createRefreshCoordinator(client),
+      status: 'configured',
+      loginMode: 'test',
+    };
+  }
+
   const configState = readOidcPublicConfig(environment);
   if (configState.status === 'unavailable') {
     return configState;
@@ -34,5 +49,6 @@ export function createOidcSessionComposition(
     login: new OidcLoginService(client, manager),
     refreshCoordinator: manager.createRefreshCoordinator(client),
     status: 'configured',
+    loginMode: 'oidc',
   };
 }

@@ -97,7 +97,7 @@
 - [x] local stable HMAC lookup과 AWS KMS 별도 HMAC `GenerateMac` 경계
 - [x] plaintext DEK use-after zero-fill, tamper/wrong AAD/wrong profile fail-closed
 - [x] pre-envelope synthetic ciphertext는 local/test read-only 호환, demo/production 거부
-- [x] fake AWS client만 사용하고 AWS SDK/credential/endpoint/실제 KMS 호출 미사용
+- [x] AWS SDK adapter와 fake-client contract를 연결하고, 실제 AWS credential/endpoint/KMS 호출은 remote 검증 전까지 미사용
 - [x] Testcontainers 신규 envelope와 보존 Compose legacy-read actual smoke 통과
 - [x] `BE-ISSUE-0006` strict test type failure 해결·재검증
 - [x] root verify: mobile 95/simulator 12/platform 68 총 175 tests와 두 backend build 통과

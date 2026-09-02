@@ -18,6 +18,8 @@ export type {
 } from './auth-session-manager';
 export { ExpoSecureRefreshTokenStore } from './expo-secure-refresh-token-store';
 export { ExpoBiometricGate } from './expo-biometric-gate';
+export { LocalTestOidcClient } from './local-test-oidc-client';
+export { LocalTestBiometricGate } from './local-test-biometric-gate';
 export { RefreshCoordinator } from './refresh-coordinator';
 export { OidcAuthorizationError } from './oidc-authorization';
 export type {

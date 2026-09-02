@@ -13,6 +13,8 @@ __pycache__/
 !.env.example
 !.env.local
 !*/.env.local
+apps/mobile/android/
+apps/mobile/ios/
 .idea/
 .vscode/
 

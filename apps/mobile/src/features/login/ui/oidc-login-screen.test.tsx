@@ -15,9 +15,7 @@ describe('OidcLoginScreen', () => {
     const view = await render(<OidcLoginScreen login={login} />);
 
     await act(async () => {
-      fireEvent.press(
-        view.getByRole('button', { name: 'OIDC 시스템 브라우저 로그인' }),
-      );
+      fireEvent.press(view.getByRole('button', { name: '브라우저로 로그인' }));
     });
     expect(await view.findByText('브라우저 여는 중')).toBeTruthy();
     await act(async () => finishLogin?.('cancelled'));
@@ -35,9 +33,7 @@ describe('OidcLoginScreen', () => {
     const view = await render(<OidcLoginScreen login={login} />);
 
     await act(async () => {
-      fireEvent.press(
-        view.getByRole('button', { name: 'OIDC 시스템 브라우저 로그인' }),
-      );
+      fireEvent.press(view.getByRole('button', { name: '브라우저로 로그인' }));
     });
 
     const alert = await view.findByRole('alert');
@@ -52,9 +48,7 @@ describe('OidcLoginScreen', () => {
       <OidcConfigurationScreen invalid={[]} missing={['clientId', 'issuer']} />,
     );
 
-    expect(
-      view.getByText('EXPO_PUBLIC_OIDC_CLIENT_ID\nEXPO_PUBLIC_OIDC_ISSUER'),
-    ).toBeTruthy();
+    expect(view.getByText('클라이언트 ID\n인증 서버 주소')).toBeTruthy();
     expect(view.queryByRole('button')).toBeNull();
   });
 });

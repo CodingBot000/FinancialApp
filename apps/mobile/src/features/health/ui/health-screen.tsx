@@ -9,6 +9,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PLATFORM_CONTRACT_VERSION } from '../../../shared/api';
+import {
+  displayContractVersion,
+  displayDatasetVersion,
+} from '../../../shared/format/display-labels';
 import { usePlatformHealth } from '../hooks/use-platform-health';
 import { ChartSmoke } from './chart-smoke';
 
@@ -23,22 +27,22 @@ export function HealthScreen() {
       >
         <View style={styles.eyebrowRow}>
           <View style={styles.brandMark} />
-          <Text style={styles.eyebrow}>WEALTH SANDBOX</Text>
+          <Text style={styles.eyebrow}>자산 샌드박스</Text>
         </View>
 
         <Text accessibilityRole="header" style={styles.title}>
           자산의 흐름을{`\n`}안전하게 연결합니다.
         </Text>
         <Text style={styles.subtitle}>
-          합성 금융 데이터로 검증하는 모바일 자산관리 플랫폼
+          테스트 금융 데이터로 검증하는 모바일 자산관리 플랫폼
         </Text>
 
         <View accessibilityLabel="플랫폼 연결 상태" style={styles.statusCard}>
           <View style={styles.statusHeader}>
-            <Text style={styles.cardLabel}>PLATFORM STATUS</Text>
+            <Text style={styles.cardLabel}>플랫폼 상태</Text>
             <View style={styles.contractBadge}>
               <Text style={styles.contractText}>
-                {PLATFORM_CONTRACT_VERSION}
+                {displayContractVersion(PLATFORM_CONTRACT_VERSION)}
               </Text>
             </View>
           </View>
@@ -56,9 +60,9 @@ export function HealthScreen() {
                 <View style={styles.readyDot} />
                 <Text style={styles.stateTitle}>서비스 준비 완료</Text>
               </View>
-              <Text style={styles.datasetLabel}>DATASET</Text>
+              <Text style={styles.datasetLabel}>데이터셋</Text>
               <Text selectable style={styles.datasetValue}>
-                {state.health.datasetVersion}
+                {displayDatasetVersion(state.health.datasetVersion)}
               </Text>
             </View>
           ) : null}
@@ -86,17 +90,17 @@ export function HealthScreen() {
 
         <View style={styles.chartCard}>
           <View style={styles.statusHeader}>
-            <Text style={styles.cardLabel}>CHART COMPATIBILITY</Text>
-            <Text style={styles.chartStack}>Victory · Skia · Reanimated</Text>
+            <Text style={styles.cardLabel}>차트 지원</Text>
+            <Text style={styles.chartStack}>차트 · 그래픽 · 애니메이션</Text>
           </View>
           <ChartSmoke />
         </View>
 
         <View style={styles.disclaimerCard}>
-          <Text style={styles.disclaimerTitle}>SYNTHETIC FINANCIAL DATA</Text>
+          <Text style={styles.disclaimerTitle}>테스트 금융 데이터</Text>
           <Text style={styles.disclaimerBody}>
-            이 앱의 사용자·기관·계좌·시세는 모두 재현 가능한 합성 데이터입니다.
-            실제 금융서비스나 투자 조언이 아닙니다.
+            이 앱의 사용자·기관·계좌·시세는 테스트용 데이터입니다. 실제
+            금융서비스나 투자 조언이 아닙니다.
           </Text>
         </View>
       </ScrollView>

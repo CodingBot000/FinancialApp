@@ -15,3 +15,21 @@ export function readAppEnvironment(
 export function isDeveloperToolsEnabled(environment?: PublicEnvironment) {
   return readAppEnvironment(environment) !== 'production';
 }
+
+export function isLocalTestLoginEnabled(environment?: PublicEnvironment) {
+  const source = environment ?? process.env;
+  return (
+    readAppEnvironment(source) === 'local' &&
+    source.EXPO_PUBLIC_LOGIN_MODE === 'test'
+  );
+}
+
+export function isLocalBiometricBypassEnabled(
+  environment?: PublicEnvironment,
+) {
+  const source = environment ?? process.env;
+  return (
+    readAppEnvironment(source) === 'local' &&
+    source.EXPO_PUBLIC_BIOMETRIC_MODE === 'skip'
+  );
+}

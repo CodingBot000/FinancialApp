@@ -9,6 +9,12 @@
     "plugins": [
       "expo-router",
       [
+        "expo-dev-client",
+        {
+          "toolsButton": false
+        }
+      ],
+      [
         "expo-local-authentication",
         {
           "faceIDPermission": "Wealth Sandbox 앱 잠금을 해제하기 위해 Face ID를 사용합니다."
@@ -20,7 +26,8 @@
       "typedRoutes": true
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.wealthsandbox"
     },
     "android": {
       "permissions": [

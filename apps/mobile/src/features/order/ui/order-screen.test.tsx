@@ -47,10 +47,10 @@ describe('OrderScreen', () => {
 
     fireEvent.press(view.getByRole('button', { name: '견적 확인' }));
     fireEvent.press(
-      await view.findByRole('button', { name: '생체인증 후 BUY 확정' }),
+      await view.findByRole('button', { name: '생체인증 후 매수 확정' }),
     );
 
-    expect(await view.findByText('주문 상태 · FILLED')).toBeTruthy();
+    expect(await view.findByText('주문 상태 · 체결')).toBeTruthy();
     expect(prepare).toHaveBeenCalledOnce();
     expect(prepare.mock.calls[0]?.[0]).toMatchObject({
       instrumentId: 'c805563c-148c-4451-8a9a-4808da7b32ae',
@@ -70,7 +70,7 @@ describe('OrderScreen', () => {
     await view.findByText('Synthetic Equity Fund');
     fireEvent.press(view.getByRole('button', { name: '견적 확인' }));
     fireEvent.press(
-      await view.findByRole('button', { name: '생체인증 후 BUY 확정' }),
+      await view.findByRole('button', { name: '생체인증 후 매수 확정' }),
     );
 
     expect(
@@ -102,7 +102,7 @@ describe('OrderScreen', () => {
     await view.findByText('Synthetic Equity Fund');
     fireEvent.press(view.getByRole('button', { name: '견적 확인' }));
     fireEvent.press(
-      await view.findByRole('button', { name: '생체인증 후 BUY 확정' }),
+      await view.findByRole('button', { name: '생체인증 후 매수 확정' }),
     );
 
     expect(
@@ -134,10 +134,10 @@ describe('OrderScreen', () => {
     await view.findByText('Synthetic Equity Fund');
     fireEvent.press(view.getByRole('button', { name: '견적 확인' }));
     fireEvent.press(
-      await view.findByRole('button', { name: '생체인증 후 BUY 확정' }),
+      await view.findByRole('button', { name: '생체인증 후 매수 확정' }),
     );
 
-    expect(await view.findByText('주문 상태 · UNKNOWN')).toBeTruthy();
+    expect(await view.findByText('주문 상태 · 확인 중')).toBeTruthy();
     expect(prepare).toHaveBeenCalledOnce();
     expect(get).toHaveBeenCalledOnce();
   });

@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   StyleSheet,
   Text,
@@ -14,10 +15,13 @@ type LoginUiState = 'idle' | 'opening' | 'cancelled' | 'error';
 
 export function OidcLoginScreen({
   login,
+  loginMode = 'oidc',
 }: {
   readonly login: () => Promise<LoginResult>;
+  readonly loginMode?: 'oidc' | 'test';
 }) {
   const [state, setState] = useState<LoginUiState>('idle');
+  const isTestLogin = loginMode === 'test';
 
   const startLogin = useCallback(async () => {
     if (state === 'opening') {
@@ -33,26 +37,37 @@ export function OidcLoginScreen({
     }
   }, [login, state]);
 
+  const confirmTestLogin = useCallback(() => {
+    Alert.alert(
+      '테스트 로그인',
+      '로컬 개발용 가상 계정으로 로그인하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '진행', onPress: () => void startLogin() },
+      ],
+    );
+  }, [startLogin]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.content}>
         <View style={styles.eyebrowRow}>
           <View style={styles.brandMark} />
-          <Text style={styles.eyebrow}>WEALTH SANDBOX</Text>
+          <Text style={styles.eyebrow}>자산 샌드박스</Text>
         </View>
         <Text accessibilityRole="header" style={styles.title}>
           안전한 자산관리{`\n`}샌드박스에 로그인
         </Text>
         <Text style={styles.description}>
-          시스템 브라우저에서 OIDC 로그인을 완료하면 앱으로 안전하게 돌아옵니다.
+          {isTestLogin
+            ? '로컬 개발 환경에서는 가상 계정으로 앱 흐름을 확인할 수 있습니다.'
+            : '시스템 브라우저에서 인증을 완료하면 앱으로 안전하게 돌아옵니다.'}
         </Text>
 
         <View style={styles.securityCard}>
-          <Text style={styles.securityTitle}>
-            AUTHORIZATION CODE + PKCE S256
-          </Text>
+          <Text style={styles.securityTitle}>보안 인증 · PKCE 방식</Text>
           <Text style={styles.securityBody}>
-            앱에는 client secret을 두지 않으며 access token은 메모리에만
+            앱에는 클라이언트 비밀값을 두지 않으며 접근 토큰은 메모리에만
             보관합니다.
           </Text>
         </View>
@@ -70,10 +85,12 @@ export function OidcLoginScreen({
         ) : null}
 
         <Pressable
-          accessibilityLabel="OIDC 시스템 브라우저 로그인"
+          accessibilityLabel={
+            isTestLogin ? '테스트 로그인' : '브라우저로 로그인'
+          }
           accessibilityRole="button"
           disabled={state === 'opening'}
-          onPress={() => void startLogin()}
+          onPress={isTestLogin ? confirmTestLogin : () => void startLogin()}
           style={({ pressed }) => [
             styles.loginButton,
             pressed && styles.loginButtonPressed,
@@ -85,12 +102,14 @@ export function OidcLoginScreen({
               <Text style={styles.loginButtonText}>브라우저 여는 중</Text>
             </View>
           ) : (
-            <Text style={styles.loginButtonText}>OIDC로 로그인</Text>
+            <Text style={styles.loginButtonText}>
+              {isTestLogin ? '테스트 로그인' : '브라우저로 로그인'}
+            </Text>
           )}
         </Pressable>
 
         <Text style={styles.syntheticNotice}>
-          SYNTHETIC FINANCIAL DATA · 실제 금융서비스가 아닙니다
+          테스트 금융 데이터 · 실제 금융서비스가 아닙니다
         </Text>
       </View>
     </SafeAreaView>
@@ -104,37 +123,35 @@ export function OidcConfigurationScreen({
   readonly invalid: readonly ('clientId' | 'issuer')[];
   readonly missing: readonly ('clientId' | 'issuer')[];
 }) {
-  const missingNames = missing.map((field) =>
-    field === 'issuer'
-      ? 'EXPO_PUBLIC_OIDC_ISSUER'
-      : 'EXPO_PUBLIC_OIDC_CLIENT_ID',
-  );
-
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel="OIDC 설정 필요" style={styles.content}>
+      <View accessibilityLabel="인증 설정 필요" style={styles.content}>
         <Text accessibilityRole="header" style={styles.title}>
-          OIDC 연결 설정이 필요합니다
+          인증 연결 설정이 필요합니다
         </Text>
         <Text style={styles.description}>
-          승인된 Identity Provider의 public mobile client 설정이 들어오기 전에는
-          로그인을 시작하지 않습니다.
+          승인된 인증 제공자의 모바일 공개 설정이 들어오기 전에는 로그인을
+          시작하지 않습니다.
         </Text>
-        {missingNames.length > 0 ? (
+        {missing.length > 0 ? (
           <View style={styles.configurationCard}>
-            <Text style={styles.securityTitle}>MISSING PUBLIC CONFIG</Text>
+            <Text style={styles.securityTitle}>필수 공개 설정</Text>
             <Text selectable style={styles.configurationValue}>
-              {missingNames.join('\n')}
+              {missing
+                .map((field) =>
+                  field === 'issuer' ? '인증 서버 주소' : '클라이언트 ID',
+                )
+                .join('\n')}
             </Text>
           </View>
         ) : null}
         {invalid.includes('issuer') ? (
           <Text accessibilityRole="alert" style={styles.errorText}>
-            issuer는 HTTPS여야 하며 HTTP는 local development에서만 허용됩니다.
+            인증 서버 주소는 HTTPS여야 하며 HTTP는 로컬 개발에서만 허용됩니다.
           </Text>
         ) : null}
         <Text style={styles.syntheticNotice}>
-          client secret은 모바일 앱 설정에 추가하지 마세요.
+          클라이언트 비밀값은 모바일 앱 설정에 추가하지 마세요.
         </Text>
       </View>
     </SafeAreaView>

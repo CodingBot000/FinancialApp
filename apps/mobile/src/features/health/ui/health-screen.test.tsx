@@ -41,7 +41,7 @@ describe('HealthScreen', () => {
 
     expect(view.getByText('연결을 확인하는 중')).toBeTruthy();
     expect(await view.findByText('서비스 준비 완료')).toBeTruthy();
-    expect(view.getByText('baseline-v1')).toBeTruthy();
+    expect(view.getByText('기본 데이터셋')).toBeTruthy();
   });
 
   it('renders a retry action for a retryable failure', async () => {

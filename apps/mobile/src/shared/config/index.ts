@@ -8,5 +8,10 @@ export type {
   OidcPublicConfig,
   OidcPublicConfigState,
 } from './oidc-public-config';
-export { isDeveloperToolsEnabled, readAppEnvironment } from './app-environment';
+export {
+  isDeveloperToolsEnabled,
+  isLocalBiometricBypassEnabled,
+  isLocalTestLoginEnabled,
+  readAppEnvironment,
+} from './app-environment';
 export type { AppEnvironment } from './app-environment';

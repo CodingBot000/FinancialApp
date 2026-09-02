@@ -19,8 +19,10 @@
 - `SIMULATOR_DATABASE_URL`: simulator runtime role의 DML 연결
 - `PLATFORM_MIGRATION_DATABASE_URL`: platform Drizzle migration CLI가 읽는 DDL 연결
 - `SIMULATOR_MIGRATION_DATABASE_URL`: simulator Drizzle migration CLI가 읽는 DDL 연결
-- `EXPO_PUBLIC_*`: 앱 번들에 들어갈 수 있는 공개 설정이다. DB URL, password, token, AWS secret은 절대 넣지 않는다.
+- `EXPO_PUBLIC_*`: 앱 번들에 들어갈 수 있는 공개 설정이다. DB URL, password, private key, production token과 AWS secret은 절대 넣지 않는다.
+- `EXPO_PUBLIC_LOGIN_MODE=test`와 `EXPO_PUBLIC_LOCAL_TEST_ACCESS_TOKEN`은 local development build에서만 사용하는 명시적 테스트 로그인 설정이다. demo/production에서는 사용하지 않는다.
 - `AWS_REGION`, `AWS_KMS_*`: remote/demo KMS 경계용 설정이다. 실제 credential은 파일 대신 workload identity/secret store를 사용한다.
+- `AWS_KMS_KEY_VERSION`: KMS로 생성된 envelope의 논리적 key version이다. 미지정 시 backend는 `kms-v1`을 사용하며, rotation 시 새 값을 명시한다.
 
 현재 migration CLI는 `.env.local` 파일을 자동으로 읽지 않고 process environment에서 값을 읽는다. 따라서 승인된 환경에서만 검토된 secret loader 또는 shell export를 사용해 주입한다. `source`로 임의의 untrusted 파일을 실행하지 않는다.
 

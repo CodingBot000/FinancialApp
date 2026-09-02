@@ -11,6 +11,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PlatformApiError } from '../../../shared/api';
+import {
+  displayDatasetVersion,
+  displayLabel,
+  displaySimulationDisclaimer,
+} from '../../../shared/format/display-labels';
 import { formatWon } from '../../../shared/format/finance-format';
 import { useMoneyVisibilityStore } from '../../../shared/privacy';
 import { useSimulation } from '../hooks/use-simulation';
@@ -48,12 +53,12 @@ export function SimulationScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.eyebrow}>DETERMINISTIC · SYNTHETIC V1</Text>
+        <Text style={styles.eyebrow}>재현 가능한 데이터 · 버전 1</Text>
         <Text accessibilityRole="header" style={styles.title}>
           자산 시뮬레이션
         </Text>
         <Text style={styles.disclaimer}>
-          합성 데이터 기반 기술 데모이며 실제 수익 예측이나 투자 조언이
+          테스트 데이터 기반 기술 데모이며 실제 수익 예측이나 투자 조언이
           아닙니다.
         </Text>
         <View style={styles.card}>
@@ -99,7 +104,7 @@ export function SimulationScreen() {
             </Text>
             <Text style={styles.error}>
               {requestError instanceof PlatformApiError && requestError.code
-                ? `${requestError.code} · 입력값을 확인해 주세요.`
+                ? `${displayLabel(requestError.code)} · 입력값을 확인해 주세요.`
                 : '네트워크 상태를 확인하고 다시 실행해 주세요.'}
             </Text>
           </View>
@@ -120,11 +125,13 @@ export function SimulationScreen() {
               최종 중앙값 {formatWon(result.finalValue.p50, amountsHidden)}
             </Text>
             <Text style={styles.version}>
-              Engine {result.engineVersion} · Assumptions{' '}
-              {result.assumptionSetVersion}
+              계산 엔진 {result.engineVersion} · 기준{' '}
+              {displayDatasetVersion(result.assumptionSetVersion)}
             </Text>
             <PercentileChart series={result.series} />
-            <Text style={styles.disclaimer}>{result.disclaimer}</Text>
+            <Text style={styles.disclaimer}>
+              {displaySimulationDisclaimer(result.disclaimer)}
+            </Text>
           </View>
         ) : null}
       </ScrollView>

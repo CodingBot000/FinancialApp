@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   formatCompactWon,
+  formatDate,
+  formatDateTime,
   formatQuantity,
   formatWon,
   isMaskedAccountIdentifier,
@@ -22,5 +24,13 @@ describe('wealth contract formatters', () => {
     expect(formatQuantity('Infinity')).toBe('수량 확인 필요');
     expect(isMaskedAccountIdentifier('***-**-0001')).toBe(true);
     expect(isMaskedAccountIdentifier('1234567890')).toBe(false);
+  });
+
+  it('normalizes API timestamps for Korean UI display', () => {
+    expect(formatDate('2026-09-01T00:00:00.000Z')).toBe('2026-09-01');
+    expect(formatDate('2026-09-01')).toBe('2026-09-01');
+    expect(formatDateTime('2026-09-01T00:00:00.000Z')).toBe('2026-09-01 09:00');
+    expect(formatDate(null)).toBe('날짜 없음');
+    expect(formatDateTime('not-a-date')).toBe('날짜 확인 필요');
   });
 });

@@ -37,16 +37,16 @@ describe('SimulationScreen', () => {
     fireEvent.press(view.getByRole('button', { name: '시뮬레이션 실행' }));
     expect(await view.findByText('서버 저장 결과')).toBeTruthy();
     expect(view.getByText('목표 달성 확률 71%')).toBeTruthy();
-    expect(view.getByText(/Engine 1.0.0/)).toBeTruthy();
-    expect(view.getByText(/SYNTHETIC_V1/)).toBeTruthy();
+    expect(view.getByText(/계산 엔진 1.0.0/)).toBeTruthy();
+    expect(view.getByText(/기본 데이터셋 1/)).toBeTruthy();
     expect(
-      view.getByLabelText(/p10 p50 p90 백분위 차트. 모션 감소/),
+      view.getByLabelText(/하위 10%, 중앙값, 상위 90% 백분위 차트. 모션 감소/),
     ).toBeTruthy();
     expect(create).toHaveBeenCalledOnce();
     expect(get).toHaveBeenCalledOnce();
 
     fireEvent.press(view.getByRole('button', { name: '0개월 결과 보기' }));
-    expect(await view.findByText(/0개월 · p10/)).toBeTruthy();
+    expect(await view.findByText(/0개월 · 하위 10%/)).toBeTruthy();
   });
 
   it('blocks an invalid duration before starting a mutation', async () => {

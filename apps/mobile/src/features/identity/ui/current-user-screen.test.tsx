@@ -64,7 +64,7 @@ describe('CurrentUserScreen', () => {
 
     expect(await view.findByText('테스트 사용자 A')).toBeTruthy();
     expect(view.getByText('균형형')).toBeTruthy();
-    expect(view.getByText('FINANCIAL_APP_DATASET_V1')).toBeTruthy();
+    expect(view.getByText('기본 데이터셋 1')).toBeTruthy();
 
     fireEvent.press(view.getByRole('button', { name: '로컬 세션 로그아웃' }));
     await waitFor(() => expect(manager.getSessionPresence()).toBe('absent'));

@@ -19,6 +19,10 @@ import {
 } from '../../../shared/api';
 import { useAuthSession } from '../../../shared/auth/auth-session-context';
 import { isDeveloperToolsEnabled } from '../../../shared/config';
+import {
+  displayDatasetVersion,
+  displayScenarioLabel,
+} from '../../../shared/format/display-labels';
 import { useMoneyVisibilityStore } from '../../../shared/privacy';
 
 const SCENARIOS: readonly DeveloperScenarioMode[] = [
@@ -110,14 +114,17 @@ export function SettingsScreen({
   const scenario = useMutation({
     mutationFn: (mode: DeveloperScenarioMode) => api.setDeveloperScenario(mode),
     onError: (error) => setMessage(problemMessage(error)),
-    onSuccess: ({ mode }) => setMessage(`시나리오 ${mode} 적용`),
+    onSuccess: ({ mode }) =>
+      setMessage(`시나리오 ${displayScenarioLabel(mode)} 적용`),
     retry: false,
   });
   const reset = useMutation({
     mutationFn: () => api.resetDeveloperDataset(),
     onError: (error) => setMessage(problemMessage(error)),
     onSuccess: async ({ datasetVersion }) => {
-      setMessage(`합성 데이터 ${datasetVersion} 초기화`);
+      setMessage(
+        `테스트 데이터 ${displayDatasetVersion(datasetVersion)} 초기화`,
+      );
       await queryClient.invalidateQueries();
     },
     retry: false,
@@ -130,7 +137,7 @@ export function SettingsScreen({
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.eyebrow}>PRIVACY · SYNTHETIC ONLY</Text>
+        <Text style={styles.eyebrow}>개인정보 보호 · 테스트 데이터</Text>
         <Text accessibilityRole="header" style={styles.title}>
           설정
         </Text>
@@ -146,10 +153,10 @@ export function SettingsScreen({
             <>
               <Text style={styles.value}>{user.data.displayName}</Text>
               <Text style={styles.muted}>
-                데이터셋 {user.data.datasetVersion}
+                데이터셋 {displayDatasetVersion(user.data.datasetVersion)}
               </Text>
               <Text style={styles.synthetic}>
-                합성 데이터 · 실제 개인정보·계좌정보 없음
+                테스트 데이터 · 실제 개인정보·계좌정보 없음
               </Text>
             </>
           ) : null}
@@ -157,8 +164,7 @@ export function SettingsScreen({
         <View style={styles.card}>
           <Text style={styles.heading}>투자 성향 정보</Text>
           <Text style={styles.muted}>
-            합성 시뮬레이션의 기본 입력을 위한 선호 정보이며 투자 추천이
-            아닙니다.
+            시뮬레이션의 기본 입력을 위한 선호 정보이며 투자 추천이 아닙니다.
           </Text>
           {riskProfile.isPending ? <ActivityIndicator color="#39e8b5" /> : null}
           {riskProfile.isError ? (
@@ -228,9 +234,7 @@ export function SettingsScreen({
         {developerToolsEnabled ? (
           <View style={styles.card}>
             <Text style={styles.heading}>개발자 도구</Text>
-            <Text style={styles.muted}>
-              local/demo 합성 시뮬레이터에만 적용됩니다.
-            </Text>
+            <Text style={styles.muted}>개발용 시뮬레이터에만 적용됩니다.</Text>
             {SCENARIOS.map((mode) => (
               <Pressable
                 accessibilityRole="button"
@@ -239,7 +243,9 @@ export function SettingsScreen({
                 onPress={() => scenario.mutate(mode)}
                 style={styles.scenarioButton}
               >
-                <Text style={styles.scenarioText}>시나리오 {mode}</Text>
+                <Text style={styles.scenarioText}>
+                  시나리오 {displayScenarioLabel(mode)}
+                </Text>
               </Pressable>
             ))}
             <Pressable
@@ -248,7 +254,7 @@ export function SettingsScreen({
               onPress={() => reset.mutate()}
               style={styles.resetButton}
             >
-              <Text style={styles.resetText}>합성 데이터셋 초기화</Text>
+              <Text style={styles.resetText}>테스트 데이터 초기화</Text>
             </Pressable>
           </View>
         ) : null}
@@ -262,7 +268,7 @@ export function SettingsScreen({
           onPress={() => void logout()}
           style={styles.logout}
         >
-          <Text style={styles.logoutText}>로컬 세션 로그아웃</Text>
+          <Text style={styles.logoutText}>현재 세션 로그아웃</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

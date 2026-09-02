@@ -17,6 +17,7 @@ import { useStore } from 'zustand';
 
 import {
   ExpoBiometricGate,
+  LocalTestBiometricGate,
   type BiometricGate,
   useAuthSession,
   useSessionPresence,
@@ -31,6 +32,7 @@ import {
   createAppLockStore,
   type AppLockNotice,
 } from '../model/app-lock-store';
+import { isLocalBiometricBypassEnabled } from '../../../shared/config';
 
 const systemClock: AppLockClock = { now: Date.now };
 
@@ -230,7 +232,12 @@ export function AppLockBoundary({
 }: AppLockBoundaryProps) {
   const manager = useAuthSession();
   const sessionPresence = useSessionPresence();
-  const [defaultBiometricGate] = useState(() => new ExpoBiometricGate());
+  const [defaultBiometricGate] = useState(
+    () =>
+      isLocalBiometricBypassEnabled()
+        ? new LocalTestBiometricGate()
+        : new ExpoBiometricGate(),
+  );
 
   if (sessionPresence === 'unknown') {
     return <SessionInspectionScreen />;
@@ -245,6 +252,10 @@ export function AppLockBoundary({
   }
 
   if (sessionPresence === 'absent') {
+    return children;
+  }
+
+  if (isLocalBiometricBypassEnabled()) {
     return children;
   }
 

@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuthSession } from '../../../shared/auth/auth-session-context';
+import { displayDatasetVersion } from '../../../shared/format/display-labels';
 import { useCurrentUser } from '../hooks/use-current-user';
 
 const RISK_LABEL = {
@@ -34,13 +35,12 @@ export function CurrentUserScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.eyebrow}>WEALTH SANDBOX · OIDC</Text>
+        <Text style={styles.eyebrow}>자산 샌드박스 · 인증</Text>
         <Text accessibilityRole="header" style={styles.title}>
           인증된 사용자 연결
         </Text>
         <Text style={styles.description}>
-          메모리 access token과 회전 가능한 SecureStore refresh session으로
-          platform-v1의 현재 사용자를 확인합니다.
+          메모리 접근 토큰과 갱신 가능한 보안 세션으로 현재 사용자를 확인합니다.
         </Text>
 
         <View accessibilityLabel="현재 사용자" style={styles.card}>
@@ -53,7 +53,7 @@ export function CurrentUserScreen() {
 
           {state.status === 'ready' ? (
             <View>
-              <Text style={styles.cardLabel}>CURRENT USER</Text>
+              <Text style={styles.cardLabel}>현재 사용자</Text>
               <Text style={styles.userName}>{state.user.displayName}</Text>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>투자 성향</Text>
@@ -64,7 +64,7 @@ export function CurrentUserScreen() {
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>데이터셋</Text>
                 <Text selectable style={styles.detailValue}>
-                  {state.user.datasetVersion}
+                  {displayDatasetVersion(state.user.datasetVersion)}
                 </Text>
               </View>
             </View>
@@ -91,9 +91,9 @@ export function CurrentUserScreen() {
         </View>
 
         <View style={styles.noticeCard}>
-          <Text style={styles.noticeTitle}>SYNTHETIC DATA ONLY</Text>
+          <Text style={styles.noticeTitle}>테스트 데이터만 사용</Text>
           <Text style={styles.noticeBody}>
-            이 사용자와 모든 금융 데이터는 로컬 시연용 합성 정보입니다. 실제
+            이 사용자와 모든 금융 데이터는 로컬 테스트용입니다. 실제
             금융서비스나 투자 조언이 아닙니다.
           </Text>
         </View>

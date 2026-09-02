@@ -4,6 +4,7 @@ import { useReducedMotion } from 'react-native-reanimated';
 import type { Allocation, AssetHistoryPoint } from '../../../shared/api';
 import { formatCompactWon } from '../../../shared/format/finance-format';
 import { useMoneyVisibilityStore } from '../../../shared/privacy';
+import { displayLabel } from '../../../shared/format/display-labels';
 
 export function AssetCharts({
   allocation,
@@ -41,7 +42,7 @@ export function AssetCharts({
       <Text style={styles.heading}>자산 배분</Text>
       {allocation.map((item) => (
         <View key={item.assetClass} style={styles.allocationRow}>
-          <Text style={styles.label}>{item.assetClass}</Text>
+          <Text style={styles.label}>{displayLabel(item.assetClass)}</Text>
           <View style={styles.track}>
             <View
               style={[

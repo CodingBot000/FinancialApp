@@ -13,6 +13,7 @@
 7. `IMPLEMENTATION_DECISIONS.md` — 확정 기술과 미결정 외부 조건
 8. `ARCHITECTURE_GUIDE.md` — 앱·서버 구조, 의존성 방향과 자동 품질 gate
 9. 현재 작업에 해당하는 계약 문서
+   - `MARKET_DATA_INTEGRATION_PLAN.md` — 외부 주식 종목 검색·현재가·기간별 차트 통합 실행계획
    - `API_CONTRACTS.md`
    - `DATA_MODEL.md`
    - `TABLE_DEFINITIONS.md`
