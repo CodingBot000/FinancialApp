@@ -1,12 +1,29 @@
 # 종목 차트 복구와 StockTracker 정보 확장 실행계획
 
-- 상태: `READY_FOR_IMPLEMENTATION`
+- 상태: `IMPLEMENTED_LOCAL_PENDING_KIS_SMOKE`
 - 작성일: 2026-09-03
 - 대상: FinancialApp React Native 시장 화면과 Platform API `MarketModule`
-- 기준 구현: commit `0fc4431`
+- 기준 구현: commit `4ac2659`
 - 참고 구현: `/Users/switch/Development/Web/StockTracker`
 - 원격 자원 사용: 금지 — 별도 승인 전 local/Testcontainers만 사용
 - 원격 DB migration/deploy: 금지
+
+## 구현 결과 (2026-09-03)
+
+- Phase 0~5 완료: chart/data P0, quote UI와 Android native 검증
+- `victory-native@42 + Skia + Reanimated + CartesianChart` 유지
+- timestamp X축, compact price Y축, grid, `monotoneX` Line과 하단 기준 Area 적용
+- 실제 chart press로 선택 날짜·종가·OHLC·거래량 tooltip 갱신 확인
+- local provider를 고정 anchor와 부드러운 deterministic wave로 변경
+- logical bucket normalization을 local/KIS/service/repository에 공통 적용
+- local cleanup: 중복 90행 제거 후 legacy/canonical 중복 30행 추가 정리
+- 최종 local repair dry-run: 614행, duplicate 0, normalization 0
+- platform-api 두 번 재시작 후 DAILY DB/API 모두 120개로 불변
+- Android UI에서 분 120/일 120/주 156/월 120/년 40 전환 확인
+- Android chart에서 축, Area, selected point와 중간 날짜 tooltip 확인
+- root verify 통과: mobile 109, simulator 12, platform 96 tests와 backend build
+- Phase 6 호가·뉴스·공시·AI는 별도 승인 전 미실행
+- 원격 DB/credential/migration/deploy 미사용
 
 ## 1. 목적
 
@@ -568,20 +585,20 @@ npm run start -w @finapp/mobile
 
 ### Chart/Data P0
 
-- [ ] `Area y0={chartBounds.bottom}` 적용
-- [ ] local/KIS logical bucket normalization
-- [ ] 반복 조회 row count 불변
-- [ ] API logical duplicate 0
-- [ ] X축 날짜와 Y축 compact price 표시
-- [ ] selected point와 실제 touch tooltip
-- [ ] `monotoneX`, 필요 시 `linear` fallback
-- [ ] 5개 interval native rendering
+- [x] `Area y0={chartBounds.bottom}` 적용
+- [x] local/KIS logical bucket normalization
+- [x] 반복 조회 row count 불변
+- [x] API logical duplicate 0
+- [x] X축 날짜와 Y축 compact price 표시
+- [x] selected point와 실제 touch tooltip
+- [x] `monotoneX`, 필요 시 `linear` fallback
+- [x] 5개 interval native rendering
 
 ### Quote/UI P1
 
-- [ ] 현재가/전일대비/등락률/거래량 표시
-- [ ] 제공처/갱신시각/freshness 표시
-- [ ] bars 개수와 선택 bar OHLC/volume 표시
+- [x] 현재가/전일대비/등락률/거래량 표시
+- [x] 제공처/갱신시각/freshness 표시
+- [x] bars 개수와 선택 bar OHLC/volume 표시
 - [ ] loading/empty/error/stale 고정 높이
 - [ ] accessibility와 font scale 확인
 - [x] `종목`과 기존 `주문`을 별도 Bottom Tab으로 동시 노출
@@ -589,13 +606,13 @@ npm run start -w @finapp/mobile
 
 ### Quality
 
-- [ ] chart test가 Victory callback을 실제 실행
-- [ ] mock 5 interval 지원
-- [ ] Android screenshot evidence
-- [ ] mobile/platform 전체 test 통과
-- [ ] `npm run verify` 통과
-- [ ] secret scan 통과
-- [ ] 원격 DB/migration/deploy 미실행
+- [x] chart test가 Victory callback을 실제 실행
+- [x] mock 5 interval 지원
+- [x] Android screenshot evidence
+- [x] mobile/platform 전체 test 통과
+- [x] `npm run verify` 통과
+- [x] secret scan 통과
+- [x] 원격 DB/migration/deploy 미실행
 
 ### 후속 정보 확장
 

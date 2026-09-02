@@ -6,6 +6,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { migratePlatformDatabase } from '../../src/database/migrate.js';
 import { DrizzleIdentityRepository } from '../../src/modules/identity/infrastructure/persistence/drizzle-identity.repository.js';
+import { MARKET_BAR_LIMITS } from '../../src/modules/market/domain/market-model.js';
+import { LocalMarketDataAdapter } from '../../src/modules/market/infrastructure/http/local-market-data.adapter.js';
+import { DrizzleMarketRepository } from '../../src/modules/market/infrastructure/persistence/drizzle-market.repository.js';
 import { SecurityEventService } from '../../src/modules/audit/security-event.service.js';
 import { AesSensitiveDataAdapter } from '../../src/modules/mydata/infrastructure/crypto/aes-sensitive-data.adapter.js';
 import { LocalDataKeyProvider } from '../../src/modules/mydata/infrastructure/crypto/local-data-key.provider.js';
@@ -185,6 +188,45 @@ describe('platform Drizzle migration', () => {
       });
     } finally {
       await Promise.all([platformClient.end(), simulatorClient.end()]);
+    }
+  });
+
+  it('keeps local market bar upserts idempotent by logical bucket', async () => {
+    const platformUrl = new URL(connectionString);
+    platformUrl.username = 'financial_platform_app';
+    platformUrl.password = 'example-platform-test-only';
+    const pool = new Pool({ connectionString: platformUrl.toString() });
+    const repository = new DrizzleMarketRepository(pool);
+    const provider = new LocalMarketDataAdapter();
+
+    try {
+      await repository.upsertInstruments(await provider.syncInstruments());
+      const stock = await repository.findStock('005930');
+      expect(stock).toBeDefined();
+      const first = await provider.bars(stock!, 'DAILY');
+      const second = await provider.bars(stock!, 'DAILY');
+      await repository.upsertBars(
+        stock!.symbol,
+        'DAILY',
+        first.bars,
+        first.source,
+      );
+      await repository.upsertBars(
+        stock!.symbol,
+        'DAILY',
+        second.bars,
+        second.source,
+      );
+
+      const bars = await repository.listBars(
+        stock!.symbol,
+        'DAILY',
+        MARKET_BAR_LIMITS.DAILY,
+      );
+      expect(bars).toHaveLength(MARKET_BAR_LIMITS.DAILY);
+      expect(new Set(bars.map((bar) => bar.bucketAt)).size).toBe(bars.length);
+    } finally {
+      await pool.end();
     }
   });
 

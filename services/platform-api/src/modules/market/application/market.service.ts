@@ -21,17 +21,11 @@ import type {
   MarketQuote,
   MarketStock,
 } from '../domain/market-model.js';
+import { MARKET_BAR_LIMITS } from '../domain/market-model.js';
+import { deduplicateMarketBars } from '../domain/market-bucket.js';
 
 const DEFAULT_QUOTE_FRESH_MS = 30_000;
 const DEFAULT_BAR_FRESH_MS = 5 * 60_000;
-const BAR_LIMITS: Readonly<Record<MarketInterval, number>> = {
-  MINUTE: 120,
-  DAILY: 120,
-  WEEKLY: 156,
-  MONTHLY: 120,
-  YEARLY: 40,
-};
-
 @Injectable()
 export class MarketService {
   private readonly quoteRequests = new Map<string, Promise<MarketQuote>>();
@@ -71,25 +65,29 @@ export class MarketService {
     const cached = await this.repository.listBars(
       symbol,
       interval,
-      BAR_LIMITS[interval],
+      MARKET_BAR_LIMITS[interval],
     );
-    if (this.isBarCacheFresh(key, cached)) {
+    const normalizedCache = deduplicateMarketBars(cached, interval);
+    if (this.isBarCacheFresh(key, normalizedCache)) {
       return {
         symbol,
         interval,
         source: this.source(),
         freshness: 'FRESH',
-        bars: cached,
+        bars: normalizedCache,
       };
     }
 
     const active = this.barRequests.get(key);
     if (active !== undefined) return active;
-    const request = this.refreshBars(stock, interval, cached, key).finally(
-      () => {
-        this.barRequests.delete(key);
-      },
-    );
+    const request = this.refreshBars(
+      stock,
+      interval,
+      normalizedCache,
+      key,
+    ).finally(() => {
+      this.barRequests.delete(key);
+    });
     this.barRequests.set(key, request);
     return request;
   }
@@ -122,10 +120,11 @@ export class MarketService {
   ): Promise<MarketBars> {
     try {
       const result = await this.provider.bars(stock, interval);
+      const normalizedBars = deduplicateMarketBars(result.bars, interval);
       await this.repository.upsertBars(
         stock.symbol,
         interval,
-        result.bars,
+        normalizedBars,
         result.source,
       );
       this.barRefreshAt.set(key, Date.now());
@@ -134,10 +133,13 @@ export class MarketService {
         interval,
         source: result.source,
         freshness: 'FRESH',
-        bars: await this.repository.listBars(
-          stock.symbol,
+        bars: deduplicateMarketBars(
+          await this.repository.listBars(
+            stock.symbol,
+            interval,
+            MARKET_BAR_LIMITS[interval],
+          ),
           interval,
-          BAR_LIMITS[interval],
         ),
       };
     } catch (error) {

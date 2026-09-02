@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 
 import {
+  MARKET_BAR_LIMITS,
   MARKET_INTERVALS,
   type MarketBar,
   type MarketInterval,
   type MarketQuote,
   type MarketStock,
 } from '../../domain/market-model.js';
+import { deduplicateMarketBars } from '../../domain/market-bucket.js';
 import {
   MarketDataInvalidError,
   MarketProviderUnavailableError,
@@ -105,14 +107,16 @@ export class KisMarketDataAdapter implements MarketDataProvider {
             FID_ORG_ADJ_PRC: '0',
           });
     const rows = Array.isArray(response.output2) ? response.output2 : [];
-    const bars = rows
-      .map((value) => normalizeBar(value, interval))
-      .filter((value): value is MarketBar => value !== undefined)
-      .sort((left, right) => left.bucketAt.localeCompare(right.bucketAt));
+    const bars = deduplicateMarketBars(
+      rows
+        .map((value) => normalizeBar(value, interval))
+        .filter((value): value is MarketBar => value !== undefined),
+      interval,
+    );
     if (rows.length > 0 && bars.length === 0) {
       throw new MarketDataInvalidError('KIS chart response is invalid.');
     }
-    return { bars: bars.slice(-chartLimit(interval)), source: 'KIS' };
+    return { bars: bars.slice(-MARKET_BAR_LIMITS[interval]), source: 'KIS' };
   }
 
   syncInstruments() {
@@ -303,12 +307,6 @@ function normalizeBar(
 
 function periodCode(interval: Exclude<MarketInterval, 'MINUTE'>): string {
   return { DAILY: 'D', WEEKLY: 'W', MONTHLY: 'M', YEARLY: 'Y' }[interval];
-}
-
-function chartLimit(interval: MarketInterval): number {
-  return { MINUTE: 120, DAILY: 120, WEEKLY: 156, MONTHLY: 120, YEARLY: 40 }[
-    interval
-  ];
 }
 
 function daysAgo(interval: Exclude<MarketInterval, 'MINUTE'>): Date {

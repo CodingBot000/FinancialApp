@@ -294,9 +294,23 @@
 ## FE-0017 iOS/Android native 화면 회귀 — 진행 상태
 
 - [ ] iOS simulator build/run 및 화면 snapshot
-- [ ] Android emulator/device build/run 및 화면 snapshot
+- [x] Android API 36 emulator build/run 및 종목 차트 screenshot
 - [ ] native 환경 blocker `ISSUE-0017`/`FE-ISSUE-0016` 해결 후 재검증
-- 상태: BLOCKED — Xcode SDK 18.2에 대응하는 eligible iOS Simulator destination이 현재 제공되지 않음
+- 상태: PARTIAL — Android 완료, Xcode SDK 18.2에 대응하는 eligible iOS Simulator destination은 여전히 없음
+
+## FE-0018 종목 차트와 local market data 복구 — 진행 상태
+
+- [x] Victory Native `CartesianChart` timestamp X축/compact price Y축/grid 적용
+- [x] `Area y0={chartBounds.bottom}`, `monotoneX` Line/Area와 selected point 적용
+- [x] 실제 chart press에 따른 날짜·종가·OHLC·거래량 tooltip 확인
+- [x] 현재가/전일대비/등락률/거래량 2열 요약과 bars 개수/최근 봉 정보 표시
+- [x] local/KIS logical bucket normalization과 service/repository 방어적 dedupe
+- [x] local deterministic 5 interval series와 mock 5 interval 지원
+- [x] local repair CLI dry-run/execute guard와 duplicate 0 재검증
+- [x] platform 재시작 2회 뒤 DAILY DB/API 120개 불변
+- [x] Android에서 분120/일120/주156/월120/년40 전환 확인
+- [x] root verify: mobile 109/simulator 12/platform 96 tests와 backend build 통과
+- [x] 원격 DB/credential/migration/deploy 미사용
 
 ## 외부 조건
 

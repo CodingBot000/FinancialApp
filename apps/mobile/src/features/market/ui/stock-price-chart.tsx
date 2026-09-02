@@ -1,100 +1,184 @@
-import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { useReducedMotion } from 'react-native-reanimated';
-import { Area, CartesianChart, Line } from 'victory-native';
-
-import type { MarketBar } from '../../../shared/api';
-import { AppText, colors, spacing } from '../../../shared/design-system';
+import { Circle, matchFont } from '@shopify/react-native-skia';
+import { useEffect, useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import {
-  formatCompactWon,
-  formatDate,
-} from '../../../shared/format/finance-format';
-import { toMarketChartPoints } from '../model/market-display';
+  runOnJS,
+  useAnimatedReaction,
+  useReducedMotion,
+} from 'react-native-reanimated';
+import { Area, CartesianChart, Line, useChartPressState } from 'victory-native';
+
+import type { MarketBar, MarketInterval } from '../../../shared/api';
+import {
+  AppText,
+  chartTheme,
+  colors,
+  radius,
+  spacing,
+} from '../../../shared/design-system';
+import { displayLabel } from '../../../shared/format/display-labels';
+import { formatDate, formatWon } from '../../../shared/format/finance-format';
+import {
+  formatMarketChartXLabel,
+  formatMarketChartYLabel,
+  marketChartDomain,
+  toMarketChartPoints,
+} from '../model/market-chart-model';
+import { formatMarketVolume } from '../model/market-display';
 
 export function StockPriceChart({
   bars,
+  interval,
   stockName,
 }: {
   readonly bars: readonly MarketBar[];
+  readonly interval: MarketInterval;
   readonly stockName: string;
 }) {
   const reduceMotion = useReducedMotion();
   const points = useMemo(() => toMarketChartPoints(bars), [bars]);
-  const [selectedIndex, setSelectedIndex] = useState(
-    Math.max(points.length - 1, 0),
+  const domain = useMemo(() => marketChartDomain(points), [points]);
+  const axisFont = useMemo(
+    () => matchFont({ fontFamily: 'sans-serif', fontSize: 12 }),
+    [],
   );
-  if (points.length < 2) {
+  const latest = points.at(-1);
+  const { state: pressState, isActive } = useChartPressState({
+    x: latest?.timestamp ?? 0,
+    y: { close: latest?.close ?? 0 },
+  });
+  const [selectedTimestamp, setSelectedTimestamp] = useState(latest?.timestamp);
+
+  useEffect(() => setSelectedTimestamp(latest?.timestamp), [latest?.timestamp]);
+  useAnimatedReaction(
+    () => pressState.x.value.value,
+    (value, previous) => {
+      if (value !== previous) runOnJS(setSelectedTimestamp)(Number(value));
+    },
+    [pressState],
+  );
+
+  if (points.length < 2 || domain === undefined) {
     return (
       <AppText tone="secondary" variant="body">
         표시할 가격 정보가 없습니다.
       </AppText>
     );
   }
-  const first = bars[0];
-  const last = bars[bars.length - 1];
-  const selectedPoint = points[selectedIndex] ?? points.at(-1);
+
+  const selectedPoint =
+    points.find((point) => point.timestamp === selectedTimestamp) ?? latest;
+  const first = points[0];
   return (
     <View
-      accessibilityLabel={`${stockName} 가격 흐름 차트`}
+      accessibilityLabel={`${stockName} ${displayLabel(interval)} 가격 흐름 차트. ${points.length}개. ${first ? formatDate(new Date(first.timestamp).toISOString()) : '-'}부터 ${latest ? formatDate(new Date(latest.timestamp).toISOString()) : '-'}까지`}
       accessible
       style={styles.container}
     >
-      <Pressable
-        accessibilityLabel="가격 차트 지점 선택"
-        accessibilityRole="button"
-        onPress={() =>
-          setSelectedIndex((index) => (index === 0 ? points.length - 1 : 0))
-        }
-        style={styles.chart}
-      >
+      <View style={styles.chart}>
         <CartesianChart
+          chartPressState={pressState}
           data={points}
+          domain={{ y: [domain.min, domain.max] }}
           domainPadding={{ bottom: 8, left: 8, right: 8, top: 8 }}
-          padding={{ bottom: 8, left: 4, right: 4, top: 8 }}
-          xKey="index"
+          frame={{ lineColor: chartTheme.grid, lineWidth: 1 }}
+          padding={{ bottom: 4, left: 6, right: 6, top: 10 }}
+          xAxis={{
+            font: axisFont,
+            formatXLabel: (value) =>
+              formatMarketChartXLabel(Number(value), interval),
+            labelColor: chartTheme.axis,
+            lineColor: chartTheme.grid,
+            tickCount: 4,
+          }}
+          xKey="timestamp"
+          yAxis={[
+            {
+              font: axisFont,
+              formatYLabel: (value) => formatMarketChartYLabel(Number(value)),
+              labelColor: chartTheme.axis,
+              lineColor: chartTheme.grid,
+              tickCount: 4,
+              yKeys: ['close'],
+            },
+          ]}
           yKeys={['close']}
         >
-          {({ points: chartPoints }) => (
-            <>
-              <Area
-                {...(reduceMotion
-                  ? {}
-                  : { animate: { duration: 500, type: 'timing' as const } })}
-                color={colors.market.downSoft}
-                curveType="natural"
-                points={chartPoints.close}
-                y0={0}
-              />
-              <Line
-                {...(reduceMotion
-                  ? {}
-                  : { animate: { duration: 500, type: 'timing' as const } })}
-                color={colors.brand.primary}
-                curveType="natural"
-                points={chartPoints.close}
-                strokeCap="round"
-                strokeJoin="round"
-                strokeWidth={3}
-              />
-            </>
-          )}
+          {({ points: chartPoints, chartBounds }) => {
+            const selectedChartPoint = chartPoints.close.find(
+              (point) => point.xValue === selectedTimestamp,
+            );
+            return (
+              <>
+                <Area
+                  {...(reduceMotion
+                    ? {}
+                    : { animate: { duration: 500, type: 'timing' as const } })}
+                  color={colors.brand.primary}
+                  curveType="monotoneX"
+                  opacity={0.14}
+                  points={chartPoints.close}
+                  y0={chartBounds.bottom}
+                />
+                <Line
+                  {...(reduceMotion
+                    ? {}
+                    : { animate: { duration: 500, type: 'timing' as const } })}
+                  color={colors.brand.primary}
+                  curveType="monotoneX"
+                  points={chartPoints.close}
+                  strokeCap="round"
+                  strokeJoin="round"
+                  strokeWidth={3}
+                />
+                {isActive ? (
+                  <Circle
+                    color={chartTheme.point}
+                    cx={pressState.x.position}
+                    cy={pressState.y.close.position}
+                    r={5}
+                  />
+                ) : selectedChartPoint &&
+                  typeof selectedChartPoint.y === 'number' ? (
+                  <Circle
+                    color={chartTheme.point}
+                    cx={selectedChartPoint.x}
+                    cy={selectedChartPoint.y}
+                    r={4}
+                  />
+                ) : null}
+              </>
+            );
+          }}
         </CartesianChart>
-      </Pressable>
+      </View>
       {selectedPoint ? (
-        <AppText
+        <View
           accessibilityLiveRegion="polite"
-          tone="secondary"
-          variant="caption"
+          style={[styles.tooltip, isActive && styles.tooltipActive]}
         >
-          선택한 날 {formatCompactWon(String(selectedPoint.close))}
-        </AppText>
+          <AppText tone="secondary" variant="caption">
+            {formatDate(new Date(selectedPoint.timestamp).toISOString())}
+          </AppText>
+          <AppText variant="bodyStrong">
+            종가 {formatWon(String(selectedPoint.close))}
+          </AppText>
+          <AppText tone="secondary" variant="caption">
+            시가 {formatWon(String(selectedPoint.open))} · 고가{' '}
+            {formatWon(String(selectedPoint.high))} · 저가{' '}
+            {formatWon(String(selectedPoint.low))}
+          </AppText>
+          <AppText tone="secondary" variant="caption">
+            거래량 {formatMarketVolume(String(selectedPoint.volume))}
+          </AppText>
+        </View>
       ) : null}
       <View style={styles.captionRow}>
         <AppText tone="secondary" variant="caption">
-          {first ? formatDate(first.bucketAt) : '-'}
+          {first ? formatDate(new Date(first.timestamp).toISOString()) : '-'}
         </AppText>
-        <AppText variant="bodyStrong">
-          {last ? formatCompactWon(last.close) : '-'}
+        <AppText tone="secondary" variant="caption">
+          {latest ? formatDate(new Date(latest.timestamp).toISOString()) : '-'}
         </AppText>
       </View>
     </View>
@@ -107,6 +191,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: spacing[2],
   },
-  chart: { height: 210, marginTop: spacing[3] },
+  chart: { height: 250, marginTop: spacing[3] },
   container: { marginTop: spacing[3] },
+  tooltip: {
+    backgroundColor: colors.surface.subtle,
+    borderRadius: radius.input,
+    gap: spacing[1],
+    marginTop: spacing[2],
+    padding: spacing[3],
+  },
+  tooltipActive: { backgroundColor: colors.surface.warm },
 });

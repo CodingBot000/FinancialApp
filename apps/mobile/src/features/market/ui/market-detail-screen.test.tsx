@@ -11,10 +11,24 @@ vi.mock('victory-native', () => ({
   Area: () => null,
   CartesianChart: () => null,
   Line: () => null,
+  useChartPressState: () => ({
+    isActive: false,
+    state: {
+      x: { position: { value: 0 }, value: { value: 0 } },
+      y: { close: { position: { value: 0 }, value: { value: 0 } } },
+    },
+  }),
 }));
 
 vi.mock('react-native-reanimated', () => ({
+  runOnJS: (callback: unknown) => callback,
+  useAnimatedReaction: () => undefined,
   useReducedMotion: () => true,
+}));
+
+vi.mock('@shopify/react-native-skia', () => ({
+  Circle: () => null,
+  matchFont: () => null,
 }));
 
 describe('MarketDetailScreen', () => {
@@ -31,8 +45,10 @@ describe('MarketDetailScreen', () => {
     );
 
     expect(await view.findByText('삼성전자')).toBeTruthy();
-    expect(await view.findByText('74,200원')).toBeTruthy();
-    expect(await view.findByLabelText(/삼성전자 가격 흐름 차트/)).toBeTruthy();
+    expect(await view.findAllByText('74,200원')).toHaveLength(2);
+    expect(
+      await view.findByLabelText(/삼성전자 일봉 가격 흐름 차트/),
+    ).toBeTruthy();
     fireEvent.press(view.getByLabelText('뒤로 가기'));
     expect(onBack).toHaveBeenCalledTimes(1);
   });

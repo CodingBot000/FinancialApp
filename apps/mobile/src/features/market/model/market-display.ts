@@ -1,26 +1,6 @@
-import type {
-  MarketBar,
-  MarketFreshness,
-  MarketSource,
-} from '../../../shared/api';
+import type { MarketFreshness, MarketSource } from '../../../shared/api';
 
 export { formatMarketRate } from '../../../shared/format/market-format';
-
-export interface MarketChartPoint {
-  readonly [key: string]: number;
-  readonly close: number;
-  readonly index: number;
-}
-
-export function toMarketChartPoints(
-  bars: readonly MarketBar[],
-): MarketChartPoint[] {
-  return bars.reduce<MarketChartPoint[]>((points, bar, index) => {
-    const close = Number(bar.close);
-    if (Number.isFinite(close)) points.push({ index, close });
-    return points;
-  }, []);
-}
 
 export function marketNameLabel(market: 'KOSPI' | 'KOSDAQ'): string {
   return market === 'KOSPI' ? '코스피' : '코스닥';

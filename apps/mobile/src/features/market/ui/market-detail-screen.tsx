@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { View } from 'react-native';
 
 import type { MarketInterval } from '../../../shared/api';
 import {
@@ -10,8 +9,6 @@ import {
   ErrorState,
   IconButton,
   LoadingState,
-  MarketChange,
-  MoneyValue,
   NoticeBanner,
   PageHeader,
   Screen,
@@ -19,19 +16,14 @@ import {
   SegmentedControl,
   StatusChip,
   colors,
-  spacing,
 } from '../../../shared/design-system';
-import { formatDateTime } from '../../../shared/format/finance-format';
-import {
-  formatMarketVolume,
-  marketFreshnessLabel,
-  marketNameLabel,
-  marketSourceLabel,
-} from '../model/market-display';
+import { displayLabel } from '../../../shared/format/display-labels';
+import { marketNameLabel } from '../model/market-display';
 import {
   useMarketStockBySymbol,
   useMarketStockData,
 } from '../hooks/use-market-data';
+import { MarketBarSummary, MarketQuoteSummary } from './market-quote-summary';
 import { StockPriceChart } from './stock-price-chart';
 
 const INTERVALS: readonly Readonly<{
@@ -99,48 +91,23 @@ export function MarketDetailScreen({
               action={<StatusChip status={quote?.freshness ?? 'STALE'} />}
               title="현재가"
             />
-            <AppText tone="secondary" variant="caption">
-              {quote ? marketSourceLabel(quote.source) : '정보 확인 중'}
-            </AppText>
             {data.quote.isPending ? (
               <LoadingState label="현재가를 확인하고 있습니다." />
             ) : null}
             {data.quote.isError ? (
               <ErrorState title="현재가를 확인하지 못했습니다." />
             ) : null}
-            {quote ? (
-              <>
-                <MoneyValue size="hero" value={quote.currentPrice} />
-                <MarketChange
-                  changePrice={quote.changePrice}
-                  changeRate={quote.changeRate}
-                />
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    marginTop: spacing[3],
-                  }}
-                >
-                  <AppText tone="secondary" variant="caption">
-                    거래량 {formatMarketVolume(quote.volume)}
-                  </AppText>
-                  <AppText tone="secondary" variant="caption">
-                    {formatDateTime(quote.capturedAt)}
-                  </AppText>
-                </View>
-                <AppText
-                  style={{ marginTop: spacing[2] }}
-                  tone="secondary"
-                  variant="caption"
-                >
-                  {marketFreshnessLabel(quote.freshness)}
-                </AppText>
-              </>
-            ) : null}
+            {quote ? <MarketQuoteSummary quote={quote} /> : null}
           </Card>
           <Card>
-            <SectionHeader title="가격 흐름" />
+            <SectionHeader
+              action={
+                <AppText tone="secondary" variant="caption">
+                  {displayLabel(interval)} {bars?.bars.length ?? 0}개
+                </AppText>
+              }
+              title="가격 흐름"
+            />
             <SegmentedControl
               onChange={setInterval}
               options={INTERVALS}
@@ -153,7 +120,16 @@ export function MarketDetailScreen({
               <ErrorState title="가격 흐름을 확인하지 못했습니다." />
             ) : null}
             {bars ? (
-              <StockPriceChart bars={bars.bars} stockName={stock.name} />
+              <>
+                <StockPriceChart
+                  bars={bars.bars}
+                  interval={interval}
+                  stockName={stock.name}
+                />
+                {bars.bars.at(-1) ? (
+                  <MarketBarSummary bar={bars.bars.at(-1)!} />
+                ) : null}
+              </>
             ) : null}
             {bars?.freshness === 'STALE' ? (
               <NoticeBanner

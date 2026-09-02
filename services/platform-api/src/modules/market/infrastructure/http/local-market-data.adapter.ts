@@ -8,6 +8,8 @@ import type {
   MarketQuote,
   MarketStock,
 } from '../../domain/market-model.js';
+import { MARKET_BAR_LIMITS } from '../../domain/market-model.js';
+import { normalizeMarketBucketAt } from '../../domain/market-bucket.js';
 
 const LOCAL_STOCKS: readonly MarketInstrumentInput[] = [
   localStock('005930', '삼성전자', 'KOSPI', '전자부품 제조업'),
@@ -37,6 +39,8 @@ const LOCAL_PRICES: Readonly<Record<string, number>> = {
   '373220': 356_000,
 };
 
+const LOCAL_MARKET_ANCHOR = new Date('2026-09-02T00:00:00.000Z');
+
 @Injectable()
 export class LocalMarketDataAdapter implements MarketDataProvider {
   async quote(stock: MarketStock): Promise<Omit<MarketQuote, 'freshness'>> {
@@ -62,26 +66,18 @@ export class LocalMarketDataAdapter implements MarketDataProvider {
     readonly source: 'LOCAL';
   }> {
     const base = LOCAL_PRICES[stock.symbol] ?? 50_000;
-    const count = interval === 'MINUTE' ? 60 : interval === 'YEARLY' ? 8 : 30;
-    const step =
-      interval === 'MINUTE'
-        ? 60 * 60 * 1000
-        : interval === 'DAILY'
-          ? 24 * 60 * 60 * 1000
-          : interval === 'WEEKLY'
-            ? 7 * 24 * 60 * 60 * 1000
-            : interval === 'MONTHLY'
-              ? 30 * 24 * 60 * 60 * 1000
-              : 365 * 24 * 60 * 60 * 1000;
-    const now = Date.now();
+    const count = MARKET_BAR_LIMITS[interval];
+    const finalWave = localWave(count - 1);
     const bars = Array.from({ length: count }, (_, index) => {
-      const wave = ((index % 7) - 3) * 0.004;
-      const close = Math.round(base * (0.91 + index / (count * 11) + wave));
+      const progress = count === 1 ? 1 : index / (count - 1);
+      const close = Math.round(
+        base * (0.92 + progress * 0.08 + localWave(index) - finalWave),
+      );
       const open = Math.round(close * 0.996);
       const high = Math.round(close * 1.012);
       const low = Math.round(close * 0.984);
       return {
-        bucketAt: new Date(now - (count - index) * step).toISOString(),
+        bucketAt: localBucketAt(interval, count - 1 - index),
         open: money(open),
         high: money(high),
         low: money(low),
@@ -115,4 +111,27 @@ function localStock(
 
 function money(value: number): string {
   return `${value.toFixed(4)}`;
+}
+
+function localWave(index: number): number {
+  return Math.sin(index / 6) * 0.012 + Math.sin(index / 17) * 0.006;
+}
+
+function localBucketAt(interval: MarketInterval, offset: number): string {
+  const date = new Date(LOCAL_MARKET_ANCHOR);
+  if (interval === 'MINUTE') date.setUTCMinutes(date.getUTCMinutes() - offset);
+  else if (interval === 'DAILY') date.setUTCDate(date.getUTCDate() - offset);
+  else if (interval === 'WEEKLY')
+    date.setUTCDate(date.getUTCDate() - offset * 7);
+  else if (interval === 'MONTHLY') {
+    date.setUTCDate(1);
+    date.setUTCMonth(date.getUTCMonth() - offset);
+  } else {
+    date.setUTCMonth(0, 1);
+    date.setUTCFullYear(date.getUTCFullYear() - offset);
+  }
+  const bucketAt = normalizeMarketBucketAt(date.toISOString(), interval);
+  if (bucketAt === undefined)
+    throw new Error('Local market bucket is invalid.');
+  return bucketAt;
 }

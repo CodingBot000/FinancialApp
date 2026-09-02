@@ -20,6 +20,7 @@ import type {
   MarketStock,
   MarketSource,
 } from '../../domain/market-model.js';
+import { deduplicateMarketBars } from '../../domain/market-bucket.js';
 
 const schema = {
   finappMarketInstrument,
@@ -175,15 +176,18 @@ export class DrizzleMarketRepository implements MarketRepository {
         ),
       )
       .orderBy(desc(finappMarketPriceBar.bucketAt))
-      .limit(limit);
-    return rows.reverse().map((row) => ({
-      bucketAt: row.bucketAt.toISOString(),
-      open: row.open,
-      high: row.high,
-      low: row.low,
-      close: row.close,
-      volume: row.volume.toString(),
-    }));
+      .limit(Math.min(limit * 8, 1000));
+    return deduplicateMarketBars(
+      rows.reverse().map((row) => ({
+        bucketAt: row.bucketAt.toISOString(),
+        open: row.open,
+        high: row.high,
+        low: row.low,
+        close: row.close,
+        volume: row.volume.toString(),
+      })),
+      interval,
+    ).slice(-limit);
   }
 
   async upsertBars(
@@ -196,7 +200,7 @@ export class DrizzleMarketRepository implements MarketRepository {
     if (instrument === undefined) {
       throw new Error('Market instrument is not available.');
     }
-    for (const bar of bars) {
+    for (const bar of deduplicateMarketBars(bars, interval)) {
       await this.database
         .insert(finappMarketPriceBar)
         .values({

@@ -9,6 +9,7 @@
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
     "db:migrate": "npm run build && node dist/database/migrate-cli.js",
     "market:seed": "npm run build && node dist/modules/market/market-seed-cli.js",
+    "market:repair-local-bars": "npm run build && node dist/modules/market/market-repair-local-bars-cli.js",
     "market:sync": "npm run build && node dist/modules/market/market-sync-cli.js",
     "lint": "eslint src test vitest.config.ts",
     "start": "node dist/main.js",

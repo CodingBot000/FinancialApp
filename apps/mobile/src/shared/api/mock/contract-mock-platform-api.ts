@@ -56,6 +56,24 @@ const marketStocks = marketFixture.stocks as readonly MarketStock[];
 const marketQuote = marketFixture.quote as MarketQuote;
 const marketBars = marketFixture.bars as MarketBars;
 
+function marketBarsForInterval(interval: MarketInterval): MarketBars {
+  const anchor = new Date('2026-09-02T00:00:00.000Z');
+  const bars = marketBars.bars.map((bar, index, values) => {
+    const date = new Date(anchor);
+    const offset = values.length - 1 - index;
+    if (interval === 'MINUTE')
+      date.setUTCMinutes(date.getUTCMinutes() - offset);
+    else if (interval === 'DAILY') date.setUTCDate(date.getUTCDate() - offset);
+    else if (interval === 'WEEKLY')
+      date.setUTCDate(date.getUTCDate() - offset * 7);
+    else if (interval === 'MONTHLY')
+      date.setUTCMonth(date.getUTCMonth() - offset);
+    else date.setUTCFullYear(date.getUTCFullYear() - offset);
+    return { ...bar, bucketAt: date.toISOString() };
+  });
+  return { ...marketBars, interval, bars };
+}
+
 export type ContractMockHealthScenario = 'rate-limited' | 'success' | 'timeout';
 
 export interface ContractMockPlatformApiOptions {
@@ -234,7 +252,7 @@ export class ContractMockPlatformApi implements PlatformApi {
     options: PlatformRequestOptions = {},
   ): Promise<MarketBars> {
     await waitForMockLatency(this.latencyMs, options.signal);
-    if (symbol !== marketBars.symbol || interval !== marketBars.interval) {
+    if (symbol !== marketBars.symbol) {
       throw new PlatformApiError({
         kind: 'http',
         message: '조회할 차트 데이터를 찾을 수 없습니다.',
@@ -242,7 +260,7 @@ export class ContractMockPlatformApi implements PlatformApi {
         status: 404,
       });
     }
-    return structuredClone(marketBars);
+    return structuredClone(marketBarsForInterval(interval));
   }
 
   async getMyDataSync(_syncId: string, options: PlatformRequestOptions = {}) {

@@ -7,6 +7,13 @@ export const MARKET_INTERVALS = [
 ] as const;
 
 export type MarketInterval = (typeof MARKET_INTERVALS)[number];
+export const MARKET_BAR_LIMITS: Readonly<Record<MarketInterval, number>> = {
+  MINUTE: 120,
+  DAILY: 120,
+  WEEKLY: 156,
+  MONTHLY: 120,
+  YEARLY: 40,
+};
 export type MarketFreshness = 'FRESH' | 'STALE';
 export type MarketSource = 'KIS' | 'LOCAL';
 
