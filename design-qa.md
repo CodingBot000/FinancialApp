@@ -176,4 +176,11 @@ Fixes applied: screen background changed to white; neutral, border, state, and m
 - Architecture: `PinSetupScreen` is isolated from the identity form and calls the launch boundary completion callback only after confirmation succeeds. The existing shared `BottomBar` and full-screen surface host both future sheets and full-screen layers.
 - No actionable P0/P1/P2 mismatch remains for the requested identity/terms/PIN demonstration flow. Device-owned status and navigation chrome differ from the three-button reference device.
 
+## Fixed bottom navigation clearance
+
+- Source issue: the supplied crop showed the final chart/content edge meeting the fixed bottom navigation.
+- Implementation evidence: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/bottom-nav-scrolled-fixed2.png`.
+- Fix: tab screens now add an additional 32 dp content-bottom clearance on top of the standard screen padding. The scroll view can move the final content fully above the fixed bar while non-tab screens retain their existing spacing.
+- Result: the asset allocation chart, account card, recent transactions, and disclosure copy remain readable with a visible breathing room before the navigation bar.
+
 final result: passed

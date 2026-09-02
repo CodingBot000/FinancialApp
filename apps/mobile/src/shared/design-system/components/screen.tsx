@@ -38,6 +38,14 @@ export function Screen({
   readonly scroll?: boolean;
 }) {
   const includeTopInset = useContext(ScreenTopInsetContext);
+  const bottomPadding = includeTopInset
+    ? spacing[12]
+    : spacing[12] + spacing[8];
+  const contentStyle = [
+    styles.content,
+    { paddingBottom: bottomPadding },
+    contentContainerStyle,
+  ];
 
   return (
     <SafeAreaView
@@ -46,15 +54,13 @@ export function Screen({
     >
       {scroll ? (
         <ScrollView
-          contentContainerStyle={[styles.content, contentContainerStyle]}
+          contentContainerStyle={contentStyle}
           showsVerticalScrollIndicator={false}
         >
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.content, styles.flex, contentContainerStyle]}>
-          {children}
-        </View>
+        <View style={[...contentStyle, styles.flex]}>{children}</View>
       )}
     </SafeAreaView>
   );
@@ -63,7 +69,6 @@ export function Screen({
 const styles = StyleSheet.create({
   content: {
     gap: spacing[4],
-    paddingBottom: spacing[12],
     paddingHorizontal: spacing[5],
     paddingTop: spacing[5],
   },
