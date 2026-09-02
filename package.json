@@ -28,6 +28,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
+    "route:check": "npm run route:check -w @finapp/mobile",
     "oidc:local:user": "node scripts/provision-local-oidc-user.mjs",
     "accept:local-mvp": "node scripts/accept-local-mvp.mjs",
     "accept:local-mvp:clean": "node scripts/accept-local-mvp.mjs --clean",
@@ -39,7 +40,7 @@
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "wait:local-infra": "node scripts/wait-local-services.mjs",
-    "verify": "npm run format:check && npm run contract:check && npm run dependency:check -w @finapp/mobile && npm run design-system:check && npm run security:secrets && npm run architecture:check && npm run lint && npm run typecheck && npm run test && npm run build"
+    "verify": "npm run format:check && npm run contract:check && npm run dependency:check -w @finapp/mobile && npm run route:check && npm run design-system:check && npm run security:secrets && npm run architecture:check && npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

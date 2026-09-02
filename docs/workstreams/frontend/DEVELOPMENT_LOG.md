@@ -769,12 +769,39 @@
 - root cwd/Node PATH가 다른 Expo export 실패는 `FE-ISSUE-0013`/중앙 `ISSUE-0014`로 기록하고 mobile cwd·Node 24 조건에서 재검증했다.
 - `MarketChange`의 feature model import 경계 위반은 `FE-ISSUE-0014`/중앙 `ISSUE-0015`로 기록하고 shared formatter/re-export adapter로 수정했다.
 - pull 후 dependency/runtime verify drift는 `FE-ISSUE-0015`/중앙 `ISSUE-0016`으로 기록했다. Node 24 `npm ci`와 `make verify` 전체 gate 통과로 해소했다.
-- 다음 FE-0016에서 Expo web export와 route smoke를 추가 검증한다.
+- FE-0016에서 Expo web export와 route smoke를 추가 검증했다.
 - 원격 DB·credential·migration·seed·배포는 실행하지 않았다.
 
 ### 다음 작업
 
-- FE-0016: navigation/export smoke와 디자인 회귀 검증 보강
+- FE-0017: iOS/Android native 화면 회귀 확인 (환경 제공 시)
+
+## FE-0016 — 종목 상세 route와 navigation smoke
+
+- 날짜: 2026-09-03
+- Milestone: 7A 모바일 고객 UI 디자인 리팩터링
+- 상태: COMPLETED
+- base commit: `2ea452df30c1c097b8f421a451b789955103d7fa`
+- contract revision: `platform-v1` unchanged
+- 예정 commit: `feat(fe): add market detail route smoke [FE-0016]`
+
+### 완료
+
+- 검색 결과에서 `/market/[symbol]` 상세 stack route로 이동하는 callback을 추가했다.
+- 상세 현재가·변동·가격 흐름·stale/empty/error 상태와 뒤로 가기를 구현했다.
+- 9개 route 파일, 4개 tab label과 Wealth Flow/light 설정을 검사하는 `route:check`를 verify에 연결했다.
+
+### 검증
+
+- route smoke 9 files, design-system 26 UI files, mobile architecture 157 files 통과
+- mobile lint/typecheck 통과
+- mobile 36 files/106 tests 통과
+- Node 24 + mobile cwd Expo web export 2,189 modules/3.4MB 성공
+- local Docker wrapper `make verify` 전체 gate와 backend build 통과
+
+### 다음 작업
+
+- FE-0017: iOS/Android native 화면 회귀 확인 (환경 제공 시)
 
 ## FE-0014 — Settings·Developer Scenario·접근성
 

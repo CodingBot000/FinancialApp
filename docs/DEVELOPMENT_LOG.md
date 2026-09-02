@@ -723,6 +723,42 @@
 
 - `FE-0016`: navigation/export smoke와 디자인 회귀 검증 보강
 
+## FE-0016 — 종목 상세 route와 navigation smoke
+
+- 날짜: 2026-09-03
+- Milestone: 7A 모바일 고객 UI 디자인 리팩터링
+- 상태: COMPLETED
+- base commit: `2ea452df30c1c097b8f421a451b789955103d7fa`
+- contract revision: `platform-v1` unchanged
+- 예정 commit: `feat(fe): add market detail route smoke [FE-0016]`
+
+### 완료
+
+- 종목 검색 결과의 상세 진입 callback과 `/market/[symbol]` Expo Router stack route를 추가했다.
+- 상세 화면에 현재가 Hero, 변동, 거래량/시각, 가격 흐름 interval, selected point, stale/error/empty 상태와 뒤로 가기를 구성했다.
+- route file 존재·4개 bottom tab label·Wealth Flow/light app 설정을 검사하는 `route:check`를 mobile/root verify에 연결했다.
+- 기존 MarketScreen 인라인 데이터/API/business hook 동작은 유지하고 상세 route용 symbol 조회 hook만 추가했다.
+
+### 검증
+
+- `npm run route:check -w @finapp/mobile`: 9 route files 통과
+- `npm run design-system:check -w @finapp/mobile`: 26 UI files 통과
+- `npm run architecture:check -w @finapp/mobile`: 157 source files 통과
+- `npm run lint -w @finapp/mobile`, `npm run typecheck -w @finapp/mobile`: 통과
+- `npm run test -w @finapp/mobile -- --run`: 36 files/106 tests 통과
+- Node 24 + `apps/mobile` cwd `npx expo export --platform web`: 2,189 modules, 3.4MB bundle 성공
+- `make verify` (local Docker wrapper): format/contract/route/design/security/architecture/lint/typecheck, mobile 36/106, simulator 4/12, platform 19/90, backend build 통과
+
+### 이슈·누락·Handoff
+
+- FE-0016 구현 중 신규 defect는 발견되지 않았다.
+- iOS/Android native 실기기 또는 native build 화면 회귀는 `GAP-0002`/`GAP-0003` 범위로 남겨 `FE-0017`에서 환경 제공 여부를 확인한다.
+- 원격 DB·credential·migration·seed·배포는 실행하지 않았다.
+
+### 다음 작업
+
+- FE-0017: iOS/Android native 화면 회귀 확인 (환경 제공 시)
+
 ## BE-0012 — Settlement Transactional Outbox
 
 - 날짜: 2026-09-02

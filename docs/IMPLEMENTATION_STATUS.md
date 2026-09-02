@@ -3,8 +3,8 @@
 - 현재 Milestone: 7A — 모바일 고객 UI 디자인 리팩터링
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-03
-- 마지막 완료 ID: FE-0015
-- 다음 작업 ID: FE-0016
+- 마지막 완료 ID: FE-0016
+- 다음 작업 ID: FE-0017
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
@@ -278,7 +278,18 @@
 - [x] app.json 표시 이름을 Wealth Flow로 변경하고 light UI 고정 (scheme/package identifier 유지)
 - [x] 공통 primitive strict typecheck 실패 ISSUE-0013/FE-ISSUE-0012를 수정·검증
 - [x] mobile lint/typecheck와 35 files/104 tests 통과
-- [ ] 다음 FE-0016: navigation/export smoke와 디자인 회귀 검증 보강
+- [x] 다음 FE-0016: navigation/export smoke와 디자인 회귀 검증 보강
+
+## FE-0016 종목 상세 route와 navigation smoke — 진행 상태
+
+- [x] 종목 검색 결과에서 종목 상세 stack route(`/market/[symbol]`)로 이동
+- [x] 상세 route의 현재가·변동·가격 흐름·stale/empty/error 상태를 공통 primitive로 구현
+- [x] 뒤로 가기와 알 수 없는 종목의 고객용 빈 상태를 검증
+- [x] 필수 Expo route 파일·4개 bottom tab label·Wealth Flow/light 설정을 검사하는 `route:check` gate 추가
+- [x] Node 24 + mobile workspace 조건의 Expo web export 재검증
+- [x] mobile 36 files/106 tests, route/design/architecture/lint/typecheck 통과
+- [x] local Docker wrapper의 root `make verify` 전체 gate 통과
+- [ ] 다음 FE-0017: iOS/Android native 화면 회귀 확인 (환경 제공 시)
 
 ## 외부 조건
 

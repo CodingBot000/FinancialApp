@@ -11,6 +11,7 @@
     "design-system:check": "node scripts/check-design-system.mjs",
     "ios": "expo run:ios",
     "lint": "eslint src scripts vitest.config.ts",
+    "route:check": "node scripts/check-routes.mjs",
     "start": "expo start",
     "start:web": "expo start --web",
     "test": "vitest run --config vitest.config.ts",

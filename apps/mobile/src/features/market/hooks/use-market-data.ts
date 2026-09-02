@@ -30,6 +30,21 @@ export function useMarketSearch(query: string) {
   return { debouncedQuery, search };
 }
 
+export function useMarketStockBySymbol(symbol: string | undefined) {
+  const api = usePlatformApi();
+  const normalizedSymbol = symbol?.trim() ?? '';
+  return useQuery({
+    enabled: normalizedSymbol.length > 0,
+    queryFn: async ({ signal }) => {
+      const stocks = await api.searchMarketStocks(normalizedSymbol, { signal });
+      return stocks.find((stock) => stock.symbol === normalizedSymbol) ?? null;
+    },
+    queryKey: marketKeys.stock(normalizedSymbol || 'none'),
+    retry: false,
+    staleTime: 300_000,
+  });
+}
+
 export function useMarketStockData(
   stock: MarketStock | undefined,
   interval: MarketInterval,
