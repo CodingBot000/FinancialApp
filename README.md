@@ -88,3 +88,5 @@ frontend FE-0001~~FE-0009와 backend BE-0001~~BE-0008의 병렬 단계는 DEV-00
 ## Remote database
 
 이번 연속 개발 실행에서는 Lightsail PostgreSQL 사전점검, 연결과 migration/seed를 진행하지 않으며 local hardening 완료 후 원격 단계 직전에 멈춘다. 자동 test는 local/Testcontainers DB를 사용한다. 장기 원격 단계가 별도로 재승인되더라도 shared DB에서 `drizzle-kit push`, destructive reset과 동시 migration은 실행하지 않으며 모든 application-owned DB 객체는 `finapp_` prefix를 사용한다.
+
+환경변수 파일 배치는 [docs/ENV_FILES_GUIDE.md](docs/ENV_FILES_GUIDE.md)를 따른다. clone 후 확인 가능한 `*.env.local`은 placeholder 템플릿이며 실제 secret은 주입하지 않는다.

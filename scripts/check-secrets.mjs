@@ -68,7 +68,8 @@ async function collectFiles(directory) {
     }
 
     const extension = path.extname(entry.name);
-    const isEnvironmentFile = entry.name === '.env.example';
+    const isEnvironmentFile =
+      entry.name === '.env.example' || entry.name === '.env.local';
     if (
       !ignoredFiles.has(entry.name) &&
       (isEnvironmentFile || scannableExtensions.has(extension))
