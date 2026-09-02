@@ -803,6 +803,22 @@
 
 - FE-0017: iOS/Android native 화면 회귀 확인 (환경 제공 시)
 
+## FE-0017 — Native 화면 회귀 검증 blocker
+
+- 날짜: 2026-09-03
+- Milestone: 7A 모바일 고객 UI 디자인 리팩터링
+- 상태: BLOCKED
+- base commit: `d6d9684f821bca2587c823538edc162c7731da90`
+- contract revision: `platform-v1` unchanged
+- iOS prebuild project 생성 후 XcodeBuildMCP `build_sim`이 iPhone 15 destination을 찾지 못했다. SDK 18.2, 설치 runtime 17.5/18.0/18.1이며 showdestinations는 placeholder만 반환했다.
+- Android emulator/device와 Gradle도 현재 제공되지 않는다.
+- 재현/해결 조건은 `FE-ISSUE-0016` 및 중앙 `ISSUE-0017`에 기록했다.
+- 원격 DB·credential·migration·seed·배포는 실행하지 않았다.
+
+### 다음 작업
+
+- FE-0017 재개: native simulator/device 환경 제공 후 build/run 및 화면 snapshot 검증
+
 ## FE-0014 — Settings·Developer Scenario·접근성
 
 - 날짜: 2026-09-02

@@ -291,6 +291,13 @@
 - [x] local Docker wrapper의 root `make verify` 전체 gate 통과
 - [ ] 다음 FE-0017: iOS/Android native 화면 회귀 확인 (환경 제공 시)
 
+## FE-0017 iOS/Android native 화면 회귀 — 진행 상태
+
+- [ ] iOS simulator build/run 및 화면 snapshot
+- [ ] Android emulator/device build/run 및 화면 snapshot
+- [ ] native 환경 blocker `ISSUE-0017`/`FE-ISSUE-0016` 해결 후 재검증
+- 상태: BLOCKED — Xcode SDK 18.2에 대응하는 eligible iOS Simulator destination이 현재 제공되지 않음
+
 ## 외부 조건
 
 다음은 완료된 Milestone 2~5와 단계 10 local 결과의 외부 미검증 범위다.

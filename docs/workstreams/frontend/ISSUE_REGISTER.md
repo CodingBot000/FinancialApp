@@ -1,6 +1,6 @@
 # Frontend Workstream Issue와 Gap Register
 
-- 다음 ISSUE ID: `FE-ISSUE-0016`
+- 다음 ISSUE ID: `FE-ISSUE-0017`
 - 다음 GAP ID: `FE-GAP-0005`
 - active issue: `FE-ISSUE-0001`
 - active gap: `FE-GAP-0002`, `FE-GAP-0004`
@@ -8,6 +8,20 @@
 frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한다. backend·계약·milestone 완료에도 영향을 주면 handoff와 중앙 `ISSUE_REGISTER.md`에 연결한다.
 
 ## Active Issue
+
+### FE-ISSUE-0016 — iOS native simulator destination unavailable
+
+- 상태: OPEN
+- 심각도: MEDIUM
+- 발견 FE: FE-0017
+- 마지막 갱신: 2026-09-03
+- 관련 contract revision: `platform-v1` unchanged
+- 중앙 연결: `ISSUE-0017`
+- 내용: Xcode 16.2 SDK 18.2와 설치 runtime 17.5/18.0/18.1의 조합에서 generated WealthFlow project의 eligible simulator destination이 노출되지 않았다. XcodeBuildMCP `build_sim`은 iPhone 15 UDID를 찾지 못했고 showdestinations는 placeholder만 반환했다.
+- 영향: iOS native build/run 및 screenshot 회귀 검증 미완료. web export와 local test/verify는 통과했다.
+- 해결 조건: Xcode iOS 18.2 simulator runtime 또는 유효한 simulator destination을 준비해 build/run과 UI snapshot을 재실행할 것.
+- 목표 FE: FE-0017
+- 해결 FE: 미해결
 
 ### FE-ISSUE-0015 — Local dependency and Docker verification setup
 

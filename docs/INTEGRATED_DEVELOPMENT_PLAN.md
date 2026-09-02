@@ -456,4 +456,4 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - 각 FE slice는 구현·component/route test·문서 갱신 후 atomic commit으로 `origin/main`에 push하고 local/remote SHA와 working tree를 확인한다.
 - 원격 DB 사전 설정·endpoint/credential 요청·연결·catalog/migration/seed/deploy는 이 addendum에서도 실행하지 않는다.
 
-현재 기록: FE-0016에서 종목 상세 stack route, route smoke gate와 Expo web export를 추가 검증했다. 다음 FE-0017은 iOS/Android native 화면 회귀 확인이며, 실기기·native build 환경이 없으면 GAP으로 유지한다.
+현재 기록: FE-0016에서 종목 상세 stack route, route smoke gate와 Expo web export를 추가 검증했다. FE-0017 native 화면 회귀는 Xcode SDK/runtime destination blocker(`ISSUE-0017`)로 대기하며, 환경 제공 전까지 GAP/미완료로 유지한다.

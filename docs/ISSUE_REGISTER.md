@@ -1,7 +1,7 @@
 # 이슈와 누락 Register
 
 - 마지막 갱신: 2026-09-03
-- 다음 ISSUE ID: `ISSUE-0017`
+- 다음 ISSUE ID: `ISSUE-0018`
 - 다음 GAP ID: `GAP-0010`
 
 이 문서는 defect, blocker, 위험과 불가피한 누락을 삭제하지 않고 추적한다.
@@ -19,6 +19,22 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - `ACCEPTED_RISK`: 사용자가 잔여 위험을 명시적으로 수용함
 
 ## Active Issue
+
+### ISSUE-0017 — iOS native simulator destination unavailable
+
+- 상태: OPEN
+- 심각도: MEDIUM
+- 최초 발견: 2026-09-03
+- 마지막 갱신: 2026-09-03
+- 발견 FE: FE-0017 / native design regression
+- 영향 Milestone: 7A 모바일 고객 UI 디자인 리팩터링
+- 내용: Xcode 16.2와 iOS Simulator device 목록은 존재하지만 `xcodebuild -showdestinations`가 WealthFlow scheme에 placeholder destination만 노출했다. Xcode SDK는 iOS 18.2이고 설치된 simulator runtime은 iOS 17.5/18.0/18.1이라 `build_sim`이 iPhone 15 UDID를 찾지 못했다.
+- 재현: `apps/mobile/ios` prebuild 후 XcodeBuildMCP `build_sim` 실행 → `Unable to find a destination matching ... platform:iOS Simulator, id:D045E4B7...`; `xcodebuild -showdestinations` → Any iOS Device/Any iOS Simulator Device placeholder만 표시.
+- 영향: iOS native build/run과 화면 screenshot을 완료하지 못했다. web export, component/route tests와 backend/local verify에는 영향이 없다.
+- 해결 조건: Xcode에서 사용 가능한 iOS Simulator runtime(현재 SDK 18.2에 대응) 설치 또는 eligible simulator를 boot한 뒤 WealthFlow build/run, UI snapshot/screenshot을 재검증할 것.
+- 목표 FE: FE-0017
+- 해결 FE: 미해결
+- 원격 작업: 원격 DB/credential/deploy와 무관한 로컬 환경 문제이며 원격 시스템은 사용하지 않았다.
 
 ### ISSUE-0016 — Fresh-clone dependency/runtime verification drift
 
