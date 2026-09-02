@@ -1,22 +1,22 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View } from 'react-native';
 
 import { PlatformApiError } from '../../../shared/api';
 import {
-  displayDatasetVersion,
+  AppText,
+  Button,
+  Card,
+  DemoDisclosure,
+  ErrorState,
+  LoadingState,
+  MoneyValue,
+  Screen,
+  TextField,
+} from '../../../shared/design-system';
+import {
   displayLabel,
   displaySimulationDisclaimer,
 } from '../../../shared/format/display-labels';
-import { formatWon } from '../../../shared/format/finance-format';
 import { useMoneyVisibilityStore } from '../../../shared/privacy';
 import { useSimulation } from '../hooks/use-simulation';
 import {
@@ -50,147 +50,77 @@ export function SimulationScreen() {
   };
   const result = simulation.result.data;
   const requestError = simulation.create.error ?? simulation.result.error;
+
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.eyebrow}>재현 가능한 데이터 · 버전 1</Text>
-        <Text accessibilityRole="header" style={styles.title}>
-          자산 시뮬레이션
-        </Text>
-        <Text style={styles.disclaimer}>
-          테스트 데이터 기반 기술 데모이며 실제 수익 예측이나 투자 조언이
-          아닙니다.
-        </Text>
-        <View style={styles.card}>
-          {fields.map(({ field, label }) => (
-            <View key={field} style={styles.field}>
-              <Text style={styles.label}>{label}</Text>
-              <TextInput
-                accessibilityLabel={label}
-                keyboardType="decimal-pad"
-                onChangeText={(value) => draft.setField(field, value)}
-                secureTextEntry={amountsHidden && field !== 'durationMonths'}
-                style={styles.input}
-                value={draft[field]}
-              />
-              {errors[field] ? (
-                <Text accessibilityRole="alert" style={styles.error}>
-                  {errors[field]}
-                </Text>
-              ) : null}
-            </View>
-          ))}
-          <Text style={styles.allocation}>
-            고정 배분 · 현금 10% / 채권 30% / 주식 60%
-          </Text>
-          <Pressable
-            accessibilityLabel="시뮬레이션 실행"
-            accessibilityRole="button"
-            disabled={simulation.create.isPending}
-            onPress={submit}
-            style={styles.action}
-          >
-            {simulation.create.isPending ? (
-              <ActivityIndicator color="#07111f" />
-            ) : (
-              <Text style={styles.actionText}>시뮬레이션 실행</Text>
-            )}
-          </Pressable>
-        </View>
-        {requestError ? (
-          <View accessibilityRole="alert" style={styles.errorCard}>
-            <Text style={styles.resultTitle}>
-              실행 결과를 확인하지 못했습니다
-            </Text>
-            <Text style={styles.error}>
-              {requestError instanceof PlatformApiError && requestError.code
-                ? `${displayLabel(requestError.code)} · 입력값을 확인해 주세요.`
-                : '네트워크 상태를 확인하고 다시 실행해 주세요.'}
-            </Text>
+    <Screen>
+      <AppText tone="brand" variant="label">
+        플랜
+      </AppText>
+      <AppText accessibilityRole="header" variant="title1">
+        목표 자산 미리보기
+      </AppText>
+      <AppText style={{ marginTop: 8 }} tone="secondary" variant="body">
+        지금의 계획으로 앞으로의 자산 흐름을 살펴보세요.
+      </AppText>
+      <Card>
+        {fields.map(({ field, label }) => (
+          <View key={field} style={{ marginTop: 12 }}>
+            <TextField
+              {...(errors[field] ? { errorText: errors[field] } : {})}
+              keyboardType="decimal-pad"
+              label={label}
+              onChangeText={(value) => draft.setField(field, value)}
+              secureTextEntry={amountsHidden && field !== 'durationMonths'}
+              value={draft[field]}
+            />
           </View>
-        ) : null}
-        {simulation.result.isFetching ? (
-          <View style={styles.loading}>
-            <ActivityIndicator color="#39e8b5" />
-            <Text style={styles.muted}>저장된 시뮬레이션 결과 확인 중</Text>
-          </View>
-        ) : null}
-        {result ? (
-          <View style={styles.card}>
-            <Text style={styles.resultTitle}>서버 저장 결과</Text>
-            <Text style={styles.probability}>
-              목표 달성 확률 {Math.round(result.goalProbability * 100)}%
-            </Text>
-            <Text style={styles.muted}>
-              최종 중앙값 {formatWon(result.finalValue.p50, amountsHidden)}
-            </Text>
-            <Text style={styles.version}>
-              계산 엔진 {result.engineVersion} · 기준{' '}
-              {displayDatasetVersion(result.assumptionSetVersion)}
-            </Text>
-            <PercentileChart series={result.series} />
-            <Text style={styles.disclaimer}>
-              {displaySimulationDisclaimer(result.disclaimer)}
-            </Text>
-          </View>
-        ) : null}
-      </ScrollView>
-    </SafeAreaView>
+        ))}
+        <AppText style={{ marginTop: 12 }} tone="secondary" variant="caption">
+          기본 배분 · 현금 10% · 채권 30% · 주식 60%
+        </AppText>
+        <Button
+          loading={simulation.create.isPending}
+          onPress={submit}
+          variant="brand"
+        >
+          미리보기 만들기
+        </Button>
+      </Card>
+
+      {requestError ? (
+        <ErrorState
+          description={
+            requestError instanceof PlatformApiError && requestError.code
+              ? `${displayLabel(requestError.code)} · 입력값을 확인해 주세요.`
+              : '연결 상태를 확인하고 다시 시도해 주세요.'
+          }
+          title="미리보기를 만들지 못했습니다."
+        />
+      ) : null}
+      {simulation.result.isFetching ? (
+        <LoadingState label="저장된 미리보기를 확인하고 있습니다." />
+      ) : null}
+      {result ? (
+        <Card variant="warm">
+          <AppText variant="heading">예상 결과</AppText>
+          <AppText style={{ marginTop: 8 }} tone="brand" variant="title2">
+            목표 달성 가능성 {Math.round(result.goalProbability * 100)}%
+          </AppText>
+          <AppText tone="secondary" variant="body">
+            예상 중앙값{' '}
+            <MoneyValue
+              hidden={amountsHidden}
+              size="small"
+              value={result.finalValue.p50}
+            />
+          </AppText>
+          <PercentileChart series={result.series} />
+          <AppText tone="secondary" variant="legal">
+            {displaySimulationDisclaimer(result.disclaimer)}
+          </AppText>
+        </Card>
+      ) : null}
+      <DemoDisclosure />
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  action: {
-    alignItems: 'center',
-    backgroundColor: '#39e8b5',
-    borderRadius: 12,
-    justifyContent: 'center',
-    marginTop: 18,
-    minHeight: 48,
-  },
-  actionText: { color: '#07111f', fontSize: 14, fontWeight: '800' },
-  allocation: { color: '#9aabc0', fontSize: 12, marginTop: 12 },
-  card: {
-    backgroundColor: '#101d2e',
-    borderColor: '#22334a',
-    borderRadius: 22,
-    borderWidth: 1,
-    marginTop: 16,
-    padding: 20,
-  },
-  content: { paddingBottom: 60, paddingHorizontal: 20, paddingTop: 28 },
-  disclaimer: { color: '#39e8b5', fontSize: 11, lineHeight: 17, marginTop: 12 },
-  error: { color: '#f8b4b4', fontSize: 11, lineHeight: 17, marginTop: 5 },
-  errorCard: {
-    backgroundColor: '#301d25',
-    borderRadius: 18,
-    marginTop: 16,
-    padding: 18,
-  },
-  eyebrow: { color: '#39e8b5', fontSize: 11, fontWeight: '800' },
-  field: { marginTop: 12 },
-  input: {
-    backgroundColor: '#07111f',
-    borderColor: '#33455f',
-    borderRadius: 10,
-    borderWidth: 1,
-    color: '#f4f7fb',
-    fontSize: 15,
-    marginTop: 7,
-    minHeight: 48,
-    paddingHorizontal: 14,
-  },
-  label: { color: '#cbd7e8', fontSize: 12, fontWeight: '700' },
-  loading: { alignItems: 'center', gap: 8, marginTop: 18 },
-  muted: { color: '#91a1b7', fontSize: 12, marginTop: 8 },
-  probability: {
-    color: '#f4f7fb',
-    fontSize: 26,
-    fontWeight: '800',
-    marginTop: 12,
-  },
-  resultTitle: { color: '#f4f7fb', fontSize: 17, fontWeight: '800' },
-  safe: { backgroundColor: '#07111f', flex: 1 },
-  title: { color: '#f4f7fb', fontSize: 30, fontWeight: '800', marginTop: 14 },
-  version: { color: '#8d7cf6', fontSize: 11, marginTop: 9 },
-});

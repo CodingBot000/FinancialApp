@@ -8,6 +8,7 @@
     "android": "expo run:android",
     "architecture:check": "node scripts/check-architecture.mjs",
     "dependency:check": "expo install --check",
+    "design-system:check": "node scripts/check-design-system.mjs",
     "ios": "expo run:ios",
     "lint": "eslint src scripts vitest.config.ts",
     "start": "expo start",

@@ -96,7 +96,9 @@ describe('SimulatorBrokerageAdapter', () => {
     await listen(() => {
       requests += 1;
     });
-    process.env.INSTITUTION_SIMULATOR_TIMEOUT_MS = '10';
+    // Keep the timeout short while allowing Node's local fetch to establish the
+    // loopback connection before the intentionally non-responsive handler times out.
+    process.env.INSTITUTION_SIMULATOR_TIMEOUT_MS = '50';
     await expect(
       new SimulatorBrokerageAdapter().submit({
         clientOrderId: '90000000-0000-4000-8000-000000000001',

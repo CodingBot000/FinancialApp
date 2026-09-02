@@ -9,6 +9,7 @@ import {
 } from '../features/login';
 import { AuthSessionProvider } from '../shared/auth';
 import { MobileQueryProvider } from '../shared/query';
+import { colors } from '../shared/design-system';
 
 export default function RootLayout() {
   return (
@@ -18,8 +19,13 @@ export default function RootLayout() {
           <AppLockBoundary>
             <ConfiguredPlatformApiProvider>
               <MobileQueryProvider>
-                <StatusBar style="light" />
-                <Stack screenOptions={{ headerShown: false }} />
+                <StatusBar style="dark" />
+                <Stack
+                  screenOptions={{
+                    contentStyle: { backgroundColor: colors.background.screen },
+                    headerShown: false,
+                  }}
+                />
               </MobileQueryProvider>
             </ConfiguredPlatformApiProvider>
           </AppLockBoundary>

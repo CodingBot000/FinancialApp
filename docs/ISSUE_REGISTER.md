@@ -1,7 +1,7 @@
 # 이슈와 누락 Register
 
-- 마지막 갱신: 2026-09-02
-- 다음 ISSUE ID: `ISSUE-0013`
+- 마지막 갱신: 2026-09-03
+- 다음 ISSUE ID: `ISSUE-0017`
 - 다음 GAP ID: `GAP-0010`
 
 이 문서는 defect, blocker, 위험과 불가피한 누락을 삭제하지 않고 추적한다.
@@ -19,6 +19,66 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - `ACCEPTED_RISK`: 사용자가 잔여 위험을 명시적으로 수용함
 
 ## Active Issue
+
+### ISSUE-0016 — Fresh-clone dependency/runtime verification drift
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 최초 발견: 2026-09-03
+- 마지막 갱신: 2026-09-03
+- 발견 FE: FE-0015 / integration verify
+- 영향 Milestone: local verification gate
+- 내용: pull 직후 stale `node_modules`에는 manifest에 있는 `adm-zip`과 `@aws-sdk/client-kms`가 없어 root typecheck가 실패했고, plain `npm run verify`는 Colima Testcontainers socket 환경이 없어 migration suite를 시작하지 못했다. Node 24에서 10ms loopback timeout fixture도 요청 도착 전에 종료될 수 있었다.
+- 영향: 첫 전체 verify가 실패했다. migration/test를 비활성화하거나 remote DB를 사용하지 않았다.
+- 해결 조건: Node 24 `npm ci`, Makefile의 local Docker wrapper, 안정적인 짧은 timeout으로 fresh local verify가 통과할 것.
+- 목표 FE: FE-0015
+- 해결 FE: FE-0015
+- 검증: Node `v24.19.0` `npm ci` 후 dependencies가 복구됐다. `make verify`가 Colima socket 자동 설정으로 format/contract/design/security/architecture/lint/typecheck, mobile 35/104, simulator 4/12, platform 19/90와 두 backend build를 통과했다. timeout fixture는 10ms→50ms로 조정해 단일 POST/no-retry invariant를 유지하며 5 tests 통과.
+
+### ISSUE-0015 — Shared design-system feature import boundary
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 최초 발견: 2026-09-03
+- 마지막 갱신: 2026-09-03
+- 발견 FE: FE-0015
+- 영향 Milestone: 7A frontend design refactor
+- 내용: `MarketChange` 공통 primitive가 market feature model의 `formatMarketRate`를 직접 import해 shared → feature 아키텍처 경계를 위반했다.
+- 영향: 구현 화면은 렌더 가능했지만 architecture gate가 실패해 slice 완료를 선언할 수 없었다.
+- 해결 조건: market rate formatter를 shared layer로 이동하고 기존 feature public import 호환성을 유지한 뒤 architecture/typecheck/test를 통과할 것.
+- 목표 FE: FE-0015
+- 해결 FE: FE-0015
+- 검증: `shared/format/market-format.ts`를 canonical implementation으로 추가하고 feature model은 re-export adapter로 전환했다. mobile architecture 154 files, strict typecheck, 35 files/104 tests 통과.
+
+### ISSUE-0014 — Mobile export invocation/runtime PATH drift
+
+- 상태: RESOLVED
+- 심각도: LOW
+- 최초 발견: 2026-09-03
+- 마지막 갱신: 2026-09-03
+- 발견 FE: FE-0015
+- 영향 Milestone: 7A mobile design validation
+- 내용: monorepo root에서 `npx expo export`를 실행하면 Expo `AppEntry`가 workspace 밖 `App`을 찾지 못했고, 셸의 `node` 해시가 Node 20.15를 선택해 Node 24 기준 경고가 발생했다.
+- 영향: 첫 export 검증 명령이 실패했으며, 앱 구현이나 원격 시스템에는 변경이 없었다.
+- 해결 조건: mobile workspace cwd와 Node.js 24 runtime을 명시한 export가 성공하고 동일 조건을 문서화할 것.
+- 목표 FE: FE-0015
+- 해결 FE: FE-0015
+- 검증: `/Users/switch/.nvm/versions/node/v24.19.0/bin`을 PATH 앞에 둔 mobile workspace에서 Expo web export가 2,186 modules/3.4MB bundle로 성공했다. root에서의 잘못된 cwd 실행은 완료 증거로 사용하지 않는다.
+
+### ISSUE-0013 — Design system primitive API/type compatibility
+
+- 상태: RESOLVED
+- 심각도: LOW
+- 최초 발견: 2026-09-03
+- 마지막 갱신: 2026-09-03
+- 발견 FE: FE-0015
+- 영향 Milestone: 7A frontend design refactor
+- 내용: 신규 design-system 공통 primitive가 React Native의 `ReactNode` export와 기존 `formatWon` 인자 계약을 잘못 가정해 첫 strict typecheck가 실패했다.
+- 영향: 디자인 리팩터링 slice의 typecheck가 중단됐으며 runtime 동작에는 배포된 변경이 없었다.
+- 해결 조건: React type import와 기존 formatter 계약에 맞춰 primitive를 수정하고 strict typecheck 및 component test를 통과할 것.
+- 목표 FE: FE-0015
+- 해결 FE: FE-0015
+- 검증: React에서 `ReactNode`/`ComponentProps`를 직접 import하고 signed 표시를 primitive에서 조합하도록 수정한 뒤 `npm run typecheck -w @finapp/mobile` 통과. 실패 원인은 숨기거나 비활성화하지 않았다.
 
 ### ISSUE-0002 — Expo 57 transitive dependency moderate advisory
 

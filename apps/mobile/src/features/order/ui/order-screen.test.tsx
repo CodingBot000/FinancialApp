@@ -50,7 +50,7 @@ describe('OrderScreen', () => {
       await view.findByRole('button', { name: '생체인증 후 매수 확정' }),
     );
 
-    expect(await view.findByText('주문 상태 · 체결')).toBeTruthy();
+    expect(await view.findByText('주문 상태')).toBeTruthy();
     expect(prepare).toHaveBeenCalledOnce();
     expect(prepare.mock.calls[0]?.[0]).toMatchObject({
       instrumentId: 'c805563c-148c-4451-8a9a-4808da7b32ae',
@@ -137,7 +137,7 @@ describe('OrderScreen', () => {
       await view.findByRole('button', { name: '생체인증 후 매수 확정' }),
     );
 
-    expect(await view.findByText('주문 상태 · 확인 중')).toBeTruthy();
+    expect(await view.findByText('주문 상태')).toBeTruthy();
     expect(prepare).toHaveBeenCalledOnce();
     expect(get).toHaveBeenCalledOnce();
   });

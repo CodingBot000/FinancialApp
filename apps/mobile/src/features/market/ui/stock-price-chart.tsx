@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { CartesianChart, Line } from 'victory-native';
+import { useMemo, useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
+import { Area, CartesianChart, Line } from 'victory-native';
 
 import type { MarketBar } from '../../../shared/api';
+import { AppText, colors, spacing } from '../../../shared/design-system';
 import {
   formatCompactWon,
   formatDate,
@@ -19,19 +20,33 @@ export function StockPriceChart({
 }) {
   const reduceMotion = useReducedMotion();
   const points = useMemo(() => toMarketChartPoints(bars), [bars]);
+  const [selectedIndex, setSelectedIndex] = useState(
+    Math.max(points.length - 1, 0),
+  );
   if (points.length < 2) {
-    return <Text style={styles.empty}>표시할 가격 데이터가 없습니다.</Text>;
+    return (
+      <AppText tone="secondary" variant="body">
+        표시할 가격 정보가 없습니다.
+      </AppText>
+    );
   }
-
   const first = bars[0];
   const last = bars[bars.length - 1];
+  const selectedPoint = points[selectedIndex] ?? points.at(-1);
   return (
     <View
-      accessibilityLabel={`${stockName} 가격 차트. ${first ? formatDate(first.bucketAt) : ''}부터 ${last ? formatDate(last.bucketAt) : ''}까지`}
+      accessibilityLabel={`${stockName} 가격 흐름 차트`}
       accessible
       style={styles.container}
     >
-      <View style={styles.chart}>
+      <Pressable
+        accessibilityLabel="가격 차트 지점 선택"
+        accessibilityRole="button"
+        onPress={() =>
+          setSelectedIndex((index) => (index === 0 ? points.length - 1 : 0))
+        }
+        style={styles.chart}
+      >
         <CartesianChart
           data={points}
           domainPadding={{ bottom: 8, left: 8, right: 8, top: 8 }}
@@ -40,40 +55,58 @@ export function StockPriceChart({
           yKeys={['close']}
         >
           {({ points: chartPoints }) => (
-            <Line
-              {...(reduceMotion
-                ? {}
-                : { animate: { duration: 650, type: 'timing' as const } })}
-              color="#39e8b5"
-              curveType="natural"
-              points={chartPoints.close}
-              strokeCap="round"
-              strokeJoin="round"
-              strokeWidth={3}
-            />
+            <>
+              <Area
+                {...(reduceMotion
+                  ? {}
+                  : { animate: { duration: 500, type: 'timing' as const } })}
+                color={colors.market.downSoft}
+                curveType="natural"
+                points={chartPoints.close}
+                y0={0}
+              />
+              <Line
+                {...(reduceMotion
+                  ? {}
+                  : { animate: { duration: 500, type: 'timing' as const } })}
+                color={colors.brand.primary}
+                curveType="natural"
+                points={chartPoints.close}
+                strokeCap="round"
+                strokeJoin="round"
+                strokeWidth={3}
+              />
+            </>
           )}
         </CartesianChart>
-      </View>
+      </Pressable>
+      {selectedPoint ? (
+        <AppText
+          accessibilityLiveRegion="polite"
+          tone="secondary"
+          variant="caption"
+        >
+          선택한 날 {formatCompactWon(String(selectedPoint.close))}
+        </AppText>
+      ) : null}
       <View style={styles.captionRow}>
-        <Text style={styles.caption}>
+        <AppText tone="secondary" variant="caption">
           {first ? formatDate(first.bucketAt) : '-'}
-        </Text>
-        <Text style={styles.caption}>
+        </AppText>
+        <AppText variant="bodyStrong">
           {last ? formatCompactWon(last.close) : '-'}
-        </Text>
+        </AppText>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  caption: { color: '#8192a9', fontSize: 11 },
   captionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 8,
+    marginTop: spacing[2],
   },
-  chart: { height: 210, marginTop: 12 },
-  container: { marginTop: 12 },
-  empty: { color: '#91a1b7', fontSize: 13, marginTop: 16 },
+  chart: { height: 210, marginTop: spacing[3] },
+  container: { marginTop: spacing[3] },
 });

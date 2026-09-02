@@ -39,9 +39,8 @@ describe('HealthScreen', () => {
       new ContractMockPlatformApi({ latencyMs: 10 }),
     );
 
-    expect(view.getByText('연결을 확인하는 중')).toBeTruthy();
-    expect(await view.findByText('서비스 준비 완료')).toBeTruthy();
-    expect(view.getByText('기본 데이터셋')).toBeTruthy();
+    expect(view.getByText('연결을 확인하고 있습니다.')).toBeTruthy();
+    expect(await view.findByText('서비스가 준비되었습니다.')).toBeTruthy();
   });
 
   it('renders a retry action for a retryable failure', async () => {
@@ -53,9 +52,7 @@ describe('HealthScreen', () => {
       { retry: false },
     );
 
-    expect(await view.findByText('연결을 확인하지 못했습니다')).toBeTruthy();
-    expect(
-      view.getByRole('button', { name: '플랫폼 연결 다시 확인' }),
-    ).toBeTruthy();
+    expect(await view.findByText('연결을 확인하지 못했습니다.')).toBeTruthy();
+    expect(view.getByRole('button', { name: '다시 확인' })).toBeTruthy();
   });
 });

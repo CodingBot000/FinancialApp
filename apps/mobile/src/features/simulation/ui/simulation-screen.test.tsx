@@ -34,19 +34,15 @@ describe('SimulationScreen', () => {
     const get = vi.spyOn(api, 'getSimulation');
     const view = await renderScreen(api);
 
-    fireEvent.press(view.getByRole('button', { name: '시뮬레이션 실행' }));
-    expect(await view.findByText('서버 저장 결과')).toBeTruthy();
-    expect(view.getByText('목표 달성 확률 71%')).toBeTruthy();
-    expect(view.getByText(/계산 엔진 1.0.0/)).toBeTruthy();
-    expect(view.getByText(/기본 데이터셋 1/)).toBeTruthy();
-    expect(
-      view.getByLabelText(/하위 10%, 중앙값, 상위 90% 백분위 차트. 모션 감소/),
-    ).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: '미리보기 만들기' }));
+    expect(await view.findByText('예상 결과')).toBeTruthy();
+    expect(view.getByText('목표 달성 가능성 71%')).toBeTruthy();
+    expect(view.getByLabelText(/예상 자산 범위 차트. 모션 감소/)).toBeTruthy();
     expect(create).toHaveBeenCalledOnce();
     expect(get).toHaveBeenCalledOnce();
 
     fireEvent.press(view.getByRole('button', { name: '0개월 결과 보기' }));
-    expect(await view.findByText(/0개월 · 하위 10%/)).toBeTruthy();
+    expect(await view.findByText(/0개월 기준/)).toBeTruthy();
   });
 
   it('blocks an invalid duration before starting a mutation', async () => {
@@ -55,7 +51,7 @@ describe('SimulationScreen', () => {
     useSimulationDraftStore.getState().setField('durationMonths', '601');
     const view = await renderScreen(api);
 
-    fireEvent.press(view.getByRole('button', { name: '시뮬레이션 실행' }));
+    fireEvent.press(view.getByRole('button', { name: '미리보기 만들기' }));
 
     expect(
       await view.findByText('기간은 1~600개월의 정수여야 합니다.'),

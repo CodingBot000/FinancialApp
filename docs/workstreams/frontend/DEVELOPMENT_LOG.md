@@ -737,6 +737,45 @@
 
 - FE-0014: Settings, synthetic/dataset, money hide, developer scenario/reset와 accessibility review
 
+## FE-0015 — Wealth Flow 고객 UI 디자인 시스템
+
+- 날짜: 2026-09-03
+- Milestone: 7A 모바일 고객 UI 디자인 리팩터링
+- 상태: COMPLETED
+- base commit: `d7b802c8226be203dd5f62ee4b3a3af608970c4c`
+- contract revision: `platform-v1` unchanged
+- 예정 commit: `feat(fe): apply Wealth Flow design system [FE-0015]`
+
+### 완료
+
+- light-first shared tokens/brand/primitive와 component test를 추가했다.
+- Expo Router를 홈·종목·플랜·내 정보 4-tab과 주문 stack route로 재구성했다.
+- 로그인, App Lock, wealth, market, simulation, order, settings, identity/health UI를 공통 primitive와 고객 문구로 전환했다.
+- line/area chart, percentile tooltip, selected market point, allocation donut, Reduce Motion을 적용했다.
+- raw hex/기술 문구 검사와 app `Wealth Flow`/light 설정을 추가했다.
+
+### 검증
+
+- `npm run design-system:check -w @finapp/mobile`: 24 UI files 통과
+- `npm run architecture:check -w @finapp/mobile`: 154 source files 통과
+- `npm run lint -w @finapp/mobile`: 통과
+- `npm run typecheck -w @finapp/mobile`: 통과
+- `npm run test -w @finapp/mobile -- --run`: 35 files/104 tests 통과
+- `make verify` (Node 24 + Colima local Docker wrapper): root format/contract/security/architecture/lint/typecheck/build, mobile 35/104, simulator 4/12, platform 19/90 통과
+
+### 이슈·누락·Handoff
+
+- `FE-ISSUE-0012`와 중앙 `ISSUE-0013`은 공통 primitive type/import 오류를 수정해 RESOLVED.
+- root cwd/Node PATH가 다른 Expo export 실패는 `FE-ISSUE-0013`/중앙 `ISSUE-0014`로 기록하고 mobile cwd·Node 24 조건에서 재검증했다.
+- `MarketChange`의 feature model import 경계 위반은 `FE-ISSUE-0014`/중앙 `ISSUE-0015`로 기록하고 shared formatter/re-export adapter로 수정했다.
+- pull 후 dependency/runtime verify drift는 `FE-ISSUE-0015`/중앙 `ISSUE-0016`으로 기록했다. Node 24 `npm ci`와 `make verify` 전체 gate 통과로 해소했다.
+- 다음 FE-0016에서 Expo web export와 route smoke를 추가 검증한다.
+- 원격 DB·credential·migration·seed·배포는 실행하지 않았다.
+
+### 다음 작업
+
+- FE-0016: navigation/export smoke와 디자인 회귀 검증 보강
+
 ## FE-0014 — Settings·Developer Scenario·접근성
 
 - 날짜: 2026-09-02

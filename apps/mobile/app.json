@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Wealth Sandbox",
+    "name": "Wealth Flow",
     "slug": "wealth-sandbox",
     "version": "0.1.0",
     "orientation": "portrait",
     "scheme": "wealthsandbox",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "plugins": [
       "expo-router",
       [
@@ -17,7 +17,7 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "Wealth Sandbox 앱 잠금을 해제하기 위해 Face ID를 사용합니다."
+          "faceIDPermission": "Wealth Flow 앱 잠금을 해제하기 위해 Face ID를 사용합니다."
         }
       ],
       "expo-secure-store"

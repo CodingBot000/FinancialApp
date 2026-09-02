@@ -1,51 +1,32 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator } from 'react-native';
 
 import { PlatformApiError, type Account } from '../../../shared/api';
+import {
+  AppText,
+  Button,
+  Card,
+  DemoDisclosure,
+  ErrorState,
+  ListRow,
+  LoadingState,
+  MoneyValue,
+  NoticeBanner,
+  PageHeader,
+  Screen,
+  SectionHeader,
+  StatusChip,
+} from '../../../shared/design-system';
 import {
   formatDate,
   formatDateTime,
   formatQuantity,
-  formatWon,
   isMaskedAccountIdentifier,
 } from '../../../shared/format/finance-format';
 import { displayLabel } from '../../../shared/format/display-labels';
 import { useMoneyVisibilityStore } from '../../../shared/privacy';
 import { useWealthDashboard } from '../hooks/use-wealth-dashboard';
 import { AssetCharts } from './asset-charts';
-
-function Action({
-  label,
-  onPress,
-  pending,
-}: {
-  readonly label: string;
-  readonly onPress: () => void;
-  readonly pending?: boolean;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      disabled={pending}
-      onPress={onPress}
-      style={styles.action}
-    >
-      {pending ? (
-        <ActivityIndicator color="#07111f" />
-      ) : (
-        <Text style={styles.actionText}>{label}</Text>
-      )}
-    </Pressable>
-  );
-}
 
 function AccountDetail({
   account,
@@ -60,28 +41,28 @@ function AccountDetail({
     (item) => item.accountId === account.accountId,
   );
   return (
-    <View accessibilityLabel="선택한 계좌 상세" style={styles.detail}>
-      <Text style={styles.sectionTitle}>
-        계좌 상세 · {account.maskedAccountNumber}
-      </Text>
-      <Text style={styles.amount}>
-        {formatWon(account.cashBalance, amountsHidden)}
-      </Text>
+    <Card variant="warm" accessibilityLabel="선택한 계좌 상세">
+      <SectionHeader title={`계좌 상세 · ${account.maskedAccountNumber}`} />
+      <MoneyValue
+        hidden={amountsHidden}
+        size="large"
+        value={account.cashBalance}
+      />
       {accountHoldings.map((holding) => (
-        <View key={holding.holdingId} style={styles.row}>
-          <View>
-            <Text style={styles.rowTitle}>{holding.displayName}</Text>
-            <Text style={styles.muted}>
-              {formatQuantity(holding.quantity)} ·{' '}
-              {displayLabel(holding.assetClass)}
-            </Text>
-          </View>
-          <Text style={styles.rowValue}>
-            {formatWon(holding.marketValue, amountsHidden)}
-          </Text>
-        </View>
+        <ListRow
+          description={`${formatQuantity(holding.quantity)} · ${displayLabel(holding.assetClass)}`}
+          key={holding.holdingId}
+          title={holding.displayName}
+          trailing={
+            <MoneyValue
+              hidden={amountsHidden}
+              size="small"
+              value={holding.marketValue}
+            />
+          }
+        />
       ))}
-    </View>
+    </Card>
   );
 }
 
@@ -89,281 +70,242 @@ export function WealthDashboardScreen() {
   const amountsHidden = useMoneyVisibilityStore((state) => state.hidden);
   const [selected, setSelected] = useState<string>();
   const dashboard = useWealthDashboard(selected);
-  if (dashboard.pending)
+
+  if (dashboard.pending) {
     return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.center}>
-          <ActivityIndicator color="#39e8b5" />
-          <Text style={styles.muted}>자산 데이터를 불러오는 중</Text>
-        </View>
-      </SafeAreaView>
+      <Screen>
+        <LoadingState label="자산 정보를 준비하고 있습니다." />
+      </Screen>
     );
-  if (dashboard.error && !dashboard.hasData)
+  }
+
+  if (dashboard.error && !dashboard.hasData) {
     return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.center}>
-          <Text accessibilityRole="alert" style={styles.error}>
-            자산 데이터를 확인하지 못했습니다
-          </Text>
-          <Text style={styles.muted}>
-            {dashboard.error instanceof PlatformApiError
+      <Screen>
+        <ErrorState
+          action={<Button onPress={dashboard.retry}>다시 확인</Button>}
+          description={
+            dashboard.error instanceof PlatformApiError
               ? dashboard.error.message
-              : '잠시 후 다시 시도하세요.'}
-          </Text>
-          <Action label="다시 확인" onPress={dashboard.retry} />
-        </View>
-      </SafeAreaView>
+              : '잠시 후 다시 시도해 주세요.'
+          }
+          title="자산 정보를 확인하지 못했습니다."
+        />
+      </Screen>
     );
+  }
 
   const connection = dashboard.data.connections[0];
   const summary = dashboard.data.summary;
   const selectedAccount = dashboard.data.account;
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.eyebrow}>자산 샌드박스 · 대시보드</Text>
-        <Text accessibilityRole="header" style={styles.title}>
-          자산 현황
-        </Text>
-        <Text style={styles.disclaimer}>
-          테스트 데이터만 사용합니다 · 실제 금융서비스나 투자 조언이 아닙니다.
-        </Text>
-        {dashboard.refreshing ? (
-          <Text accessibilityLiveRegion="polite" style={styles.muted}>
-            최신 자산 데이터를 확인 중입니다.
-          </Text>
-        ) : null}
-        {dashboard.error ? (
-          <View accessibilityRole="alert" style={styles.warningCard}>
-            <Text style={styles.sectionTitle}>
-              일부 자산 데이터를 갱신하지 못했습니다
-            </Text>
-            <Text style={styles.muted}>확인된 데이터는 계속 표시합니다.</Text>
-            <Action label="일부 데이터 다시 확인" onPress={dashboard.retry} />
-          </View>
-        ) : null}
-        {dashboard.syncError ? (
-          <Text accessibilityRole="alert" style={styles.errorBanner}>
-            연결 또는 동기화 요청을 완료하지 못했습니다. 다시 시도해 주세요.
-          </Text>
-        ) : null}
-        {!connection ? (
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>기관 연결이 필요합니다</Text>
-            <Text style={styles.muted}>테스트 기관만 연결됩니다.</Text>
-            <Action
-              label="기관 연결"
-              pending={dashboard.createConnection.isPending}
-              onPress={() => dashboard.createConnection.mutate()}
-            />
-          </View>
-        ) : (
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>
-              기관 연결 · {displayLabel(connection.status)}
-            </Text>
-            <Text style={styles.muted}>
-              마지막 동기화 {formatDateTime(connection.lastSuccessfulSyncAt)}
-            </Text>
-            <Action
-              label="지금 동기화"
-              pending={
-                dashboard.startSync.isPending ||
-                (dashboard.sync !== undefined &&
-                  !['COMPLETED', 'FAILED'].includes(dashboard.sync.status))
-              }
-              onPress={() =>
-                dashboard.startSync.mutate(connection.connectionId)
-              }
-            />
-            {dashboard.sync ? (
-              <Text accessibilityLiveRegion="polite" style={styles.muted}>
-                동기화 {displayLabel(dashboard.sync.status)} · 계좌{' '}
-                {dashboard.sync.counts.accounts} / 보유{' '}
-                {dashboard.sync.counts.holdings} / 거래{' '}
-                {dashboard.sync.counts.transactions}
-              </Text>
-            ) : null}
-          </View>
-        )}
-        {summary ? (
-          <View style={styles.card}>
-            <Text style={styles.muted}>총 자산 · {summary.asOfDate}</Text>
-            {summary.lastSyncedAt === null ? (
-              <Text style={styles.stale}>동기화 전 데이터</Text>
-            ) : null}
-            <Text style={styles.total}>
-              {formatWon(summary.totalAssets, amountsHidden)}
-            </Text>
-            <Text style={styles.muted}>
-              현금 {formatWon(summary.cash, amountsHidden)} · 투자{' '}
-              {formatWon(summary.investments, amountsHidden)}
-            </Text>
-            <AssetCharts
-              allocation={summary.allocation}
-              history={dashboard.data.history}
-            />
-          </View>
-        ) : null}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>계좌</Text>
-          {dashboard.data.accounts.length === 0 ? (
-            <Text style={styles.muted}>동기화된 계좌가 없습니다.</Text>
-          ) : (
-            dashboard.data.accounts.map((account) => (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`${account.maskedAccountNumber} 계좌 상세`}
-                key={account.accountId}
-                onPress={() => setSelected(account.accountId)}
-                style={styles.row}
-              >
-                <View>
-                  <Text style={styles.rowTitle}>
-                    {isMaskedAccountIdentifier(account.maskedAccountNumber)
-                      ? account.maskedAccountNumber
-                      : '***-**-****'}
-                  </Text>
-                  <Text style={styles.muted}>
-                    {displayLabel(account.accountType)} ·{' '}
-                    {displayLabel(account.status)}
-                  </Text>
-                </View>
-                <Text style={styles.rowValue}>
-                  {formatWon(account.cashBalance, amountsHidden)}
-                </Text>
-              </Pressable>
-            ))
-          )}
-        </View>
-        {dashboard.accountPending ? (
-          <View style={styles.detail}>
-            <ActivityIndicator color="#39e8b5" />
-            <Text style={styles.muted}>계좌 상세를 불러오는 중</Text>
-          </View>
-        ) : null}
-        {dashboard.accountError ? (
-          <View accessibilityRole="alert" style={styles.warningCard}>
-            <Text style={styles.sectionTitle}>
-              계좌 상세를 확인하지 못했습니다
-            </Text>
-            <Action
-              label="계좌 상세 다시 확인"
-              onPress={dashboard.retryAccount}
-            />
-          </View>
-        ) : null}
-        {selectedAccount ? (
-          <AccountDetail
-            account={selectedAccount}
-            amountsHidden={amountsHidden}
-            holdings={dashboard.data.holdings}
+    <Screen>
+      <PageHeader
+        subtitle="내 자산을 한눈에 보고 필요한 순간에 관리하세요."
+        title="홈"
+      />
+      <AppText tone="secondary" variant="caption">
+        최근 업데이트{' '}
+        {summary?.lastSyncedAt
+          ? formatDateTime(summary.lastSyncedAt)
+          : '확인 전'}
+      </AppText>
+      {dashboard.refreshing ? (
+        <AppText
+          accessibilityLiveRegion="polite"
+          tone="secondary"
+          variant="caption"
+        >
+          최신 정보를 확인하고 있습니다.
+        </AppText>
+      ) : null}
+      {dashboard.error ? (
+        <>
+          <NoticeBanner
+            title="일부 정보를 갱신하지 못했습니다."
+            variant="warning"
+          >
+            확인된 정보는 계속 표시합니다.
+          </NoticeBanner>
+          <Button onPress={dashboard.retry} size="small" variant="secondary">
+            다시 확인
+          </Button>
+        </>
+      ) : null}
+      {dashboard.syncError ? (
+        <NoticeBanner title="연결을 완료하지 못했습니다." variant="danger">
+          잠시 후 다시 시도해 주세요.
+        </NoticeBanner>
+      ) : null}
+
+      {!connection ? (
+        <Card>
+          <SectionHeader title="기관 연결" />
+          <AppText tone="secondary" variant="body">
+            연결을 시작하면 계좌와 자산 정보를 확인할 수 있습니다.
+          </AppText>
+          <Button
+            loading={dashboard.createConnection.isPending}
+            onPress={() => dashboard.createConnection.mutate()}
+            variant="brand"
+          >
+            기관 연결
+          </Button>
+        </Card>
+      ) : (
+        <Card>
+          <SectionHeader
+            action={<StatusChip status={connection.status} />}
+            title="기관 연결"
           />
-        ) : null}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>최근 거래</Text>
-          {dashboard.data.transactions.length === 0 ? (
-            <Text style={styles.muted}>거래가 없습니다.</Text>
-          ) : (
-            dashboard.data.transactions.map((transaction) => (
-              <View key={transaction.transactionId} style={styles.row}>
-                <View>
-                  <Text style={styles.rowTitle}>
-                    {displayLabel(transaction.transactionType)}
-                  </Text>
-                  <Text style={styles.muted}>
-                    {formatDate(transaction.occurredAt)}
-                  </Text>
-                </View>
-                <Text style={styles.rowValue}>
-                  {formatWon(transaction.amount, amountsHidden)}
-                </Text>
-              </View>
-            ))
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          <AppText tone="secondary" variant="caption">
+            마지막 업데이트 {formatDateTime(connection.lastSuccessfulSyncAt)}
+          </AppText>
+          <Button
+            loading={
+              dashboard.startSync.isPending ||
+              (dashboard.sync !== undefined &&
+                !['COMPLETED', 'FAILED'].includes(dashboard.sync.status))
+            }
+            onPress={() => dashboard.startSync.mutate(connection.connectionId)}
+            variant="secondary"
+          >
+            지금 업데이트
+          </Button>
+          {dashboard.sync ? (
+            <AppText
+              accessibilityLiveRegion="polite"
+              tone="secondary"
+              variant="caption"
+            >
+              {displayLabel(dashboard.sync.status)} · 계좌{' '}
+              {dashboard.sync.counts.accounts}개 · 보유 자산{' '}
+              {dashboard.sync.counts.holdings}개
+            </AppText>
+          ) : null}
+        </Card>
+      )}
+
+      {summary ? (
+        <Card>
+          <AppText tone="secondary" variant="caption">
+            총 자산 · {summary.asOfDate}
+          </AppText>
+          {summary.lastSyncedAt === null ? (
+            <AppText tone="warning" variant="caption">
+              아직 업데이트 전입니다.
+            </AppText>
+          ) : null}
+          <MoneyValue
+            hidden={amountsHidden}
+            size="hero"
+            value={summary.totalAssets}
+          />
+          <AppText tone="secondary" variant="body">
+            현금{' '}
+            <MoneyValue
+              hidden={amountsHidden}
+              size="small"
+              value={summary.cash}
+            />{' '}
+            · 투자{' '}
+            <MoneyValue
+              hidden={amountsHidden}
+              size="small"
+              value={summary.investments}
+            />
+          </AppText>
+          <AssetCharts
+            allocation={summary.allocation}
+            history={dashboard.data.history}
+          />
+        </Card>
+      ) : null}
+
+      <Card>
+        <SectionHeader title="계좌" />
+        {dashboard.data.accounts.length === 0 ? (
+          <AppText tone="secondary" variant="body">
+            업데이트된 계좌가 없습니다.
+          </AppText>
+        ) : (
+          dashboard.data.accounts.map((account) => (
+            <ListRow
+              description={`${displayLabel(account.accountType)} · ${displayLabel(account.status)}`}
+              key={account.accountId}
+              onPress={() => setSelected(account.accountId)}
+              title={
+                isMaskedAccountIdentifier(account.maskedAccountNumber)
+                  ? account.maskedAccountNumber
+                  : '***-**-****'
+              }
+              trailing={
+                <MoneyValue
+                  hidden={amountsHidden}
+                  size="small"
+                  value={account.cashBalance}
+                />
+              }
+            />
+          ))
+        )}
+      </Card>
+
+      {dashboard.accountPending ? (
+        <Card variant="subtle">
+          <ActivityIndicator />
+          <AppText tone="secondary" variant="caption">
+            계좌 상세를 준비하고 있습니다.
+          </AppText>
+        </Card>
+      ) : null}
+      {dashboard.accountError ? (
+        <>
+          <NoticeBanner
+            title="계좌 상세를 확인하지 못했습니다."
+            variant="warning"
+          />
+          <Button
+            onPress={dashboard.retryAccount}
+            size="small"
+            variant="secondary"
+          >
+            다시 확인
+          </Button>
+        </>
+      ) : null}
+      {selectedAccount ? (
+        <AccountDetail
+          account={selectedAccount}
+          amountsHidden={amountsHidden}
+          holdings={dashboard.data.holdings}
+        />
+      ) : null}
+
+      <Card>
+        <SectionHeader title="최근 거래" />
+        {dashboard.data.transactions.length === 0 ? (
+          <AppText tone="secondary" variant="body">
+            최근 거래가 없습니다.
+          </AppText>
+        ) : (
+          dashboard.data.transactions.map((transaction) => (
+            <ListRow
+              description={formatDate(transaction.occurredAt)}
+              key={transaction.transactionId}
+              title={displayLabel(transaction.transactionType)}
+              trailing={
+                <MoneyValue
+                  hidden={amountsHidden}
+                  size="small"
+                  value={transaction.amount}
+                />
+              }
+            />
+          ))
+        )}
+      </Card>
+      <DemoDisclosure />
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  action: {
-    alignItems: 'center',
-    backgroundColor: '#39e8b5',
-    borderRadius: 12,
-    justifyContent: 'center',
-    marginTop: 16,
-    minHeight: 48,
-    paddingHorizontal: 16,
-  },
-  actionText: { color: '#07111f', fontSize: 14, fontWeight: '800' },
-  amount: { color: '#f4f7fb', fontSize: 24, fontWeight: '800', marginTop: 8 },
-  card: {
-    backgroundColor: '#101d2e',
-    borderColor: '#22334a',
-    borderRadius: 22,
-    borderWidth: 1,
-    marginTop: 16,
-    padding: 20,
-  },
-  center: {
-    alignItems: 'center',
-    flex: 1,
-    gap: 16,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  content: { paddingBottom: 48, paddingHorizontal: 20, paddingTop: 36 },
-  detail: {
-    backgroundColor: '#14243a',
-    borderRadius: 22,
-    marginTop: 16,
-    padding: 20,
-  },
-  disclaimer: { color: '#39e8b5', fontSize: 11, lineHeight: 17, marginTop: 12 },
-  error: {
-    color: '#f8b4b4',
-    fontSize: 19,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  errorBanner: {
-    color: '#f8b4b4',
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: 12,
-  },
-  eyebrow: {
-    color: '#39e8b5',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.2,
-  },
-  muted: { color: '#91a1b7', fontSize: 12, lineHeight: 18, marginTop: 4 },
-  row: {
-    alignItems: 'center',
-    borderTopColor: '#22334a',
-    borderTopWidth: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 14,
-    minHeight: 52,
-    paddingTop: 12,
-  },
-  rowTitle: { color: '#eaf0f8', fontSize: 14, fontWeight: '700' },
-  rowValue: { color: '#cad5e3', fontSize: 13, marginLeft: 12 },
-  safe: { backgroundColor: '#07111f', flex: 1 },
-  sectionTitle: { color: '#f4f7fb', fontSize: 17, fontWeight: '800' },
-  stale: { color: '#f6c76a', fontSize: 11, marginTop: 6 },
-  title: { color: '#f4f7fb', fontSize: 31, fontWeight: '800', marginTop: 16 },
-  total: { color: '#f4f7fb', fontSize: 30, fontWeight: '800', marginTop: 7 },
-  warningCard: {
-    backgroundColor: '#30271a',
-    borderColor: '#6b5429',
-    borderRadius: 16,
-    borderWidth: 1,
-    marginTop: 16,
-    padding: 16,
-  },
-});

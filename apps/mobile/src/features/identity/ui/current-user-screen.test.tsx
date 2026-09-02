@@ -64,7 +64,6 @@ describe('CurrentUserScreen', () => {
 
     expect(await view.findByText('테스트 사용자 A')).toBeTruthy();
     expect(view.getByText('균형형')).toBeTruthy();
-    expect(view.getByText('기본 데이터셋 1')).toBeTruthy();
 
     fireEvent.press(view.getByRole('button', { name: '로컬 세션 로그아웃' }));
     await waitFor(() => expect(manager.getSessionPresence()).toBe('absent'));
@@ -87,7 +86,7 @@ describe('CurrentUserScreen', () => {
     const { view } = await renderScreen(new DeniedApi({ latencyMs: 0 }));
 
     expect(
-      await view.findByText('사용자 연결을 확인하지 못했습니다'),
+      await view.findByText('내 정보를 확인하지 못했습니다.'),
     ).toBeTruthy();
     expect(
       view.queryByRole('button', { name: '현재 사용자 다시 확인' }),

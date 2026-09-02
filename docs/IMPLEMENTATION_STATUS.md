@@ -1,10 +1,10 @@
 # 구현 상태
 
-- 현재 Milestone: 6A — 로컬 하드닝 완료 / 단계 11 STOP
-- 전체 상태: DONE
-- 마지막 갱신: 2026-09-02
-- 마지막 완료 ID: DEV-0014
-- 다음 작업 ID: 없음 — 단계 11은 새 사용자 승인 필요
+- 현재 Milestone: 7A — 모바일 고객 UI 디자인 리팩터링
+- 전체 상태: IN_PROGRESS
+- 마지막 갱신: 2026-09-03
+- 마지막 완료 ID: FE-0015
+- 다음 작업 ID: FE-0016
 - 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
@@ -266,6 +266,19 @@
 - [x] platform/simulator health와 Keycloak discovery/PKCE redirect 확인
 - [x] 실제 `/api/v1/me` 무인증 401 ProblemDetails/trace header 확인
 - [x] production image build와 runtime dependency audit 0
+
+## FE-0015 모바일 고객 UI 디자인 리팩터링 — 진행 상태
+
+- [x] Wealth Flow 독립 브랜드 모듈과 light-first 토큰/공통 primitive 추가
+- [x] 홈·종목·플랜·내 정보 4개 bottom tab 및 주문 stack route 추가
+- [x] 로그인/App Lock/자산/시세/시뮬레이션/주문/내 정보 화면을 공통 컴포넌트로 전환
+- [x] 금액 숨김, 상태 chip, demo disclosure와 접근성 메시지 유지
+- [x] 자산·시뮬레이션·시세 차트를 line/area 상호작용과 Reduce Motion 기준으로 갱신
+- [x] feature UI/app route raw hex·금지 고객 문구 검사 스크립트 추가
+- [x] app.json 표시 이름을 Wealth Flow로 변경하고 light UI 고정 (scheme/package identifier 유지)
+- [x] 공통 primitive strict typecheck 실패 ISSUE-0013/FE-ISSUE-0012를 수정·검증
+- [x] mobile lint/typecheck와 35 files/104 tests 통과
+- [ ] 다음 FE-0016: navigation/export smoke와 디자인 회귀 검증 보강
 
 ## 외부 조건
 

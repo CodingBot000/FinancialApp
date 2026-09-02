@@ -1,6 +1,6 @@
 # Frontend Workstream Issue와 Gap Register
 
-- 다음 ISSUE ID: `FE-ISSUE-0012`
+- 다음 ISSUE ID: `FE-ISSUE-0016`
 - 다음 GAP ID: `FE-GAP-0005`
 - active issue: `FE-ISSUE-0001`
 - active gap: `FE-GAP-0002`, `FE-GAP-0004`
@@ -8,6 +8,66 @@
 frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한다. backend·계약·milestone 완료에도 영향을 주면 handoff와 중앙 `ISSUE_REGISTER.md`에 연결한다.
 
 ## Active Issue
+
+### FE-ISSUE-0015 — Local dependency and Docker verification setup
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 발견 FE: FE-0015
+- 마지막 갱신: 2026-09-03
+- 관련 contract revision: `platform-v1` unchanged
+- 중앙 연결: `ISSUE-0016`
+- 내용: pull 후 `node_modules`가 새 backend dependencies와 동기화되지 않았고, plain verify에는 Colima Testcontainers socket 전달이 없었다. Node 24 loopback timeout fixture도 10ms에서 간헐적으로 요청 도착 전 중단됐다.
+- 영향: fresh verification 첫 실행 실패.
+- 해결 조건: `npm ci`, local Docker wrapper와 안정적인 timeout fixture로 전체 gate 통과.
+- 목표 FE: FE-0015
+- 해결 FE: FE-0015
+- 검증: Node 24 `npm ci` 및 `make verify` 전체 통과; platform brokerage adapter 5 tests와 migration suites 포함. remote DB/seed/deploy는 사용하지 않았다.
+
+### FE-ISSUE-0014 — Shared primitive imported market feature model
+
+- 상태: RESOLVED
+- 심각도: MEDIUM
+- 발견 FE: FE-0015
+- 마지막 갱신: 2026-09-03
+- 관련 contract revision: `platform-v1` unchanged
+- 중앙 연결: `ISSUE-0015`
+- 내용: `MarketChange`가 feature-owned market display model을 import해 shared layer의 boundary rule을 어겼다.
+- 영향: architecture check 실패. API와 runtime business logic은 변경되지 않았다.
+- 해결 조건: formatter를 shared format module로 이동하고 feature model public import를 보존할 것.
+- 목표 FE: FE-0015
+- 해결 FE: FE-0015
+- 검증: shared formatter + feature re-export adapter로 수정 후 architecture 154 files, typecheck와 mobile 104 tests 통과.
+
+### FE-ISSUE-0013 — Expo export workspace/runtime invocation
+
+- 상태: RESOLVED
+- 심각도: LOW
+- 발견 FE: FE-0015
+- 마지막 갱신: 2026-09-03
+- 관련 contract revision: `platform-v1` unchanged
+- 중앙 연결: `ISSUE-0014`
+- 내용: root cwd에서 실행한 Expo export는 `node_modules/expo/AppEntry.js`의 `../../App` 해석으로 실패했고, 셸 command hash가 Node 20.15를 선택했다.
+- 영향: 검증 명령 한 번이 실패했다. 구현 실패나 코드 비활성화는 없었다.
+- 해결 조건: mobile cwd와 Node 24 PATH를 명시해 export 성공을 확인할 것.
+- 목표 FE: FE-0015
+- 해결 FE: FE-0015
+- 검증: Node `v24.19.0` explicit PATH + `apps/mobile` cwd에서 web export 성공(2,186 modules). Node 20 경고가 재현되지 않았다.
+
+### FE-ISSUE-0012 — Design primitive API assumptions
+
+- 상태: RESOLVED
+- 심각도: LOW
+- 발견 FE: FE-0015
+- 마지막 갱신: 2026-09-03
+- 관련 contract revision: `platform-v1` unchanged
+- 중앙 연결: `ISSUE-0013`
+- 내용: 신규 공통 컴포넌트가 React Native에서 제공하지 않는 `ReactNode` type export와 기존 `formatWon(value, hidden?)` 계약을 사용했다.
+- 영향: design-system slice 첫 typecheck가 실패했다.
+- 해결 조건: React type import를 사용하고 기존 formatter와 호환되는 signed rendering을 유지하면서 typecheck를 통과할 것.
+- 목표 FE: FE-0015
+- 해결 FE: FE-0015
+- 검증: primitive type imports/formatter 호출을 수정하고 Prettier 후 mobile strict typecheck 통과.
 
 ### FE-ISSUE-0001 — Expo 57 transitive dependency advisory 재확인
 

@@ -64,6 +64,6 @@ export function displayContractVersion(value: string): string {
 export function displaySimulationDisclaimer(value: string): string {
   return value ===
     'Synthetic financial simulation for technical demonstration only.'
-    ? '실제 수익을 보장하지 않는 테스트 시뮬레이션 결과입니다.'
-    : '실제 수익을 보장하지 않는 시뮬레이션 결과입니다.';
+    ? '예시 결과이며 실제 수익을 보장하지 않습니다.'
+    : '실제 수익을 보장하지 않는 예시 결과입니다.';
 }

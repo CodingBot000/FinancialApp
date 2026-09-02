@@ -83,7 +83,7 @@ export class ExpoBiometricGate implements BiometricGate {
       promptDescription:
         this.prompt.description ??
         '이 인증은 기기 안에서만 앱 잠금을 해제합니다.',
-      promptMessage: this.prompt.message ?? 'Wealth Sandbox 잠금 해제',
+      promptMessage: this.prompt.message ?? 'Wealth Flow 잠금 해제',
       promptSubtitle: this.prompt.subtitle ?? '로컬 생체인증',
       requireConfirmation: true,
     });

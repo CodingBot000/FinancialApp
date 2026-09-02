@@ -444,3 +444,16 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 - 전체 Milestone 6 완료는 향후 별도 실행에서 승인된 원격 환경의 migration, KMS, HTTPS, Preview Build, 원격 E2E와 rollback 증거까지 있어야 선언할 수 있다.
 - iOS/Android 실기기, AWS/Lightsail 같은 외부 검증은 자동 결과와 구분해 기록한다.
 - `IMPLEMENTATION_STATUS.md`, 실제 Git/DB 상태와 테스트 결과가 다르면 문서의 완료 표시를 되돌리고 issue/gap을 등록한다.
+
+## 10. Design Refactor Addendum — FE-0015 onward
+
+사용자 승인 범위에 따라 단계 10 local hardening 완료 이후에도 backend/API/DB를 변경하지 않는 모바일 고객 UI 디자인 리팩터링을 단일 `main`에서 진행한다. 원격 단계 11 STOP gate는 그대로 유지한다.
+
+- 독립 브랜드는 `Wealth Flow`로 표시하고 기존 scheme/package identifier는 유지한다.
+- shared design-system token/primitive를 feature UI보다 먼저 사용하며 feature/app route raw hex와 고객-facing technical copy를 검사한다.
+- bottom tab은 홈·종목·플랜·내 정보로 고정하고 주문은 stack route로 둔다. auth/AppLock/provider/business hook과 API 계약은 변경하지 않는다.
+- line/area/donut/range chart와 selected tooltip, Reduce Motion을 mobile-only scope에서 검증한다.
+- 각 FE slice는 구현·component/route test·문서 갱신 후 atomic commit으로 `origin/main`에 push하고 local/remote SHA와 working tree를 확인한다.
+- 원격 DB 사전 설정·endpoint/credential 요청·연결·catalog/migration/seed/deploy는 이 addendum에서도 실행하지 않는다.
+
+현재 기록: FE-0015 디자인 시스템 및 주요 화면 전환 완료. 다음 FE-0016은 Expo export/navigation smoke와 디자인 회귀 검증이다.

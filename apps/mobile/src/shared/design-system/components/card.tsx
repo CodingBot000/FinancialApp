@@ -1,0 +1,44 @@
+import { type ReactNode } from 'react';
+import { StyleSheet, View, type ViewProps } from 'react-native';
+
+import { colors, radius, spacing } from '../tokens';
+
+export type CardVariant =
+  'default' | 'subtle' | 'warm' | 'info' | 'warning' | 'danger';
+
+const backgrounds: Record<CardVariant, string> = {
+  default: colors.surface.primary,
+  subtle: colors.surface.subtle,
+  warm: colors.surface.warm,
+  info: colors.surface.info,
+  warning: colors.surface.warning,
+  danger: colors.surface.danger,
+};
+
+export function Card({
+  children,
+  style,
+  variant = 'default',
+  ...props
+}: ViewProps & {
+  readonly children: ReactNode;
+  readonly variant?: CardVariant;
+}) {
+  return (
+    <View
+      {...props}
+      style={[styles.base, { backgroundColor: backgrounds[variant] }, style]}
+    >
+      {children}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  base: {
+    borderColor: colors.border.subtle,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    padding: spacing[5],
+  },
+});

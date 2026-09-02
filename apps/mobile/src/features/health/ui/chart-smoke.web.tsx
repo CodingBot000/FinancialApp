@@ -1,11 +1,12 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { chartSmokeData } from '../model/chart-smoke-data';
+import { colors } from '../../../shared/design-system';
 
 export function ChartSmoke() {
   return (
     <View
-      accessibilityLabel="재현 가능한 자산 추이 차트. 100에서 151로 변화"
+      accessibilityLabel="자산 추이 차트. 100에서 151로 변화"
       accessible
       style={styles.chart}
     >
@@ -20,14 +21,14 @@ export function ChartSmoke() {
           />
         ))}
       </View>
-      <Text style={styles.caption}>100 → 151 · 재현 가능한 테스트 추이</Text>
+      <Text style={styles.caption}>100 → 151 · 예시 추이</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   bar: {
-    backgroundColor: '#39e8b5',
+    backgroundColor: colors.brand.primary,
     borderRadius: 3,
     flex: 1,
     minHeight: 12,
@@ -40,7 +41,7 @@ const styles = StyleSheet.create({
     height: 110,
   },
   caption: {
-    color: '#718198',
+    color: colors.text.tertiary,
     fontSize: 11,
     marginTop: 10,
   },

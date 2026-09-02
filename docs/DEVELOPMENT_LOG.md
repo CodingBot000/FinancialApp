@@ -670,6 +670,59 @@
 
 - `FE-0013`: BUY order와 UNKNOWN recovery mobile vertical slice
 
+## FE-0015 — Wealth Flow 고객 UI 디자인 시스템
+
+- 날짜: 2026-09-03
+- Milestone: 7A 모바일 고객 UI 디자인 리팩터링
+- 상태: COMPLETED
+- base commit: `d7b802c8226be203dd5f62ee4b3a3af608970c4c`
+- contract revision: `platform-v1` unchanged
+- 예정 commit: `feat(fe): apply Wealth Flow design system [FE-0015]`
+
+### 완료
+
+- light-first color/typography/spacing/radius/shadow/motion token과 Wealth Flow brand module을 추가했다.
+- AppText, Screen, PageHeader, Card, Button, field, money/metric/status/notice/list/empty/error primitive를 추가하고 component test를 작성했다.
+- 홈·종목·플랜·내 정보 bottom tab과 주문 route를 도입했으며 기존 API/auth/AppLock/business hook 경계를 유지했다.
+- customer UI의 dark raw hex와 샌드박스·데이터셋·개발자 도구 노출을 제거하고 데모 안내·금액 숨김·접근성 문구를 유지했다.
+- 자산/시세 line·area 차트, 시뮬레이션 범위 chart tooltip과 Reduce Motion, 자산 배분 donut 표현을 적용했다.
+- feature UI와 app route의 raw color/기술 문구를 검사하는 `design-system:check` gate를 추가했다.
+- app 표시 이름을 Wealth Flow, light UI로 갱신하고 scheme/package identifier는 보존했다.
+
+### 변경 파일
+
+- `apps/mobile/src/shared/design-system/**`
+- `apps/mobile/src/app/**`
+- `apps/mobile/src/features/**/ui/**`
+- `apps/mobile/src/features/market/model/market-display.ts`
+- `apps/mobile/app.json`
+- `apps/mobile/scripts/check-design-system.mjs`
+- `apps/mobile/package.json`, `package.json`
+- `docs/IMPLEMENTATION_STATUS.md`, `docs/ISSUE_REGISTER.md`
+
+### 검증
+
+- `npm run design-system:check -w @finapp/mobile`: 24 UI files 통과
+- `npm run architecture:check -w @finapp/mobile`: 154 source files 통과
+- `npm run lint -w @finapp/mobile`: 통과
+- `npm run typecheck -w @finapp/mobile`: 통과
+- `npm run test -w @finapp/mobile -- --run`: 35 files/104 tests 통과
+- `make verify` (Node 24 + Colima local Docker wrapper): root format/contract/security/architecture/lint/typecheck/build, mobile 35/104, simulator 4/12, platform 19/90 통과
+- 초기 공통 primitive typecheck 실패는 `ISSUE-0013`/`FE-ISSUE-0012`로 기록하고 수정 후 재검증했다.
+- root cwd/Node PATH가 다른 Expo export 실패는 `ISSUE-0014`/`FE-ISSUE-0013`으로 기록하고 mobile cwd·Node 24 조건에서 재검증했다.
+- shared primitive의 feature import 경계 위반은 `ISSUE-0015`/`FE-ISSUE-0014`로 기록하고 shared formatter/re-export adapter로 수정한 뒤 architecture gate를 통과했다.
+- pull 직후 dependency/runtime verify drift는 `ISSUE-0016`/`FE-ISSUE-0015`로 기록했다. Node 24 `npm ci`, Colima wrapper와 50ms timeout fixture 조정 후 `make verify` 전체 gate를 통과했다.
+
+### 이슈·누락·Handoff
+
+- `ISSUE-0013`, `FE-ISSUE-0012` RESOLVED.
+- 다음 slice에서 navigation/export smoke와 실제 iOS/Android 화면 회귀 검증을 추가한다.
+- 원격 DB, credential, migration, seed와 배포는 실행하지 않았다.
+
+### 다음 작업
+
+- `FE-0016`: navigation/export smoke와 디자인 회귀 검증 보강
+
 ## BE-0012 — Settlement Transactional Outbox
 
 - 날짜: 2026-09-02

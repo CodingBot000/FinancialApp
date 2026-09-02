@@ -3,13 +3,14 @@ import { useReducedMotion } from 'react-native-reanimated';
 import { CartesianChart, Line } from 'victory-native';
 
 import { chartSmokeData } from '../model/chart-smoke-data';
+import { colors } from '../../../shared/design-system';
 
 export function ChartSmoke() {
   const reduceMotion = useReducedMotion();
 
   return (
     <View
-      accessibilityLabel="재현 가능한 자산 추이 차트. 100에서 151로 변화"
+      accessibilityLabel="자산 추이 차트. 100에서 151로 변화"
       accessible
       style={styles.chart}
     >
@@ -25,7 +26,7 @@ export function ChartSmoke() {
             {...(reduceMotion
               ? {}
               : { animate: { duration: 650, type: 'timing' as const } })}
-            color="#39e8b5"
+            color={colors.brand.primary}
             curveType="natural"
             points={points.assets}
             strokeCap="round"

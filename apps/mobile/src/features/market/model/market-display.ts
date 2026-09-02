@@ -4,6 +4,8 @@ import type {
   MarketSource,
 } from '../../../shared/api';
 
+export { formatMarketRate } from '../../../shared/format/market-format';
+
 export interface MarketChartPoint {
   readonly [key: string]: number;
   readonly close: number;
@@ -25,21 +27,11 @@ export function marketNameLabel(market: 'KOSPI' | 'KOSDAQ'): string {
 }
 
 export function marketSourceLabel(source: MarketSource): string {
-  return source === 'KIS' ? '한국투자증권' : '로컬 테스트 데이터';
+  return source === 'KIS' ? '한국투자증권 제공' : '예시 시세';
 }
 
 export function marketFreshnessLabel(freshness: MarketFreshness): string {
   return freshness === 'FRESH' ? '최신 데이터' : '지연 데이터';
-}
-
-export function formatMarketRate(value: string): string {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return '등락률 확인 필요';
-  const sign = number > 0 ? '+' : '';
-  return `${sign}${number.toLocaleString('ko-KR', {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2,
-  })}%`;
 }
 
 export function formatMarketVolume(value: string): string {
