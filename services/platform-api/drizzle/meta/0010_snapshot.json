@@ -1,0 +1,3931 @@
+{
+  "id": "aad3c744-708d-4d60-a665-b598c5d4f694",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "finapp_identity.finapp_app_user": {
+      "name": "finapp_app_user",
+      "schema": "finapp_identity",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ACTIVE'"
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dataset_version": {
+          "name": "dataset_version",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "synthetic_data": {
+          "name": "synthetic_data",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "finapp_pk_app_user": {
+          "name": "finapp_pk_app_user",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_app_user_status": {
+          "name": "finapp_ck_app_user_status",
+          "value": "\"finapp_identity\".\"finapp_app_user\".\"status\" IN ('ACTIVE', 'DISABLED')"
+        },
+        "finapp_ck_app_user_synthetic": {
+          "name": "finapp_ck_app_user_synthetic",
+          "value": "\"finapp_identity\".\"finapp_app_user\".\"synthetic_data\" = true"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_wealth.finapp_asset_snapshot": {
+      "name": "finapp_asset_snapshot",
+      "schema": "finapp_wealth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "as_of_date": {
+          "name": "as_of_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'KRW'"
+        },
+        "total_assets": {
+          "name": "total_assets",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cash_amount": {
+          "name": "cash_amount",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "investment_amount": {
+          "name": "investment_amount",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "finapp_idx_asset_snapshot_user_date": {
+          "name": "finapp_idx_asset_snapshot_user_date",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "as_of_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_asset_snapshot_user": {
+          "name": "finapp_fk_asset_snapshot_user",
+          "tableFrom": "finapp_asset_snapshot",
+          "tableTo": "finapp_app_user",
+          "schemaTo": "finapp_identity",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_asset_snapshot": {
+          "name": "finapp_pk_asset_snapshot",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_asset_snapshot_user_date": {
+          "name": "finapp_uq_asset_snapshot_user_date",
+          "nullsNotDistinct": false,
+          "columns": ["user_id", "as_of_date", "currency"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_asset_snapshot_amounts": {
+          "name": "finapp_ck_asset_snapshot_amounts",
+          "value": "\"finapp_wealth\".\"finapp_asset_snapshot\".\"total_assets\" >= 0 AND \"finapp_wealth\".\"finapp_asset_snapshot\".\"cash_amount\" >= 0 AND \"finapp_wealth\".\"finapp_asset_snapshot\".\"investment_amount\" >= 0 AND \"finapp_wealth\".\"finapp_asset_snapshot\".\"total_assets\" = \"finapp_wealth\".\"finapp_asset_snapshot\".\"cash_amount\" + \"finapp_wealth\".\"finapp_asset_snapshot\".\"investment_amount\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_wealth.finapp_asset_snapshot_allocation": {
+      "name": "finapp_asset_snapshot_allocation",
+      "schema": "finapp_wealth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "snapshot_id": {
+          "name": "snapshot_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "asset_class": {
+          "name": "asset_class",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount": {
+          "name": "amount",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "weight": {
+          "name": "weight",
+          "type": "numeric(12, 8)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "finapp_fk_snapshot_allocation_snapshot": {
+          "name": "finapp_fk_snapshot_allocation_snapshot",
+          "tableFrom": "finapp_asset_snapshot_allocation",
+          "tableTo": "finapp_asset_snapshot",
+          "schemaTo": "finapp_wealth",
+          "columnsFrom": ["snapshot_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_asset_snapshot_allocation": {
+          "name": "finapp_pk_asset_snapshot_allocation",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_snapshot_allocation_class": {
+          "name": "finapp_uq_snapshot_allocation_class",
+          "nullsNotDistinct": false,
+          "columns": ["snapshot_id", "asset_class"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_snapshot_allocation_values": {
+          "name": "finapp_ck_snapshot_allocation_values",
+          "value": "\"finapp_wealth\".\"finapp_asset_snapshot_allocation\".\"amount\" >= 0 AND \"finapp_wealth\".\"finapp_asset_snapshot_allocation\".\"weight\" BETWEEN 0 AND 1"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_simulation.finapp_assumption_set": {
+      "name": "finapp_assumption_set",
+      "schema": "finapp_simulation",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version_name": {
+          "name": "version_name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ACTIVE'"
+        },
+        "asset_assumptions": {
+          "name": "asset_assumptions",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "correlation_matrix": {
+          "name": "correlation_matrix",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "effective_from": {
+          "name": "effective_from",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "finapp_pk_assumption_set": {
+          "name": "finapp_pk_assumption_set",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_assumption_set_version": {
+          "name": "finapp_uq_assumption_set_version",
+          "nullsNotDistinct": false,
+          "columns": ["version_name"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_assumption_set_status": {
+          "name": "finapp_ck_assumption_set_status",
+          "value": "\"finapp_simulation\".\"finapp_assumption_set\".\"status\" IN ('ACTIVE', 'RETIRED')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_audit.finapp_audit_event": {
+      "name": "finapp_audit_event",
+      "schema": "finapp_audit",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "action": {
+          "name": "action",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resource_type": {
+          "name": "resource_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resource_id": {
+          "name": "resource_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "result": {
+          "name": "result",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason_code": {
+          "name": "reason_code",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        }
+      },
+      "indexes": {
+        "finapp_idx_audit_user_time": {
+          "name": "finapp_idx_audit_user_time",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "occurred_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "finapp_idx_audit_action_time": {
+          "name": "finapp_idx_audit_action_time",
+          "columns": [
+            {
+              "expression": "action",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "occurred_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_audit_event_user": {
+          "name": "finapp_fk_audit_event_user",
+          "tableFrom": "finapp_audit_event",
+          "tableTo": "finapp_app_user",
+          "schemaTo": "finapp_identity",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_audit_event": {
+          "name": "finapp_pk_audit_event",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_audit_result": {
+          "name": "finapp_ck_audit_result",
+          "value": "\"finapp_audit\".\"finapp_audit_event\".\"result\" IN ('SUCCESS', 'FAILURE', 'UNKNOWN')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_wealth.finapp_cash_account": {
+      "name": "finapp_cash_account",
+      "schema": "finapp_wealth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "available_balance": {
+          "name": "available_balance",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "reserved_balance": {
+          "name": "reserved_balance",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'KRW'"
+        },
+        "version": {
+          "name": "version",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "0"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "finapp_fk_cash_account_user": {
+          "name": "finapp_fk_cash_account_user",
+          "tableFrom": "finapp_cash_account",
+          "tableTo": "finapp_app_user",
+          "schemaTo": "finapp_identity",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finapp_fk_cash_account_account": {
+          "name": "finapp_fk_cash_account_account",
+          "tableFrom": "finapp_cash_account",
+          "tableTo": "finapp_financial_account",
+          "schemaTo": "finapp_wealth",
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_cash_account": {
+          "name": "finapp_pk_cash_account",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_cash_account_account": {
+          "name": "finapp_uq_cash_account_account",
+          "nullsNotDistinct": false,
+          "columns": ["account_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_cash_account_balance": {
+          "name": "finapp_ck_cash_account_balance",
+          "value": "\"finapp_wealth\".\"finapp_cash_account\".\"available_balance\" >= 0 AND \"finapp_wealth\".\"finapp_cash_account\".\"reserved_balance\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_trading.finapp_cash_ledger_entry": {
+      "name": "finapp_cash_ledger_entry",
+      "schema": "finapp_trading",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cash_account_id": {
+          "name": "cash_account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entry_type": {
+          "name": "entry_type",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount": {
+          "name": "amount",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "balance_after": {
+          "name": "balance_after",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "finapp_fk_ledger_cash_account": {
+          "name": "finapp_fk_ledger_cash_account",
+          "tableFrom": "finapp_cash_ledger_entry",
+          "tableTo": "finapp_cash_account",
+          "schemaTo": "finapp_wealth",
+          "columnsFrom": ["cash_account_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finapp_fk_ledger_order": {
+          "name": "finapp_fk_ledger_order",
+          "tableFrom": "finapp_cash_ledger_entry",
+          "tableTo": "finapp_trade_order",
+          "schemaTo": "finapp_trading",
+          "columnsFrom": ["order_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_cash_ledger_entry": {
+          "name": "finapp_pk_cash_ledger_entry",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_ledger_order_entry_type": {
+          "name": "finapp_uq_ledger_order_entry_type",
+          "nullsNotDistinct": false,
+          "columns": ["order_id", "entry_type"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_ledger_entry_type": {
+          "name": "finapp_ck_ledger_entry_type",
+          "value": "\"finapp_trading\".\"finapp_cash_ledger_entry\".\"entry_type\" IN ('RESERVE', 'RELEASE', 'SETTLE')"
+        },
+        "finapp_ck_ledger_balance": {
+          "name": "finapp_ck_ledger_balance",
+          "value": "\"finapp_trading\".\"finapp_cash_ledger_entry\".\"balance_after\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_wealth.finapp_financial_account": {
+      "name": "finapp_financial_account",
+      "schema": "finapp_wealth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "connection_id": {
+          "name": "connection_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "institution_code": {
+          "name": "institution_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "external_account_id_hash": {
+          "name": "external_account_id_hash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "masked_account_number": {
+          "name": "masked_account_number",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_type": {
+          "name": "account_type",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'KRW'"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ACTIVE'"
+        },
+        "opened_at": {
+          "name": "opened_at",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "closed_at": {
+          "name": "closed_at",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "finapp_idx_account_user_status": {
+          "name": "finapp_idx_account_user_status",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_financial_account_user": {
+          "name": "finapp_fk_financial_account_user",
+          "tableFrom": "finapp_financial_account",
+          "tableTo": "finapp_app_user",
+          "schemaTo": "finapp_identity",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finapp_fk_financial_account_connection": {
+          "name": "finapp_fk_financial_account_connection",
+          "tableFrom": "finapp_financial_account",
+          "tableTo": "finapp_institution_connection",
+          "schemaTo": "finapp_mydata",
+          "columnsFrom": ["connection_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_financial_account": {
+          "name": "finapp_pk_financial_account",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_account_connection_external": {
+          "name": "finapp_uq_account_connection_external",
+          "nullsNotDistinct": false,
+          "columns": ["connection_id", "external_account_id_hash"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "finapp_wealth.finapp_financial_transaction": {
+      "name": "finapp_financial_transaction",
+      "schema": "finapp_wealth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "external_transaction_id": {
+          "name": "external_transaction_id",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "transaction_type": {
+          "name": "transaction_type",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount": {
+          "name": "amount",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'KRW'"
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "raw_record_id": {
+          "name": "raw_record_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "finapp_idx_transaction_user_occurred": {
+          "name": "finapp_idx_transaction_user_occurred",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "occurred_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_financial_transaction_user": {
+          "name": "finapp_fk_financial_transaction_user",
+          "tableFrom": "finapp_financial_transaction",
+          "tableTo": "finapp_app_user",
+          "schemaTo": "finapp_identity",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finapp_fk_financial_transaction_account": {
+          "name": "finapp_fk_financial_transaction_account",
+          "tableFrom": "finapp_financial_transaction",
+          "tableTo": "finapp_financial_account",
+          "schemaTo": "finapp_wealth",
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finapp_fk_financial_transaction_raw": {
+          "name": "finapp_fk_financial_transaction_raw",
+          "tableFrom": "finapp_financial_transaction",
+          "tableTo": "finapp_raw_record",
+          "schemaTo": "finapp_mydata",
+          "columnsFrom": ["raw_record_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_financial_transaction": {
+          "name": "finapp_pk_financial_transaction",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_transaction_account_external": {
+          "name": "finapp_uq_transaction_account_external",
+          "nullsNotDistinct": false,
+          "columns": ["account_id", "external_transaction_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "finapp_trading.finapp_fund_reservation": {
+      "name": "finapp_fund_reservation",
+      "schema": "finapp_trading",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cash_account_id": {
+          "name": "cash_account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount": {
+          "name": "amount",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ACTIVE'"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "released_at": {
+          "name": "released_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "settled_at": {
+          "name": "settled_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "finapp_uq_reservation_order_active": {
+          "name": "finapp_uq_reservation_order_active",
+          "columns": [
+            {
+              "expression": "order_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"finapp_trading\".\"finapp_fund_reservation\".\"status\" = 'ACTIVE'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_reservation_order": {
+          "name": "finapp_fk_reservation_order",
+          "tableFrom": "finapp_fund_reservation",
+          "tableTo": "finapp_trade_order",
+          "schemaTo": "finapp_trading",
+          "columnsFrom": ["order_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finapp_fk_reservation_cash_account": {
+          "name": "finapp_fk_reservation_cash_account",
+          "tableFrom": "finapp_fund_reservation",
+          "tableTo": "finapp_cash_account",
+          "schemaTo": "finapp_wealth",
+          "columnsFrom": ["cash_account_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_fund_reservation": {
+          "name": "finapp_pk_fund_reservation",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_reservation_amount": {
+          "name": "finapp_ck_reservation_amount",
+          "value": "\"finapp_trading\".\"finapp_fund_reservation\".\"amount\" > 0"
+        },
+        "finapp_ck_reservation_status": {
+          "name": "finapp_ck_reservation_status",
+          "value": "\"finapp_trading\".\"finapp_fund_reservation\".\"status\" IN ('ACTIVE', 'RELEASED', 'SETTLED', 'EXPIRED')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_wealth.finapp_holding": {
+      "name": "finapp_holding",
+      "schema": "finapp_wealth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "instrument_id": {
+          "name": "instrument_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "external_holding_id": {
+          "name": "external_holding_id",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "numeric(19, 8)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "average_price": {
+          "name": "average_price",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "as_of_at": {
+          "name": "as_of_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "0"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "finapp_idx_holding_user_account": {
+          "name": "finapp_idx_holding_user_account",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "account_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_holding_user": {
+          "name": "finapp_fk_holding_user",
+          "tableFrom": "finapp_holding",
+          "tableTo": "finapp_app_user",
+          "schemaTo": "finapp_identity",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finapp_fk_holding_account": {
+          "name": "finapp_fk_holding_account",
+          "tableFrom": "finapp_holding",
+          "tableTo": "finapp_financial_account",
+          "schemaTo": "finapp_wealth",
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finapp_fk_holding_instrument": {
+          "name": "finapp_fk_holding_instrument",
+          "tableFrom": "finapp_holding",
+          "tableTo": "finapp_instrument",
+          "schemaTo": "finapp_wealth",
+          "columnsFrom": ["instrument_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_holding": {
+          "name": "finapp_pk_holding",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_holding_account_instrument": {
+          "name": "finapp_uq_holding_account_instrument",
+          "nullsNotDistinct": false,
+          "columns": ["account_id", "instrument_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_holding_values": {
+          "name": "finapp_ck_holding_values",
+          "value": "\"finapp_wealth\".\"finapp_holding\".\"quantity\" >= 0 AND \"finapp_wealth\".\"finapp_holding\".\"average_price\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_trading.finapp_idempotency_record": {
+      "name": "finapp_idempotency_record",
+      "schema": "finapp_trading",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "operation": {
+          "name": "operation",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_hash": {
+          "name": "request_hash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resource_type": {
+          "name": "resource_type",
+          "type": "varchar(40)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resource_id": {
+          "name": "resource_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "response_status": {
+          "name": "response_status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "response_snapshot": {
+          "name": "response_snapshot",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "finapp_fk_idempotency_user": {
+          "name": "finapp_fk_idempotency_user",
+          "tableFrom": "finapp_idempotency_record",
+          "tableTo": "finapp_app_user",
+          "schemaTo": "finapp_identity",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_idempotency_record": {
+          "name": "finapp_pk_idempotency_record",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_idempotency_user_operation_key": {
+          "name": "finapp_uq_idempotency_user_operation_key",
+          "nullsNotDistinct": false,
+          "columns": ["user_id", "operation", "idempotency_key"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_idempotency_response_status": {
+          "name": "finapp_ck_idempotency_response_status",
+          "value": "\"finapp_trading\".\"finapp_idempotency_record\".\"response_status\" IS NULL OR \"finapp_trading\".\"finapp_idempotency_record\".\"response_status\" BETWEEN 200 AND 599"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_mydata.finapp_institution_connection": {
+      "name": "finapp_institution_connection",
+      "schema": "finapp_mydata",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "institution_code": {
+          "name": "institution_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "external_customer_id_hash": {
+          "name": "external_customer_id_hash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "external_customer_id_ciphertext": {
+          "name": "external_customer_id_ciphertext",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "encryption_key_version": {
+          "name": "encryption_key_version",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "masked_external_customer_id": {
+          "name": "masked_external_customer_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ACTIVE'"
+        },
+        "consent_expires_at": {
+          "name": "consent_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_successful_sync_at": {
+          "name": "last_successful_sync_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "finapp_fk_connection_user": {
+          "name": "finapp_fk_connection_user",
+          "tableFrom": "finapp_institution_connection",
+          "tableTo": "finapp_app_user",
+          "schemaTo": "finapp_identity",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_institution_connection": {
+          "name": "finapp_pk_institution_connection",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_connection_status": {
+          "name": "finapp_ck_connection_status",
+          "value": "\"finapp_mydata\".\"finapp_institution_connection\".\"status\" IN ('ACTIVE', 'REVOKED', 'EXPIRED')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_wealth.finapp_instrument": {
+      "name": "finapp_instrument",
+      "schema": "finapp_wealth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "instrument_code": {
+          "name": "instrument_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "varchar(150)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "asset_class": {
+          "name": "asset_class",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'KRW'"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ACTIVE'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "finapp_pk_instrument": {
+          "name": "finapp_pk_instrument",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_instrument_code": {
+          "name": "finapp_uq_instrument_code",
+          "nullsNotDistinct": false,
+          "columns": ["instrument_code"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "finapp_market.finapp_market_instrument": {
+      "name": "finapp_market_instrument",
+      "schema": "finapp_market",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "symbol": {
+          "name": "symbol",
+          "type": "varchar(12)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "market": {
+          "name": "market",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "industry": {
+          "name": "industry",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "standard_code": {
+          "name": "standard_code",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "base_price": {
+          "name": "base_price",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "listed_at": {
+          "name": "listed_at",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "source": {
+          "name": "source",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "raw": {
+          "name": "raw",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "synced_at": {
+          "name": "synced_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "finapp_idx_market_instrument_name": {
+          "name": "finapp_idx_market_instrument_name",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "finapp_idx_market_instrument_market_symbol": {
+          "name": "finapp_idx_market_instrument_market_symbol",
+          "columns": [
+            {
+              "expression": "market",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "symbol",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "finapp_pk_market_instrument": {
+          "name": "finapp_pk_market_instrument",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_market_instrument_symbol": {
+          "name": "finapp_uq_market_instrument_symbol",
+          "nullsNotDistinct": false,
+          "columns": ["symbol"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_market_instrument_market": {
+          "name": "finapp_ck_market_instrument_market",
+          "value": "\"finapp_market\".\"finapp_market_instrument\".\"market\" IN ('KOSPI', 'KOSDAQ')"
+        },
+        "finapp_ck_market_instrument_source": {
+          "name": "finapp_ck_market_instrument_source",
+          "value": "\"finapp_market\".\"finapp_market_instrument\".\"source\" = 'KIS_MASTER'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_market.finapp_market_price_bar": {
+      "name": "finapp_market_price_bar",
+      "schema": "finapp_market",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "instrument_id": {
+          "name": "instrument_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "interval": {
+          "name": "interval",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bucket_at": {
+          "name": "bucket_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "open": {
+          "name": "open",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "high": {
+          "name": "high",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "low": {
+          "name": "low",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "close": {
+          "name": "close",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "volume": {
+          "name": "volume",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source": {
+          "name": "source",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "raw": {
+          "name": "raw",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        }
+      },
+      "indexes": {
+        "finapp_idx_market_bar_lookup": {
+          "name": "finapp_idx_market_bar_lookup",
+          "columns": [
+            {
+              "expression": "instrument_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "interval",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "bucket_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_market_bar_instrument": {
+          "name": "finapp_fk_market_bar_instrument",
+          "tableFrom": "finapp_market_price_bar",
+          "tableTo": "finapp_market_instrument",
+          "schemaTo": "finapp_market",
+          "columnsFrom": ["instrument_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_market_price_bar": {
+          "name": "finapp_pk_market_price_bar",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_market_bar_bucket": {
+          "name": "finapp_uq_market_bar_bucket",
+          "nullsNotDistinct": false,
+          "columns": ["instrument_id", "interval", "bucket_at"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_market_bar_interval": {
+          "name": "finapp_ck_market_bar_interval",
+          "value": "\"finapp_market\".\"finapp_market_price_bar\".\"interval\" IN ('MINUTE', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY')"
+        },
+        "finapp_ck_market_bar_source": {
+          "name": "finapp_ck_market_bar_source",
+          "value": "\"finapp_market\".\"finapp_market_price_bar\".\"source\" IN ('KIS', 'LOCAL')"
+        },
+        "finapp_ck_market_bar_ohlc": {
+          "name": "finapp_ck_market_bar_ohlc",
+          "value": "\"finapp_market\".\"finapp_market_price_bar\".\"high\" >= \"finapp_market\".\"finapp_market_price_bar\".\"low\" AND \"finapp_market\".\"finapp_market_price_bar\".\"volume\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_market.finapp_market_quote_snapshot": {
+      "name": "finapp_market_quote_snapshot",
+      "schema": "finapp_market",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "instrument_id": {
+          "name": "instrument_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "current_price": {
+          "name": "current_price",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "change_price": {
+          "name": "change_price",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "change_rate": {
+          "name": "change_rate",
+          "type": "numeric(10, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "volume": {
+          "name": "volume",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source": {
+          "name": "source",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "captured_at": {
+          "name": "captured_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "raw": {
+          "name": "raw",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        }
+      },
+      "indexes": {
+        "finapp_idx_market_quote_instrument_captured": {
+          "name": "finapp_idx_market_quote_instrument_captured",
+          "columns": [
+            {
+              "expression": "instrument_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "captured_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_market_quote_instrument": {
+          "name": "finapp_fk_market_quote_instrument",
+          "tableFrom": "finapp_market_quote_snapshot",
+          "tableTo": "finapp_market_instrument",
+          "schemaTo": "finapp_market",
+          "columnsFrom": ["instrument_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_market_quote_snapshot": {
+          "name": "finapp_pk_market_quote_snapshot",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_market_quote_source": {
+          "name": "finapp_ck_market_quote_source",
+          "value": "\"finapp_market\".\"finapp_market_quote_snapshot\".\"source\" IN ('KIS', 'LOCAL')"
+        },
+        "finapp_ck_market_quote_values": {
+          "name": "finapp_ck_market_quote_values",
+          "value": "\"finapp_market\".\"finapp_market_quote_snapshot\".\"current_price\" > 0 AND \"finapp_market\".\"finapp_market_quote_snapshot\".\"volume\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_identity.finapp_oidc_identity": {
+      "name": "finapp_oidc_identity",
+      "schema": "finapp_identity",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "issuer": {
+          "name": "issuer",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject": {
+          "name": "subject",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "finapp_idx_oidc_identity_user": {
+          "name": "finapp_idx_oidc_identity_user",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_oidc_identity_user": {
+          "name": "finapp_fk_oidc_identity_user",
+          "tableFrom": "finapp_oidc_identity",
+          "tableTo": "finapp_app_user",
+          "schemaTo": "finapp_identity",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_oidc_identity": {
+          "name": "finapp_pk_oidc_identity",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_oidc_identity_issuer_subject": {
+          "name": "finapp_uq_oidc_identity_issuer_subject",
+          "nullsNotDistinct": false,
+          "columns": ["issuer", "subject"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "finapp_trading.finapp_order_execution": {
+      "name": "finapp_order_execution",
+      "schema": "finapp_trading",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "external_execution_id": {
+          "name": "external_execution_id",
+          "type": "varchar(140)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "numeric(19, 8)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unit_price": {
+          "name": "unit_price",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount": {
+          "name": "amount",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "executed_at": {
+          "name": "executed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "finapp_fk_execution_order": {
+          "name": "finapp_fk_execution_order",
+          "tableFrom": "finapp_order_execution",
+          "tableTo": "finapp_trade_order",
+          "schemaTo": "finapp_trading",
+          "columnsFrom": ["order_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_order_execution": {
+          "name": "finapp_pk_order_execution",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_execution_external": {
+          "name": "finapp_uq_execution_external",
+          "nullsNotDistinct": false,
+          "columns": ["external_execution_id"]
+        },
+        "finapp_uq_execution_order": {
+          "name": "finapp_uq_execution_order",
+          "nullsNotDistinct": false,
+          "columns": ["order_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_execution_values": {
+          "name": "finapp_ck_execution_values",
+          "value": "\"finapp_trading\".\"finapp_order_execution\".\"quantity\" > 0 AND \"finapp_trading\".\"finapp_order_execution\".\"unit_price\" > 0 AND \"finapp_trading\".\"finapp_order_execution\".\"amount\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_trading.finapp_outbox_delivery": {
+      "name": "finapp_outbox_delivery",
+      "schema": "finapp_trading",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "consumer_name": {
+          "name": "consumer_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "delivered_at": {
+          "name": "delivered_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "finapp_fk_outbox_delivery_event": {
+          "name": "finapp_fk_outbox_delivery_event",
+          "tableFrom": "finapp_outbox_delivery",
+          "tableTo": "finapp_outbox_event",
+          "schemaTo": "finapp_trading",
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_outbox_delivery": {
+          "name": "finapp_pk_outbox_delivery",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_outbox_delivery_event_consumer": {
+          "name": "finapp_uq_outbox_delivery_event_consumer",
+          "nullsNotDistinct": false,
+          "columns": ["event_id", "consumer_name"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "finapp_trading.finapp_outbox_event": {
+      "name": "finapp_outbox_event",
+      "schema": "finapp_trading",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aggregate_type": {
+          "name": "aggregate_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aggregate_id": {
+          "name": "aggregate_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'PENDING'"
+        },
+        "attempt": {
+          "name": "attempt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "available_at": {
+          "name": "available_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "locked_at": {
+          "name": "locked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locked_by": {
+          "name": "locked_by",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_error_code": {
+          "name": "last_error_code",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "processed_at": {
+          "name": "processed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "finapp_idx_outbox_status_available": {
+          "name": "finapp_idx_outbox_status_available",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "available_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "finapp_pk_outbox_event": {
+          "name": "finapp_pk_outbox_event",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_outbox_aggregate_event": {
+          "name": "finapp_uq_outbox_aggregate_event",
+          "nullsNotDistinct": false,
+          "columns": ["aggregate_type", "aggregate_id", "event_type"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_outbox_attempt": {
+          "name": "finapp_ck_outbox_attempt",
+          "value": "\"finapp_trading\".\"finapp_outbox_event\".\"attempt\" >= 0"
+        },
+        "finapp_ck_outbox_status": {
+          "name": "finapp_ck_outbox_status",
+          "value": "\"finapp_trading\".\"finapp_outbox_event\".\"status\" IN ('PENDING', 'PROCESSING', 'PROCESSED', 'FAILED')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_trading.finapp_position": {
+      "name": "finapp_position",
+      "schema": "finapp_trading",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "instrument_id": {
+          "name": "instrument_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "numeric(19, 8)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "average_price": {
+          "name": "average_price",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "version": {
+          "name": "version",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "0"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "finapp_fk_position_user": {
+          "name": "finapp_fk_position_user",
+          "tableFrom": "finapp_position",
+          "tableTo": "finapp_app_user",
+          "schemaTo": "finapp_identity",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finapp_fk_position_account": {
+          "name": "finapp_fk_position_account",
+          "tableFrom": "finapp_position",
+          "tableTo": "finapp_financial_account",
+          "schemaTo": "finapp_wealth",
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finapp_fk_position_instrument": {
+          "name": "finapp_fk_position_instrument",
+          "tableFrom": "finapp_position",
+          "tableTo": "finapp_instrument",
+          "schemaTo": "finapp_wealth",
+          "columnsFrom": ["instrument_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_position": {
+          "name": "finapp_pk_position",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_position_account_instrument": {
+          "name": "finapp_uq_position_account_instrument",
+          "nullsNotDistinct": false,
+          "columns": ["account_id", "instrument_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_position_values": {
+          "name": "finapp_ck_position_values",
+          "value": "\"finapp_trading\".\"finapp_position\".\"quantity\" >= 0 AND \"finapp_trading\".\"finapp_position\".\"average_price\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_trading.finapp_quote": {
+      "name": "finapp_quote",
+      "schema": "finapp_trading",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "instrument_id": {
+          "name": "instrument_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "side": {
+          "name": "side",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'BUY'"
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "numeric(19, 8)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unit_price": {
+          "name": "unit_price",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estimated_amount": {
+          "name": "estimated_amount",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fee": {
+          "name": "fee",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'KRW'"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "finapp_idx_quote_user_expires": {
+          "name": "finapp_idx_quote_user_expires",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_quote_user": {
+          "name": "finapp_fk_quote_user",
+          "tableFrom": "finapp_quote",
+          "tableTo": "finapp_app_user",
+          "schemaTo": "finapp_identity",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finapp_fk_quote_account": {
+          "name": "finapp_fk_quote_account",
+          "tableFrom": "finapp_quote",
+          "tableTo": "finapp_financial_account",
+          "schemaTo": "finapp_wealth",
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finapp_fk_quote_instrument": {
+          "name": "finapp_fk_quote_instrument",
+          "tableFrom": "finapp_quote",
+          "tableTo": "finapp_instrument",
+          "schemaTo": "finapp_wealth",
+          "columnsFrom": ["instrument_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_quote": {
+          "name": "finapp_pk_quote",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_quote_side": {
+          "name": "finapp_ck_quote_side",
+          "value": "\"finapp_trading\".\"finapp_quote\".\"side\" = 'BUY'"
+        },
+        "finapp_ck_quote_values": {
+          "name": "finapp_ck_quote_values",
+          "value": "\"finapp_trading\".\"finapp_quote\".\"quantity\" > 0 AND \"finapp_trading\".\"finapp_quote\".\"unit_price\" > 0 AND \"finapp_trading\".\"finapp_quote\".\"estimated_amount\" > 0 AND \"finapp_trading\".\"finapp_quote\".\"fee\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_mydata.finapp_raw_batch": {
+      "name": "finapp_raw_batch",
+      "schema": "finapp_mydata",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sync_job_id": {
+          "name": "sync_job_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resource_type": {
+          "name": "resource_type",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "schema_version": {
+          "name": "schema_version",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "page_cursor": {
+          "name": "page_cursor",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payload_checksum": {
+          "name": "payload_checksum",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "received_at": {
+          "name": "received_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "finapp_idx_raw_batch_sync": {
+          "name": "finapp_idx_raw_batch_sync",
+          "columns": [
+            {
+              "expression": "sync_job_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "finapp_idx_raw_batch_checksum": {
+          "name": "finapp_idx_raw_batch_checksum",
+          "columns": [
+            {
+              "expression": "payload_checksum",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_raw_batch_sync_job": {
+          "name": "finapp_fk_raw_batch_sync_job",
+          "tableFrom": "finapp_raw_batch",
+          "tableTo": "finapp_sync_job",
+          "schemaTo": "finapp_mydata",
+          "columnsFrom": ["sync_job_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_raw_batch": {
+          "name": "finapp_pk_raw_batch",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_raw_batch_resource_type": {
+          "name": "finapp_ck_raw_batch_resource_type",
+          "value": "\"finapp_mydata\".\"finapp_raw_batch\".\"resource_type\" IN ('ACCOUNT', 'HOLDING', 'TRANSACTION')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_mydata.finapp_raw_processing_result": {
+      "name": "finapp_raw_processing_result",
+      "schema": "finapp_mydata",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "raw_record_id": {
+          "name": "raw_record_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "processor_version": {
+          "name": "processor_version",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "derived_resource_type": {
+          "name": "derived_resource_type",
+          "type": "varchar(40)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "derived_resource_id": {
+          "name": "derived_resource_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error_code": {
+          "name": "error_code",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "processed_at": {
+          "name": "processed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "finapp_fk_raw_processing_result_record": {
+          "name": "finapp_fk_raw_processing_result_record",
+          "tableFrom": "finapp_raw_processing_result",
+          "tableTo": "finapp_raw_record",
+          "schemaTo": "finapp_mydata",
+          "columnsFrom": ["raw_record_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_raw_processing_result": {
+          "name": "finapp_pk_raw_processing_result",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_raw_process_record_version": {
+          "name": "finapp_uq_raw_process_record_version",
+          "nullsNotDistinct": false,
+          "columns": ["raw_record_id", "processor_version"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_raw_processing_status": {
+          "name": "finapp_ck_raw_processing_status",
+          "value": "\"finapp_mydata\".\"finapp_raw_processing_result\".\"status\" IN ('PROCESSED', 'DUPLICATE', 'INVALID', 'FAILED')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_mydata.finapp_raw_record": {
+      "name": "finapp_raw_record",
+      "schema": "finapp_mydata",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "raw_batch_id": {
+          "name": "raw_batch_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resource_type": {
+          "name": "resource_type",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "external_resource_id": {
+          "name": "external_resource_id",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload_checksum": {
+          "name": "payload_checksum",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "received_at": {
+          "name": "received_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "finapp_idx_raw_record_checksum": {
+          "name": "finapp_idx_raw_record_checksum",
+          "columns": [
+            {
+              "expression": "payload_checksum",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_raw_record_batch": {
+          "name": "finapp_fk_raw_record_batch",
+          "tableFrom": "finapp_raw_record",
+          "tableTo": "finapp_raw_batch",
+          "schemaTo": "finapp_mydata",
+          "columnsFrom": ["raw_batch_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_raw_record": {
+          "name": "finapp_pk_raw_record",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_raw_record_batch_resource": {
+          "name": "finapp_uq_raw_record_batch_resource",
+          "nullsNotDistinct": false,
+          "columns": ["raw_batch_id", "resource_type", "external_resource_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_raw_record_resource_type": {
+          "name": "finapp_ck_raw_record_resource_type",
+          "value": "\"finapp_mydata\".\"finapp_raw_record\".\"resource_type\" IN ('ACCOUNT', 'HOLDING', 'TRANSACTION')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_trading.finapp_reconciliation_job": {
+      "name": "finapp_reconciliation_job",
+      "schema": "finapp_trading",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'QUEUED'"
+        },
+        "attempt": {
+          "name": "attempt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "next_attempt_at": {
+          "name": "next_attempt_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "locked_at": {
+          "name": "locked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locked_by": {
+          "name": "locked_by",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_error_code": {
+          "name": "last_error_code",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "finapp_idx_reconcile_claim": {
+          "name": "finapp_idx_reconcile_claim",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "next_attempt_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "finapp_uq_reconcile_order_active": {
+          "name": "finapp_uq_reconcile_order_active",
+          "columns": [
+            {
+              "expression": "order_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"finapp_trading\".\"finapp_reconciliation_job\".\"status\" IN ('QUEUED', 'PROCESSING')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_reconciliation_order": {
+          "name": "finapp_fk_reconciliation_order",
+          "tableFrom": "finapp_reconciliation_job",
+          "tableTo": "finapp_trade_order",
+          "schemaTo": "finapp_trading",
+          "columnsFrom": ["order_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_reconciliation_job": {
+          "name": "finapp_pk_reconciliation_job",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_reconciliation_attempt": {
+          "name": "finapp_ck_reconciliation_attempt",
+          "value": "\"finapp_trading\".\"finapp_reconciliation_job\".\"attempt\" >= 0"
+        },
+        "finapp_ck_reconciliation_status": {
+          "name": "finapp_ck_reconciliation_status",
+          "value": "\"finapp_trading\".\"finapp_reconciliation_job\".\"status\" IN ('QUEUED', 'PROCESSING', 'COMPLETED', 'FAILED')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_identity.finapp_risk_profile": {
+      "name": "finapp_risk_profile",
+      "schema": "finapp_identity",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "risk_level": {
+          "name": "risk_level",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'BALANCED'"
+        },
+        "investment_horizon_months": {
+          "name": "investment_horizon_months",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 120
+        },
+        "monthly_contribution": {
+          "name": "monthly_contribution",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "version": {
+          "name": "version",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "0"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "finapp_fk_risk_profile_user": {
+          "name": "finapp_fk_risk_profile_user",
+          "tableFrom": "finapp_risk_profile",
+          "tableTo": "finapp_app_user",
+          "schemaTo": "finapp_identity",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_risk_profile": {
+          "name": "finapp_pk_risk_profile",
+          "columns": ["user_id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_risk_profile_level": {
+          "name": "finapp_ck_risk_profile_level",
+          "value": "\"finapp_identity\".\"finapp_risk_profile\".\"risk_level\" IN ('CONSERVATIVE', 'BALANCED', 'GROWTH')"
+        },
+        "finapp_ck_risk_profile_values": {
+          "name": "finapp_ck_risk_profile_values",
+          "value": "\"finapp_identity\".\"finapp_risk_profile\".\"investment_horizon_months\" BETWEEN 1 AND 600 AND \"finapp_identity\".\"finapp_risk_profile\".\"monthly_contribution\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_audit.finapp_security_event": {
+      "name": "finapp_security_event",
+      "schema": "finapp_audit",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "result": {
+          "name": "result",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason_code": {
+          "name": "reason_code",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_ip_hash": {
+          "name": "source_ip_hash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        }
+      },
+      "indexes": {
+        "finapp_idx_security_event_type_time": {
+          "name": "finapp_idx_security_event_type_time",
+          "columns": [
+            {
+              "expression": "event_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "occurred_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "finapp_idx_security_event_source_time": {
+          "name": "finapp_idx_security_event_source_time",
+          "columns": [
+            {
+              "expression": "source_ip_hash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "occurred_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_security_event_user": {
+          "name": "finapp_fk_security_event_user",
+          "tableFrom": "finapp_security_event",
+          "tableTo": "finapp_app_user",
+          "schemaTo": "finapp_identity",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_security_event": {
+          "name": "finapp_pk_security_event",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_security_event_type": {
+          "name": "finapp_ck_security_event_type",
+          "value": "\"finapp_audit\".\"finapp_security_event\".\"event_type\" IN ('AUTHENTICATION_FAILURE', 'AUTHORIZATION_FAILURE', 'SUSPICIOUS_REQUEST')"
+        },
+        "finapp_ck_security_event_result": {
+          "name": "finapp_ck_security_event_result",
+          "value": "\"finapp_audit\".\"finapp_security_event\".\"result\" IN ('SUCCESS', 'FAILURE')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_simulation.finapp_simulation_result_point": {
+      "name": "finapp_simulation_result_point",
+      "schema": "finapp_simulation",
+      "columns": {
+        "simulation_run_id": {
+          "name": "simulation_run_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "month": {
+          "name": "month",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "p10": {
+          "name": "p10",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "p50": {
+          "name": "p50",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "p90": {
+          "name": "p90",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "finapp_fk_simulation_point_run": {
+          "name": "finapp_fk_simulation_point_run",
+          "tableFrom": "finapp_simulation_result_point",
+          "tableTo": "finapp_simulation_run",
+          "schemaTo": "finapp_simulation",
+          "columnsFrom": ["simulation_run_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_simulation_result_point": {
+          "name": "finapp_pk_simulation_result_point",
+          "columns": ["simulation_run_id", "month"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_sim_point_percentiles": {
+          "name": "finapp_ck_sim_point_percentiles",
+          "value": "\"finapp_simulation\".\"finapp_simulation_result_point\".\"month\" BETWEEN 0 AND 600 AND \"finapp_simulation\".\"finapp_simulation_result_point\".\"p10\" >= 0 AND \"finapp_simulation\".\"finapp_simulation_result_point\".\"p10\" <= \"finapp_simulation\".\"finapp_simulation_result_point\".\"p50\" AND \"finapp_simulation\".\"finapp_simulation_result_point\".\"p50\" <= \"finapp_simulation\".\"finapp_simulation_result_point\".\"p90\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_simulation.finapp_simulation_result_summary": {
+      "name": "finapp_simulation_result_summary",
+      "schema": "finapp_simulation",
+      "columns": {
+        "simulation_run_id": {
+          "name": "simulation_run_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "goal_probability": {
+          "name": "goal_probability",
+          "type": "numeric(12, 8)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "final_p10": {
+          "name": "final_p10",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "final_p50": {
+          "name": "final_p50",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "final_p90": {
+          "name": "final_p90",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'KRW'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "finapp_fk_simulation_summary_run": {
+          "name": "finapp_fk_simulation_summary_run",
+          "tableFrom": "finapp_simulation_result_summary",
+          "tableTo": "finapp_simulation_run",
+          "schemaTo": "finapp_simulation",
+          "columnsFrom": ["simulation_run_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_simulation_result_summary": {
+          "name": "finapp_pk_simulation_result_summary",
+          "columns": ["simulation_run_id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_sim_summary_percentiles": {
+          "name": "finapp_ck_sim_summary_percentiles",
+          "value": "\"finapp_simulation\".\"finapp_simulation_result_summary\".\"goal_probability\" BETWEEN 0 AND 1 AND \"finapp_simulation\".\"finapp_simulation_result_summary\".\"final_p10\" >= 0 AND \"finapp_simulation\".\"finapp_simulation_result_summary\".\"final_p10\" <= \"finapp_simulation\".\"finapp_simulation_result_summary\".\"final_p50\" AND \"finapp_simulation\".\"finapp_simulation_result_summary\".\"final_p50\" <= \"finapp_simulation\".\"finapp_simulation_result_summary\".\"final_p90\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_simulation.finapp_simulation_run": {
+      "name": "finapp_simulation_run",
+      "schema": "finapp_simulation",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "assumption_set_id": {
+          "name": "assumption_set_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "engine_version": {
+          "name": "engine_version",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "input_snapshot": {
+          "name": "input_snapshot",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "seed": {
+          "name": "seed",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "path_count": {
+          "name": "path_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1000
+        },
+        "duration_months": {
+          "name": "duration_months",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "finapp_idx_simulation_run_user_created": {
+          "name": "finapp_idx_simulation_run_user_created",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_simulation_run_user": {
+          "name": "finapp_fk_simulation_run_user",
+          "tableFrom": "finapp_simulation_run",
+          "tableTo": "finapp_app_user",
+          "schemaTo": "finapp_identity",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finapp_fk_simulation_run_assumption": {
+          "name": "finapp_fk_simulation_run_assumption",
+          "tableFrom": "finapp_simulation_run",
+          "tableTo": "finapp_assumption_set",
+          "schemaTo": "finapp_simulation",
+          "columnsFrom": ["assumption_set_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_simulation_run": {
+          "name": "finapp_pk_simulation_run",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_simulation_run_values": {
+          "name": "finapp_ck_simulation_run_values",
+          "value": "\"finapp_simulation\".\"finapp_simulation_run\".\"path_count\" > 0 AND \"finapp_simulation\".\"finapp_simulation_run\".\"duration_months\" BETWEEN 1 AND 600"
+        },
+        "finapp_ck_simulation_run_status": {
+          "name": "finapp_ck_simulation_run_status",
+          "value": "\"finapp_simulation\".\"finapp_simulation_run\".\"status\" IN ('RUNNING', 'COMPLETED', 'FAILED')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_mydata.finapp_sync_job": {
+      "name": "finapp_sync_job",
+      "schema": "finapp_mydata",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "connection_id": {
+          "name": "connection_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(24)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'QUEUED'"
+        },
+        "attempt": {
+          "name": "attempt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "next_attempt_at": {
+          "name": "next_attempt_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locked_at": {
+          "name": "locked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locked_by": {
+          "name": "locked_by",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error_code": {
+          "name": "error_code",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "finapp_idx_sync_job_claim": {
+          "name": "finapp_idx_sync_job_claim",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "next_attempt_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "finapp_idx_sync_job_connection_created": {
+          "name": "finapp_idx_sync_job_connection_created",
+          "columns": [
+            {
+              "expression": "connection_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_sync_job_connection": {
+          "name": "finapp_fk_sync_job_connection",
+          "tableFrom": "finapp_sync_job",
+          "tableTo": "finapp_institution_connection",
+          "schemaTo": "finapp_mydata",
+          "columnsFrom": ["connection_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_sync_job": {
+          "name": "finapp_pk_sync_job",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_sync_job_attempt": {
+          "name": "finapp_ck_sync_job_attempt",
+          "value": "\"finapp_mydata\".\"finapp_sync_job\".\"attempt\" >= 0"
+        },
+        "finapp_ck_sync_job_status": {
+          "name": "finapp_ck_sync_job_status",
+          "value": "\"finapp_mydata\".\"finapp_sync_job\".\"status\" IN ('QUEUED', 'FETCHING', 'RAW_STORED', 'NORMALIZING', 'COMPLETED', 'FAILED')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "finapp_trading.finapp_trade_order": {
+      "name": "finapp_trade_order",
+      "schema": "finapp_trading",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "instrument_id": {
+          "name": "instrument_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quote_id": {
+          "name": "quote_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "client_order_id": {
+          "name": "client_order_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "side": {
+          "name": "side",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'BUY'"
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "numeric(19, 8)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estimated_amount": {
+          "name": "estimated_amount",
+          "type": "numeric(19, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'KRW'"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'PENDING_SUBMISSION'"
+        },
+        "external_order_id": {
+          "name": "external_order_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version": {
+          "name": "version",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "0"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "finapp_idx_order_user_created": {
+          "name": "finapp_idx_order_user_created",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "finapp_idx_order_status_updated": {
+          "name": "finapp_idx_order_status_updated",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "finapp_fk_order_user": {
+          "name": "finapp_fk_order_user",
+          "tableFrom": "finapp_trade_order",
+          "tableTo": "finapp_app_user",
+          "schemaTo": "finapp_identity",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finapp_fk_order_account": {
+          "name": "finapp_fk_order_account",
+          "tableFrom": "finapp_trade_order",
+          "tableTo": "finapp_financial_account",
+          "schemaTo": "finapp_wealth",
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finapp_fk_order_instrument": {
+          "name": "finapp_fk_order_instrument",
+          "tableFrom": "finapp_trade_order",
+          "tableTo": "finapp_instrument",
+          "schemaTo": "finapp_wealth",
+          "columnsFrom": ["instrument_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finapp_fk_order_quote": {
+          "name": "finapp_fk_order_quote",
+          "tableFrom": "finapp_trade_order",
+          "tableTo": "finapp_quote",
+          "schemaTo": "finapp_trading",
+          "columnsFrom": ["quote_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finapp_pk_trade_order": {
+          "name": "finapp_pk_trade_order",
+          "columns": ["id"]
+        }
+      },
+      "uniqueConstraints": {
+        "finapp_uq_order_client_id": {
+          "name": "finapp_uq_order_client_id",
+          "nullsNotDistinct": false,
+          "columns": ["client_order_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "finapp_ck_order_side": {
+          "name": "finapp_ck_order_side",
+          "value": "\"finapp_trading\".\"finapp_trade_order\".\"side\" = 'BUY'"
+        },
+        "finapp_ck_order_values": {
+          "name": "finapp_ck_order_values",
+          "value": "\"finapp_trading\".\"finapp_trade_order\".\"quantity\" > 0 AND \"finapp_trading\".\"finapp_trade_order\".\"estimated_amount\" > 0"
+        },
+        "finapp_ck_order_status": {
+          "name": "finapp_ck_order_status",
+          "value": "\"finapp_trading\".\"finapp_trade_order\".\"status\" IN ('CREATED', 'FUNDS_RESERVED', 'PENDING_SUBMISSION', 'ACCEPTED', 'UNKNOWN', 'FILLED', 'REJECTED', 'FAILED', 'CANCELLED')"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {
+    "finapp_audit": "finapp_audit",
+    "finapp_crypto": "finapp_crypto",
+    "finapp_identity": "finapp_identity",
+    "finapp_market": "finapp_market",
+    "finapp_meta": "finapp_meta",
+    "finapp_mydata": "finapp_mydata",
+    "finapp_simulation": "finapp_simulation",
+    "finapp_trading": "finapp_trading",
+    "finapp_wealth": "finapp_wealth"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

@@ -1,12 +1,21 @@
 # 외부 주식 시세·차트 통합 실행계획
 
-- 상태: `READY_FOR_IMPLEMENTATION`
+- 상태: `IMPLEMENTED_LOCAL_PENDING_KIS_SMOKE`
 - 작성일: 2026-09-02
 - 대상: React Native(Expo) + NestJS/Fastify + PostgreSQL/Drizzle FinancialApp
 - 구현 난이도 기준: Luna 모델이 단계별로 독립 구현 가능한 수준
-- 구현 시작 여부: 미실행 — 이 문서는 계획만 확정한다
+- 구현 시작 여부: Phase 0~5 구현 완료, Phase 6의 실제 KIS smoke만 credential 대기
 - 외부 유료 자원 실행: 없음
 - 원격 DB migration: 금지 — 별도 승인 전 local/Testcontainers에서만 검증
+
+## 구현 진행 상태 (2026-09-02)
+
+- 완료: canonical OpenAPI/operation coverage, `finapp_market` 3개 table과 versioned migration
+- 완료: KIS adapter/token cache/master parser, local deterministic provider, cache/stale 정책
+- 완료: backend API, mobile HTTP/mock adapter, `시장` 탭과 5개 interval line chart
+- 검증: local Compose migration/seed와 검색 → 현재가 → 차트 HTTP 흐름 통과
+- 대기: 실제 KIS credential을 주입한 수동 smoke와 Android development build chart runtime 확인
+- 미실행: 원격 DB migration/deploy. 기존 `cdd_*`와 FinancialApp 기존 schema/table은 변경하지 않음
 
 ## 1. 목표
 

@@ -31,6 +31,7 @@ export const finappSimulationSchema = pgSchema('finapp_simulation');
 export const finappTradingSchema = pgSchema('finapp_trading');
 export const finappAuditSchema = pgSchema('finapp_audit');
 export const finappCryptoSchema = pgSchema('finapp_crypto');
+export const finappMarketSchema = pgSchema('finapp_market');
 
 export const finappAppUser = finappIdentitySchema.table(
   'finapp_app_user',
@@ -99,7 +100,9 @@ export const finappRiskProfile = finappIdentitySchema.table(
     })
       .notNull()
       .default('0'),
-    version: bigint('version', { mode: 'bigint' }).notNull().default(0n),
+    version: bigint('version', { mode: 'bigint' })
+      .notNull()
+      .default(sql`0`),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
       .notNull()
       .defaultNow(),
@@ -411,7 +414,9 @@ export const finappHolding = finappWealthSchema.table(
       withTimezone: true,
       mode: 'date',
     }).notNull(),
-    version: bigint('version', { mode: 'bigint' }).notNull().default(0n),
+    version: bigint('version', { mode: 'bigint' })
+      .notNull()
+      .default(sql`0`),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
       .notNull()
       .defaultNow(),
@@ -519,7 +524,9 @@ export const finappCashAccount = finappWealthSchema.table(
       .notNull()
       .default('0'),
     currency: varchar('currency', { length: 3 }).notNull().default('KRW'),
-    version: bigint('version', { mode: 'bigint' }).notNull().default(0n),
+    version: bigint('version', { mode: 'bigint' })
+      .notNull()
+      .default(sql`0`),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
       .notNull()
       .defaultNow(),
@@ -849,7 +856,9 @@ export const finappTradeOrder = finappTradingSchema.table(
       .notNull()
       .default('PENDING_SUBMISSION'),
     externalOrderId: varchar('external_order_id', { length: 100 }),
-    version: bigint('version', { mode: 'bigint' }).notNull().default(0n),
+    version: bigint('version', { mode: 'bigint' })
+      .notNull()
+      .default(sql`0`),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
       .notNull()
       .defaultNow(),
@@ -1028,7 +1037,9 @@ export const finappPosition = finappTradingSchema.table(
     averagePrice: numeric('average_price', { precision: 19, scale: 4 })
       .notNull()
       .default('0'),
-    version: bigint('version', { mode: 'bigint' }).notNull().default(0n),
+    version: bigint('version', { mode: 'bigint' })
+      .notNull()
+      .default(sql`0`),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
       .notNull()
       .defaultNow(),
@@ -1249,6 +1260,144 @@ export const finappSecurityEvent = finappAuditSchema.table(
     index('finapp_idx_security_event_source_time').on(
       table.sourceIpHash,
       table.occurredAt,
+    ),
+  ],
+);
+
+export const finappMarketInstrument = finappMarketSchema.table(
+  'finapp_market_instrument',
+  {
+    id: uuid('id').notNull(),
+    symbol: varchar('symbol', { length: 12 }).notNull(),
+    name: varchar('name', { length: 120 }).notNull(),
+    market: varchar('market', { length: 20 }).notNull(),
+    industry: varchar('industry', { length: 200 }),
+    standardCode: varchar('standard_code', { length: 32 }),
+    basePrice: numeric('base_price', { precision: 19, scale: 4 }),
+    listedAt: date('listed_at'),
+    active: boolean('active').notNull().default(true),
+    source: varchar('source', { length: 20 }).notNull(),
+    raw: jsonb('raw').notNull().default({}),
+    syncedAt: timestamp('synced_at', {
+      withTimezone: true,
+      mode: 'date',
+    }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_market_instrument', columns: [table.id] }),
+    unique('finapp_uq_market_instrument_symbol').on(table.symbol),
+    check(
+      'finapp_ck_market_instrument_market',
+      sql`${table.market} IN ('KOSPI', 'KOSDAQ')`,
+    ),
+    check(
+      'finapp_ck_market_instrument_source',
+      sql`${table.source} = 'KIS_MASTER'`,
+    ),
+    index('finapp_idx_market_instrument_name').on(table.name),
+    index('finapp_idx_market_instrument_market_symbol').on(
+      table.market,
+      table.symbol,
+    ),
+  ],
+);
+
+export const finappMarketQuoteSnapshot = finappMarketSchema.table(
+  'finapp_market_quote_snapshot',
+  {
+    id: uuid('id').notNull(),
+    instrumentId: uuid('instrument_id').notNull(),
+    currentPrice: numeric('current_price', {
+      precision: 19,
+      scale: 4,
+    }).notNull(),
+    changePrice: numeric('change_price', { precision: 19, scale: 4 }).notNull(),
+    changeRate: numeric('change_rate', { precision: 10, scale: 4 }).notNull(),
+    volume: bigint('volume', { mode: 'bigint' }).notNull(),
+    source: varchar('source', { length: 20 }).notNull(),
+    capturedAt: timestamp('captured_at', {
+      withTimezone: true,
+      mode: 'date',
+    }).notNull(),
+    raw: jsonb('raw').notNull().default({}),
+  },
+  (table) => [
+    primaryKey({
+      name: 'finapp_pk_market_quote_snapshot',
+      columns: [table.id],
+    }),
+    foreignKey({
+      name: 'finapp_fk_market_quote_instrument',
+      columns: [table.instrumentId],
+      foreignColumns: [finappMarketInstrument.id],
+    }).onDelete('restrict'),
+    check(
+      'finapp_ck_market_quote_source',
+      sql`${table.source} IN ('KIS', 'LOCAL')`,
+    ),
+    check(
+      'finapp_ck_market_quote_values',
+      sql`${table.currentPrice} > 0 AND ${table.volume} >= 0`,
+    ),
+    index('finapp_idx_market_quote_instrument_captured').on(
+      table.instrumentId,
+      table.capturedAt,
+    ),
+  ],
+);
+
+export const finappMarketPriceBar = finappMarketSchema.table(
+  'finapp_market_price_bar',
+  {
+    id: uuid('id').notNull(),
+    instrumentId: uuid('instrument_id').notNull(),
+    interval: varchar('interval', { length: 20 }).notNull(),
+    bucketAt: timestamp('bucket_at', {
+      withTimezone: true,
+      mode: 'date',
+    }).notNull(),
+    open: numeric('open', { precision: 19, scale: 4 }).notNull(),
+    high: numeric('high', { precision: 19, scale: 4 }).notNull(),
+    low: numeric('low', { precision: 19, scale: 4 }).notNull(),
+    close: numeric('close', { precision: 19, scale: 4 }).notNull(),
+    volume: bigint('volume', { mode: 'bigint' }).notNull(),
+    source: varchar('source', { length: 20 }).notNull(),
+    raw: jsonb('raw').notNull().default({}),
+  },
+  (table) => [
+    primaryKey({ name: 'finapp_pk_market_price_bar', columns: [table.id] }),
+    foreignKey({
+      name: 'finapp_fk_market_bar_instrument',
+      columns: [table.instrumentId],
+      foreignColumns: [finappMarketInstrument.id],
+    }).onDelete('restrict'),
+    unique('finapp_uq_market_bar_bucket').on(
+      table.instrumentId,
+      table.interval,
+      table.bucketAt,
+    ),
+    check(
+      'finapp_ck_market_bar_interval',
+      sql`${table.interval} IN ('MINUTE', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY')`,
+    ),
+    check(
+      'finapp_ck_market_bar_source',
+      sql`${table.source} IN ('KIS', 'LOCAL')`,
+    ),
+    check(
+      'finapp_ck_market_bar_ohlc',
+      sql`${table.high} >= ${table.low} AND ${table.volume} >= 0`,
+    ),
+    index('finapp_idx_market_bar_lookup').on(
+      table.instrumentId,
+      table.interval,
+      table.bucketAt,
     ),
   ],
 );

@@ -13,8 +13,7 @@ export class LocalTestOidcClient
   private readonly token: string;
 
   constructor(
-    token =
-      process.env.EXPO_PUBLIC_LOCAL_TEST_ACCESS_TOKEN?.trim() ||
+    token = process.env.EXPO_PUBLIC_LOCAL_TEST_ACCESS_TOKEN?.trim() ||
       DEFAULT_LOCAL_TEST_ACCESS_TOKEN,
   ) {
     this.token = token;

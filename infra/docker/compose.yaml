@@ -58,6 +58,7 @@ services:
       FINAPP_MYDATA_ENCRYPTION_KEY_VERSION: ${FINAPP_MYDATA_ENCRYPTION_KEY_VERSION:-local-v1}
       FINAPP_SECURITY_EVENT_HASH_KEY_BASE64: ${FINAPP_SECURITY_EVENT_HASH_KEY_BASE64:?required}
       FINAPP_LOCAL_TEST_ACCESS_TOKEN: ${FINAPP_LOCAL_TEST_ACCESS_TOKEN:-<LOCAL_TEST_ACCESS_TOKEN>}
+      MARKET_DATA_PROVIDER: ${MARKET_DATA_PROVIDER:-LOCAL}
       EXTERNAL_CIRCUIT_FAILURE_THRESHOLD: '5'
       EXTERNAL_CIRCUIT_OPEN_MS: '30000'
       INSTITUTION_SIMULATOR_BASE_URL: http://institution-simulator:8080
@@ -120,6 +121,20 @@ services:
     command: ['node', 'services/platform-api/dist/database/migrate-cli.js']
     environment:
       PLATFORM_MIGRATION_DATABASE_URL: postgresql://financial_migration:${FINAPP_MIGRATION_DB_PASSWORD:?required}@postgres:5432/financial_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - finapp_local_network
+
+  platform-market-seed:
+    image: finapp-platform-api:local
+    profiles: ['tools']
+    command:
+      ['node', 'services/platform-api/dist/modules/market/market-seed-cli.js']
+    environment:
+      MARKET_DATA_PROVIDER: LOCAL
+      PLATFORM_DATABASE_URL: postgresql://financial_platform_app:${FINAPP_PLATFORM_DB_PASSWORD:?required}@postgres:5432/financial_app
     depends_on:
       postgres:
         condition: service_healthy

@@ -57,6 +57,13 @@
       }
     },
     {
+      "name": "market.read",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true"
+      }
+    },
+    {
       "name": "scenario.admin",
       "protocol": "openid-connect",
       "attributes": {
@@ -95,6 +102,7 @@
         "financial.write",
         "simulation.execute",
         "order.execute",
+        "market.read",
         "finapp-api-audience"
       ],
       "optionalClientScopes": ["offline_access"],

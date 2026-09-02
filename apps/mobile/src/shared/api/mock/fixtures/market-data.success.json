@@ -1,0 +1,92 @@
+{
+  "stocks": [
+    {
+      "symbol": "005930",
+      "name": "삼성전자",
+      "market": "KOSPI",
+      "industry": "전자부품 제조업"
+    },
+    {
+      "symbol": "000660",
+      "name": "SK하이닉스",
+      "market": "KOSPI",
+      "industry": "반도체 제조업"
+    },
+    {
+      "symbol": "035420",
+      "name": "NAVER",
+      "market": "KOSPI",
+      "industry": "인터넷 정보매개 서비스업"
+    }
+  ],
+  "quote": {
+    "symbol": "005930",
+    "name": "삼성전자",
+    "market": "KOSPI",
+    "industry": "전자부품 제조업",
+    "currency": "KRW",
+    "currentPrice": "74200.0000",
+    "changePrice": "1200.0000",
+    "changeRate": "1.6438",
+    "volume": "12452301",
+    "capturedAt": "2026-09-02T06:20:00.000Z",
+    "source": "LOCAL",
+    "freshness": "FRESH"
+  },
+  "bars": {
+    "symbol": "005930",
+    "interval": "DAILY",
+    "source": "LOCAL",
+    "freshness": "FRESH",
+    "bars": [
+      {
+        "bucketAt": "2026-08-26T00:00:00.000Z",
+        "open": "71200.0000",
+        "high": "72100.0000",
+        "low": "70800.0000",
+        "close": "71800.0000",
+        "volume": "9821000"
+      },
+      {
+        "bucketAt": "2026-08-27T00:00:00.000Z",
+        "open": "71900.0000",
+        "high": "72800.0000",
+        "low": "71400.0000",
+        "close": "72400.0000",
+        "volume": "10423000"
+      },
+      {
+        "bucketAt": "2026-08-28T00:00:00.000Z",
+        "open": "72500.0000",
+        "high": "73500.0000",
+        "low": "72100.0000",
+        "close": "73100.0000",
+        "volume": "11345000"
+      },
+      {
+        "bucketAt": "2026-08-29T00:00:00.000Z",
+        "open": "73000.0000",
+        "high": "73800.0000",
+        "low": "72600.0000",
+        "close": "72900.0000",
+        "volume": "9120000"
+      },
+      {
+        "bucketAt": "2026-08-30T00:00:00.000Z",
+        "open": "72800.0000",
+        "high": "74000.0000",
+        "low": "72400.0000",
+        "close": "73600.0000",
+        "volume": "11888000"
+      },
+      {
+        "bucketAt": "2026-09-01T00:00:00.000Z",
+        "open": "73500.0000",
+        "high": "74600.0000",
+        "low": "73100.0000",
+        "close": "74200.0000",
+        "volume": "12452301"
+      }
+    ]
+  }
+}

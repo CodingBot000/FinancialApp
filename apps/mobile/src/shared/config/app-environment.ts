@@ -24,9 +24,7 @@ export function isLocalTestLoginEnabled(environment?: PublicEnvironment) {
   );
 }
 
-export function isLocalBiometricBypassEnabled(
-  environment?: PublicEnvironment,
-) {
+export function isLocalBiometricBypassEnabled(environment?: PublicEnvironment) {
   const source = environment ?? process.env;
   return (
     readAppEnvironment(source) === 'local' &&

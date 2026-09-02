@@ -29,6 +29,8 @@
 - reconciliation decision
 - ownership policy
 - encryption roundtrip와 wrong AAD
+- KIS quote/bar normalization, token cache, rate-limit/error mapping
+- market quote stale fallback과 interval별 chart cache 정책
 
 Nest application context 없이 실행 가능한 Vitest domain test를 우선한다.
 
@@ -111,6 +113,7 @@ HTTP adapter mock은 세부 client unit test에 사용할 수 있지만 이 suit
 - order UNKNOWN 상태에서 POST retry 없음
 - biometric adapter 결과 분기
 - Reduce Motion 분기
+- 시장 종목 검색, quote source/freshness, 5개 interval chart rendering
 
 ### Mobile architecture
 

@@ -8,6 +8,7 @@ CREATE SCHEMA finapp_simulation AUTHORIZATION financial_migration;
 CREATE SCHEMA finapp_trading AUTHORIZATION financial_migration;
 CREATE SCHEMA finapp_audit AUTHORIZATION financial_migration;
 CREATE SCHEMA finapp_crypto AUTHORIZATION financial_migration;
+CREATE SCHEMA finapp_market AUTHORIZATION financial_migration;
 CREATE SCHEMA finapp_simulator AUTHORIZATION financial_migration;
 
 GRANT USAGE ON SCHEMA
@@ -17,14 +18,15 @@ GRANT USAGE ON SCHEMA
   finapp_simulation,
   finapp_trading,
   finapp_audit,
-  finapp_crypto
+  finapp_crypto,
+  finapp_market
 TO financial_platform_app;
 
 GRANT USAGE ON SCHEMA finapp_simulator TO financial_simulator_app;
 
 ALTER DEFAULT PRIVILEGES FOR ROLE financial_migration
   IN SCHEMA finapp_identity, finapp_wealth, finapp_simulation,
-  finapp_trading, finapp_audit, finapp_crypto
+  finapp_trading, finapp_audit, finapp_crypto, finapp_market
   GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO financial_platform_app;
 
 ALTER DEFAULT PRIVILEGES FOR ROLE financial_migration

@@ -3,12 +3,13 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { SimulationScreen } from '../features/simulation';
 import { OrderScreen } from '../features/order';
+import { MarketScreen } from '../features/market';
 import { SettingsScreen } from '../features/settings';
 import { WealthDashboardScreen } from '../features/wealth';
 
 export default function HomeRoute() {
   const [section, setSection] = useState<
-    'order' | 'settings' | 'simulation' | 'wealth'
+    'market' | 'order' | 'settings' | 'simulation' | 'wealth'
   >('wealth');
   return (
     <View style={styles.shell}>
@@ -20,6 +21,14 @@ export default function HomeRoute() {
           style={styles.tab}
         >
           <Text style={styles.tabText}>자산</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="tab"
+          accessibilityState={{ selected: section === 'market' }}
+          onPress={() => setSection('market')}
+          style={styles.tab}
+        >
+          <Text style={styles.tabText}>시장</Text>
         </Pressable>
         <Pressable
           accessibilityRole="tab"
@@ -49,6 +58,8 @@ export default function HomeRoute() {
       <View style={styles.content}>
         {section === 'wealth' ? (
           <WealthDashboardScreen />
+        ) : section === 'market' ? (
+          <MarketScreen />
         ) : section === 'simulation' ? (
           <SimulationScreen />
         ) : section === 'order' ? (

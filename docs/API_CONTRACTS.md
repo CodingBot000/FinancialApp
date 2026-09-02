@@ -105,6 +105,7 @@ MVP 목록은 cursor 방식을 사용한다.
 | `financial.write` | connection 생성, manual sync |
 | `simulation.execute` | simulation 생성과 조회 |
 | `order.execute` | quote preview와 BUY order |
+| `market.read` | 외부 주식 종목 검색, 현재가와 기간별 차트 |
 | `scenario.admin` | demo developer scenario와 reset |
 
 모든 사용자 소유 resource는 scope 검사 후 ownership을 추가로 검사한다.
@@ -127,6 +128,23 @@ MVP 목록은 cursor 방식을 사용한다.
 }
 ```
 
+## 4. Market API
+
+필요 scope: `market.read`
+
+```text
+GET /api/v1/market/stocks?q=삼성&limit=30
+GET /api/v1/market/stocks/{symbol}/quote
+GET /api/v1/market/stocks/{symbol}/bars?interval=DAILY
+```
+
+종목 검색은 FinancialApp 전용 `finapp_market` catalog를 사용하고, 현재가와
+차트는 backend provider가 KIS 응답을 canonical decimal string으로 정규화한다.
+`MINUTE`, `DAILY`, `WEEKLY`, `MONTHLY`, `YEARLY` interval을 지원한다. provider
+장애 시 저장된 값이 있으면 `freshness: STALE`, 저장된 값도 없으면 `503`을
+반환한다. 상세 schema와 status는 `contracts/openapi/platform-v1.yaml`을
+canonical source로 사용한다.
+
 ### `GET|PUT /api/v1/me/risk-profile`
 
 - GET은 `financial.read`, PUT은 `financial.write` scope가 필요하다.
@@ -137,7 +155,7 @@ MVP 목록은 cursor 방식을 사용한다.
 
 최초 유효 token 요청 시 OIDC subject를 기준으로 내부 user를 idempotent하게 provision할 수 있다.
 
-## 4. MyData API
+## 5. MyData API
 
 MVP는 한 사용자당 활성 connection 하나와 단일 기관 `SYNTH_WEALTH_001`만 지원한다.
 
@@ -228,7 +246,7 @@ QUEUED → FETCHING → RAW_STORED → NORMALIZING → COMPLETED
 }
 ```
 
-## 5. Asset API
+## 6. Asset API
 
 ### `GET /api/v1/assets/summary`
 
@@ -285,7 +303,7 @@ QUEUED → FETCHING → RAW_STORED → NORMALIZING → COMPLETED
 
 응답 point는 날짜 오름차순이며 같은 날짜가 중복되지 않는다. `1Y`는 최대 366 points, `ALL`은 서버에서 downsample한다.
 
-## 6. Simulation API
+## 7. Simulation API
 
 ### `POST /api/v1/simulations`
 
@@ -346,7 +364,7 @@ QUEUED → FETCHING → RAW_STORED → NORMALIZING → COMPLETED
 
 필요 scope: `simulation.execute`와 ownership
 
-## 7. Trading API
+## 8. Trading API
 
 ### `POST /api/v1/orders/preview`
 
@@ -441,7 +459,7 @@ CREATED
 
 `cursor`는 직전 page 마지막 `orderId`이며 `limit`은 1~100이다. 응답은 `{ items, nextCursor }`이고 모든 항목은 현재 사용자 ownership으로 제한한다.
 
-## 8. Developer API
+## 9. Developer API
 
 ### `PUT /api/v1/dev/scenario`
 
@@ -469,7 +487,7 @@ ORDER_UNKNOWN_THEN_FILLED
 
 `local` 또는 `demo` 전용. reset은 simulator admin API를 호출하며 production에서는 route가 존재하지 않는다.
 
-## 9. Simulator API
+## 10. Simulator API
 
 Simulator 계약은 platform 내부 model과 분리한다.
 
@@ -492,7 +510,7 @@ POST /sim/v1/admin/reset
 
 admin scenario는 `NORMAL`, `TIMEOUT`, `HTTP_500`, `MALFORMED_RESPONSE`, `ORDER_REJECT`, `ORDER_UNKNOWN_THEN_FILLED`만 허용한다. reset은 주문과 scenario/시세 상태를 합성 기준선으로 되돌린다. production에서는 admin 요청이 404이고 상태를 변경하지 않으며 simulator API 자체는 public internet에 노출하지 않는다.
 
-## 10. 안정적인 오류 코드
+## 11. 안정적인 오류 코드
 
 최소 오류 코드:
 
@@ -513,5 +531,9 @@ ORDER_UNKNOWN
 ORDER_EXTERNAL_REJECTED
 IDEMPOTENCY_CONFLICT
 EXTERNAL_SERVICE_UNAVAILABLE
+MARKET_STOCK_NOT_FOUND
+MARKET_RATE_LIMITED
+MARKET_DATA_INVALID
+MARKET_PROVIDER_UNAVAILABLE
 DEV_SCENARIO_FORBIDDEN
 ```

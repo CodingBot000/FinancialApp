@@ -19,6 +19,10 @@ import {
   type PlatformApi,
   type PlatformHealthResponse,
   type PlatformRequestOptions,
+  type MarketBars,
+  type MarketInterval,
+  type MarketQuote,
+  type MarketStock,
   type Quote,
   type UpdateRiskProfileInput,
   type UserRiskProfile,
@@ -36,6 +40,9 @@ import {
   isHistory,
   isHoldingPage,
   isPlatformHealth,
+  isMarketBars,
+  isMarketQuoteResponse,
+  isMarketStockSearch,
   isOrder,
   isOrderPage,
   isQuote,
@@ -180,6 +187,45 @@ export class HttpPlatformApi implements PlatformApi {
       isPlatformHealth,
       options,
       this.fetch,
+    );
+  }
+
+  async searchMarketStocks(
+    query: string,
+    options: PlatformRequestOptions = {},
+  ): Promise<readonly MarketStock[]> {
+    const response = await this.requestJson(
+      `/api/v1/market/stocks?q=${encodeURIComponent(query)}&limit=30`,
+      isMarketStockSearch,
+      options,
+      this.authenticatedFetch,
+    );
+    return response.stocks;
+  }
+
+  async getMarketQuote(
+    symbol: string,
+    options: PlatformRequestOptions = {},
+  ): Promise<MarketQuote> {
+    const response = await this.requestJson(
+      `/api/v1/market/stocks/${encodeURIComponent(symbol)}/quote`,
+      isMarketQuoteResponse,
+      options,
+      this.authenticatedFetch,
+    );
+    return response.quote;
+  }
+
+  getMarketBars(
+    symbol: string,
+    interval: MarketInterval,
+    options: PlatformRequestOptions = {},
+  ): Promise<MarketBars> {
+    return this.requestJson(
+      `/api/v1/market/stocks/${encodeURIComponent(symbol)}/bars?interval=${interval}`,
+      isMarketBars,
+      options,
+      this.authenticatedFetch,
     );
   }
 

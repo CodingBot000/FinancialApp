@@ -372,6 +372,63 @@
   },
   {
     "contract": "platform-v1",
+    "operationId": "searchMarketStocks",
+    "status": 200,
+    "body": {
+      "stocks": [
+        {
+          "symbol": "005930",
+          "name": "삼성전자",
+          "market": "KOSPI",
+          "industry": "전자부품 제조업"
+        }
+      ]
+    }
+  },
+  {
+    "contract": "platform-v1",
+    "operationId": "getMarketStockQuote",
+    "status": 200,
+    "body": {
+      "quote": {
+        "symbol": "005930",
+        "name": "삼성전자",
+        "market": "KOSPI",
+        "industry": "전자부품 제조업",
+        "currency": "KRW",
+        "currentPrice": "74200.0000",
+        "changePrice": "1200.0000",
+        "changeRate": "1.6438",
+        "volume": "12452301",
+        "capturedAt": "2026-09-02T00:00:00.000Z",
+        "source": "LOCAL",
+        "freshness": "FRESH"
+      }
+    }
+  },
+  {
+    "contract": "platform-v1",
+    "operationId": "getMarketStockBars",
+    "status": 200,
+    "body": {
+      "symbol": "005930",
+      "interval": "DAILY",
+      "source": "LOCAL",
+      "freshness": "FRESH",
+      "bars": [
+        {
+          "bucketAt": "2026-09-01T00:00:00.000Z",
+          "open": "73100.0000",
+          "high": "74600.0000",
+          "low": "72800.0000",
+          "close": "74200.0000",
+          "volume": "1000"
+        }
+      ]
+    }
+  },
+  {
+    "contract": "platform-v1",
     "operationId": "setDeveloperScenario",
     "status": 200,
     "body": { "mode": "ORDER_UNKNOWN_THEN_FILLED", "scope": "GLOBAL" }

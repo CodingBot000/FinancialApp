@@ -7,6 +7,7 @@ import { SimulationModule } from './modules/simulation/simulation.module.js';
 import { TradingModule } from './modules/trading/trading.module.js';
 import { WealthModule } from './modules/wealth/wealth.module.js';
 import { DeveloperModule } from './modules/developer/developer.module.js';
+import { MarketModule } from './modules/market/market.module.js';
 
 const environmentModules =
   process.env.APP_ENV === 'production' ? [] : [DeveloperModule];
@@ -19,6 +20,7 @@ const environmentModules =
     WealthModule,
     SimulationModule,
     TradingModule,
+    MarketModule,
     ...environmentModules,
   ],
 })

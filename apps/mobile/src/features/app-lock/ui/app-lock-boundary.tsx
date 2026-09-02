@@ -232,11 +232,10 @@ export function AppLockBoundary({
 }: AppLockBoundaryProps) {
   const manager = useAuthSession();
   const sessionPresence = useSessionPresence();
-  const [defaultBiometricGate] = useState(
-    () =>
-      isLocalBiometricBypassEnabled()
-        ? new LocalTestBiometricGate()
-        : new ExpoBiometricGate(),
+  const [defaultBiometricGate] = useState(() =>
+    isLocalBiometricBypassEnabled()
+      ? new LocalTestBiometricGate()
+      : new ExpoBiometricGate(),
   );
 
   if (sessionPresence === 'unknown') {

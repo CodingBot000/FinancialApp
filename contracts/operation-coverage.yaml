@@ -281,6 +281,45 @@ contracts:
             adapter: apps/mobile/src/shared/api/http-platform-api.ts,
             target: FE-0013,
           }
+      searchMarketStocks:
+        implementation:
+          [
+            services/platform-api/src/modules/market/api/market.controller.ts,
+            searchStocks,
+          ]
+        providerTests: [services/platform-api/test/market/market.e2e.test.ts]
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-market,
+          }
+      getMarketStockQuote:
+        implementation:
+          [
+            services/platform-api/src/modules/market/api/market.controller.ts,
+            quote,
+          ]
+        providerTests: [services/platform-api/test/market/market.e2e.test.ts]
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-market,
+          }
+      getMarketStockBars:
+        implementation:
+          [
+            services/platform-api/src/modules/market/api/market.controller.ts,
+            bars,
+          ]
+        providerTests: [services/platform-api/test/market/market.e2e.test.ts]
+        consumer:
+          {
+            status: implemented,
+            adapter: apps/mobile/src/shared/api/http-platform-api.ts,
+            target: FE-market,
+          }
       setDeveloperScenario:
         implementation:
           [

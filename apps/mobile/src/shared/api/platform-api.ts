@@ -126,6 +126,46 @@ export interface Page<T> {
 
 export type SimulationAssetClass = 'BOND' | 'CASH' | 'EQUITY';
 
+export type MarketInterval =
+  'MINUTE' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+export type MarketFreshness = 'FRESH' | 'STALE';
+export type MarketSource = 'KIS' | 'LOCAL';
+
+export interface MarketStock {
+  readonly symbol: string;
+  readonly name: string;
+  readonly market: 'KOSPI' | 'KOSDAQ';
+  readonly industry: string | null;
+}
+
+export interface MarketQuote extends MarketStock {
+  readonly currency: 'KRW';
+  readonly currentPrice: Money;
+  readonly changePrice: Money;
+  readonly changeRate: Money;
+  readonly volume: string;
+  readonly capturedAt: string;
+  readonly source: MarketSource;
+  readonly freshness: MarketFreshness;
+}
+
+export interface MarketBar {
+  readonly bucketAt: string;
+  readonly open: Money;
+  readonly high: Money;
+  readonly low: Money;
+  readonly close: Money;
+  readonly volume: string;
+}
+
+export interface MarketBars {
+  readonly symbol: string;
+  readonly interval: MarketInterval;
+  readonly source: MarketSource;
+  readonly freshness: MarketFreshness;
+  readonly bars: readonly MarketBar[];
+}
+
 export interface CreateSimulationInput {
   readonly allocation: readonly Readonly<{
     assetClass: SimulationAssetClass;
@@ -247,6 +287,19 @@ export interface PlatformApi {
   ): Promise<CurrentUserResponse>;
   getRiskProfile(options?: PlatformRequestOptions): Promise<UserRiskProfile>;
   getHealth(options?: PlatformRequestOptions): Promise<PlatformHealthResponse>;
+  searchMarketStocks(
+    query: string,
+    options?: PlatformRequestOptions,
+  ): Promise<readonly MarketStock[]>;
+  getMarketQuote(
+    symbol: string,
+    options?: PlatformRequestOptions,
+  ): Promise<MarketQuote>;
+  getMarketBars(
+    symbol: string,
+    interval: MarketInterval,
+    options?: PlatformRequestOptions,
+  ): Promise<MarketBars>;
   getMyDataSync(
     syncId: string,
     options?: PlatformRequestOptions,

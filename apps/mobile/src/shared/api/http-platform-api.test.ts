@@ -5,6 +5,7 @@ import type { PlatformApiError } from './platform-api';
 import wealthFixture from './mock/fixtures/wealth-dashboard.success.json';
 import simulationFixture from './mock/fixtures/simulation.success.json';
 import orderFixture from './mock/fixtures/order-flow.success.json';
+import marketFixture from './mock/fixtures/market-data.success.json';
 
 describe('HttpPlatformApi', () => {
   it('uses PUT for scenarios and a bodyless POST for dataset reset', async () => {
@@ -358,6 +359,41 @@ describe('HttpPlatformApi', () => {
         },
         method: 'GET',
       }),
+    );
+  });
+
+  it('maps the market search, quote, and bars endpoints', async () => {
+    const authenticatedFetch = vi.fn(async (url: string) => {
+      if (url.includes('/market/stocks?q=')) {
+        return Response.json({ stocks: marketFixture.stocks });
+      }
+      if (url.endsWith('/quote')) {
+        return Response.json({ quote: marketFixture.quote });
+      }
+      return Response.json(marketFixture.bars);
+    });
+    const api = new HttpPlatformApi({
+      authenticatedFetch,
+      baseUrl: 'https://platform.example',
+    });
+
+    await expect(api.searchMarketStocks('삼성')).resolves.toHaveLength(3);
+    await expect(api.getMarketQuote('005930')).resolves.toMatchObject({
+      currentPrice: '74200.0000',
+    });
+    await expect(api.getMarketBars('005930', 'DAILY')).resolves.toMatchObject({
+      interval: 'DAILY',
+      bars: expect.any(Array),
+    });
+    expect(authenticatedFetch).toHaveBeenNthCalledWith(
+      1,
+      'https://platform.example/api/v1/market/stocks?q=%EC%82%BC%EC%84%B1&limit=30',
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(authenticatedFetch).toHaveBeenNthCalledWith(
+      3,
+      'https://platform.example/api/v1/market/stocks/005930/bars?interval=DAILY',
+      expect.objectContaining({ method: 'GET' }),
     );
   });
 

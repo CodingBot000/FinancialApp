@@ -63,6 +63,7 @@ flowchart LR
 | simulation 생성/조회 | `simulation.execute` | user ownership |
 | order preview/submit | `order.execute` | account, quote ownership |
 | order 조회 | `financial.read` | user ownership |
+| market stock/quote/bars | `market.read` | active catalog; provider credential backend-only |
 | dev scenario/reset | `scenario.admin` | demo 환경 전용; production controller/provider 미등록 |
 
 다른 사용자 resource는 `403` 대신 `404 RESOURCE_NOT_FOUND`를 사용해 존재 여부 노출을 줄인다.

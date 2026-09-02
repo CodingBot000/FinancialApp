@@ -8,6 +8,7 @@ const DISPLAY_LABELS: Readonly<Record<string, string>> = {
   CASH: '현금',
   COMPLETED: '완료',
   CONSERVATIVE: '안정형',
+  DAILY: '일봉',
   DEPOSIT: '입금',
   EQUITY: '주식',
   EXPIRED: '만료',
@@ -18,6 +19,8 @@ const DISPLAY_LABELS: Readonly<Record<string, string>> = {
   IDEMPOTENCY_CONFLICT: '중복 요청 충돌',
   INSUFFICIENT_FUNDS: '잔액 부족',
   NORMALIZING: '정리하는 중',
+  MINUTE: '분봉',
+  MONTHLY: '월봉',
   PENDING_SUBMISSION: '제출 대기',
   QUEUED: '대기 중',
   RAW_STORED: '원본 저장됨',
@@ -26,7 +29,9 @@ const DISPLAY_LABELS: Readonly<Record<string, string>> = {
   UNKNOWN: '확인 중',
   QUOTE_EXPIRED: '견적 만료',
   VALIDATION_FAILED: '입력값 오류',
+  WEEKLY: '주봉',
   WITHDRAWAL: '출금',
+  YEARLY: '연봉',
 };
 
 const SCENARIO_LABELS: Readonly<Record<string, string>> = {

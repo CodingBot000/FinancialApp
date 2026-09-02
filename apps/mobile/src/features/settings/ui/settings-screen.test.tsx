@@ -90,9 +90,7 @@ describe('SettingsScreen', () => {
     const { view } = await renderSettings(api, true);
     expect(await view.findByText('개발자 도구')).toBeTruthy();
 
-    fireEvent.press(
-      view.getByRole('button', { name: '시나리오 주문 거절' }),
-    );
+    fireEvent.press(view.getByRole('button', { name: '시나리오 주문 거절' }));
     await waitFor(() =>
       expect(scenarioSpy).toHaveBeenCalledWith('ORDER_REJECT'),
     );

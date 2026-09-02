@@ -608,6 +608,136 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/market/stocks:
+    get:
+      operationId: searchMarketStocks
+      summary: Search active KOSPI and KOSDAQ stocks
+      description: Requires `market.read`; search is served from the FinancialApp market catalog.
+      security:
+        - BearerAuth: []
+      tags: [Market]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 50
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 30
+            default: 20
+      responses:
+        '200':
+          description: Matching active stocks.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketStockSearchResponse'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/market/stocks/{symbol}/quote:
+    get:
+      operationId: getMarketStockQuote
+      summary: Read the latest stock quote
+      description: Requires `market.read`; returns cached data when the provider is unavailable.
+      security:
+        - BearerAuth: []
+      tags: [Market]
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{6}$'
+      responses:
+        '200':
+          description: Latest normalized quote.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketQuoteResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '502':
+          description: Provider returned invalid data.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          description: Provider unavailable and no cached quote exists.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/market/stocks/{symbol}/bars:
+    get:
+      operationId: getMarketStockBars
+      summary: Read normalized stock price bars
+      description: Requires `market.read`; bars are returned in ascending bucket time order.
+      security:
+        - BearerAuth: []
+      tags: [Market]
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{6}$'
+        - name: interval
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [MINUTE, DAILY, WEEKLY, MONTHLY, YEARLY]
+            default: DAILY
+      responses:
+        '200':
+          description: Normalized price bars.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketBars'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '502':
+          description: Provider returned invalid data.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          description: Provider unavailable and no cached bars exist.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /api/v1/dev/scenario:
     put:
       operationId: setDeveloperScenario
@@ -1278,6 +1408,129 @@ components:
         datasetVersion: { type: string, minLength: 1 }
         scenarioMode: { type: string, const: NORMAL }
         syntheticData: { type: boolean, const: true }
+    MarketStock:
+      type: object
+      additionalProperties: false
+      required: [symbol, name, market, industry]
+      properties:
+        symbol:
+          type: string
+          pattern: '^\d{6}$'
+        name:
+          type: string
+          minLength: 1
+        market:
+          type: string
+          enum: [KOSPI, KOSDAQ]
+        industry:
+          type: [string, 'null']
+    MarketStockSearchResponse:
+      type: object
+      additionalProperties: false
+      required: [stocks]
+      properties:
+        stocks:
+          type: array
+          maxItems: 30
+          items:
+            $ref: '#/components/schemas/MarketStock'
+    MarketQuoteResponse:
+      type: object
+      additionalProperties: false
+      required: [quote]
+      properties:
+        quote:
+          $ref: '#/components/schemas/MarketQuote'
+    MarketQuote:
+      type: object
+      additionalProperties: false
+      required:
+        - symbol
+        - name
+        - market
+        - industry
+        - currency
+        - currentPrice
+        - changePrice
+        - changeRate
+        - volume
+        - capturedAt
+        - source
+        - freshness
+      properties:
+        symbol:
+          type: string
+          pattern: '^\d{6}$'
+        name:
+          type: string
+          minLength: 1
+        market:
+          type: string
+          enum: [KOSPI, KOSDAQ]
+        industry:
+          type: [string, 'null']
+        currency:
+          type: string
+          const: KRW
+        currentPrice:
+          $ref: '#/components/schemas/Money'
+        changePrice:
+          $ref: '#/components/schemas/Money'
+        changeRate:
+          $ref: '#/components/schemas/Money'
+        volume:
+          type: string
+          pattern: '^\d+$'
+        capturedAt:
+          type: string
+          format: date-time
+        source:
+          type: string
+          enum: [KIS, LOCAL]
+        freshness:
+          type: string
+          enum: [FRESH, STALE]
+    MarketBars:
+      type: object
+      additionalProperties: false
+      required: [symbol, interval, source, freshness, bars]
+      properties:
+        symbol:
+          type: string
+          pattern: '^\d{6}$'
+        interval:
+          type: string
+          enum: [MINUTE, DAILY, WEEKLY, MONTHLY, YEARLY]
+        source:
+          type: string
+          enum: [KIS, LOCAL]
+        freshness:
+          type: string
+          enum: [FRESH, STALE]
+        bars:
+          type: array
+          maxItems: 156
+          items:
+            $ref: '#/components/schemas/MarketBar'
+    MarketBar:
+      type: object
+      additionalProperties: false
+      required: [bucketAt, open, high, low, close, volume]
+      properties:
+        bucketAt:
+          type: string
+          format: date-time
+        open:
+          $ref: '#/components/schemas/Money'
+        high:
+          $ref: '#/components/schemas/Money'
+        low:
+          $ref: '#/components/schemas/Money'
+        close:
+          $ref: '#/components/schemas/Money'
+        volume:
+          type: string
+          pattern: '^\d+$'
     MeResponse:
       type: object
       additionalProperties: false

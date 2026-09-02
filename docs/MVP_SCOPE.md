@@ -17,6 +17,7 @@
 - raw/derived 데이터 경계
 - 서버 기반 자산 집계와 시뮬레이션
 - BUY 주문의 멱등성, 현금 예약, settlement와 reconciliation
+- 한국투자증권 KIS 시장 데이터 provider adapter와 종목/시세 cache
 - 로컬 생체인증 app lock
 - 테스트와 배포 자동화
 
@@ -40,6 +41,7 @@
 - TanStack Query 서버 상태
 - Zustand UI/draft 상태
 - Dashboard, Accounts, Simulation, Order, Settings 화면
+- 종목 검색, 현재가와 기간별 가격 차트를 제공하는 `시장` 탭
 - 총자산 추이, 자산배분, p10/p50/p90 차트
 - loading, empty, error, retry UX
 - Reduce Motion 기본 고려
@@ -59,6 +61,7 @@
 - audit event 최소 구현
 - OpenAPI와 표준 오류 응답
 - health와 correlation ID
+- KIS 종목 마스터, 현재가, 분봉/일봉/주봉/월봉/연봉 조회 API
 
 ### Simulator
 
@@ -99,7 +102,7 @@
 ## 4. 명시적으로 제외
 
 - SELL, limit order, partial fill, cancel order
-- 실제 금융기관 API와 실제 시세
+- 실제 금융기관 계좌/마이데이터 API와 실제 주문
 - 실제 개인정보와 실제 계좌번호
 - 투자 추천 또는 수익 보장 표현
 - push notification

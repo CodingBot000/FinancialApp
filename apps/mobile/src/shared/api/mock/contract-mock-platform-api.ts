@@ -24,12 +24,17 @@ import {
   type Transaction,
   type UpdateRiskProfileInput,
   type UserRiskProfile,
+  type MarketBars,
+  type MarketQuote,
+  type MarketStock,
+  type MarketInterval,
 } from '../platform-api';
 import currentUserFixture from './fixtures/current-user.success.json';
 import fixture from './fixtures/platform-health.success.json';
 import wealthFixture from './fixtures/wealth-dashboard.success.json';
 import simulationFixture from './fixtures/simulation.success.json';
 import orderFixture from './fixtures/order-flow.success.json';
+import marketFixture from './fixtures/market-data.success.json';
 
 const platformHealthFixture = fixture as PlatformHealthResponse;
 const currentUser = currentUserFixture as CurrentUserResponse;
@@ -47,6 +52,9 @@ const wealth = wealthFixture as unknown as {
   sync: MyDataSync;
   transactions: readonly Transaction[];
 };
+const marketStocks = marketFixture.stocks as readonly MarketStock[];
+const marketQuote = marketFixture.quote as MarketQuote;
+const marketBars = marketFixture.bars as MarketBars;
 
 export type ContractMockHealthScenario = 'rate-limited' | 'success' | 'timeout';
 
@@ -187,6 +195,54 @@ export class ContractMockPlatformApi implements PlatformApi {
     }
 
     return structuredClone(platformHealthFixture);
+  }
+
+  async searchMarketStocks(
+    query: string,
+    options: PlatformRequestOptions = {},
+  ): Promise<readonly MarketStock[]> {
+    await waitForMockLatency(this.latencyMs, options.signal);
+    const normalized = query.trim().toLocaleLowerCase('ko-KR');
+    return structuredClone(
+      marketStocks.filter(
+        (stock) =>
+          stock.symbol.startsWith(normalized) ||
+          stock.name.toLocaleLowerCase('ko-KR').includes(normalized),
+      ),
+    );
+  }
+
+  async getMarketQuote(
+    symbol: string,
+    options: PlatformRequestOptions = {},
+  ): Promise<MarketQuote> {
+    await waitForMockLatency(this.latencyMs, options.signal);
+    if (symbol !== marketQuote.symbol) {
+      throw new PlatformApiError({
+        kind: 'http',
+        message: '조회할 종목을 찾을 수 없습니다.',
+        retryable: false,
+        status: 404,
+      });
+    }
+    return structuredClone(marketQuote);
+  }
+
+  async getMarketBars(
+    symbol: string,
+    interval: MarketInterval,
+    options: PlatformRequestOptions = {},
+  ): Promise<MarketBars> {
+    await waitForMockLatency(this.latencyMs, options.signal);
+    if (symbol !== marketBars.symbol || interval !== marketBars.interval) {
+      throw new PlatformApiError({
+        kind: 'http',
+        message: '조회할 차트 데이터를 찾을 수 없습니다.',
+        retryable: false,
+        status: 404,
+      });
+    }
+    return structuredClone(marketBars);
   }
 
   async getMyDataSync(_syncId: string, options: PlatformRequestOptions = {}) {

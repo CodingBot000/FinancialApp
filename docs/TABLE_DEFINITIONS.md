@@ -53,6 +53,7 @@ Keycloak schema는 애플리케이션 Drizzle migration이 생성·수정·삭�
 | `finapp_wealth` | platform migration | 계좌, 보유자산, 거래, snapshot |
 | `finapp_simulation` | platform migration | assumption과 simulation 결과 |
 | `finapp_trading` | platform migration | quote, order, reservation, ledger |
+| `finapp_market` | platform migration | KIS 종목 master와 시세 cache |
 | `finapp_audit` | platform migration | append-only audit/security event |
 | `finapp_crypto` | platform migration | encrypted data key metadata |
 | `finapp_simulator` | simulator migration | 가상 외부기관 원천 데이터 |
@@ -98,6 +99,9 @@ Drizzle migration history:
 | `finapp_trading` | `finapp_reconciliation_job` | 5 | platform worker |
 | `finapp_trading` | `finapp_outbox_event` | 6 | platform worker |
 | `finapp_trading` | `finapp_outbox_delivery` | 6 | platform worker, insert-only receipt |
+| `finapp_market` | `finapp_market_instrument` | 6 | market sync CLI |
+| `finapp_market` | `finapp_market_quote_snapshot` | 6 | platform |
+| `finapp_market` | `finapp_market_price_bar` | 6 | platform |
 | `finapp_audit` | `finapp_audit_event` | 3 | platform, insert-only |
 | `finapp_audit` | `finapp_security_event` | 6 | platform, insert-only |
 | `finapp_crypto` | `finapp_data_keyring` | 6 | platform crypto adapter |
@@ -613,7 +617,41 @@ Constraints/indexes: `finapp_uq_outbox_aggregate_event`, `finapp_ck_outbox_attem
 
 `(event_id, consumer_name)` unique receipt가 publish 성공 뒤 outbox complete 전에 process가 종료되는 crash window의 중복 효과를 막는다. Runtime role은 INSERT/SELECT만 허용한다.
 
-## 10. finapp_audit와 finapp_crypto
+## 10. finapp_market
+
+### `finapp_market.finapp_market_instrument`
+
+- `id uuid` PK
+- `symbol varchar(12)` unique, active 국내 6자리 종목코드
+- `name varchar(120)`, `market varchar(20)` (`KOSPI`/`KOSDAQ`)
+- `industry varchar(200)` nullable
+- `standard_code varchar(32)` nullable
+- `base_price numeric(19,4)`, `listed_at date` nullable
+- `active boolean`, `source varchar(20)` (`KIS_MASTER`), `raw jsonb`
+- `synced_at`, `created_at`, `updated_at timestamptz`
+- indexes: `finapp_idx_market_instrument_name`, `finapp_idx_market_instrument_market_symbol`
+
+### `finapp_market.finapp_market_quote_snapshot`
+
+- `id uuid` PK, `instrument_id uuid` FK market instrument
+- `current_price`, `change_price numeric(19,4)`, `change_rate numeric(10,4)`
+- `volume bigint`, `source varchar(20)` (`KIS`/`LOCAL`)
+- `captured_at timestamptz`, `raw jsonb`
+- index: `finapp_idx_market_quote_instrument_captured`
+
+### `finapp_market.finapp_market_price_bar`
+
+- `id uuid` PK, `instrument_id uuid` FK market instrument
+- `interval varchar(20)` (`MINUTE`, `DAILY`, `WEEKLY`, `MONTHLY`, `YEARLY`)
+- `bucket_at timestamptz`, OHLC `numeric(19,4)`, `volume bigint`
+- `source varchar(20)` (`KIS`/`LOCAL`), `raw jsonb`
+- unique: `finapp_uq_market_bar_bucket` on `(instrument_id, interval, bucket_at)`
+- index: `finapp_idx_market_bar_lookup`
+
+시장 migration은 `finapp_market`만 생성하며 기존 `finapp_*`, `cdd_*` schema/table을
+변경하지 않는다. `market:sync`는 startup 자동 실행이 아닌 명시적 CLI다.
+
+## 11. finapp_audit와 finapp_crypto
 
 ### `finapp_audit.finapp_audit_event`
 
@@ -665,7 +703,7 @@ Constraints/indexes: `finapp_ck_security_event_type`, `finapp_ck_security_event_
 
 Unique: `finapp_uq_keyring_scope_version`.
 
-## 11. finapp_simulator
+## 12. finapp_simulator
 
 Simulator table은 모두 `finapp_simulator` schema에 있고 platform schema와 FK를 갖지 않는다.
 
@@ -760,12 +798,13 @@ Simulator table은 모두 `finapp_simulator` schema에 있고 platform schema와
 - `updated_at timestamptz`
 - unique `finapp_uq_sim_scenario_scope`
 
-## 12. 권한 기준
+## 13. 권한 기준
 
 ### `financial_platform_app`
 
-- USAGE: platform schema만
+- USAGE: platform schema와 `finapp_market`
 - DML: platform table의 필요한 SELECT/INSERT/UPDATE
+- `finapp_market` instrument/quote/bar의 필요한 SELECT/INSERT/UPDATE
 - 금지: DDL, `finapp_simulator`, Keycloak schema
 - `finapp_raw_record`, ledger, audit event UPDATE/DELETE 금지
 
@@ -785,7 +824,7 @@ Simulator table은 모두 `finapp_simulator` schema에 있고 platform schema와
 - 별도 `finapp_keycloak` database 또는 schema만 사용
 - application schema 접근 금지
 
-## 13. Drizzle migration과 공용 DB 안전장치
+## 14. Drizzle migration과 공용 DB 안전장치
 
 - shared/demo/production DB에서 `drizzle-kit push`를 사용하지 않는다.
 - versioned SQL migration은 신규 `finapp_*` schema와 명시된 객체만 대상으로 한다.
@@ -806,6 +845,7 @@ WHERE table_schema IN (
     'finapp_wealth',
     'finapp_simulation',
     'finapp_trading',
+    'finapp_market',
     'finapp_audit',
     'finapp_crypto',
     'finapp_simulator'

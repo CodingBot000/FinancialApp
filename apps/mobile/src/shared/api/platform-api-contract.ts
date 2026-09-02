@@ -16,6 +16,10 @@ import type {
   UserRiskProfile,
   Simulation,
   Transaction,
+  MarketBar,
+  MarketBars,
+  MarketQuote,
+  MarketStock,
 } from './platform-api';
 
 const UUID =
@@ -43,6 +47,115 @@ const money = (value: unknown) =>
 const maskedIdentifier = (value: unknown) =>
   typeof value === 'string' && value.includes('*') && value.length > 0;
 const count = (value: unknown) => Number.isInteger(value) && Number(value) >= 0;
+const volume = (value: unknown) =>
+  typeof value === 'string' && /^\d+$/.test(value);
+const marketInterval = (value: unknown) =>
+  ['MINUTE', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].includes(String(value));
+const marketSource = (value: unknown) =>
+  ['KIS', 'LOCAL'].includes(String(value));
+const marketFreshness = (value: unknown) =>
+  ['FRESH', 'STALE'].includes(String(value));
+
+export function isMarketStock(value: unknown): value is MarketStock {
+  const item = record(value);
+  return (
+    !!item &&
+    exact(item, ['symbol', 'name', 'market', 'industry']) &&
+    typeof item.symbol === 'string' &&
+    /^\d{6}$/.test(item.symbol) &&
+    text(item.name) &&
+    ['KOSPI', 'KOSDAQ'].includes(String(item.market)) &&
+    nullableText(item.industry)
+  );
+}
+
+export function isMarketStockSearch(
+  value: unknown,
+): value is { readonly stocks: readonly MarketStock[] } {
+  const item = record(value);
+  return (
+    !!item &&
+    exact(item, ['stocks']) &&
+    Array.isArray(item.stocks) &&
+    item.stocks.length <= 30 &&
+    item.stocks.every(isMarketStock)
+  );
+}
+
+export function isMarketQuote(value: unknown): value is MarketQuote {
+  const item = record(value);
+  return (
+    !!item &&
+    exact(item, [
+      'symbol',
+      'name',
+      'market',
+      'industry',
+      'currency',
+      'currentPrice',
+      'changePrice',
+      'changeRate',
+      'volume',
+      'capturedAt',
+      'source',
+      'freshness',
+    ]) &&
+    isMarketStock({
+      symbol: item.symbol,
+      name: item.name,
+      market: item.market,
+      industry: item.industry,
+    }) &&
+    item.currency === 'KRW' &&
+    money(item.currentPrice) &&
+    money(item.changePrice) &&
+    money(item.changeRate) &&
+    volume(item.volume) &&
+    typeof item.capturedAt === 'string' &&
+    Number.isFinite(Date.parse(item.capturedAt)) &&
+    marketSource(item.source) &&
+    marketFreshness(item.freshness)
+  );
+}
+
+export function isMarketQuoteResponse(
+  value: unknown,
+): value is { readonly quote: MarketQuote } {
+  const item = record(value);
+  return !!item && exact(item, ['quote']) && isMarketQuote(item.quote);
+}
+
+function isMarketBar(value: unknown): value is MarketBar {
+  const item = record(value);
+  return (
+    !!item &&
+    exact(item, ['bucketAt', 'open', 'high', 'low', 'close', 'volume']) &&
+    typeof item.bucketAt === 'string' &&
+    Number.isFinite(Date.parse(item.bucketAt)) &&
+    money(item.open) &&
+    money(item.high) &&
+    money(item.low) &&
+    money(item.close) &&
+    volume(item.volume) &&
+    Number(item.high) >= Number(item.low)
+  );
+}
+
+export function isMarketBars(value: unknown): value is MarketBars {
+  const item = record(value);
+  return (
+    !!item &&
+    exact(item, ['symbol', 'interval', 'source', 'freshness', 'bars']) &&
+    typeof item.symbol === 'string' &&
+    /^\d{6}$/.test(item.symbol) &&
+    marketInterval(item.interval) &&
+    marketSource(item.source) &&
+    marketFreshness(item.freshness) &&
+    Array.isArray(item.bars) &&
+    item.bars.length <= 156 &&
+    item.bars.every(isMarketBar)
+  );
+}
 
 export function isPlatformHealth(
   value: unknown,

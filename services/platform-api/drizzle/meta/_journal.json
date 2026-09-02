@@ -71,6 +71,13 @@
       "when": 1788969600000,
       "tag": "0009_finapp_order_list_index",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788969600001,
+      "tag": "0010_finapp_market",
+      "breakpoints": true
     }
   ]
 }

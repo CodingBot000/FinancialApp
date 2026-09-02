@@ -18,6 +18,10 @@ import {
   type Page,
   type PlatformApi,
   type PlatformHealthResponse,
+  type MarketBars,
+  type MarketInterval,
+  type MarketQuote,
+  type MarketStock,
   type Quote,
   type Simulation,
   type Transaction,
@@ -58,6 +62,20 @@ export class UnavailablePlatformApi implements PlatformApi {
   }
 
   getHealth(): Promise<PlatformHealthResponse> {
+    return this.reject();
+  }
+
+  searchMarketStocks(): Promise<readonly MarketStock[]> {
+    return this.reject();
+  }
+
+  getMarketQuote(): Promise<MarketQuote> {
+    return this.reject();
+  }
+
+  getMarketBars(symbol: string, interval: MarketInterval): Promise<MarketBars> {
+    void symbol;
+    void interval;
     return this.reject();
   }
 

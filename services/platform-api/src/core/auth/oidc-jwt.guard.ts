@@ -41,6 +41,7 @@ const LOCAL_TEST_SCOPES = new Set([
   'financial.write',
   'simulation.execute',
   'order.execute',
+  'market.read',
   'scenario.admin',
 ]);
 
