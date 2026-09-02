@@ -34,6 +34,18 @@ for (const label of ['홈', '종목', '주문', '플랜', '내 정보']) {
   }
 }
 
+for (const icon of [
+  'home-outline',
+  'stats-chart-outline',
+  'receipt-outline',
+  'analytics-outline',
+  'person-circle-outline',
+]) {
+  if (!tabsLayout.includes(`'${icon}'`)) {
+    throw new Error(`필수 bottom tab icon이 없습니다: ${icon}`);
+  }
+}
+
 const appJson = JSON.parse(await readFile(join(appRoot, 'app.json'), 'utf8'));
 if (appJson.expo?.name !== 'Wealth Flow') {
   throw new Error('app 표시 이름은 Wealth Flow여야 합니다.');
