@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { colors, radius, spacing } from '../tokens';
+import { radius } from '../tokens';
 
 export function IconButton({
   accessibilityLabel,
@@ -27,11 +27,10 @@ export function IconButton({
 const styles = StyleSheet.create({
   base: {
     alignItems: 'center',
-    backgroundColor: colors.surface.subtle,
     borderRadius: radius.full,
-    height: spacing[12],
+    height: 44,
     justifyContent: 'center',
-    width: spacing[12],
+    width: 44,
   },
   pressed: { opacity: 0.72 },
 });

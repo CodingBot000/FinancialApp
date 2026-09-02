@@ -2,7 +2,6 @@ import { type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText } from './app-text';
-import { spacing } from '../tokens';
 
 export function SectionHeader({
   action,
@@ -24,6 +23,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: spacing[3],
   },
 });

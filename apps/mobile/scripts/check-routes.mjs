@@ -8,6 +8,7 @@ const routeFiles = [
   'src/app/index.tsx',
   'src/app/order.tsx',
   'src/app/market/[symbol].tsx',
+  'src/app/notifications.tsx',
   'src/app/(tabs)/_layout.tsx',
   'src/app/(tabs)/index.tsx',
   'src/app/(tabs)/market.tsx',

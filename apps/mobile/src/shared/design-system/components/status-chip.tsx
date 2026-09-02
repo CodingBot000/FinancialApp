@@ -25,7 +25,9 @@ export function StatusChip({ status }: { readonly status: string }) {
                 ? colors.surface.warning
                 : tone === 'success'
                   ? colors.surface.success
-                  : colors.surface.subtle,
+                  : colors.surface.primary,
+          borderColor:
+            tone === 'secondary' ? colors.border.subtle : 'transparent',
         },
       ]}
     >
@@ -38,6 +40,7 @@ export function StatusChip({ status }: { readonly status: string }) {
 
 const styles = StyleSheet.create({
   base: {
+    borderWidth: 1,
     borderRadius: radius.full,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],

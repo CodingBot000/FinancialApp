@@ -15,6 +15,15 @@ const backgrounds: Record<CardVariant, string> = {
   danger: colors.surface.danger,
 };
 
+const borders: Record<CardVariant, string> = {
+  default: colors.border.strong,
+  subtle: 'transparent',
+  warm: 'transparent',
+  info: 'transparent',
+  warning: 'transparent',
+  danger: 'transparent',
+};
+
 export function Card({
   children,
   style,
@@ -27,7 +36,14 @@ export function Card({
   return (
     <View
       {...props}
-      style={[styles.base, { backgroundColor: backgrounds[variant] }, style]}
+      style={[
+        styles.base,
+        {
+          backgroundColor: backgrounds[variant],
+          borderColor: borders[variant],
+        },
+        style,
+      ]}
     >
       {children}
     </View>
@@ -36,9 +52,9 @@ export function Card({
 
 const styles = StyleSheet.create({
   base: {
-    borderColor: colors.border.subtle,
     borderRadius: radius.card,
     borderWidth: 1,
+    gap: spacing[3],
     padding: spacing[5],
   },
 });

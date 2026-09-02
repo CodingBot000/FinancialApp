@@ -55,8 +55,8 @@ const styles = StyleSheet.create({
   clearLineSecond: { transform: [{ rotate: '-45deg' }] },
   container: { justifyContent: 'center' },
   input: {
-    backgroundColor: colors.surface.primary,
-    borderColor: colors.border.strong,
+    backgroundColor: colors.surface.subtle,
+    borderColor: 'transparent',
     borderRadius: radius.input,
     borderWidth: 1,
     color: colors.text.primary,

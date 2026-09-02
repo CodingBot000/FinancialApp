@@ -2,15 +2,43 @@ import { fireEvent, render } from '@testing-library/react-native';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  AppText,
   Button,
   DemoDisclosure,
+  FullScreenLayer,
   MarketChange,
   MoneyValue,
   SegmentedControl,
   StatusChip,
 } from './index';
+import { colors, palette, radius, typography } from '../tokens';
 
 describe('design system primitives', () => {
+  it('provides a reusable full-screen layer header', async () => {
+    const onBack = vi.fn();
+    const view = await render(
+      <FullScreenLayer backIcon={<></>} onBack={onBack} title="알림함">
+        <AppText>레이어 본문</AppText>
+      </FullScreenLayer>,
+    );
+    fireEvent.press(view.getByRole('button', { name: '뒤로가기' }));
+    expect(onBack).toHaveBeenCalledOnce();
+    expect(view.getByRole('header', { name: '알림함' })).toBeTruthy();
+    expect(view.getByText('레이어 본문')).toBeTruthy();
+  });
+
+  it('keeps the screenshot-aligned visual foundation stable', () => {
+    expect(colors.background.screen).toBe('#FFFFFF');
+    expect(colors.text.primary).toBe('#0E0E0E');
+    expect(colors.text.secondary).toBe('#707070');
+    expect(colors.surface.subtle).toBe('#F4F4F4');
+    expect(colors.brand.primary).toBe('#F37321');
+    expect(palette.neutral300).toBe('#D0D0D0');
+    expect(typography.amountHero.fontWeight).toBe('700');
+    expect(typography.body.fontSize).toBe(16);
+    expect(radius.card).toBe(20);
+  });
+
   it('renders a privacy-safe money value and signed market change', async () => {
     const hidden = await render(<MoneyValue hidden value="1250000" />);
     expect(hidden.getByText('••••원')).toBeTruthy();

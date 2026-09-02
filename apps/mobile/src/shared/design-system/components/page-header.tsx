@@ -31,7 +31,7 @@ export function PageHeader({
 }
 
 const styles = StyleSheet.create({
-  container: { marginBottom: spacing[6] },
+  container: { marginBottom: spacing[1] },
   row: {
     alignItems: 'center',
     flexDirection: 'row',

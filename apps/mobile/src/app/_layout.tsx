@@ -25,7 +25,15 @@ export default function RootLayout() {
                     contentStyle: { backgroundColor: colors.background.screen },
                     headerShown: false,
                   }}
-                />
+                >
+                  <Stack.Screen
+                    name="notifications"
+                    options={{
+                      animation: 'slide_from_right',
+                      presentation: 'card',
+                    }}
+                  />
+                </Stack>
               </MobileQueryProvider>
             </ConfiguredPlatformApiProvider>
           </AppLockBoundary>

@@ -1,5 +1,11 @@
 import { type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
 import { AppText } from './app-text';
 import { colors, radius, spacing } from '../tokens';
@@ -49,6 +55,7 @@ export function Button({
   loading = false,
   onPress,
   size = 'large',
+  style,
   variant = 'primary',
 }: {
   readonly accessibilityLabel?: string;
@@ -57,6 +64,7 @@ export function Button({
   readonly loading?: boolean;
   readonly onPress: () => void;
   readonly size?: 'large' | 'medium' | 'small';
+  readonly style?: StyleProp<ViewStyle>;
   readonly variant?: ButtonVariant;
 }) {
   const visual = variantStyles[variant];
@@ -79,6 +87,7 @@ export function Button({
             ? colors.action.disabledBackground
             : visual.borderColor,
         },
+        style,
         pressed && styles.pressed,
       ]}
     >
