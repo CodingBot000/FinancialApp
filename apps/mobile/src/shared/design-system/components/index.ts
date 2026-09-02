@@ -1,10 +1,12 @@
 export { AppText } from './app-text';
 export { Button } from './button';
+export { BottomBar } from './bottom-bar';
 export { Card } from './card';
 export { DemoDisclosure } from './demo-disclosure';
 export { EmptyState } from './empty-state';
 export { ErrorState } from './error-state';
 export { FullScreenLayer } from './full-screen-layer';
+export { FullScreenSurface } from './full-screen-surface';
 export { IconButton } from './icon-button';
 export { ListRow } from './list-row';
 export { LoadingState } from './loading-state';

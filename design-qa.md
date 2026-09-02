@@ -108,4 +108,72 @@ Fixes applied: screen background changed to white; neutral, border, state, and m
 - Flow tested: home bell -> notification layer -> inactive `알림켜기` press -> no visible state or navigation change after three seconds -> back -> original home tab.
 - No actionable P0/P1/P2 notification-layer mismatch remains.
 
+## Launch splash and shared bottom bar update
+
+- Source brief: user instruction specifying a one-second full-screen black splash with centered grey `WM`, followed by a full-screen-ready onboarding destination, plus a reusable content-sized bottom bar.
+- Native splash evidence: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/22-splash-wm-native.png`.
+- App-shell evidence: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/23-bottom-bar-content-sized.png`.
+- Combined evidence: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/24-splash-and-bottom-bar.png`.
+- Viewport: Android emulator 1080 x 2400 px at 420 dpi (approximately 411 x 914 dp). The native splash and app capture include device-owned status/system navigation chrome.
+- Typography and color: native and runtime splash both use a black `#000000` surface and grey `#8D8D8D` `WM` wordmark. The runtime status-bar icon mode changes to light during splash and dark after the app is ready.
+- Layout: `FullScreenSurface` has no content padding and applies all safe-area edges, making it suitable for the upcoming full-screen onboarding screen. `AppLaunchBoundary` holds the launch state for `SPLASH_DURATION_MS = 1000` and hides the native splash before mounting the next destination.
+- Bottom bar: shared `BottomBar` is content-sized (no fixed height), exports through the design-system public index, and is used by the five-tab navigator. The tab items retain their existing icon, label, color, and semantics while the container reserves bottom inset space.
+- Runtime flow: cold Android launch showed native black/grey `WM`; after the launch gate, the home screen and content-sized bottom bar rendered without runtime errors. `AppLaunchBoundary` timer behavior is covered by unit tests.
+- Onboarding readiness: the full-screen surface and launch children slot are now consumed by the four-page onboarding carousel documented below.
+- Residual P3: the development client can show its own loading banner while Metro is unavailable; this is dev-client chrome and does not appear in a production build.
+
+## First-run permission sheet update
+
+- Source visual truth: `/Users/switch/Downloads/항목을 포함하는 새로운 폴더 15/1.jpg`.
+- First-run sheet evidence: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/25-first-launch-permission-sheet.png`.
+- Confirmation result: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/26-after-permission-home.png`.
+- Subsequent launch result: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/27-second-launch-no-sheet.png`.
+- Flow comparison: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/28-launch-flow.png`.
+- State sequence: first cold launch -> one-second splash -> permission sheet blocks transition -> `확인` -> home; second cold launch -> splash -> home without the sheet.
+- Copy and layout: the supplied Korean permission title, explanation, optional permission list, device caveat, and full-width confirmation button are rendered in a rounded white bottom sheet over the black `WM` surface.
+- Persistence: `expo-secure-store` stores versioned `wealth-flow.launch-notice-seen.v1` and `wealth-flow.onboarding-completed.v1` flags. Read/write failures fail open to the app without blocking startup.
+- Architecture: `LaunchPermissionSheet` uses the shared content-sized `BottomBar` with `variant="sheet"`; future first-run sheets can reuse the same surface and keep their own content height.
+- Interaction proof: tapping `확인` removes the sheet and reveals the app; the next cold launch was observed without the sheet. Unit coverage now includes first-run blocking, confirmation persistence, and seen-state skip.
+- No actionable P0/P1/P2 mismatch remains. The only intentional limitation is that the permission button records acknowledgement but does not request OS permissions yet.
+
+## Onboarding carousel update
+
+- Source visual truth: `/Users/switch/Downloads/항목을 포함하는 새로운 폴더 15/2_1.jpg` plus the user-supplied four-page copy brief.
+- Generated project assets (built-in image generation, low-resolution exports): `apps/mobile/assets/onboarding/assets-overview.png`, `money-flow.png`, `goal-planning.png`, and `financial-habits.png`.
+- Page evidence: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/33-onboarding-pages.png`.
+- Completion evidence: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/32-onboarding-complete.png`.
+- Viewport: Android emulator 1080 x 2400 px at 420 dpi (approximately 411 x 914 dp). The onboarding surface is safe-area aware and fills the app-owned viewport.
+- Copy: all four requested title/description pairs are included verbatim. The CTA reads `바로 시작하기` on every page; horizontal paging and the four-dot indicator remain active.
+- Interaction proof: pages 1 -> 2 -> 3 -> 4 were advanced with horizontal swipes. Tapping `바로 시작하기` entered home and persisted onboarding completion in SecureStore.
+- Architecture: `OnboardingScreen` is an isolated feature that receives an `onComplete` callback from `AppLaunchBoundary`, uses `FullScreenSurface`, and does not depend on authenticated providers.
+- Image fidelity: generated illustrations share a restrained white/warm-grey/orange 3D style and are resized to low-resolution workspace assets. No CSS/SVG placeholder art was used.
+- No actionable P0/P1/P2 mismatch remains for the requested onboarding scope. Exact illustration subject matter is intentionally flexible because arbitrary low-resolution images were requested.
+
+## Phone verification and carrier sheet update
+
+- Source visual truth: `/Users/switch/Downloads/항목을 포함하는 새로운 폴더 15/3_1.jpg` and `3_2.jpg`.
+- Phone input evidence: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/34-phone-input.png`.
+- Carrier sheet evidence: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/35-carrier-sheet.png`.
+- Selection result: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/36-carrier-selected.png`.
+- Demo completion evidence: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/37-phone-flow-complete.png`.
+- Reference comparisons: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/38-reference-vs-phone-input.png` and `39-reference-vs-carrier-sheet.png`.
+- Copy and layout: the full-screen form uses the supplied title, phone label/placeholder, underline fields, disabled `다음` CTA, and six carrier labels in the requested order.
+- Interaction proof: entering an 11-digit phone number opens the carrier bottom sheet (the carrier field can also be opened directly); selecting any carrier closes it and updates the field. `다음` remains a demo continuation action and does not perform real identity verification.
+- Architecture: `PhoneVerificationScreen` is exposed through the onboarding feature boundary and receives completion from `AppLaunchBoundary`. Verification completion is stored separately as `wealth-flow.verification-completed.v1`, allowing future launch layers to be added without coupling them to the app providers.
+- Overlay behavior: the scrim covers the full app surface (including the status-area content) and the content-sized shared `BottomBar` sheet is anchored above the device navigation inset.
+- No actionable P0/P1/P2 mismatch remains for the requested phone/carrier demonstration flow. The emulator uses gesture navigation while the source uses three-button navigation; that system-owned difference is expected.
+
+## Identity details, terms, and quick-password update
+
+- Source visual truth: `/Users/switch/Downloads/항목을 포함하는 새로운 폴더 15/3_4.jpg`, `3_5.jpg`, and `4.jpg`.
+- Terms sheet evidence: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/40-terms-sheet.png`.
+- New PIN evidence: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/41-pin-create.png`.
+- Confirmation evidence: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/42-pin-confirm.png`.
+- Reference comparisons: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/43-reference-vs-terms.png` and `44-reference-vs-pin.png`.
+- Progressive form: carrier selection reveals a masked resident-number field (`앞 6자리 - 성별 1자리 + ••••••`), completion reveals the name field, and the `다음` CTA remains disabled until all required identity inputs are present.
+- Terms behavior: `약관을 확인해주세요` is a reusable content-sized bottom sheet. 전체 동의 toggles every row, individual required/optional rows can be toggled independently, and `동의` activates only when both required rows are checked.
+- Quick password: a six-digit custom keypad is shuffled per entry attempt, dots fill as digits are entered, the back arrow removes one digit, and validation runs only after six digits. A mismatch shows a red message and resets the confirmation entry; a match transitions automatically to the home screen.
+- Architecture: `PinSetupScreen` is isolated from the identity form and calls the launch boundary completion callback only after confirmation succeeds. The existing shared `BottomBar` and full-screen surface host both future sheets and full-screen layers.
+- No actionable P0/P1/P2 mismatch remains for the requested identity/terms/PIN demonstration flow. Device-owned status and navigation chrome differ from the three-button reference device.
+
 final result: passed

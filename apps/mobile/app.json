@@ -9,6 +9,14 @@
     "plugins": [
       "expo-router",
       [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#000000",
+          "image": "./assets/splash.png",
+          "resizeMode": "contain"
+        }
+      ],
+      [
         "expo-dev-client",
         {
           "toolsButton": false

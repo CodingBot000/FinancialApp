@@ -1,8 +1,12 @@
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppLockBoundary } from '../features/app-lock';
+import { AppLaunchBoundary } from '../features/launch';
+import {
+  OnboardingScreen,
+  PhoneVerificationScreen,
+} from '../features/onboarding';
 import {
   ConfiguredPlatformApiProvider,
   LoginBoundary,
@@ -14,31 +18,41 @@ import { colors } from '../shared/design-system';
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <AuthSessionProvider>
-        <LoginBoundary>
-          <AppLockBoundary>
-            <ConfiguredPlatformApiProvider>
-              <MobileQueryProvider>
-                <StatusBar style="dark" />
-                <Stack
-                  screenOptions={{
-                    contentStyle: { backgroundColor: colors.background.screen },
-                    headerShown: false,
-                  }}
-                >
-                  <Stack.Screen
-                    name="notifications"
-                    options={{
-                      animation: 'slide_from_right',
-                      presentation: 'card',
+      <AppLaunchBoundary
+        onboarding={(onComplete) => (
+          <OnboardingScreen onComplete={onComplete} />
+        )}
+        verification={(onComplete) => (
+          <PhoneVerificationScreen onComplete={onComplete} />
+        )}
+      >
+        <AuthSessionProvider>
+          <LoginBoundary>
+            <AppLockBoundary>
+              <ConfiguredPlatformApiProvider>
+                <MobileQueryProvider>
+                  <Stack
+                    screenOptions={{
+                      contentStyle: {
+                        backgroundColor: colors.background.screen,
+                      },
+                      headerShown: false,
                     }}
-                  />
-                </Stack>
-              </MobileQueryProvider>
-            </ConfiguredPlatformApiProvider>
-          </AppLockBoundary>
-        </LoginBoundary>
-      </AuthSessionProvider>
+                  >
+                    <Stack.Screen
+                      name="notifications"
+                      options={{
+                        animation: 'slide_from_right',
+                        presentation: 'card',
+                      }}
+                    />
+                  </Stack>
+                </MobileQueryProvider>
+              </ConfiguredPlatformApiProvider>
+            </AppLockBoundary>
+          </LoginBoundary>
+        </AuthSessionProvider>
+      </AppLaunchBoundary>
     </SafeAreaProvider>
   );
 }

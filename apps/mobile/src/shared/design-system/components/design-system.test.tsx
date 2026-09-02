@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   AppText,
+  BottomBar,
   Button,
   DemoDisclosure,
   FullScreenLayer,
@@ -37,6 +38,18 @@ describe('design system primitives', () => {
     expect(typography.amountHero.fontWeight).toBe('700');
     expect(typography.body.fontSize).toBe(16);
     expect(radius.card).toBe(20);
+    expect(colors.background.splash).toBe('#000000');
+    expect(colors.text.splash).toBe('#8D8D8D');
+  });
+
+  it('keeps the shared bottom bar content-sized', async () => {
+    const view = await render(
+      <BottomBar>
+        <AppText>하단 콘텐츠</AppText>
+      </BottomBar>,
+    );
+    expect(view.getByLabelText('하단 메뉴')).toBeTruthy();
+    expect(view.getByText('하단 콘텐츠')).toBeTruthy();
   });
 
   it('renders a privacy-safe money value and signed market change', async () => {

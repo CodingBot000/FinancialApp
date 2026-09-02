@@ -1,5 +1,6 @@
 export const palette = {
   white: '#FFFFFF',
+  trueBlack: '#000000',
   black: '#0E0E0E',
   orange500: '#F37321',
   orange300: '#F89B6C',
@@ -45,6 +46,7 @@ export const colors = {
     screen: palette.white,
     elevated: palette.white,
     inverse: palette.neutral950,
+    splash: palette.trueBlack,
   },
   surface: {
     primary: palette.white,
@@ -60,6 +62,7 @@ export const colors = {
     secondary: palette.neutral600,
     tertiary: palette.neutral500,
     inverse: palette.white,
+    splash: palette.neutral500,
     brand: palette.orangeText,
     success: palette.success600,
     warning: palette.warning700,

@@ -1,19 +1,17 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
 import { Tabs, useRouter } from 'expo-router';
-import { StyleSheet, View, type ColorValue } from 'react-native';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import type { BottomTabBarProps } from 'expo-router/tabs';
+import { Pressable, StyleSheet, View, type ColorValue } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   AppText,
+  BottomBar,
   colors,
   IconButton,
   ScreenSafeAreaProvider,
   spacing,
-  typography,
 } from '../../shared/design-system';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
@@ -66,27 +64,76 @@ function AppTopBar() {
   );
 }
 
-export default function TabsLayout() {
-  const insets = useSafeAreaInsets();
+function AppBottomBar({
+  descriptors,
+  navigation,
+  state,
+  insets,
+}: BottomTabBarProps) {
+  return (
+    <BottomBar style={{ paddingBottom: Math.max(insets.bottom, spacing[2]) }}>
+      {state.routes.map((route, index) => {
+        const focused = index === state.index;
+        const options = descriptors[route.key]?.options;
+        if (options === undefined) return null;
+        const color = focused
+          ? String(options.tabBarActiveTintColor ?? colors.tab.active)
+          : String(options.tabBarInactiveTintColor ?? colors.tab.inactive);
+        const label =
+          typeof options.tabBarLabel === 'string'
+            ? options.tabBarLabel
+            : (options.title ?? route.name);
+        const icon = options.tabBarIcon?.({
+          color,
+          focused,
+          size: 24,
+        });
 
+        return (
+          <Pressable
+            accessibilityRole="tab"
+            accessibilityState={{ selected: focused }}
+            key={route.key}
+            onLongPress={() => {
+              navigation.emit({ type: 'tabLongPress', target: route.key });
+            }}
+            onPress={() => {
+              const event = navigation.emit({
+                type: 'tabPress',
+                target: route.key,
+                canPreventDefault: true,
+              });
+              if (!focused && !event.defaultPrevented) {
+                navigation.navigate(route.name, route.params);
+              }
+            }}
+            style={styles.tabItem}
+          >
+            {icon}
+            <AppText
+              style={styles.tabLabel}
+              tone={focused ? 'brand' : 'secondary'}
+              variant="tabLabel"
+            >
+              {label}
+            </AppText>
+          </Pressable>
+        );
+      })}
+    </BottomBar>
+  );
+}
+
+export default function TabsLayout() {
   return (
     <ScreenSafeAreaProvider includeTopInset={false}>
       <Tabs
+        tabBar={AppBottomBar}
         screenOptions={{
           header: AppTopBar,
           headerShown: true,
           tabBarActiveTintColor: colors.tab.active,
           tabBarInactiveTintColor: colors.tab.inactive,
-          tabBarLabelStyle: typography.tabLabel,
-          tabBarStyle: {
-            backgroundColor: colors.surface.primary,
-            borderTopColor: colors.border.subtle,
-            bottom: insets.bottom,
-            height: 72,
-            paddingBottom: 12,
-            paddingTop: 8,
-            position: 'absolute',
-          },
         }}
       >
         <Tabs.Screen
@@ -123,5 +170,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[5],
   },
   topBarSafeArea: { backgroundColor: colors.background.screen },
+  tabItem: {
+    alignItems: 'center',
+    flex: 1,
+    gap: spacing[1],
+    justifyContent: 'center',
+    minHeight: 48,
+  },
+  tabLabel: { textAlign: 'center' },
   wordmark: { letterSpacing: -1.2 },
 });

@@ -13,8 +13,10 @@ export const AppState = {
     return { remove() {} };
   },
 };
+export const Keyboard = { dismiss() {} };
 export const SafeAreaView = createNativeTestComponent('SafeAreaView');
 export const ScrollView = createNativeTestComponent('ScrollView');
+export const StatusBar = createNativeTestComponent('StatusBar');
 export const Text = createNativeTestComponent('Text');
 export const TextInput = createNativeTestComponent('TextInput');
 export const View = createNativeTestComponent('View');
