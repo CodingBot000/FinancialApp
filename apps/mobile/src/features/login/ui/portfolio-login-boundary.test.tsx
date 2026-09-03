@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react-native';
 import { useEffect, type PropsWithChildren } from 'react';
 import { Text } from 'react-native';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('expo-auth-session', () => ({
   CodeChallengeMethod: { S256: 'S256' },
@@ -58,6 +58,26 @@ function UnlockThenShow({ children }: PropsWithChildren) {
 }
 
 describe('portfolio login composition', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('reads the Expo public API URL from the bundled environment', () => {
+    vi.stubEnv('EXPO_PUBLIC_APP_ENV', 'local');
+    vi.stubEnv('EXPO_PUBLIC_LOGIN_MODE', 'test');
+    vi.stubEnv('EXPO_PUBLIC_LOCAL_TEST_ACCESS_TOKEN', 'local-test-token');
+    vi.stubEnv('EXPO_PUBLIC_PLATFORM_API_MODE', 'http');
+    vi.stubEnv('EXPO_PUBLIC_PLATFORM_API_URL', 'http://10.0.2.2:8081');
+
+    const manager = new AuthSessionManager(
+      new MemoryAccessTokenStore(),
+      new EmptyRefreshTokenStore(),
+    );
+    const api = createConfiguredPlatformApi(manager);
+
+    expect(api.constructor.name).toBe('HttpPlatformApi');
+  });
+
   it('keeps HTTP API mode when the local portfolio is unlocked', () => {
     const manager = new AuthSessionManager(
       new MemoryAccessTokenStore(),

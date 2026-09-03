@@ -19,7 +19,7 @@ type PublicEnvironment = Readonly<Record<string, string | undefined>>;
 
 export function createConfiguredPlatformApi(
   manager: AuthSessionManager,
-  environment: PublicEnvironment = process.env,
+  environment: PublicEnvironment = readExpoPublicEnvironment(),
 ): PlatformApi {
   const defaultApiMode =
     typeof __DEV__ !== 'undefined'
@@ -29,8 +29,7 @@ export function createConfiguredPlatformApi(
       : process.env.NODE_ENV === 'production'
         ? 'http'
         : 'mock';
-  const apiMode =
-    environment.EXPO_PUBLIC_PLATFORM_API_MODE ?? defaultApiMode;
+  const apiMode = environment.EXPO_PUBLIC_PLATFORM_API_MODE ?? defaultApiMode;
 
   if (apiMode === 'mock') return new ContractMockPlatformApi();
 
@@ -70,6 +69,20 @@ export function createConfiguredPlatformApi(
       authenticatedFetch.request(input, init),
     baseUrl,
   });
+}
+
+function readExpoPublicEnvironment(): PublicEnvironment {
+  return {
+    EXPO_PUBLIC_APP_ENV: process.env.EXPO_PUBLIC_APP_ENV,
+    EXPO_PUBLIC_LOGIN_MODE: process.env.EXPO_PUBLIC_LOGIN_MODE,
+    EXPO_PUBLIC_LOCAL_TEST_ACCESS_TOKEN:
+      process.env.EXPO_PUBLIC_LOCAL_TEST_ACCESS_TOKEN,
+    EXPO_PUBLIC_OIDC_AUDIENCE: process.env.EXPO_PUBLIC_OIDC_AUDIENCE,
+    EXPO_PUBLIC_OIDC_CLIENT_ID: process.env.EXPO_PUBLIC_OIDC_CLIENT_ID,
+    EXPO_PUBLIC_OIDC_ISSUER: process.env.EXPO_PUBLIC_OIDC_ISSUER,
+    EXPO_PUBLIC_PLATFORM_API_MODE: process.env.EXPO_PUBLIC_PLATFORM_API_MODE,
+    EXPO_PUBLIC_PLATFORM_API_URL: process.env.EXPO_PUBLIC_PLATFORM_API_URL,
+  };
 }
 
 export function ConfiguredPlatformApiProvider({ children }: PropsWithChildren) {
