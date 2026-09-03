@@ -5,23 +5,37 @@ import { describe, expect, it, vi } from 'vitest';
 import { PhoneVerificationScreen } from './phone-verification-screen';
 
 vi.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
+vi.mock('react-native-reanimated', () => ({
+  default: { View: 'Animated.View' },
+  LinearTransition: { duration: () => ({}) },
+}));
 
 describe('PhoneVerificationScreen', () => {
-  it('opens the carrier sheet after a phone number is entered', async () => {
+  it('requires exactly 11 digits and strips separators before opening carriers', async () => {
     const onComplete = vi.fn();
     const view = await render(
       <PhoneVerificationScreen onComplete={onComplete} />,
     );
 
     expect(view.queryByText('통신사 선택')).toBeNull();
+    expect(view.getByLabelText('휴대폰번호').props.keyboardType).toBe(
+      'number-pad',
+    );
     const next = view.getByRole('button', { name: '다음' });
     expect(next.props.accessibilityState).toEqual({ disabled: true });
 
     await act(async () => {
-      view.getByLabelText('휴대폰번호').props.onChangeText('01099841726');
+      view.getByLabelText('휴대폰번호').props.onChangeText('0101234567');
+    });
+    expect(view.queryByText('통신사 선택')).toBeNull();
+    expect(view.queryByLabelText('통신사 선택')).toBeNull();
+
+    await act(async () => {
+      view.getByLabelText('휴대폰번호').props.onChangeText('010-1234-5678');
     });
 
     expect(view.getByText('통신사 선택')).toBeTruthy();
+    expect(view.getByLabelText('휴대폰번호').props.value).toBe('01012345678');
     expect(view.getByText('SKT')).toBeTruthy();
     expect(view.getByText('LG U+ 알뜰폰')).toBeTruthy();
   });
@@ -47,9 +61,26 @@ describe('PhoneVerificationScreen', () => {
 
     await act(async () => {
       view.getByLabelText('주민등록번호 앞자리').props.onChangeText('771011');
+    });
+
+    expect(view.getByLabelText('주민등록번호 앞자리').props.maxLength).toBe(6);
+    expect(view.getByLabelText('주민등록번호 뒷자리').props.maxLength).toBe(1);
+
+    await act(async () => {
       view.getByLabelText('주민등록번호 뒷자리').props.onChangeText('1');
     });
     expect(view.getByLabelText('이름')).toBeTruthy();
+    expect(view.getByLabelText('이름').props.autoFocus).toBe(true);
+    expect(view.getByLabelText('이름').props.keyboardType).toBe('default');
+    expect(view.getByText('••••••').props.style).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          fontSize: 32,
+          letterSpacing: 4.5,
+          lineHeight: 48,
+        }),
+      ]),
+    );
 
     await act(async () => {
       view.getByLabelText('이름').props.onChangeText('이정훈');

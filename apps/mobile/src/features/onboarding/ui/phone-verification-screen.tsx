@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Keyboard,
   Pressable,
@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 
 import { PinSetupScreen } from './pin-setup-screen';
 import {
@@ -58,6 +59,8 @@ const initialAgreements: Record<AgreementKey, boolean> = {
   membership: false,
 };
 
+const fieldLayoutTransition = LinearTransition.duration(280);
+
 export function PhoneVerificationScreen({
   onComplete,
 }: {
@@ -73,15 +76,34 @@ export function PhoneVerificationScreen({
   const [pinStarted, setPinStarted] = useState(false);
   const [agreements, setAgreements] =
     useState<Record<AgreementKey, boolean>>(initialAgreements);
+  const residentBackRef = useRef<TextInput>(null);
+  const nameRef = useRef<TextInput>(null);
 
   const onPhoneChange = useCallback((value: string) => {
     const digits = value.replace(/[^0-9]/g, '').slice(0, 11);
     setPhone(digits);
-    if (digits.length >= 11) {
+    if (digits.length === 11) {
       Keyboard.dismiss();
       setCarrierSheetOpen(true);
+    } else {
+      setCarrierSheetOpen(false);
     }
   }, []);
+
+  const residentComplete =
+    residentFront.length === 6 && residentBack.length === 1;
+
+  useEffect(() => {
+    if (!residentComplete) {
+      return;
+    }
+
+    const focusTimer = setTimeout(() => {
+      nameRef.current?.focus?.();
+    }, 0);
+
+    return () => clearTimeout(focusTimer);
+  }, [residentComplete]);
 
   const selectCarrier = useCallback((value: string) => {
     setCarrier(value);
@@ -135,8 +157,6 @@ export function PhoneVerificationScreen({
 
   const requiredAccepted = agreements.membership && agreements.identity;
   const allAccepted = agreementKeys.every((key) => agreements[key]);
-  const residentComplete =
-    residentFront.length === 6 && residentBack.length === 1;
   const canContinue = residentComplete && name.trim().length > 0;
 
   if (pinStarted) {
@@ -162,7 +182,10 @@ export function PhoneVerificationScreen({
           </AppText>
 
           {residentComplete ? (
-            <View style={styles.fieldGroup}>
+            <Animated.View
+              layout={fieldLayoutTransition}
+              style={styles.fieldGroup}
+            >
               <AppText
                 style={styles.fieldLabel}
                 tone="secondary"
@@ -172,17 +195,24 @@ export function PhoneVerificationScreen({
               </AppText>
               <TextInput
                 accessibilityLabel="이름"
+                autoFocus={residentComplete}
+                autoCorrect={false}
+                keyboardType="default"
+                ref={nameRef}
                 onChangeText={setName}
                 placeholder="이름을 입력해주세요"
                 placeholderTextColor={colors.text.tertiary}
                 style={[styles.textInput, styles.activeField]}
                 value={name}
               />
-            </View>
+            </Animated.View>
           ) : null}
 
           {carrier !== undefined ? (
-            <View style={styles.fieldGroup}>
+            <Animated.View
+              layout={fieldLayoutTransition}
+              style={styles.fieldGroup}
+            >
               <AppText
                 style={styles.fieldLabel}
                 tone="secondary"
@@ -195,9 +225,13 @@ export function PhoneVerificationScreen({
                   accessibilityLabel="주민등록번호 앞자리"
                   keyboardType="number-pad"
                   maxLength={6}
-                  onChangeText={(value) =>
-                    setResidentFront(value.replace(/[^0-9]/g, ''))
-                  }
+                  onChangeText={(value) => {
+                    const digits = value.replace(/[^0-9]/g, '').slice(0, 6);
+                    setResidentFront(digits);
+                    if (digits.length === 6) {
+                      residentBackRef.current?.focus?.();
+                    }
+                  }}
                   placeholder="000000"
                   placeholderTextColor={colors.text.tertiary}
                   style={[styles.residentInput, styles.frontInput]}
@@ -211,10 +245,11 @@ export function PhoneVerificationScreen({
                   keyboardType="number-pad"
                   maxLength={1}
                   onChangeText={(value) =>
-                    setResidentBack(value.replace(/[^0-9]/g, ''))
+                    setResidentBack(value.replace(/[^0-9]/g, '').slice(0, 1))
                   }
                   placeholder="0"
                   placeholderTextColor={colors.text.tertiary}
+                  ref={residentBackRef}
                   style={styles.residentInput}
                   value={residentBack}
                 />
@@ -226,11 +261,14 @@ export function PhoneVerificationScreen({
                 </AppText>
               </View>
               <View style={styles.divider} />
-            </View>
+            </Animated.View>
           ) : null}
 
-          {phone.length > 0 ? (
-            <View style={styles.fieldGroup}>
+          {phone.length === 11 ? (
+            <Animated.View
+              layout={fieldLayoutTransition}
+              style={styles.fieldGroup}
+            >
               <AppText
                 style={styles.fieldLabel}
                 tone="secondary"
@@ -263,16 +301,19 @@ export function PhoneVerificationScreen({
                   size={24}
                 />
               </Pressable>
-            </View>
+            </Animated.View>
           ) : null}
 
-          <View style={styles.fieldGroup}>
+          <Animated.View
+            layout={fieldLayoutTransition}
+            style={styles.fieldGroup}
+          >
             <AppText style={styles.fieldLabel} tone="secondary" variant="body">
               휴대폰번호
             </AppText>
             <TextInput
               accessibilityLabel="휴대폰번호"
-              keyboardType="phone-pad"
+              keyboardType="number-pad"
               onChangeText={onPhoneChange}
               placeholder="예) 01012345678"
               placeholderTextColor={colors.text.tertiary}
@@ -282,7 +323,7 @@ export function PhoneVerificationScreen({
               ]}
               value={phone}
             />
-          </View>
+          </Animated.View>
         </View>
 
         <View style={styles.action}>
@@ -543,7 +584,9 @@ const styles = StyleSheet.create({
   },
   maskedDigits: {
     flex: 1,
-    letterSpacing: 3,
+    fontSize: typography.body.fontSize * 2,
+    lineHeight: typography.body.lineHeight * 2,
+    letterSpacing: 4.5,
   },
   nestedAgreementRow: {
     paddingLeft: spacing[10],
