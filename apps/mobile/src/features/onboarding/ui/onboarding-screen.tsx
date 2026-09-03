@@ -124,7 +124,11 @@ export function OnboardingScreen({
 }
 
 const styles = StyleSheet.create({
-  action: { paddingHorizontal: spacing[6], paddingTop: spacing[3] },
+  action: {
+    paddingBottom: spacing[6],
+    paddingHorizontal: spacing[6],
+    paddingTop: spacing[3],
+  },
   activeDot: { backgroundColor: colors.text.primary, width: 10 },
   button: { alignSelf: 'stretch', minWidth: 0 },
   container: { flex: 1 },
