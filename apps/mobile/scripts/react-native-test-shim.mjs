@@ -13,6 +13,12 @@ export const AppState = {
     return { remove() {} };
   },
 };
+export const BackHandler = {
+  addEventListener() {
+    return { remove() {} };
+  },
+};
+export const Image = createNativeTestComponent('Image');
 export const Keyboard = { dismiss() {} };
 export const SafeAreaView = createNativeTestComponent('SafeAreaView');
 export const ScrollView = createNativeTestComponent('ScrollView');

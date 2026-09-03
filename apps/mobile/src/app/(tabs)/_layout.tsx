@@ -2,8 +2,16 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/tabs';
-import { Pressable, StyleSheet, View, type ColorValue } from 'react-native';
+import {
+  Image,
+  Pressable,
+  StyleSheet,
+  View,
+  type ColorValue,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import appIcon from '../../../assets/icon-wm.png';
 
 import {
   AppText,
@@ -42,13 +50,14 @@ function AppTopBar() {
   return (
     <SafeAreaView edges={['top']} style={styles.topBarSafeArea}>
       <View style={styles.topBar}>
-        <AppText
-          accessibilityRole="header"
-          style={styles.wordmark}
-          variant="display"
-        >
-          WM
-        </AppText>
+        <View accessibilityLabel="WM 로고" accessibilityRole="header">
+          <Image
+            accessibilityLabel="WM 로고"
+            resizeMode="contain"
+            source={appIcon}
+            style={styles.wordmark}
+          />
+        </View>
         <IconButton
           accessibilityLabel="알림함 열기"
           onPress={() => router.push('/notifications' as never)}
@@ -178,5 +187,5 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   tabLabel: { textAlign: 'center' },
-  wordmark: { letterSpacing: -1.2 },
+  wordmark: { height: 64, width: 64 },
 });

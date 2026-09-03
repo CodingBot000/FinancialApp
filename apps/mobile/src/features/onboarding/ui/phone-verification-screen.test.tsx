@@ -1,4 +1,5 @@
 import { act, render } from '@testing-library/react-native';
+import { BackHandler } from 'react-native';
 import { describe, expect, it, vi } from 'vitest';
 
 import { PhoneVerificationScreen } from './phone-verification-screen';
@@ -77,5 +78,26 @@ describe('PhoneVerificationScreen', () => {
     });
     expect(view.getByText(/신규 간편비밀번호를/)).toBeTruthy();
     expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  it('dismisses an open bottom sheet on Android back', async () => {
+    const onComplete = vi.fn();
+    const addEventListener = vi.spyOn(BackHandler, 'addEventListener');
+    const view = await render(
+      <PhoneVerificationScreen onComplete={onComplete} />,
+    );
+
+    await act(async () => {
+      view.getByLabelText('휴대폰번호').props.onChangeText('01099841726');
+    });
+
+    const backHandler = addEventListener.mock.calls.at(-1)?.[1] as
+      | (() => boolean)
+      | undefined;
+    expect(backHandler).toBeDefined();
+    await act(async () => {
+      expect(backHandler?.()).toBe(true);
+    });
+    expect(view.queryByText('통신사 선택')).toBeNull();
   });
 });

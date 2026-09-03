@@ -3,6 +3,7 @@
     "name": "Wealth Flow",
     "slug": "wealth-sandbox",
     "version": "0.1.0",
+    "icon": "./assets/icon-wm.png",
     "orientation": "portrait",
     "scheme": "wealthsandbox",
     "userInterfaceStyle": "light",
@@ -12,7 +13,7 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#000000",
-          "image": "./assets/splash.png",
+          "image": "./assets/splash-logo.png",
           "resizeMode": "contain"
         }
       ],

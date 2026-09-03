@@ -8,12 +8,18 @@ import {
 } from '../../../shared/design-system';
 
 export function LaunchPermissionSheet({
+  onBack,
   onConfirm,
 }: {
+  readonly onBack: () => void;
   readonly onConfirm: () => void;
 }) {
   return (
-    <BottomBar accessibilityLabel="접근 권한 안내" variant="sheet">
+    <BottomBar
+      accessibilityLabel="접근 권한 안내"
+      onBack={onBack}
+      variant="sheet"
+    >
       <View style={styles.content}>
         <AppText variant="title1">접근 권한 안내</AppText>
         <AppText tone="secondary" variant="body">

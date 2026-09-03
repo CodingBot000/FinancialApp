@@ -110,15 +110,15 @@ Fixes applied: screen background changed to white; neutral, border, state, and m
 
 ## Launch splash and shared bottom bar update
 
-- Source brief: user instruction specifying a one-second full-screen black splash with centered grey `WM`, followed by a full-screen-ready onboarding destination, plus a reusable content-sized bottom bar.
+- Source brief: user instruction specifying a one-second full-screen black splash with centered white `WM`, followed by a full-screen-ready onboarding destination, plus a reusable content-sized bottom bar.
 - Native splash evidence: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/22-splash-wm-native.png`.
 - App-shell evidence: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/23-bottom-bar-content-sized.png`.
 - Combined evidence: `/Users/switch/.codex/visualizations/2026/09/02/01a0630d-d92e-7632-8443-8fcf55d283be/financialapp-design-system/24-splash-and-bottom-bar.png`.
 - Viewport: Android emulator 1080 x 2400 px at 420 dpi (approximately 411 x 914 dp). The native splash and app capture include device-owned status/system navigation chrome.
-- Typography and color: native and runtime splash both use a black `#000000` surface and grey `#8D8D8D` `WM` wordmark. The runtime status-bar icon mode changes to light during splash and dark after the app is ready.
+- Typography and color: native and runtime splash both use a black `#000000` surface and a transparent pure-white `WM` logo asset. The runtime status-bar icon mode changes to light during splash and dark after the app is ready.
 - Layout: `FullScreenSurface` has no content padding and applies all safe-area edges, making it suitable for the upcoming full-screen onboarding screen. `AppLaunchBoundary` holds the launch state for `SPLASH_DURATION_MS = 1000` and hides the native splash before mounting the next destination.
 - Bottom bar: shared `BottomBar` is content-sized (no fixed height), exports through the design-system public index, and is used by the five-tab navigator. The tab items retain their existing icon, label, color, and semantics while the container reserves bottom inset space.
-- Runtime flow: cold Android launch showed native black/grey `WM`; after the launch gate, the home screen and content-sized bottom bar rendered without runtime errors. `AppLaunchBoundary` timer behavior is covered by unit tests.
+- Runtime flow: cold Android launch showed native black/white `WM`; after the launch gate, the home screen and content-sized bottom bar rendered without runtime errors. `AppLaunchBoundary` timer behavior is covered by unit tests.
 - Onboarding readiness: the full-screen surface and launch children slot are now consumed by the four-page onboarding carousel documented below.
 - Residual P3: the development client can show its own loading banner while Metro is unavailable; this is dev-client chrome and does not appear in a production build.
 

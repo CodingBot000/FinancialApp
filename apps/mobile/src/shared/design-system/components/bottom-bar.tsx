@@ -1,5 +1,6 @@
-import { type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import {
+  BackHandler,
   StyleSheet,
   View,
   type LayoutChangeEvent,
@@ -16,16 +17,33 @@ import { colors, spacing } from '../tokens';
 export function BottomBar({
   accessibilityLabel = '하단 메뉴',
   children,
+  onBack,
   onLayout,
   style,
   variant = 'navigation',
 }: {
   readonly accessibilityLabel?: string;
   readonly children: ReactNode;
+  /** Handles Android back while this bottom surface is open. */
+  readonly onBack?: () => void;
   readonly onLayout?: (event: LayoutChangeEvent) => void;
   readonly style?: StyleProp<ViewStyle>;
   readonly variant?: 'navigation' | 'sheet';
 }) {
+  useEffect(() => {
+    if (onBack === undefined) return;
+
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        onBack();
+        return true;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [onBack]);
+
   return (
     <View
       accessibilityLabel={accessibilityLabel}

@@ -1,4 +1,5 @@
 import { act, render } from '@testing-library/react-native';
+import { BackHandler } from 'react-native';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AppText, Button } from '../../../shared/design-system';
@@ -44,13 +45,13 @@ describe('AppLaunchBoundary', () => {
       </AppLaunchBoundary>,
     );
 
-    expect(view.getByText('WM')).toBeTruthy();
+    expect(view.getByLabelText('WM 로고')).toBeTruthy();
     expect(view.queryByText('다음 화면')).toBeNull();
 
     await act(async () => {
       vi.advanceTimersByTime(999);
     });
-    expect(view.getByText('WM')).toBeTruthy();
+    expect(view.getByLabelText('WM 로고')).toBeTruthy();
 
     await act(async () => {
       vi.advanceTimersByTime(1);
@@ -156,5 +157,40 @@ describe('AppLaunchBoundary', () => {
     });
     expect(view.queryByText('접근 권한 안내')).toBeNull();
     expect(view.getByText('다음 화면')).toBeTruthy();
+  });
+
+  it('dismisses the permission sheet on Android back without acknowledging it', async () => {
+    vi.useFakeTimers();
+    const store = createStore(false);
+    const addEventListener = vi.spyOn(BackHandler, 'addEventListener');
+    const view = await render(
+      <AppLaunchBoundary
+        durationMs={1000}
+        noticeStore={store}
+        onboarding={(onComplete) => (
+          <Button onPress={onComplete}>온보딩 시작</Button>
+        )}
+      >
+        <AppText>다음 화면</AppText>
+      </AppLaunchBoundary>,
+    );
+
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const backHandler = addEventListener.mock.calls.at(-1)?.[1] as
+      | (() => boolean)
+      | undefined;
+    expect(backHandler).toBeDefined();
+    await act(async () => {
+      expect(backHandler?.()).toBe(true);
+      await Promise.resolve();
+    });
+
+    expect(store.markSeen).not.toHaveBeenCalled();
+    expect(view.getByText('온보딩 시작')).toBeTruthy();
   });
 });

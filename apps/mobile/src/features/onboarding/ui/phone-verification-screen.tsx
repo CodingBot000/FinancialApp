@@ -88,6 +88,14 @@ export function PhoneVerificationScreen({
     setCarrierSheetOpen(false);
   }, []);
 
+  const closeCarrierSheet = useCallback(() => {
+    setCarrierSheetOpen(false);
+  }, []);
+
+  const closeTermsSheet = useCallback(() => {
+    setTermsOpen(false);
+  }, []);
+
   const toggleAgreement = useCallback((key: AgreementKey) => {
     setAgreements((current) => {
       const nextValue = !current[key];
@@ -292,6 +300,7 @@ export function PhoneVerificationScreen({
             <View style={styles.scrim} />
             <BottomBar
               accessibilityLabel="통신사 선택"
+              onBack={closeCarrierSheet}
               style={styles.carrierSheet}
               variant="sheet"
             >
@@ -323,6 +332,7 @@ export function PhoneVerificationScreen({
             <View style={styles.scrim} />
             <BottomBar
               accessibilityLabel="약관 확인"
+              onBack={closeTermsSheet}
               style={styles.termsSheet}
               variant="sheet"
             >

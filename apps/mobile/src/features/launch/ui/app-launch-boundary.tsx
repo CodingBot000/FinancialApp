@@ -65,9 +65,11 @@ export function AppLaunchBoundary({
     };
   }, [defaultNoticeStore, durationMs, noticeStore, onboarding, verification]);
 
-  const confirmNotice = async () => {
+  const continueAfterNotice = async (markSeen: boolean) => {
     const store = noticeStore ?? defaultNoticeStore;
-    await store.markSeen();
+    if (markSeen) {
+      await store.markSeen();
+    }
     const [onboardingCompleted, verificationCompleted] = await Promise.all([
       store.hasCompletedOnboarding(),
       store.hasCompletedVerification(),
@@ -79,8 +81,18 @@ export function AppLaunchBoundary({
           : 'verification'
         : onboarding === undefined
           ? 'ready'
-          : 'onboarding',
+      : 'onboarding',
     );
+  };
+
+  const confirmNotice = () => {
+    void continueAfterNotice(true);
+  };
+
+  const dismissNotice = () => {
+    // Back dismisses the informational sheet without acknowledging it. It
+    // will be presented again on the next launch until the user confirms it.
+    void continueAfterNotice(false);
   };
 
   const completeOnboarding = async () => {
@@ -114,7 +126,10 @@ export function AppLaunchBoundary({
         <StatusBar style="light" />
         <SplashScreenView
           bottomBar={
-            <LaunchPermissionSheet onConfirm={() => void confirmNotice()} />
+            <LaunchPermissionSheet
+              onBack={dismissNotice}
+              onConfirm={confirmNotice}
+            />
           }
         />
       </>
