@@ -29,6 +29,23 @@
           "faceIDPermission": "Wealth Flow 앱 잠금을 해제하기 위해 Face ID를 사용합니다."
         }
       ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Wealth Flow에서 신분증 촬영 기능을 시연하기 위해 카메라를 사용합니다.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Wealth Flow에서 신분증 촬영 기능을 시연하기 위해 카메라를 사용합니다.",
+          "microphonePermission": false,
+          "photosPermission": "Wealth Flow에서 프로필 사진 등록 기능을 시연하기 위해 사진을 사용합니다."
+        }
+      ],
+      "expo-notifications",
       "expo-secure-store"
     ],
     "experiments": {

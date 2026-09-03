@@ -8,9 +8,11 @@ import {
 } from '../../../shared/design-system';
 
 export function LaunchPermissionSheet({
+  confirming = false,
   onBack,
   onConfirm,
 }: {
+  readonly confirming?: boolean;
   readonly onBack: () => void;
   readonly onConfirm: () => void;
 }) {
@@ -23,7 +25,7 @@ export function LaunchPermissionSheet({
       <View style={styles.content}>
         <AppText variant="title1">접근 권한 안내</AppText>
         <AppText tone="secondary" variant="body">
-          고객님의 편리한 서비스 이용을 위해 다음 권한의 허용이 필요합니다.
+          고객님의 편리한 서비스 이용을 위해 다음 선택 권한을 요청합니다.
         </AppText>
         <View style={styles.permissionList}>
           <AppText tone="secondary" variant="body">
@@ -38,10 +40,11 @@ export function LaunchPermissionSheet({
         </AppText>
         <Button
           accessibilityLabel="접근 권한 안내 확인"
+          disabled={confirming}
           onPress={onConfirm}
           style={styles.confirm}
         >
-          확인
+          {confirming ? '권한 확인 중' : '확인'}
         </Button>
       </View>
     </BottomBar>

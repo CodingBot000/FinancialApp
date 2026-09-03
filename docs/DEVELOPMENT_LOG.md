@@ -1048,3 +1048,31 @@
 - Android/iOS 물리 기기의 실제 prompt, cancel, lockout, enrollment 변경과 iOS build는
   `GAP-0002`/`GAP-0003`으로 유지한다.
 - 원격 DB·credential·migration·seed·deploy는 사용하지 않았다.
+
+## FE-0020 — launch native 선택 권한 요청
+
+- 날짜: 2026-09-03
+- Milestone: 7B 포트폴리오 launch 권한
+- 상태: IMPLEMENTED_LOCAL_PHYSICAL_PENDING
+- contract revision: `platform-v1` unchanged
+
+### 완료
+
+- `expo-notifications@57.0.16`, `expo-image-picker@57.0.15`,
+  `expo-camera@57.0.4`와 config plugin 권한 문구를 추가했다.
+- 알림 → 사진 → 카메라를 순차 확인해 이미 결정된 권한은 건너뛰고 요청 가능한
+  권한만 native prompt로 요청한다.
+- 승인·거부·개별 adapter 오류와 무관하게 다음 권한과 onboarding을 진행하고,
+  승인 상태가 아닌 permission handled marker를 SecureStore에 저장한다.
+- 기존 notice seen marker와 분리해 이전 설치도 한 번 권한 흐름을 수행하고, 다음
+  실행부터 custom 안내와 OS request를 모두 생략한다.
+
+### 검증과 남은 범위
+
+- mobile 48 files/141 tests, typecheck와 launch targeted tests 통과
+- root verify: mobile 141/simulator 12/platform 96 총 249 tests와 두 backend build 통과
+- Android Debug Development Build 484 tasks와 runtime POST_NOTIFICATIONS/CAMERA 선언 확인
+- Android API 36 Emulator에서 notification deny → camera deny → onboarding과
+  force-stop/relaunch 권한 화면 생략 통과
+- iOS/physical permission prompt는 `GAP-0010`/`FE-GAP-0005`로 유지한다.
+- 원격 자원은 사용하지 않았다.

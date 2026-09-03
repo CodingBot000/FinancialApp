@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
   type PropsWithChildren,
   type ReactNode,
@@ -14,6 +15,8 @@ import {
   createSecureLaunchNoticeStore,
   type LaunchNoticeStore,
 } from '../model/launch-notice-store';
+import { createExpoLaunchPermissionRequester } from '../model/expo-launch-permission-requester';
+import type { LaunchPermissionRequester } from '../model/launch-permission-requester';
 
 export const SPLASH_DURATION_MS = 1000;
 
@@ -27,6 +30,7 @@ export function AppLaunchBoundary({
   noticeStore,
   onboarding,
   biometric,
+  permissionRequester,
   verification,
 }: PropsWithChildren<{
   readonly biometric?: (
@@ -36,9 +40,15 @@ export function AppLaunchBoundary({
   readonly durationMs?: number;
   readonly noticeStore?: LaunchNoticeStore;
   readonly onboarding?: (onComplete: () => void) => ReactNode;
+  readonly permissionRequester?: LaunchPermissionRequester;
   readonly verification?: (onComplete: () => void) => ReactNode;
 }>) {
   const [defaultNoticeStore] = useState(createSecureLaunchNoticeStore);
+  const [defaultPermissionRequester] = useState(
+    createExpoLaunchPermissionRequester,
+  );
+  const permissionRequestInFlightRef = useRef(false);
+  const [requestingPermissions, setRequestingPermissions] = useState(false);
   const [phase, setPhase] = useState<
     | 'splash'
     | 'notice'
@@ -80,12 +90,12 @@ export function AppLaunchBoundary({
     const timer = setTimeout(async () => {
       const store = noticeStore ?? defaultNoticeStore;
       const [
-        seen,
+        permissionsHandled,
         onboardingCompleted,
         verificationCompleted,
         biometricCompleted,
       ] = await Promise.all([
-        store.hasSeen(),
+        store.hasHandledPermissions(),
         store.hasCompletedOnboarding(),
         store.hasCompletedVerification(),
         store.hasCompletedBiometricSetup(),
@@ -98,7 +108,7 @@ export function AppLaunchBoundary({
         resolvePhase({
           biometricCompleted,
           onboardingCompleted,
-          seen,
+          seen: permissionsHandled,
           verificationCompleted,
         }),
       );
@@ -109,11 +119,8 @@ export function AppLaunchBoundary({
     };
   }, [defaultNoticeStore, durationMs, noticeStore, resolvePhase]);
 
-  const continueAfterNotice = async (markSeen: boolean) => {
+  const continueAfterNotice = async () => {
     const store = noticeStore ?? defaultNoticeStore;
-    if (markSeen) {
-      await store.markSeen();
-    }
     const [onboardingCompleted, verificationCompleted, biometricCompleted] =
       await Promise.all([
         store.hasCompletedOnboarding(),
@@ -131,13 +138,31 @@ export function AppLaunchBoundary({
   };
 
   const confirmNotice = () => {
-    void continueAfterNotice(true);
+    if (permissionRequestInFlightRef.current) return;
+    permissionRequestInFlightRef.current = true;
+    setRequestingPermissions(true);
+
+    void (async () => {
+      const store = noticeStore ?? defaultNoticeStore;
+      try {
+        await (
+          permissionRequester ?? defaultPermissionRequester
+        ).requestPendingPermissions();
+        await Promise.all([store.markSeen(), store.markPermissionsHandled()]);
+        await continueAfterNotice();
+      } finally {
+        permissionRequestInFlightRef.current = false;
+        setRequestingPermissions(false);
+      }
+    })();
   };
 
   const dismissNotice = () => {
     // Back dismisses the informational sheet without acknowledging it. It
     // will be presented again on the next launch until the user confirms it.
-    void continueAfterNotice(false);
+    if (!permissionRequestInFlightRef.current) {
+      void continueAfterNotice();
+    }
   };
 
   const completeOnboarding = async () => {
@@ -187,6 +212,7 @@ export function AppLaunchBoundary({
         <SplashScreenView
           bottomBar={
             <LaunchPermissionSheet
+              confirming={requestingPermissions}
               onBack={dismissNotice}
               onConfirm={confirmNotice}
             />

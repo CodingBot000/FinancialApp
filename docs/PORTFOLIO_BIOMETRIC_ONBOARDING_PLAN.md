@@ -25,6 +25,24 @@
   platform 96 총 244 tests와 두 backend build
 - iOS와 Android/iOS 물리 기기 prompt 검증은 외부 기기 조건으로 남음
 
+### FE-0020 launch native permission 확장
+
+- 권한 안내 `확인`에서 알림 → 사진 → 카메라 순으로 OS 권한 상태 확인 및 요청
+- OS 상태가 이미 결정된 권한은 재요청하지 않고, 미결정 권한만 요청
+- Android notification channel을 권한 상태 조회 전에 생성해 Android 13+ 알림
+  permission prompt 보장
+- 승인·거부·native 오류와 무관하게 전체 순서를 계속하고 완료 marker 저장
+- `wealth-flow.launch-permissions-handled.v1`은 승인 상태가 아닌 요청 처리 완료만 표현
+- 기존 `launch-notice-seen`과 신규 marker를 분리해 이전 설치도 한 번 native 권한
+  흐름을 수행
+- 완료 marker가 있으면 다음 실행부터 custom 안내와 OS 요청을 모두 생략
+- Android API 36 Emulator에서 알림 거부 → 카메라 거부 → onboarding 진행과
+  force-stop/relaunch 권한 화면 생략을 확인
+- `expo-notifications@57.0.16`, `expo-image-picker@57.0.15`,
+  `expo-camera@57.0.4` 적용
+- root verify 통과: mobile 48 files/141, simulator 12, platform 96 총 249 tests와
+  두 backend build
+
 ## 1. 목적
 
 포트폴리오 시연에 맞춰 최초 실행과 재실행의 진입 흐름을 다음과 같이 구성한다.

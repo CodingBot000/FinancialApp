@@ -22,19 +22,21 @@ describe('AppLaunchBoundary', () => {
   });
 
   function createStore(
-    seen: boolean,
-    onboardingCompleted = seen,
-    verificationCompleted = seen,
-    biometricCompleted = seen,
+    permissionsHandled: boolean,
+    onboardingCompleted = permissionsHandled,
+    verificationCompleted = permissionsHandled,
+    biometricCompleted = permissionsHandled,
   ): LaunchNoticeStore {
     return {
       clearPortfolioSetup: vi.fn(async () => undefined),
       hasCompletedBiometricSetup: vi.fn(async () => biometricCompleted),
       hasCompletedOnboarding: vi.fn(async () => onboardingCompleted),
       hasCompletedVerification: vi.fn(async () => verificationCompleted),
-      hasSeen: vi.fn(async () => seen),
+      hasHandledPermissions: vi.fn(async () => permissionsHandled),
+      hasSeen: vi.fn(async () => permissionsHandled),
       markBiometricSetupCompleted: vi.fn(async () => undefined),
       markOnboardingCompleted: vi.fn(async () => undefined),
+      markPermissionsHandled: vi.fn(async () => undefined),
       markVerificationCompleted: vi.fn(async () => undefined),
       markSeen: vi.fn(async () => undefined),
     };
@@ -69,6 +71,7 @@ describe('AppLaunchBoundary', () => {
   it('shows the permission sheet once and continues after confirmation', async () => {
     vi.useFakeTimers();
     const store = createStore(false);
+    const requestPendingPermissions = vi.fn().mockResolvedValue([]);
     const view = await render(
       <AppLaunchBoundary
         durationMs={1000}
@@ -76,6 +79,7 @@ describe('AppLaunchBoundary', () => {
         onboarding={(onComplete) => (
           <Button onPress={onComplete}>온보딩 완료</Button>
         )}
+        permissionRequester={{ requestPendingPermissions }}
       >
         <AppText>다음 화면</AppText>
       </AppLaunchBoundary>,
@@ -95,6 +99,8 @@ describe('AppLaunchBoundary', () => {
       await Promise.resolve();
     });
     expect(store.markSeen).toHaveBeenCalledOnce();
+    expect(store.markPermissionsHandled).toHaveBeenCalledOnce();
+    expect(requestPendingPermissions).toHaveBeenCalledOnce();
     expect(view.getByText('온보딩 완료')).toBeTruthy();
 
     await act(async () => {
@@ -142,6 +148,52 @@ describe('AppLaunchBoundary', () => {
       await Promise.resolve();
     });
     expect(store.markVerificationCompleted).toHaveBeenCalledOnce();
+    expect(view.getByText('다음 화면')).toBeTruthy();
+  });
+
+  it('keeps one permission request in flight across repeated confirmation', async () => {
+    vi.useFakeTimers();
+    const store = createStore(false);
+    let finishRequest: (() => void) | undefined;
+    const requestPendingPermissions = vi.fn(
+      () =>
+        new Promise<readonly []>((resolve) => {
+          finishRequest = () => resolve([]);
+        }),
+    );
+    const view = await render(
+      <AppLaunchBoundary
+        durationMs={1000}
+        noticeStore={store}
+        permissionRequester={{ requestPendingPermissions }}
+      >
+        <AppText>다음 화면</AppText>
+      </AppLaunchBoundary>,
+    );
+
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    const confirm = view.getByRole('button', {
+      name: '접근 권한 안내 확인',
+    });
+    await act(async () => {
+      confirm.props.onPress();
+      confirm.props.onPress();
+      await Promise.resolve();
+    });
+
+    expect(requestPendingPermissions).toHaveBeenCalledOnce();
+    expect(view.getByText('권한 확인 중')).toBeTruthy();
+
+    await act(async () => {
+      finishRequest?.();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(store.markPermissionsHandled).toHaveBeenCalledOnce();
     expect(view.getByText('다음 화면')).toBeTruthy();
   });
 
@@ -221,11 +273,16 @@ describe('AppLaunchBoundary', () => {
     expect(store.markBiometricSetupCompleted).not.toHaveBeenCalled();
   });
 
-  it('skips the permission sheet after it has been seen', async () => {
+  it('skips the permission sheet after native permissions were handled', async () => {
     vi.useFakeTimers();
     const store = createStore(true);
+    const requestPendingPermissions = vi.fn().mockResolvedValue([]);
     const view = await render(
-      <AppLaunchBoundary durationMs={1000} noticeStore={store}>
+      <AppLaunchBoundary
+        durationMs={1000}
+        noticeStore={store}
+        permissionRequester={{ requestPendingPermissions }}
+      >
         <AppText>다음 화면</AppText>
       </AppLaunchBoundary>,
     );
@@ -237,6 +294,7 @@ describe('AppLaunchBoundary', () => {
     });
     expect(view.queryByText('접근 권한 안내')).toBeNull();
     expect(view.getByText('다음 화면')).toBeTruthy();
+    expect(requestPendingPermissions).not.toHaveBeenCalled();
   });
 
   it('dismisses the permission sheet on Android back without acknowledging it', async () => {
@@ -270,6 +328,7 @@ describe('AppLaunchBoundary', () => {
     });
 
     expect(store.markSeen).not.toHaveBeenCalled();
+    expect(store.markPermissionsHandled).not.toHaveBeenCalled();
     expect(view.getByText('온보딩 시작')).toBeTruthy();
   });
 });

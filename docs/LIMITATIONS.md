@@ -9,6 +9,9 @@
 - Android API 36 emulator Development Build에서 OIDC, App Lock, refresh restart와 logout을 수동 확인했다.
 - Android API 36 emulator에서 포트폴리오 최초 onboarding/PIN → non-physical biometric
   adapter → mock Home과 force-stop/relaunch → onboarding 생략 → Home을 확인했다.
+- Android API 36 emulator에서 launch 알림·카메라 native permission prompt, 거부 후
+  onboarding 진행과 재실행 prompt 생략을 확인했다. 최신 Android photo picker는 별도
+  runtime 사진 권한 prompt를 표시하지 않을 수 있다.
 - canonical OpenAPI, 실제 Fastify provider, mobile consumer fixture와 adapter를 35 operations/38 fixtures에 대해 추적한다.
 - Testcontainers PostgreSQL에서 migration, role, ownership, append-only, concurrency, settlement/outbox/crypto invariant를 검증한다.
 - production backend image의 runtime workspace dependency audit은 0건이다.
@@ -40,6 +43,7 @@
 - iOS Development Build의 OIDC redirect, SecureStore와 Face ID
 - Android/iOS 물리 기기의 biometric cancel, lockout, fallback과 background timing edge case
 - 포트폴리오 launch의 Android/iOS 물리 기기 Face ID/Touch ID/Android biometric prompt
+- iOS 및 Android 물리 기기의 알림·사진·카메라 권한 prompt와 설정 변경 edge case
 - 원격 HTTPS 환경의 redirect/CORS/certificate와 EAS Preview Build
 
 위 항목은 `GAP-0002`, `GAP-0003`, `ISSUE-0002`, `ISSUE-0003`에서 계속 추적한다. 이 프로젝트는 금융 규제 준수, production readiness 또는 실제 투자 서비스 적합성을 주장하지 않는다.

@@ -925,3 +925,27 @@
 - Android Debug Development Build 484 tasks 통과
 - Android API 36 Emulator clean first-run과 force-stop/relaunch 통과
 - physical/iOS native prompt는 `FE-GAP-0002`/`FE-GAP-0004`로 유지
+
+## FE-0020 — launch native 선택 권한 요청
+
+- 날짜: 2026-09-03
+- Milestone: 7B 포트폴리오 launch 권한
+- 상태: IMPLEMENTED_LOCAL_PHYSICAL_PENDING
+- contract revision: `platform-v1` unchanged
+
+### 구현
+
+- notification/photo/camera Expo native module과 config plugin을 추가했다.
+- OS permission 상태를 순차 확인하고 미결정·요청 가능 상태만 request하는 coordinator를
+  구현했다.
+- 승인·거부와 분리된 SecureStore handled marker, 중복 확인 방지와 확인 중 UI를
+  추가했다.
+- 기존 seen marker만 있는 설치는 한 번 native 권한 흐름을 수행하고, 처리 이후
+  custom/native prompt를 재실행하지 않는다.
+
+### 검증
+
+- mobile 48 files/141 tests와 Android Development Build 484 tasks 통과
+- root verify: mobile 141/simulator 12/platform 96 총 249 tests와 두 backend build 통과
+- Android API 36 Emulator notification/camera deny 후 onboarding과 relaunch skip 통과
+- physical/iOS는 `FE-GAP-0005`로 유지

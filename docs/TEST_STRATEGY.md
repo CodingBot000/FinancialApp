@@ -171,6 +171,20 @@ Android Emulator actual smoke는 clean app data의 최초 흐름과 force-stop/r
 검증한다. physical prompt의 성공·취소·lockout·enrollment 변경은 Android/iOS 실제
 기기 체크리스트로 남긴다.
 
+launch 선택 권한 자동화 범위:
+
+- 알림 → 사진 → 카메라의 고정 순서
+- OS 상태가 결정된 권한의 request 미호출
+- 미결정 또는 요청 가능한 권한의 request 호출
+- 하나의 adapter 오류 뒤 나머지 권한 계속 처리
+- custom 안내 확인 뒤 permission handled marker 저장
+- custom 안내를 뒤로 닫으면 marker 미저장
+- marker가 있는 재실행에서 custom/native 권한 요청 미호출
+
+Android API 36 actual smoke는 알림 거부 → 카메라 거부 뒤 onboarding 진행과
+force-stop/relaunch의 권한 화면 생략을 검증한다. Android 최신 photo picker처럼 OS가
+runtime permission을 요구하지 않는 경우에는 별도 prompt를 강제하지 않는다.
+
 ## 3. 핵심 동시성 Scenario
 
 ### 현금 초과 예약

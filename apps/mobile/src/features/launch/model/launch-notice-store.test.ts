@@ -43,13 +43,30 @@ describe('LaunchNoticeStore biometric setup', () => {
     );
   });
 
+  it('stores permission flow completion independently from permission results', async () => {
+    const store = createSecureLaunchNoticeStore();
+    expect(await store.hasHandledPermissions()).toBe(false);
+
+    await store.markPermissionsHandled();
+    expect(secureStore.setItemAsync).toHaveBeenCalledWith(
+      'wealth-flow.launch-permissions-handled.v1',
+      'true',
+    );
+
+    secureStore.getItemAsync.mockResolvedValue('true');
+    expect(await store.hasHandledPermissions()).toBe(true);
+  });
+
   it('clears every portfolio launch marker', async () => {
     const store = createSecureLaunchNoticeStore();
     await store.clearPortfolioSetup();
 
-    expect(secureStore.deleteItemAsync).toHaveBeenCalledTimes(4);
+    expect(secureStore.deleteItemAsync).toHaveBeenCalledTimes(5);
     expect(secureStore.deleteItemAsync).toHaveBeenCalledWith(
       'wealth-flow.biometric-setup-completed.v1',
+    );
+    expect(secureStore.deleteItemAsync).toHaveBeenCalledWith(
+      'wealth-flow.launch-permissions-handled.v1',
     );
   });
 });

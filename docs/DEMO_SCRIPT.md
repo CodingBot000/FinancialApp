@@ -16,9 +16,11 @@ make acceptance-test
 ## 0:00–0:30 — 포트폴리오 진입과 신뢰 경계
 
 1. 최초 실행에서 소개 화면, 본인인증 UI와 간편비밀번호 확인을 빠르게 보여준다.
-2. 실기기에서는 OS Face ID/지문, emulator에서는 테스트 gate가 선택된다고 설명한다.
-3. 생체인증 성공 뒤 OIDC 설정 화면 없이 contract mock Home으로 진입한다.
-4. 앱을 다시 실행해 onboarding/PIN을 생략하고 생체인증 뒤 Home으로 돌아오는 흐름을
+2. 접근 권한 안내 확인 뒤 OS 알림·사진·카메라 선택 권한 요청을 보여준다. 거부해도
+   다음 단계로 진행하며 재실행에는 다시 요청하지 않는다고 설명한다.
+3. 실기기에서는 OS Face ID/지문, emulator에서는 테스트 gate가 선택된다고 설명한다.
+4. 생체인증 성공 뒤 OIDC 설정 화면 없이 contract mock Home으로 진입한다.
+5. 앱을 다시 실행해 onboarding/PIN을 생략하고 생체인증 뒤 Home으로 돌아오는 흐름을
    보여준다.
 
 설명 포인트: SecureStore에는 setup 완료 marker만 저장하고 현재 unlock은 메모리에만

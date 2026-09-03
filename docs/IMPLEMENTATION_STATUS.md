@@ -3,8 +3,8 @@
 - 현재 Milestone: 7B — 포트폴리오 생체인증 진입
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-03
-- 마지막 로컬 구현 ID: FE-0019
-- 다음 작업 ID: FE-0019 물리 기기 검증 / FE-0017 iOS 회귀
+- 마지막 로컬 구현 ID: FE-0020
+- 다음 작업 ID: FE-0019/FE-0020 물리 기기 검증 / FE-0017 iOS 회귀
 - 활성 계획: `PORTFOLIO_BIOMETRIC_ONBOARDING_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
@@ -328,6 +328,23 @@
       총 244 tests와 두 backend build 통과
 - [ ] Android/iOS 물리 기기의 실제 prompt, cancel, lockout, enrollment 변경 검증
 - 상태: PARTIAL — local code/Android Emulator 완료, physical/iOS evidence 대기
+
+## FE-0020 launch native 선택 권한 요청 — 진행 상태
+
+- [x] `expo-notifications`, `expo-image-picker`, `expo-camera` SDK 57 모듈 추가
+- [x] 알림 → 사진 → 카메라 순차 permission coordinator 구현
+- [x] 이미 결정된 권한은 skip하고 요청 가능한 미결정 권한만 native 요청
+- [x] 승인·거부·개별 adapter 오류와 무관하게 다음 권한과 onboarding 진행
+- [x] 기존 안내 확인과 분리된 permission handled SecureStore marker 추가
+- [x] marker 존재 시 custom 안내와 OS 권한 요청 모두 생략
+- [x] Android 13+ 알림 prompt용 notification channel 선생성
+- [x] 카메라/사진 iOS usage description과 Android runtime permission config 반영
+- [x] Android API 36 Emulator에서 알림·카메라 거부 후 onboarding 진행 확인
+- [x] force-stop/relaunch에서 권한 화면 재표시 없음 확인
+- [x] mobile 48 files/141 tests와 Android Development Build 484 tasks 통과
+- [x] root verify: mobile 141/simulator 12/platform 96 총 249 tests와 두 backend build
+- [ ] iOS 및 Android/iOS 물리 기기 native prompt 수동 확인
+- 상태: PARTIAL — Android Emulator 완료, physical/iOS evidence 대기
 
 ## 외부 조건
 

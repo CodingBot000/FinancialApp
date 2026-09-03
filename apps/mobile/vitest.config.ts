@@ -12,6 +12,27 @@ export default defineConfig({
         ),
       },
       {
+        find: /^expo-camera$/,
+        replacement: fileURLToPath(
+          new URL('./scripts/expo-camera-test-shim.mjs', import.meta.url),
+        ),
+      },
+      {
+        find: /^expo-image-picker$/,
+        replacement: fileURLToPath(
+          new URL('./scripts/expo-image-picker-test-shim.mjs', import.meta.url),
+        ),
+      },
+      {
+        find: /^expo-notifications$/,
+        replacement: fileURLToPath(
+          new URL(
+            './scripts/expo-notifications-test-shim.mjs',
+            import.meta.url,
+          ),
+        ),
+      },
+      {
         find: /^expo-local-authentication$/,
         replacement: fileURLToPath(
           new URL(

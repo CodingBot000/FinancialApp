@@ -155,6 +155,17 @@ BE-0010 기준 `finapp_audit_event`는 runtime role에 SELECT/INSERT만 허용�
 - CORS origin과 redirect URI는 환경별 allowlist다.
 - `.env`, keystore, certificate private key는 Git에서 제외한다.
 
+## 8.1 launch 선택 권한
+
+- 알림·사진·카메라는 선택 권한이며 승인 여부로 앱 진입을 차단하지 않는다.
+- OS 상태가 이미 결정된 권한은 자동 재요청하지 않는다.
+- SecureStore에는 권한 승인 결과가 아니라 launch 권한 요청 처리 완료 marker만
+  저장한다.
+- 실제 권한 상태는 항상 OS가 소유하며 앱 설정 화면에서 사용자가 변경할 수 있다.
+- Android notification channel은 POST_NOTIFICATIONS 상태 조회 전에 생성한다.
+- 권한 request 결과와 오류 상세에는 개인정보가 없으며 로그에 사용자 콘텐츠를
+  포함하지 않는다.
+
 ## 9. MVP 보안 검증
 
 - valid/expired/wrong issuer/wrong audience token

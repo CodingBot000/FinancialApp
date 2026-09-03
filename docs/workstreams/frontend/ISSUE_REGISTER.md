@@ -1,9 +1,9 @@
 # Frontend Workstream Issue와 Gap Register
 
 - 다음 ISSUE ID: `FE-ISSUE-0017`
-- 다음 GAP ID: `FE-GAP-0005`
+- 다음 GAP ID: `FE-GAP-0006`
 - active issue: `FE-ISSUE-0001`
-- active gap: `FE-GAP-0002`, `FE-GAP-0004`
+- active gap: `FE-GAP-0002`, `FE-GAP-0004`, `FE-GAP-0005`
 
 frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한다. backend·계약·milestone 완료에도 영향을 주면 handoff와 중앙 `ISSUE_REGISTER.md`에 연결한다.
 
@@ -99,6 +99,21 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 검증: DEV-0013에서 registry current stable Expo `57.0.19`, Expo Router `57.0.18`과 현재 compatible pin이 일치하고 `expo install --check`가 통과했다. root audit은 Expo 경로 moderate 14를 포함해 총 moderate 18/high 0/critical 0이다. 제안된 강제 fix는 Expo 46 또는 Router 5의 비호환 downgrade라 적용하지 않았다. local release는 조건부 통과, 원격 preview 전 upstream 해소 또는 사용자 위험 수용이 필요하다.
 
 ## Active Gap
+
+### FE-GAP-0005 — 물리 기기 launch 선택 권한 prompt 검증
+
+- 상태: UNVERIFIED
+- 심각도: LOW
+- 발견 FE: FE-0020
+- 누락/연기 이유: Android API 36 Emulator에서는 POST_NOTIFICATIONS와 CAMERA native
+  prompt를 확인했지만 iOS와 물리 Android/iOS 기기는 제공되지 않았다.
+- 현재 영향: coordinator, SecureStore handled marker, deny 후 진행과 force-stop/relaunch
+  생략은 검증됐다. 실제 기기별 사진 권한 정책과 설정 변경 edge case만 남았다.
+- 목표 Milestone: portfolio device smoke
+- 재확인 조건: 실제 Android/iOS 기기에서 fresh install 후 알림·사진·카메라
+  승인/거부 조합, process relaunch와 Settings 변경을 확인
+- 해결 FE:
+- 검증: 중앙 `GAP-0010`
 
 ### FE-GAP-0002 — iOS Development Build chart runtime 검증
 

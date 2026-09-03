@@ -62,6 +62,7 @@
 | D-051 | ACCEPTED | Milestone 6 onboarding은 검증된 OIDC subject의 합성 기본 risk profile 자동 생성과 Settings의 owner-scoped 조회/수정으로 완료한다. 별도 wizard는 만들지 않는다. risk profile은 planning preference이며 portfolio recommendation, 목표 배분 생성, 투자 적합성 판정이나 수익 보장 표현을 제공하지 않는다. update는 `financial.write`와 optimistic version을 요구한다. |
 | D-052 | ACCEPTED | local performance gate는 runtime role의 actual PostgreSQL JSON plan에서 expected index와 100ms ceiling을 검증하되 capacity/SLO 증거로 과장하지 않는다. root moderate 18/high·critical 0과 backend runtime 0인 dependency 상태는 local 단계 조건부 통과로 판정하며, 원격 preview의 security-clean 판정은 upstream 해소 또는 사용자 위험 수용 전 보류한다. `npm audit fix --force`와 비호환 downgrade는 적용하지 않는다. |
 | D-053 | ACCEPTED | 포트폴리오 launch flow는 `Device.isDevice`로 physical/non-physical biometric adapter를 선택한다. setup 완료 marker는 SecureStore, 현재 process unlock은 메모리만 사용한다. 이 로컬 접근은 OIDC/MFA 증거가 아니며 가짜 token을 만들지 않고 contract mock Home만 연다. 실제 HTTP API와 OIDC 경계는 별도로 보존한다. |
+| D-054 | ACCEPTED | launch 권한 안내 확인 시 알림·사진·카메라의 현재 OS 상태를 순차 확인하고 미결정 권한만 native API로 요청한다. 승인 여부가 아닌 요청 처리 완료 marker를 SecureStore에 저장하며, 승인·거부와 무관하게 다음 실행부터 custom 안내와 OS 요청을 생략한다. 선택 권한 결과는 앱 진입을 차단하지 않는다. |
 
 ## 정정 이력
 

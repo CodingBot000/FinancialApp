@@ -2,7 +2,7 @@
 
 - 마지막 갱신: 2026-09-03
 - 다음 ISSUE ID: `ISSUE-0018`
-- 다음 GAP ID: `GAP-0010`
+- 다음 GAP ID: `GAP-0011`
 
 이 문서는 defect, blocker, 위험과 불가피한 누락을 삭제하지 않고 추적한다.
 
@@ -159,6 +159,21 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 재확인 조건: 지원 실제 기기에서 prompt, cancel, lockout, background 60초와 재인증 흐름 통과
 - 해결 DEV:
 - 검증: FE-0010에서 Android API 36 emulator의 실제 시스템 fingerprint prompt, 성공 unlock, process force-stop 뒤 재인증과 `/me` 복구를 통과했다. FE-0019에서는 clean portfolio onboarding/PIN → non-physical gate → mock Home과 force-stop/relaunch onboarding 생략을 재검증했다. 남은 범위는 물리 기기의 launch prompt, cancel/lockout/enrollment 변경과 실제 60초 background timing이다. frontend `FE-GAP-0004` 참조.
+
+### GAP-0010 — 물리 기기 launch 선택 권한 검증
+
+- 상태: UNVERIFIED
+- 심각도: LOW
+- 최초 발견: 2026-09-03
+- 발견 FE: FE-0020
+- 원래 요구사항: 권한 안내 확인 뒤 실제 기기의 알림·사진·카메라 OS prompt를
+  순차 처리하고 승인·거부와 무관하게 재실행에는 생략
+- 현재 영향: Android API 36 Emulator의 알림/카메라 prompt, 거부 후 onboarding과
+  force-stop/relaunch 생략은 통과했다. iOS와 Android/iOS 물리 기기는 미검증이다.
+- 재확인 조건: 실제 Android/iOS 기기에서 fresh install 승인/거부 조합, 재실행,
+  설정 앱에서 권한 변경 후 앱 진입을 수동 확인
+- 해결 DEV:
+- 검증: frontend `FE-GAP-0005` 참조
 
 ### GAP-0007 — Local Full-stack E2E와 Fresh-clone 인수
 
