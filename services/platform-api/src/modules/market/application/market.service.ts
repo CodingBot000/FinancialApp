@@ -46,7 +46,11 @@ export class MarketService {
   async quote(symbol: string): Promise<MarketQuote> {
     const stock = await this.requireStock(symbol);
     const cached = await this.repository.latestQuote(symbol);
-    if (cached !== undefined && isFresh(cached.capturedAt, quoteFreshMs())) {
+    if (
+      cached !== undefined &&
+      cached.source === this.source() &&
+      isFresh(cached.capturedAt, quoteFreshMs())
+    ) {
       return { ...cached, freshness: 'FRESH' };
     }
 
@@ -121,7 +125,7 @@ export class MarketService {
     try {
       const result = await this.provider.bars(stock, interval);
       const normalizedBars = deduplicateMarketBars(result.bars, interval);
-      await this.repository.upsertBars(
+      await this.repository.replaceBars(
         stock.symbol,
         interval,
         normalizedBars,

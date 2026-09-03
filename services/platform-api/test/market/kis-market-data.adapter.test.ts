@@ -48,6 +48,7 @@ describe('KisMarketDataAdapter', () => {
             acml_vol: '12,452,301',
             prdy_ctrt: '1.6438',
             prdy_vrss: '1,200',
+            prdy_vrss_sign: '2',
             stck_prpr: '74,200',
           },
         }),
@@ -74,6 +75,34 @@ describe('KisMarketDataAdapter', () => {
         tr_id: 'FHKST01010100',
       }),
     });
+  });
+
+  it('applies the KIS down sign to unsigned quote changes', async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(
+        json({ access_token: 'change-me-access-token', expires_in: 3600 }),
+      )
+      .mockResolvedValueOnce(
+        json({
+          rt_cd: '0',
+          output: {
+            acml_vol: '1000',
+            prdy_ctrt: '4.7300',
+            prdy_vrss: '80000',
+            prdy_vrss_sign: '4',
+            stck_prpr: '1613000',
+          },
+        }),
+      );
+    vi.stubGlobal('fetch', fetch);
+
+    await expect(new KisMarketDataAdapter().quote(stock)).resolves.toMatchObject(
+      {
+        changePrice: '-80000.0000',
+        changeRate: '-4.7300',
+      },
+    );
   });
 
   it('maps daily bars and rejects malformed provider rows', async () => {

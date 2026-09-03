@@ -26,7 +26,10 @@ import {
   usePortfolioAccess,
 } from '../../../shared/auth/portfolio-access-context';
 import type { RefreshTokenStore } from '../../../shared/auth/refresh-token-store';
-import { ConfiguredPlatformApiProvider } from '../model/configured-platform-api-provider';
+import {
+  ConfiguredPlatformApiProvider,
+  createConfiguredPlatformApi,
+} from '../model/configured-platform-api-provider';
 import { LoginBoundary } from './login-boundary';
 
 class EmptyRefreshTokenStore implements RefreshTokenStore {
@@ -55,6 +58,22 @@ function UnlockThenShow({ children }: PropsWithChildren) {
 }
 
 describe('portfolio login composition', () => {
+  it('keeps HTTP API mode when the local portfolio is unlocked', () => {
+    const manager = new AuthSessionManager(
+      new MemoryAccessTokenStore(),
+      new EmptyRefreshTokenStore(),
+    );
+    const api = createConfiguredPlatformApi(manager, {
+      EXPO_PUBLIC_APP_ENV: 'local',
+      EXPO_PUBLIC_LOGIN_MODE: 'test',
+      EXPO_PUBLIC_LOCAL_TEST_ACCESS_TOKEN: 'local-test-token',
+      EXPO_PUBLIC_PLATFORM_API_MODE: 'http',
+      EXPO_PUBLIC_PLATFORM_API_URL: 'http://10.0.2.2:8081',
+    });
+
+    expect(api.constructor.name).toBe('HttpPlatformApi');
+  });
+
   it('opens the mock-backed home without showing OIDC configuration', async () => {
     const manager = new AuthSessionManager(
       new MemoryAccessTokenStore(),

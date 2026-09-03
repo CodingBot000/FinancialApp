@@ -235,6 +235,44 @@ export class DrizzleMarketRepository implements MarketRepository {
     }
   }
 
+  async replaceBars(
+    symbol: string,
+    interval: MarketInterval,
+    bars: readonly MarketBar[],
+    source: MarketSource,
+  ): Promise<void> {
+    const instrument = await this.findInstrumentId(symbol);
+    if (instrument === undefined) {
+      throw new Error('Market instrument is not available.');
+    }
+    const normalizedBars = deduplicateMarketBars(bars, interval);
+    await this.database.transaction(async (transaction) => {
+      await transaction
+        .delete(finappMarketPriceBar)
+        .where(
+          and(
+            eq(finappMarketPriceBar.instrumentId, instrument.id),
+            eq(finappMarketPriceBar.interval, interval),
+          ),
+        );
+      for (const bar of normalizedBars) {
+        await transaction.insert(finappMarketPriceBar).values({
+          id: randomUUID(),
+          instrumentId: instrument.id,
+          interval,
+          bucketAt: new Date(bar.bucketAt),
+          open: bar.open,
+          high: bar.high,
+          low: bar.low,
+          close: bar.close,
+          volume: BigInt(bar.volume),
+          source,
+          raw: {},
+        });
+      }
+    });
+  }
+
   async upsertInstruments(
     instruments: readonly MarketInstrumentInput[],
   ): Promise<number> {

@@ -25,6 +25,12 @@ export interface MarketRepository {
     bars: readonly MarketBar[],
     source: MarketSource,
   ): Promise<void>;
+  replaceBars(
+    symbol: string,
+    interval: MarketInterval,
+    bars: readonly MarketBar[],
+    source: MarketSource,
+  ): Promise<void>;
   upsertInstruments(
     instruments: readonly MarketInstrumentInput[],
   ): Promise<number>;

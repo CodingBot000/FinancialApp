@@ -57,9 +57,10 @@ export class KisMarketDataAdapter implements MarketDataProvider {
       FID_INPUT_ISCD: stock.symbol,
     });
     const output = record(response.output);
+    const changeDirection = kisDirection(output?.prdy_vrss_sign);
     const currentPrice = decimal(output?.stck_prpr);
-    const changePrice = decimal(output?.prdy_vrss);
-    const changeRate = decimal(output?.prdy_ctrt);
+    const changePrice = signedDecimal(output?.prdy_vrss, changeDirection);
+    const changeRate = signedDecimal(output?.prdy_ctrt, changeDirection);
     const volume = integer(output?.acml_vol);
     if (
       currentPrice === undefined ||
@@ -264,6 +265,24 @@ function decimal(value: unknown): string | undefined {
   const unsigned = negative ? text.slice(1) : text;
   const [whole = '0', fraction = ''] = unsigned.split('.');
   return `${negative ? '-' : ''}${whole}.${fraction.padEnd(4, '0').slice(0, 4)}`;
+}
+
+function signedDecimal(
+  value: unknown,
+  direction: 'up' | 'down' | undefined,
+): string | undefined {
+  const parsed = decimal(value);
+  if (parsed === undefined || parsed.startsWith('-') || direction !== 'down') {
+    return parsed;
+  }
+  return parsed === '0.0000' ? parsed : `-${parsed}`;
+}
+
+function kisDirection(value: unknown): 'up' | 'down' | undefined {
+  const sign = String(value ?? '').trim();
+  if (sign === '2' || sign === '5') return 'up';
+  if (sign === '1' || sign === '4') return 'down';
+  return undefined;
 }
 
 function integer(value: unknown): string | undefined {

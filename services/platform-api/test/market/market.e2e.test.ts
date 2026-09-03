@@ -66,6 +66,7 @@ describe('market provider boundary', () => {
       })),
       listBars: vi.fn().mockResolvedValue([]),
       upsertBars: vi.fn().mockResolvedValue(undefined),
+      replaceBars: vi.fn().mockResolvedValue(undefined),
       upsertInstruments: vi.fn().mockResolvedValue(0),
     };
 

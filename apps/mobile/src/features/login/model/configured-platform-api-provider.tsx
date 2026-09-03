@@ -8,7 +8,6 @@ import { PlatformApiProvider } from '../../../shared/api/platform-api-context';
 import { UnavailablePlatformApi } from '../../../shared/api/unavailable-platform-api';
 import type { AuthSessionManager } from '../../../shared/auth/auth-session-manager';
 import { useAuthSession } from '../../../shared/auth/auth-session-context';
-import { useOptionalPortfolioAccess } from '../../../shared/auth/portfolio-access-context';
 import { ExpoOidcClient } from '../../../shared/auth/expo-oidc-client';
 import { LocalTestOidcClient } from '../../../shared/auth/local-test-oidc-client';
 import {
@@ -22,8 +21,16 @@ export function createConfiguredPlatformApi(
   manager: AuthSessionManager,
   environment: PublicEnvironment = process.env,
 ): PlatformApi {
+  const defaultApiMode =
+    typeof __DEV__ !== 'undefined'
+      ? __DEV__
+        ? 'mock'
+        : 'http'
+      : process.env.NODE_ENV === 'production'
+        ? 'http'
+        : 'mock';
   const apiMode =
-    environment.EXPO_PUBLIC_PLATFORM_API_MODE ?? (__DEV__ ? 'mock' : 'http');
+    environment.EXPO_PUBLIC_PLATFORM_API_MODE ?? defaultApiMode;
 
   if (apiMode === 'mock') return new ContractMockPlatformApi();
 
@@ -67,14 +74,6 @@ export function createConfiguredPlatformApi(
 
 export function ConfiguredPlatformApiProvider({ children }: PropsWithChildren) {
   const manager = useAuthSession();
-  const portfolioAccess = useOptionalPortfolioAccess();
-  const portfolioUnlocked = portfolioAccess?.state.phase === 'unlocked';
-  const api = useMemo(
-    () =>
-      portfolioUnlocked
-        ? new ContractMockPlatformApi()
-        : createConfiguredPlatformApi(manager),
-    [manager, portfolioUnlocked],
-  );
+  const api = useMemo(() => createConfiguredPlatformApi(manager), [manager]);
   return <PlatformApiProvider api={api}>{children}</PlatformApiProvider>;
 }

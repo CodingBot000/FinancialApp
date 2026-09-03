@@ -23,6 +23,7 @@ function repository(): MarketRepository {
       .mockImplementation(async (quote) => ({ ...quote, freshness: 'FRESH' })),
     searchStocks: vi.fn().mockResolvedValue([stock]),
     upsertBars: vi.fn().mockResolvedValue(undefined),
+    replaceBars: vi.fn().mockResolvedValue(undefined),
     upsertInstruments: vi.fn().mockResolvedValue(1),
   };
 }
@@ -72,7 +73,7 @@ describe('MarketService', () => {
       bars: expect.any(Array),
     });
     expect(repo.saveQuote).toHaveBeenCalledOnce();
-    expect(repo.upsertBars).toHaveBeenCalledOnce();
+    expect(repo.replaceBars).toHaveBeenCalledOnce();
   });
 
   it('serves stale quote cache when provider is unavailable', async () => {
