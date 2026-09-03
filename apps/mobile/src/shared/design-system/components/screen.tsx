@@ -11,7 +11,9 @@ import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 import { colors, spacing } from '../tokens';
 
 const allSafeAreaEdges: readonly Edge[] = ['top', 'right', 'bottom', 'left'];
-const tabSafeAreaEdges: readonly Edge[] = ['right', 'bottom', 'left'];
+// The tab bar owns the bottom system inset. Keeping it out of the scene
+// prevents a white safe-area strip from clipping the final scroll content.
+const tabSafeAreaEdges: readonly Edge[] = ['right', 'left'];
 const ScreenTopInsetContext = createContext(true);
 
 export function ScreenSafeAreaProvider({
