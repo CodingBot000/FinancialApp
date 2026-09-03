@@ -45,6 +45,9 @@ describe('MarketDetailScreen', () => {
     );
 
     expect(await view.findByText('삼성전자')).toBeTruthy();
+    expect(
+      await view.findByText('005930 · 코스피 · 전자부품 제조업'),
+    ).toBeTruthy();
     expect(await view.findAllByText('74,200원')).toHaveLength(2);
     expect(
       await view.findByLabelText(/삼성전자 일봉 가격 흐름 차트/),

@@ -1,5 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import Constants from 'expo-constants';
+import * as Linking from 'expo-linking';
+import * as Notifications from 'expo-notifications';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { Platform } from 'react-native';
 
 import {
   AppText,
@@ -9,13 +14,52 @@ import {
   spacing,
 } from '../../../shared/design-system';
 
-const keepNotificationActionInactive = () => undefined;
-
 export function NotificationInboxScreen({
   onBack,
 }: {
   readonly onBack: () => void;
 }) {
+  const [notificationsEnabled, setNotificationsEnabled] = useState<
+    boolean | undefined
+  >();
+
+  useEffect(() => {
+    let mounted = true;
+    void Notifications.getPermissionsAsync()
+      .then((permission) => {
+        if (mounted) setNotificationsEnabled(permission.granted);
+      })
+      .catch(() => {
+        if (mounted) setNotificationsEnabled(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const openNotificationSettings = async () => {
+    if (Platform.OS === 'android') {
+      const packageName = Constants.expoConfig?.android?.package;
+      if (packageName) {
+        try {
+          await Linking.sendIntent(
+            'android.settings.APP_NOTIFICATION_SETTINGS',
+            [
+              {
+                key: 'android.provider.extra.APP_PACKAGE',
+                value: packageName,
+              },
+            ],
+          );
+          return;
+        } catch {
+          // Fall back to the app settings page when the direct intent is unavailable.
+        }
+      }
+    }
+    await Linking.openSettings();
+  };
+
   return (
     <FullScreenLayer
       backIcon={
@@ -33,19 +77,23 @@ export function NotificationInboxScreen({
         <AppText style={styles.centered} variant="title1">
           아직 받은 메시지가 없어요
         </AppText>
-        <AppText style={styles.centered} variant="caption">
-          앱 푸시 알림을 켜고 다양한 혜택과 정보를 놓치지 마세요!
-        </AppText>
-        <View style={styles.action}>
-          <Button
-            accessibilityLabel="알림켜기, 준비 중"
-            onPress={keepNotificationActionInactive}
-            size="medium"
-            style={styles.actionButton}
-          >
-            알림켜기
-          </Button>
-        </View>
+        {!notificationsEnabled ? (
+          <>
+            <AppText style={styles.centered} variant="caption">
+              앱 푸시 알림을 켜고 다양한 혜택과 정보를 놓치지 마세요!
+            </AppText>
+            <View style={styles.action}>
+              <Button
+                accessibilityLabel="알림켜기"
+                onPress={() => void openNotificationSettings()}
+                size="medium"
+                style={styles.actionButton}
+              >
+                알림켜기
+              </Button>
+            </View>
+          </>
+        ) : null}
       </View>
     </FullScreenLayer>
   );

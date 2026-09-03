@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { render } from '@testing-library/react-native';
 import { describe, expect, it, vi } from 'vitest';
 
+import { colors } from '../../../shared/design-system';
 import { StockPriceChart } from './stock-price-chart';
 
 const { areaSpy, chartSpy, lineSpy } = vi.hoisted(() => ({
@@ -96,7 +97,14 @@ describe('StockPriceChart', () => {
       expect.objectContaining({ curveType: 'monotoneX' }),
     );
     expect(view.getByText('종가 74,200원')).toBeTruthy();
-    expect(view.getByText(/시가 74,000원 · 고가 75,000원/)).toBeTruthy();
+    expect(view.getByText('시가 74,000원')).toBeTruthy();
+    expect(view.getByText('고가 75,000원')).toBeTruthy();
+    expect(view.getByText('저가 73,000원')).toBeTruthy();
+    expect(view.getByText('종가 74,200원').props.style).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ color: colors.market.up }),
+      ]),
+    );
     expect(view.getByText('거래량 2,000')).toBeTruthy();
     expect(view.getByLabelText(/삼성전자 일봉 가격 흐름 차트/)).toBeTruthy();
   });

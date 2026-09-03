@@ -69,7 +69,7 @@ export function MarketScreen({
           title="검색 결과가 없습니다."
         />
       ) : null}
-      {search.data && search.data.length > 0 ? (
+      {!selected && search.data && search.data.length > 0 ? (
         <Card style={{ marginTop: spacing[3] }}>
           <SectionHeader title="검색 결과" />
           {search.data.map((stock) => (
@@ -80,7 +80,7 @@ export function MarketScreen({
                 setSelected(stock);
                 onOpenDetails?.(stock);
               }}
-              selected={selected?.symbol === stock.symbol}
+              selected={false}
               title={stock.name}
             />
           ))}
@@ -96,6 +96,7 @@ export function MarketScreen({
             />
             <AppText tone="secondary" variant="caption">
               {selected.symbol} · {marketNameLabel(selected.market)}
+              {selected.industry ? ` · ${selected.industry}` : ''}
             </AppText>
             {data.quote.isPending ? (
               <LoadingState label="현재가를 확인하고 있습니다." />
@@ -133,7 +134,10 @@ export function MarketScreen({
                   stockName={selected.name}
                 />
                 {bars.bars.at(-1) ? (
-                  <MarketBarSummary bar={bars.bars.at(-1)!} />
+                  <MarketBarSummary
+                    bar={bars.bars.at(-1)!}
+                    previousBar={bars.bars.at(-2)}
+                  />
                 ) : null}
               </>
             ) : null}

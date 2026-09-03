@@ -66,7 +66,7 @@ export function MarketDetailScreen({
         }
         subtitle={
           stock
-            ? `${stock.symbol} · ${marketNameLabel(stock.market)}`
+            ? `${stock.symbol} · ${marketNameLabel(stock.market)}${stock.industry ? ` · ${stock.industry}` : ''}`
             : '종목 정보를 불러오고 있습니다.'
         }
         title={stock?.name ?? '종목 상세'}
@@ -127,7 +127,10 @@ export function MarketDetailScreen({
                   stockName={stock.name}
                 />
                 {bars.bars.at(-1) ? (
-                  <MarketBarSummary bar={bars.bars.at(-1)!} />
+                  <MarketBarSummary
+                    bar={bars.bars.at(-1)!}
+                    previousBar={bars.bars.at(-2)}
+                  />
                 ) : null}
               </>
             ) : null}

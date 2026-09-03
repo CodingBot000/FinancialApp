@@ -20,3 +20,20 @@ export function formatMarketVolume(value: string): string {
     ? number.toLocaleString('ko-KR')
     : '거래량 확인 필요';
 }
+
+export type MarketTrendTone = 'marketUp' | 'marketDown' | 'secondary';
+
+export function marketTrendTone(
+  current: string | number,
+  previous: string | number | undefined,
+  fallback: string | number | undefined,
+): MarketTrendTone {
+  const currentValue = Number(current);
+  const comparisonValue = Number(previous ?? fallback);
+  if (!Number.isFinite(currentValue) || !Number.isFinite(comparisonValue)) {
+    return 'secondary';
+  }
+  if (currentValue > comparisonValue) return 'marketUp';
+  if (currentValue < comparisonValue) return 'marketDown';
+  return 'secondary';
+}

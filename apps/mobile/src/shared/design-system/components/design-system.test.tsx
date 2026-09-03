@@ -113,7 +113,7 @@ describe('design system primitives', () => {
     expect(view.getByText('체결')).toBeTruthy();
     expect(
       view.getByText(
-        '데이터는 포트폴리오 시연을 위한 예시이며 실제 금융계좌와 연결되지 않습니다.',
+        '데이터는 실제 증권사 데이터 기반입니다.',
       ),
     ).toBeTruthy();
   });

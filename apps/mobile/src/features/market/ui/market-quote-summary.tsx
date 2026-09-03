@@ -16,6 +16,7 @@ import {
   formatMarketVolume,
   marketFreshnessLabel,
   marketSourceLabel,
+  marketTrendTone,
 } from '../model/market-display';
 
 export function MarketQuoteSummary({ quote }: { readonly quote: MarketQuote }) {
@@ -41,7 +42,14 @@ export function MarketQuoteSummary({ quote }: { readonly quote: MarketQuote }) {
   );
 }
 
-export function MarketBarSummary({ bar }: { readonly bar: MarketBar }) {
+export function MarketBarSummary({
+  bar,
+  previousBar,
+}: {
+  readonly bar: MarketBar;
+  readonly previousBar?: MarketBar | undefined;
+}) {
+  const closeTone = marketTrendTone(bar.close, previousBar?.close, bar.open);
   return (
     <View style={styles.barSummary}>
       <AppText variant="bodyStrong">최근 봉 정보</AppText>
@@ -49,7 +57,7 @@ export function MarketBarSummary({ bar }: { readonly bar: MarketBar }) {
         <BarValue label="시가" value={formatWon(bar.open)} />
         <BarValue label="고가" value={formatWon(bar.high)} />
         <BarValue label="저가" value={formatWon(bar.low)} />
-        <BarValue label="종가" value={formatWon(bar.close)} />
+        <BarValue label="종가" tone={closeTone} value={formatWon(bar.close)} />
       </View>
       <AppText tone="secondary" variant="caption">
         거래량 {formatMarketVolume(bar.volume)}
@@ -77,17 +85,21 @@ function QuoteMetric({
 
 function BarValue({
   label,
+  tone = 'secondary',
   value,
 }: {
   readonly label: string;
+  readonly tone?: 'marketUp' | 'marketDown' | 'secondary';
   readonly value: string;
 }) {
   return (
     <View style={styles.barValue}>
-      <AppText tone="secondary" variant="caption">
+      <AppText tone={tone} variant="caption">
         {label}
       </AppText>
-      <AppText variant="caption">{value}</AppText>
+      <AppText tone={tone} variant="caption">
+        {value}
+      </AppText>
     </View>
   );
 }
@@ -98,7 +110,7 @@ function signedWon(value: string): string {
 }
 
 const styles = StyleSheet.create({
-  barRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2] },
+  barRow: { gap: spacing[2] },
   barSummary: {
     backgroundColor: colors.surface.subtle,
     borderRadius: radius.input,
@@ -106,7 +118,7 @@ const styles = StyleSheet.create({
     marginTop: spacing[3],
     padding: spacing[3],
   },
-  barValue: { flexBasis: '46%', flexGrow: 1, gap: spacing[1] },
+  barValue: { gap: spacing[1] },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

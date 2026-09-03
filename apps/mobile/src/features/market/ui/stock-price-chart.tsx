@@ -24,7 +24,7 @@ import {
   marketChartDomain,
   toMarketChartPoints,
 } from '../model/market-chart-model';
-import { formatMarketVolume } from '../model/market-display';
+import { formatMarketVolume, marketTrendTone } from '../model/market-display';
 
 export function StockPriceChart({
   bars,
@@ -69,6 +69,18 @@ export function StockPriceChart({
   const selectedPoint =
     points.find((point) => point.timestamp === selectedTimestamp) ?? latest;
   const first = points[0];
+  const selectedIndex = selectedPoint
+    ? points.findIndex((point) => point.timestamp === selectedPoint.timestamp)
+    : -1;
+  const previousPoint =
+    selectedIndex > 0 ? points[selectedIndex - 1] : undefined;
+  const closeTone = selectedPoint
+    ? marketTrendTone(
+        selectedPoint.close,
+        previousPoint?.close,
+        selectedPoint.open,
+      )
+    : 'secondary';
   return (
     <View
       accessibilityLabel={`${stockName} ${displayLabel(interval)} 가격 흐름 차트. ${points.length}개. ${first ? formatDate(new Date(first.timestamp).toISOString()) : '-'}부터 ${latest ? formatDate(new Date(latest.timestamp).toISOString()) : '-'}까지`}
@@ -160,14 +172,20 @@ export function StockPriceChart({
           <AppText tone="secondary" variant="caption">
             {formatDate(new Date(selectedPoint.timestamp).toISOString())}
           </AppText>
-          <AppText variant="bodyStrong">
+          <AppText tone={closeTone} variant="bodyStrong">
             종가 {formatWon(String(selectedPoint.close))}
           </AppText>
-          <AppText tone="secondary" variant="caption">
-            시가 {formatWon(String(selectedPoint.open))} · 고가{' '}
-            {formatWon(String(selectedPoint.high))} · 저가{' '}
-            {formatWon(String(selectedPoint.low))}
-          </AppText>
+          <View style={styles.ohlcList}>
+            <AppText tone="secondary" variant="caption">
+              시가 {formatWon(String(selectedPoint.open))}
+            </AppText>
+            <AppText tone="secondary" variant="caption">
+              고가 {formatWon(String(selectedPoint.high))}
+            </AppText>
+            <AppText tone="secondary" variant="caption">
+              저가 {formatWon(String(selectedPoint.low))}
+            </AppText>
+          </View>
           <AppText tone="secondary" variant="caption">
             거래량 {formatMarketVolume(String(selectedPoint.volume))}
           </AppText>
@@ -193,6 +211,7 @@ const styles = StyleSheet.create({
   },
   chart: { height: 250, marginTop: spacing[3] },
   container: { marginTop: spacing[3] },
+  ohlcList: { gap: spacing[1] },
   tooltip: {
     backgroundColor: colors.surface.subtle,
     borderRadius: radius.input,

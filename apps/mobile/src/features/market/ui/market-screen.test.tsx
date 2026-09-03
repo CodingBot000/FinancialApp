@@ -50,6 +50,8 @@ describe('MarketScreen', () => {
     expect(await view.findByText('삼성전자')).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: /삼성전자/ }));
 
+    await waitFor(() => expect(view.queryByText('검색 결과')).toBeNull());
+    expect(view.getByText('005930 · 코스피 · 전자부품 제조업')).toBeTruthy();
     expect(await view.findAllByText('74,200원')).toHaveLength(2);
     expect(view.getByText('전일대비')).toBeTruthy();
     expect(view.getByText('등락률')).toBeTruthy();
