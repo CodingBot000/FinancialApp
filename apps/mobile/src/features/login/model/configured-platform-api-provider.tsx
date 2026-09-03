@@ -8,6 +8,7 @@ import { PlatformApiProvider } from '../../../shared/api/platform-api-context';
 import { UnavailablePlatformApi } from '../../../shared/api/unavailable-platform-api';
 import type { AuthSessionManager } from '../../../shared/auth/auth-session-manager';
 import { useAuthSession } from '../../../shared/auth/auth-session-context';
+import { useOptionalPortfolioAccess } from '../../../shared/auth/portfolio-access-context';
 import { ExpoOidcClient } from '../../../shared/auth/expo-oidc-client';
 import { LocalTestOidcClient } from '../../../shared/auth/local-test-oidc-client';
 import {
@@ -66,6 +67,14 @@ export function createConfiguredPlatformApi(
 
 export function ConfiguredPlatformApiProvider({ children }: PropsWithChildren) {
   const manager = useAuthSession();
-  const api = useMemo(() => createConfiguredPlatformApi(manager), [manager]);
+  const portfolioAccess = useOptionalPortfolioAccess();
+  const portfolioUnlocked = portfolioAccess?.state.phase === 'unlocked';
+  const api = useMemo(
+    () =>
+      portfolioUnlocked
+        ? new ContractMockPlatformApi()
+        : createConfiguredPlatformApi(manager),
+    [manager, portfolioUnlocked],
+  );
   return <PlatformApiProvider api={api}>{children}</PlatformApiProvider>;
 }

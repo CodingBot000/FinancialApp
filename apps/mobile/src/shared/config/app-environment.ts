@@ -23,11 +23,3 @@ export function isLocalTestLoginEnabled(environment?: PublicEnvironment) {
     source.EXPO_PUBLIC_LOGIN_MODE === 'test'
   );
 }
-
-export function isLocalBiometricBypassEnabled(environment?: PublicEnvironment) {
-  const source = environment ?? process.env;
-  return (
-    readAppEnvironment(source) === 'local' &&
-    source.EXPO_PUBLIC_BIOMETRIC_MODE === 'skip'
-  );
-}

@@ -897,3 +897,31 @@
 ### 다음 작업
 
 - `DEV-0014`: final local portfolio documentation/acceptance
+
+## FE-0019 — 포트폴리오 생체인증 온보딩·재실행
+
+- 날짜: 2026-09-03
+- Milestone: 7B 포트폴리오 생체인증 진입
+- 상태: IMPLEMENTED_LOCAL_PHYSICAL_PENDING
+- contract revision: `platform-v1` unchanged
+
+### 구현
+
+- `Device.isDevice`를 testable runtime port로 감싸 physical/non-physical biometric gate를
+  선택하고 `EXPO_PUBLIC_BIOMETRIC_MODE` 의존을 제거했다.
+- launch SecureStore에 biometric setup marker/reset을 추가하고 현재 unlock은
+  `PortfolioAccessProvider` 메모리 상태로만 유지했다.
+- PIN 완료 → biometric setup → mock Home과 재실행 splash → biometric unlock → Home을
+  연결했다.
+- `LoginBoundary`와 API composition은 portfolio unlock에서 OIDC 화면을 우회하고
+  contract mock을 사용하되 기존 OIDC 구현은 보존했다.
+- 60초 background re-lock, 단일-flight prompt, 실패/retry와 Settings 초기화를 추가했다.
+
+### 검증
+
+- mobile 46 files/136 tests, dependency/architecture/route/design/lint/typecheck 통과
+- root verify: 38 operations/41 fixtures, mobile 136/simulator 12/platform 96 총 244
+  tests와 두 backend build 통과
+- Android Debug Development Build 484 tasks 통과
+- Android API 36 Emulator clean first-run과 force-stop/relaunch 통과
+- physical/iOS native prompt는 `FE-GAP-0002`/`FE-GAP-0004`로 유지

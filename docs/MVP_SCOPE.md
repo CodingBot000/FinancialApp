@@ -38,6 +38,8 @@
 - OIDC Authorization Code + PKCE 로그인
 - SecureStore와 access token 메모리 보관
 - app lock 및 주문 전 LocalAuthentication
+- 포트폴리오용 4페이지 소개, 가입 UI, PIN 확인과 기기 생체인증 진입 흐름
+- 최초 생체인증 완료 상태의 SecureStore 보존과 재실행 시 onboarding 생략
 - TanStack Query 서버 상태
 - Zustand UI/draft 상태
 - Dashboard, Accounts, Simulation, Order, Settings 화면
@@ -113,7 +115,12 @@
 - app attestation, pinning, 위변조 방지 솔루션
 - App Store와 Google Play 정식 공개
 
-Milestone 6 재확정: 별도 onboarding wizard와 규칙 기반 portfolio recommendation은 계속 제외한다. OIDC 첫 로그인에서 합성 기본 risk profile을 자동 생성하고 Settings에서 위험 선호·기간·월 납입액을 owner-scoped/versioned하게 편집하는 planning preference 기능만 `DEV-0012`에서 구현했다. 이 값은 추천 비율, 적합성 판정 또는 수익 보장을 생성하지 않는다.
+Milestone 6 재확정에서 제외한 onboarding wizard는 투자성향·추천 결과를 만드는 업무
+onboarding을 뜻한다. 이후 추가된 포트폴리오 소개·본인인증 UI·PIN·기기 생체인증은
+화면 시연용 launch flow이며 규칙 기반 portfolio recommendation을 생성하지 않는다.
+OIDC 첫 로그인에서 합성 기본 risk profile을 자동 생성하고 Settings에서 위험 선호·기간·
+월 납입액을 owner-scoped/versioned하게 편집하는 planning preference 경계는 그대로
+유지한다.
 
 ## 5. 로컬 MVP E2E 인수 시나리오
 

@@ -1013,3 +1013,38 @@
 ### 다음 작업
 
 - `FE-0013`: BUY order와 UNKNOWN recovery mobile vertical slice
+
+## FE-0019 — 포트폴리오 생체인증 온보딩·재실행
+
+- 날짜: 2026-09-03
+- Milestone: 7B 포트폴리오 생체인증 진입
+- 상태: IMPLEMENTED_LOCAL_PHYSICAL_PENDING
+- contract revision: `platform-v1` unchanged
+
+### 완료
+
+- `expo-device@57.0.1`과 runtime `Device.isDevice` 기반으로 physical device는
+  `ExpoBiometricGate`, emulator/simulator/web은 `LocalTestBiometricGate`를 선택했다.
+- PIN 확인 뒤 biometric setup을 연결하고 `authenticated`와 SecureStore write 성공
+  후에만 Home으로 이동하도록 했다.
+- biometric setup marker와 현재 process unlock을 분리해 force-stop/relaunch 시
+  onboarding/verification/PIN을 생략하되 생체인증은 다시 수행한다.
+- 포트폴리오 access가 unlock된 경우 OIDC configuration 화면을 우회하고 fake token
+  없이 `ContractMockPlatformApi` Home을 표시한다.
+- background 60초 timeout, cancel/failure/not-enrolled/lockout/storage failure retry와
+  포트폴리오 초기화 경계를 추가했다.
+- 기존 OIDC/App Lock/주문 biometric 코드는 보존하고 주문 gate도 device-aware factory로
+  통일했다.
+
+### 검증과 남은 범위
+
+- mobile dependency/architecture/route/design/lint/typecheck 통과
+- mobile 46 files/136 tests 통과
+- root verify: 38 operations/41 fixtures, mobile 136/simulator 12/platform 96 총 244
+  tests와 두 backend build 통과
+- Android Debug Development Build 484 Gradle tasks와 `expo-device` autolinking 통과
+- Android API 36 Emulator에서 clean onboarding/PIN → mock Home과 force-stop/relaunch
+  → onboarding 생략 → Home 통과
+- Android/iOS 물리 기기의 실제 prompt, cancel, lockout, enrollment 변경과 iOS build는
+  `GAP-0002`/`GAP-0003`으로 유지한다.
+- 원격 DB·credential·migration·seed·deploy는 사용하지 않았다.

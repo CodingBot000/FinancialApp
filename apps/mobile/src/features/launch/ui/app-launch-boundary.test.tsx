@@ -25,11 +25,15 @@ describe('AppLaunchBoundary', () => {
     seen: boolean,
     onboardingCompleted = seen,
     verificationCompleted = seen,
+    biometricCompleted = seen,
   ): LaunchNoticeStore {
     return {
+      clearPortfolioSetup: vi.fn(async () => undefined),
+      hasCompletedBiometricSetup: vi.fn(async () => biometricCompleted),
       hasCompletedOnboarding: vi.fn(async () => onboardingCompleted),
       hasCompletedVerification: vi.fn(async () => verificationCompleted),
       hasSeen: vi.fn(async () => seen),
+      markBiometricSetupCompleted: vi.fn(async () => undefined),
       markOnboardingCompleted: vi.fn(async () => undefined),
       markVerificationCompleted: vi.fn(async () => undefined),
       markSeen: vi.fn(async () => undefined),
@@ -139,6 +143,82 @@ describe('AppLaunchBoundary', () => {
     });
     expect(store.markVerificationCompleted).toHaveBeenCalledOnce();
     expect(view.getByText('다음 화면')).toBeTruthy();
+  });
+
+  it('persists biometric setup after verification before showing content', async () => {
+    vi.useFakeTimers();
+    const store = createStore(true, true, false, false);
+    const view = await render(
+      <AppLaunchBoundary
+        biometric={(_, onAuthenticated) => (
+          <Button onPress={() => void onAuthenticated()}>생체인증 완료</Button>
+        )}
+        durationMs={1000}
+        noticeStore={store}
+        verification={(onComplete) => (
+          <Button onPress={onComplete}>본인인증 완료</Button>
+        )}
+      >
+        <AppText>홈</AppText>
+      </AppLaunchBoundary>,
+    );
+
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(view.getByText('본인인증 완료')).toBeTruthy();
+
+    await act(async () => {
+      view.getByRole('button', { name: '본인인증 완료' }).props.onPress();
+      await Promise.resolve();
+    });
+    expect(view.getByText('생체인증 완료')).toBeTruthy();
+    expect(view.queryByText('홈')).toBeNull();
+
+    await act(async () => {
+      view.getByRole('button', { name: '생체인증 완료' }).props.onPress();
+      await Promise.resolve();
+    });
+    expect(store.markBiometricSetupCompleted).toHaveBeenCalledOnce();
+    expect(view.getByText('홈')).toBeTruthy();
+  });
+
+  it('reauthenticates on a returning launch without mounting onboarding', async () => {
+    vi.useFakeTimers();
+    const store = createStore(true, true, true, true);
+    const view = await render(
+      <AppLaunchBoundary
+        biometric={(mode, onAuthenticated) => (
+          <Button onPress={() => void onAuthenticated()}>
+            {mode === 'unlock' ? '재실행 인증' : '최초 인증'}
+          </Button>
+        )}
+        durationMs={1000}
+        noticeStore={store}
+        onboarding={() => <AppText>온보딩</AppText>}
+        verification={() => <AppText>본인인증</AppText>}
+      >
+        <AppText>홈</AppText>
+      </AppLaunchBoundary>,
+    );
+
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(view.getByText('재실행 인증')).toBeTruthy();
+    expect(view.queryByText('온보딩')).toBeNull();
+    expect(view.queryByText('본인인증')).toBeNull();
+
+    await act(async () => {
+      view.getByRole('button', { name: '재실행 인증' }).props.onPress();
+      await Promise.resolve();
+    });
+    expect(view.getByText('홈')).toBeTruthy();
+    expect(store.markBiometricSetupCompleted).not.toHaveBeenCalled();
   });
 
   it('skips the permission sheet after it has been seen', async () => {

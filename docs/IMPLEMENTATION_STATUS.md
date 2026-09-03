@@ -1,11 +1,11 @@
 # 구현 상태
 
-- 현재 Milestone: 7A — 모바일 고객 UI 디자인 리팩터링
+- 현재 Milestone: 7B — 포트폴리오 생체인증 진입
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-03
-- 마지막 완료 ID: FE-0016
-- 다음 작업 ID: FE-0017
-- 활성 계획: `INTEGRATED_DEVELOPMENT_PLAN.md`
+- 마지막 로컬 구현 ID: FE-0019
+- 다음 작업 ID: FE-0019 물리 기기 검증 / FE-0017 iOS 회귀
+- 활성 계획: `PORTFOLIO_BIOMETRIC_ONBOARDING_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
 ## 상태 표기
@@ -311,6 +311,23 @@
 - [x] Android에서 분120/일120/주156/월120/년40 전환 확인
 - [x] root verify: mobile 109/simulator 12/platform 96 tests와 backend build 통과
 - [x] 원격 DB/credential/migration/deploy 미사용
+
+## FE-0019 포트폴리오 생체인증 온보딩·재실행 — 진행 상태
+
+- [x] `expo-device@57.0.1`과 `Device.isDevice` 기반 physical/non-physical gate 선택
+- [x] PIN 완료 뒤 biometric setup 성공 시에만 SecureStore marker 저장
+- [x] force-stop/relaunch 시 onboarding/본인인증/PIN 생략 후 biometric unlock
+- [x] 현재 process unlock은 메모리 전용이며 background 60초 뒤 재인증
+- [x] 포트폴리오 성공 경로에서 OIDC configuration 화면 우회
+- [x] fake OIDC token 없이 `ContractMockPlatformApi` Home 표시
+- [x] 생체 미등록·취소·실패·timeout·lockout·저장 실패 UX와 retry
+- [x] Android API 36 Emulator clean 첫 흐름과 force-stop/relaunch smoke
+- [x] Android Debug Development Build 484 Gradle tasks 통과
+- [x] mobile dependency/architecture/route/design/lint/typecheck와 46 files/136 tests 통과
+- [x] root verify: 38 operations/41 fixtures, mobile 136/simulator 12/platform 96
+      총 244 tests와 두 backend build 통과
+- [ ] Android/iOS 물리 기기의 실제 prompt, cancel, lockout, enrollment 변경 검증
+- 상태: PARTIAL — local code/Android Emulator 완료, physical/iOS evidence 대기
 
 ## 외부 조건
 

@@ -52,6 +52,13 @@ flowchart LR
 - backend는 Face ID/지문 결과를 직접 검증하지 않는다.
 - 생체인증 미지원, 미등록, 취소, lockout을 구분한다.
 - fallback은 OIDC 재로그인이다.
+- 포트폴리오 launch flow는 physical device에서 OS LocalAuthentication을 호출하고
+  emulator/simulator/web에서는 테스트 adapter를 사용한다.
+- SecureStore의 biometric setup 완료 marker는 다음 launch phase를 선택하는 UX
+  상태일 뿐 인증 증거가 아니다.
+- 현재 process의 portfolio unlock은 메모리에만 두고 process 재실행마다 다시
+  생체인증한다.
+- 포트폴리오 접근은 가짜 OIDC token을 만들지 않으며 contract mock 데이터만 연다.
 
 ## 4. 권한 Matrix
 

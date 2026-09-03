@@ -10,7 +10,6 @@ export type {
 } from './oidc-public-config';
 export {
   isDeveloperToolsEnabled,
-  isLocalBiometricBypassEnabled,
   isLocalTestLoginEnabled,
   readAppEnvironment,
 } from './app-environment';

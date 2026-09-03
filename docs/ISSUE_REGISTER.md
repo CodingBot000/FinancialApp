@@ -158,7 +158,7 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 목표 Milestone: 6 이전
 - 재확인 조건: 지원 실제 기기에서 prompt, cancel, lockout, background 60초와 재인증 흐름 통과
 - 해결 DEV:
-- 검증: FE-0010에서 Android API 36 emulator의 실제 시스템 fingerprint prompt, 성공 unlock, process force-stop 뒤 재인증과 `/me` 복구는 통과했다. 남은 범위는 물리 기기의 cancel/lockout/enrollment 변경과 60초 background timing이다. frontend `FE-GAP-0004` 참조.
+- 검증: FE-0010에서 Android API 36 emulator의 실제 시스템 fingerprint prompt, 성공 unlock, process force-stop 뒤 재인증과 `/me` 복구를 통과했다. FE-0019에서는 clean portfolio onboarding/PIN → non-physical gate → mock Home과 force-stop/relaunch onboarding 생략을 재검증했다. 남은 범위는 물리 기기의 launch prompt, cancel/lockout/enrollment 변경과 실제 60초 background timing이다. frontend `FE-GAP-0004` 참조.
 
 ### GAP-0007 — Local Full-stack E2E와 Fresh-clone 인수
 

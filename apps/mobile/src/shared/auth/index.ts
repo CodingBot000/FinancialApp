@@ -6,6 +6,9 @@ export type {
   BiometricReauthenticationReason,
   BiometricRetryReason,
 } from './biometric-gate';
+export { createPortfolioBiometricGate } from './create-portfolio-biometric-gate';
+export { expoDeviceRuntime } from './device-runtime';
+export type { DeviceRuntime } from './device-runtime';
 export {
   AuthSessionProvider,
   useAuthSession,
@@ -20,6 +23,16 @@ export { ExpoSecureRefreshTokenStore } from './expo-secure-refresh-token-store';
 export { ExpoBiometricGate } from './expo-biometric-gate';
 export { LocalTestOidcClient } from './local-test-oidc-client';
 export { LocalTestBiometricGate } from './local-test-biometric-gate';
+export {
+  PortfolioAccessProvider,
+  useOptionalPortfolioAccess,
+  usePortfolioAccess,
+} from './portfolio-access-context';
+export type {
+  PortfolioAccess,
+  PortfolioAccessPhase,
+  PortfolioAccessState,
+} from './portfolio-access-context';
 export { RefreshCoordinator } from './refresh-coordinator';
 export { OidcAuthorizationError } from './oidc-authorization';
 export type {

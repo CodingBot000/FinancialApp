@@ -6,6 +6,21 @@ export default defineConfig({
   resolve: {
     alias: [
       {
+        find: /^expo-device$/,
+        replacement: fileURLToPath(
+          new URL('./scripts/expo-device-test-shim.mjs', import.meta.url),
+        ),
+      },
+      {
+        find: /^expo-local-authentication$/,
+        replacement: fileURLToPath(
+          new URL(
+            './scripts/expo-local-authentication-test-shim.mjs',
+            import.meta.url,
+          ),
+        ),
+      },
+      {
         find: /^react-native$/,
         replacement: fileURLToPath(
           new URL('./scripts/react-native-test-shim.mjs', import.meta.url),

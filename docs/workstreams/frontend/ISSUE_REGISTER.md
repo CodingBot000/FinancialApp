@@ -118,9 +118,9 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 심각도: MEDIUM
 - 발견 FE: FE-0006
 - 누락/연기 이유: Android API 36 emulator에서는 등록 fingerprint와 실제 OS prompt를 검증했지만 물리 Face ID/Touch ID/Android biometric 기기를 사용하지 않았다.
-- 현재 영향: emulator 실제 prompt/success, process restart 재인증과 자동 success/cancel/failure/lockout/60초 state test는 통과했다. 물리 기기 cancel/lockout 복구, enrollment 변경과 실제 60초 background timing만 미검증이다.
+- 현재 영향: 기존 emulator OS prompt/success와 FE-0019의 portfolio clean onboarding/PIN, non-physical gate, force-stop/relaunch onboarding 생략 및 자동 success/cancel/failure/lockout/60초 state test는 통과했다. 물리 기기 launch prompt, cancel/lockout 복구, enrollment 변경과 실제 60초 background timing만 미검증이다.
 - 목표 Milestone: 2
-- 재확인 조건: 승인된 OIDC test session과 실제 iOS/Android 기기에서 login → initial app lock → biometric unlock → 60초 이상 background → relock, cancel/retry, enrollment 제거 또는 lockout → local session clear/로그인 화면 흐름을 수동 확인
+- 재확인 조건: 실제 iOS/Android 기기에서 portfolio PIN → initial native biometric → Home, process relaunch → native biometric → Home과 60초 이상 background → relock, cancel/retry, enrollment 제거 또는 lockout의 fail-closed 흐름을 수동 확인
 - 해결 FE:
 - 검증: FE-0006 자동/native build에 더해 FE-0010 Android API 36 Development Build에서 fingerprint enrollment, OS prompt, unlock, process restart 뒤 재인증과 실제 `/me` 복구를 통과했다. UI는 생체인증을 server MFA로 표현하지 않는다.
 

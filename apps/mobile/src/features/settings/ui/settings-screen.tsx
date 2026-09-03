@@ -8,6 +8,7 @@ import {
   usePlatformApi,
 } from '../../../shared/api';
 import { useAuthSession } from '../../../shared/auth/auth-session-context';
+import { useOptionalPortfolioAccess } from '../../../shared/auth/portfolio-access-context';
 import {
   AppText,
   Button,
@@ -41,6 +42,7 @@ function problemMessage(error: unknown) {
 export function SettingsScreen() {
   const api = usePlatformApi();
   const auth = useAuthSession();
+  const portfolioAccess = useOptionalPortfolioAccess();
   const queryClient = useQueryClient();
   const amountsHidden = useMoneyVisibilityStore((state) => state.hidden);
   const toggleAmounts = useMoneyVisibilityStore((state) => state.toggle);
@@ -102,6 +104,17 @@ export function SettingsScreen() {
   const logout = async () => {
     await auth.clear();
     queryClient.clear();
+    portfolioAccess?.lock();
+  };
+
+  const resetPortfolio = async () => {
+    try {
+      await auth.clear();
+      queryClient.clear();
+      await portfolioAccess?.reset();
+    } catch {
+      setMessage('포트폴리오 초기화에 실패했습니다. 다시 시도해 주세요.');
+    }
   };
 
   return (
@@ -232,6 +245,11 @@ export function SettingsScreen() {
       <Button onPress={() => void logout()} variant="secondary">
         현재 세션 로그아웃
       </Button>
+      {portfolioAccess === undefined ? null : (
+        <Button onPress={() => void resetPortfolio()} variant="secondary">
+          포트폴리오 처음부터 보기
+        </Button>
+      )}
       <DemoDisclosure />
     </Screen>
   );

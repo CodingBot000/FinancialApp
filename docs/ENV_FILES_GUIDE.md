@@ -21,6 +21,8 @@
 - `SIMULATOR_MIGRATION_DATABASE_URL`: simulator Drizzle migration CLI가 읽는 DDL 연결
 - `EXPO_PUBLIC_*`: 앱 번들에 들어갈 수 있는 공개 설정이다. DB URL, password, private key, production token과 AWS secret은 절대 넣지 않는다.
 - `EXPO_PUBLIC_LOGIN_MODE=test`와 `EXPO_PUBLIC_LOCAL_TEST_ACCESS_TOKEN`은 local development build에서만 사용하는 명시적 테스트 로그인 설정이다. demo/production에서는 사용하지 않는다.
+- 생체인증 adapter 선택에는 Expo public 환경변수를 사용하지 않는다. physical 여부는
+  `expo-device` runtime 결과로 판별한다.
 - `AWS_REGION`, `AWS_KMS_*`: remote/demo KMS 경계용 설정이다. 실제 credential은 파일 대신 workload identity/secret store를 사용한다.
 - `AWS_KMS_KEY_VERSION`: KMS로 생성된 envelope의 논리적 key version이다. 미지정 시 backend는 `kms-v1`을 사용하며, rotation 시 새 값을 명시한다.
 

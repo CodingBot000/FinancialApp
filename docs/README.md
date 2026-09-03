@@ -15,6 +15,7 @@
 9. 현재 작업에 해당하는 계약 문서
    - `MARKET_DATA_INTEGRATION_PLAN.md` — 외부 주식 종목 검색·현재가·기간별 차트 통합 실행계획
    - `MARKET_CHART_REPAIR_AND_PARITY_PLAN.md` — Victory Native 종목 차트 복구·중복 봉 방지·StockTracker 정보 확장 실행계획
+   - `PORTFOLIO_BIOMETRIC_ONBOARDING_PLAN.md` — PIN 이후 기기 생체인증, 포트폴리오 홈 진입과 재실행 잠금 해제 계획
    - `API_CONTRACTS.md`
    - `DATA_MODEL.md`
    - `TABLE_DEFINITIONS.md`

@@ -156,6 +156,21 @@ HTTP adapter mock은 세부 client unit test에 사용할 수 있지만 이 suit
 
 실제 OIDC 브라우저와 생체인증은 실제 기기 체크리스트로 별도 기록한다.
 
+포트폴리오 launch flow 자동화 범위:
+
+- 최초 notice/onboarding/verification/PIN 순서
+- PIN 불일치 시 biometric 미호출
+- physical/non-physical biometric adapter 선택
+- biometric success 전 Home 미노출과 success 뒤 SecureStore marker 저장
+- 재실행 상태에서 onboarding/verification/PIN 미렌더링
+- cancel/failure/not-enrolled/lockout/저장 실패의 fail-closed와 retry
+- 동일 prompt single-flight와 background 60초 뒤 재인증
+- portfolio unlock에서 OIDC configuration 미노출과 contract mock Home 선택
+
+Android Emulator actual smoke는 clean app data의 최초 흐름과 force-stop/relaunch를
+검증한다. physical prompt의 성공·취소·lockout·enrollment 변경은 Android/iOS 실제
+기기 체크리스트로 남긴다.
+
 ## 3. 핵심 동시성 Scenario
 
 ### 현금 초과 예약

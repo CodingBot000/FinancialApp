@@ -3,9 +3,8 @@ import { View } from 'react-native';
 
 import { PlatformApiError } from '../../../shared/api';
 import type { BiometricGate } from '../../../shared/auth/biometric-gate';
+import { createPortfolioBiometricGate } from '../../../shared/auth/create-portfolio-biometric-gate';
 import { ExpoBiometricGate } from '../../../shared/auth/expo-biometric-gate';
-import { LocalTestBiometricGate } from '../../../shared/auth/local-test-biometric-gate';
-import { isLocalBiometricBypassEnabled } from '../../../shared/config';
 import {
   AppText,
   Button,
@@ -52,13 +51,13 @@ export function OrderScreen({
   const amountsHidden = useMoneyVisibilityStore((state) => state.hidden);
   const [quantity, setQuantity] = useState('1.00000000');
   const [defaultGate] = useState(() =>
-    isLocalBiometricBypassEnabled()
-      ? new LocalTestBiometricGate()
-      : new ExpoBiometricGate({
-          description: '매수 주문 전 기기 소유자 확인입니다.',
-          message: '매수 주문 확인',
-          subtitle: '기기 생체인증',
-        }),
+    createPortfolioBiometricGate({
+      physicalGate: new ExpoBiometricGate({
+        description: '매수 주문 전 기기 소유자 확인입니다.',
+        message: '매수 주문 확인',
+        subtitle: '기기 생체인증',
+      }),
+    }),
   );
   const flow = useOrderFlow(quantity);
   const message = errorMessage(flow.error);

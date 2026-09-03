@@ -8,8 +8,7 @@ import { ActivityIndicator, AppState, View } from 'react-native';
 import { useStore } from 'zustand';
 
 import {
-  ExpoBiometricGate,
-  LocalTestBiometricGate,
+  createPortfolioBiometricGate,
   type BiometricGate,
   useAuthSession,
   useSessionPresence,
@@ -24,7 +23,6 @@ import {
   createAppLockStore,
   type AppLockNotice,
 } from '../model/app-lock-store';
-import { isLocalBiometricBypassEnabled } from '../../../shared/config';
 import {
   AppText,
   APP_BRAND,
@@ -215,11 +213,7 @@ export function AppLockBoundary({
 }: AppLockBoundaryProps) {
   const manager = useAuthSession();
   const sessionPresence = useSessionPresence();
-  const [defaultBiometricGate] = useState(() =>
-    isLocalBiometricBypassEnabled()
-      ? new LocalTestBiometricGate()
-      : new ExpoBiometricGate(),
-  );
+  const [defaultBiometricGate] = useState(createPortfolioBiometricGate);
 
   if (sessionPresence === 'unknown') {
     return <SessionInspectionScreen />;
@@ -234,10 +228,6 @@ export function AppLockBoundary({
   }
 
   if (sessionPresence === 'absent') {
-    return children;
-  }
-
-  if (isLocalBiometricBypassEnabled()) {
     return children;
   }
 

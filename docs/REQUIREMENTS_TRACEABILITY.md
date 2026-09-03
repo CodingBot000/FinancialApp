@@ -8,6 +8,7 @@
 | Expo React Native 화면과 상태 분리 | Dashboard, Accounts, Simulation, Order, Settings; Query/Zustand 분리 | mobile architecture + 97 tests | DONE |
 | OIDC Authorization Code + PKCE | auth/session adapter, Keycloak realm | actual PKCE/JWT/refresh/logout smoke | DONE (local/Android emulator) |
 | App Lock와 주문 전 biometric | LocalAuthentication adapter와 두 gate | component tests + Android emulator | DONE; physical/iOS gap |
+| 포트폴리오 최초/재실행 biometric | Device-aware gate, SecureStore setup marker, memory-only unlock, mock Home | 46 mobile suites + Android API 36 clean/relaunch smoke | DONE local; physical/iOS gap |
 | `/me`와 risk profile | owner-scoped GET/PUT, optimistic version | provider/consumer + actual version smoke | DONE |
 | 단일 기관 connection/sync | HTTP simulator adapter, raw/processing/normalization | 12-step smoke + PostgreSQL assertions | DONE |
 | 자산 조회와 차트 | summary/accounts/holdings/history/allocation | provider/mobile tests + actual smoke | DONE |
