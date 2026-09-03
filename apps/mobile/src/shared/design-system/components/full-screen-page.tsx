@@ -13,12 +13,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from './app-text';
 import { colors, spacing } from '../tokens';
 
+const FULL_SCREEN_PAGE_HEADER_HEIGHT = 64;
+
 /** A reusable full-screen page for app-owned routes that always have back navigation. */
 export function FullScreenPage({
   backIcon,
   children,
   contentContainerStyle,
-  headerHeight = 64,
   onBack,
   title,
   titleStyle,
@@ -26,7 +27,6 @@ export function FullScreenPage({
   readonly backIcon: ReactNode;
   readonly children: ReactNode;
   readonly contentContainerStyle?: StyleProp<ViewStyle>;
-  readonly headerHeight?: number;
   readonly onBack: () => void;
   readonly title: string;
   readonly titleStyle?: StyleProp<TextStyle>;
@@ -36,7 +36,7 @@ export function FullScreenPage({
       edges={['top', 'right', 'bottom', 'left']}
       style={styles.safeArea}
     >
-      <View style={[styles.header, { height: headerHeight }]}>
+      <View style={styles.header}>
         <Pressable
           accessibilityLabel="뒤로가기"
           accessibilityRole="button"
@@ -79,6 +79,7 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     flexDirection: 'row',
+    height: FULL_SCREEN_PAGE_HEADER_HEIGHT,
     paddingHorizontal: spacing[1],
   },
   headerSide: {

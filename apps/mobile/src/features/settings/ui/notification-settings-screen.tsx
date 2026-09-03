@@ -33,7 +33,6 @@ export function NotificationSettingsScreen({
         <Ionicons color={colors.text.primary} name="chevron-back" size={28} />
       }
       contentContainerStyle={styles.content}
-      headerHeight={36}
       onBack={onBack}
       title="알림 설정"
       titleStyle={styles.headerTitle}

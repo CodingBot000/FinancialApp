@@ -385,7 +385,7 @@
 - [x] 온보딩 전용 `FullScreenSurface`와 앱 페이지용 `FullScreenPage` 레이아웃 분리
 - [x] `FullScreenPage`에 safe area, 고정 back action, 중앙 title, scroll content 지원
 - [x] `내 정보 관리`와 `알림 설정`을 공통 full-screen page template으로 전환
-- [x] 기존 알림 설정의 header 높이·title style·content spacing을 template 옵션으로 보존
+- [x] 알림 설정의 header height는 공통 64로 고정하고 title style·content spacing만 화면별로 보존
 - [x] Android Emulator에서 두 페이지의 상단 `뒤로가기` 노출과 복귀 동작 확인
 - [x] mobile 50 files/144 tests, route 13 files, design-system 42 UI files 통과
 - 상태: DONE local reusable layout; onboarding backless surface와 app-owned back page 분리 완료
