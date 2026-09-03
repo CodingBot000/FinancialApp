@@ -182,8 +182,7 @@ describe('AppLaunchBoundary', () => {
     });
 
     const backHandler = addEventListener.mock.calls.at(-1)?.[1] as
-      | (() => boolean)
-      | undefined;
+      (() => boolean) | undefined;
     expect(backHandler).toBeDefined();
     await act(async () => {
       expect(backHandler?.()).toBe(true);

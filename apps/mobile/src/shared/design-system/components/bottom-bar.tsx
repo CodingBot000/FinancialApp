@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import {
   BackHandler,
+  Platform,
   StyleSheet,
   View,
   type LayoutChangeEvent,
@@ -9,6 +10,21 @@ import {
 } from 'react-native';
 
 import { colors, spacing } from '../tokens';
+
+type BottomBarProps = {
+  readonly accessibilityLabel?: string;
+  readonly children: ReactNode;
+  readonly onBack?: () => void;
+  readonly onLayout?: (event: LayoutChangeEvent) => void;
+  readonly style?: StyleProp<ViewStyle>;
+  readonly variant?: 'navigation';
+};
+
+type BottomSheetProps = Omit<BottomBarProps, 'onBack' | 'variant'> & {
+  /** A sheet must provide an explicit dismissal path for Android back. */
+  readonly onBack: () => void;
+  readonly variant: 'sheet';
+};
 
 /**
  * A reusable, content-sized bottom surface. The bar intentionally has no
@@ -21,17 +37,9 @@ export function BottomBar({
   onLayout,
   style,
   variant = 'navigation',
-}: {
-  readonly accessibilityLabel?: string;
-  readonly children: ReactNode;
-  /** Handles Android back while this bottom surface is open. */
-  readonly onBack?: () => void;
-  readonly onLayout?: (event: LayoutChangeEvent) => void;
-  readonly style?: StyleProp<ViewStyle>;
-  readonly variant?: 'navigation' | 'sheet';
-}) {
+}: BottomBarProps | BottomSheetProps) {
   useEffect(() => {
-    if (onBack === undefined) return;
+    if (onBack === undefined || Platform.OS !== 'android') return;
 
     const subscription = BackHandler.addEventListener(
       'hardwareBackPress',

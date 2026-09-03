@@ -81,7 +81,7 @@ export function AppLaunchBoundary({
           : 'verification'
         : onboarding === undefined
           ? 'ready'
-      : 'onboarding',
+          : 'onboarding',
     );
   };
 
