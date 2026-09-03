@@ -55,6 +55,9 @@ describe('PhoneVerificationScreen', () => {
 
     expect(view.queryByText('통신사 선택')).toBeNull();
     expect(view.getByText('SKT')).toBeTruthy();
+    expect(view.getByLabelText('주민등록번호 앞자리').props.autoFocus).toBe(
+      true,
+    );
     expect(
       view.getByRole('button', { name: '다음' }).props.accessibilityState,
     ).toEqual({ disabled: true });

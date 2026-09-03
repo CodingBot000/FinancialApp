@@ -79,10 +79,6 @@ function AppBottomBar({
   state,
   insets,
 }: BottomTabBarProps) {
-  if (state.routes[state.index]?.name === 'me') {
-    return null;
-  }
-
   return (
     <BottomBar style={{ paddingBottom: Math.max(insets.bottom, spacing[2]) }}>
       {state.routes.map((route, index) => {
@@ -168,7 +164,6 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="me"
           options={{
-            headerShown: false,
             tabBarIcon: profileIcon,
             title: '내 정보',
           }}

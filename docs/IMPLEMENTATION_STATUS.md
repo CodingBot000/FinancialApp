@@ -348,16 +348,25 @@
 
 ## FE-0021 내 정보 overview와 관리 route — 진행 상태
 
-- [x] `내 정보` tab에서 첨부 기준의 전체 화면 overview 구성
-- [x] overview에서 global app header와 custom bottom tab bar 제거
+- [x] `내 정보` tab에서 공통 상·하단 바를 포함한 overview 구성
+- [x] overview에서 WM 로고·알림함 상단바와 홈·종목·주문·플랜·내 정보 하단바 표시
 - [x] `내 정보 관리`만 기존 투자성향·계정 관리 화면으로 root stack 이동
-- [x] 관리 화면도 global app header와 bottom tab bar 없이 표시
+- [x] 관리 화면은 overview와 분리된 global app header/bottom tab bar 없는 full-screen route로 표시
 - [x] 자동로그인/생체인증 switch의 local visual toggle 구현
 - [x] 알림·간편비밀번호·공지·문의·브랜드 row에 no-op press handler 등록
 - [x] 기존 top bar의 `icon-wm.png`를 WM 브랜드 row에 재사용
 - [x] Android Emulator screenshot full/focused design QA 통과
 - [x] mobile 49 files/142 tests, route 12 files, design-system 40 UI files 통과
 - 상태: DONE local visual implementation; source device chrome 차이는 의도된 범위
+
+## FE-0024 내정보 탭 공통 navigation chrome 복원 — 진행 상태
+
+- [x] `내 정보` 탭 선택 시 공통 WM 로고·알림함 상단바 표시
+- [x] `내 정보` 탭 선택 시 공통 홈·종목·주문·플랜·내 정보 하단 내비게이션 표시
+- [x] overview를 탭용 `Screen` safe-area/content 레이아웃으로 전환
+- [x] root stack의 관리·알림 설정 full-screen route에는 공통 navigation chrome 미표시 유지
+- [x] Android Emulator에서 내정보 탭의 상·하단 바 노출 및 route 진입 회귀 확인
+- 상태: DONE local navigation chrome behavior
 
 ## FE-0022 알림 설정 full-screen route — 진행 상태
 

@@ -60,6 +60,7 @@ const initialAgreements: Record<AgreementKey, boolean> = {
 };
 
 const fieldLayoutTransition = LinearTransition.duration(280);
+const carrierFocusDelayMs = 320;
 
 export function PhoneVerificationScreen({
   onComplete,
@@ -76,6 +77,7 @@ export function PhoneVerificationScreen({
   const [pinStarted, setPinStarted] = useState(false);
   const [agreements, setAgreements] =
     useState<Record<AgreementKey, boolean>>(initialAgreements);
+  const residentFrontRef = useRef<TextInput>(null);
   const residentBackRef = useRef<TextInput>(null);
   const nameRef = useRef<TextInput>(null);
 
@@ -92,6 +94,18 @@ export function PhoneVerificationScreen({
 
   const residentComplete =
     residentFront.length === 6 && residentBack.length === 1;
+
+  useEffect(() => {
+    if (carrier === undefined) {
+      return;
+    }
+
+    const focusTimer = setTimeout(() => {
+      residentFrontRef.current?.focus?.();
+    }, carrierFocusDelayMs);
+
+    return () => clearTimeout(focusTimer);
+  }, [carrier]);
 
   useEffect(() => {
     if (!residentComplete) {
@@ -223,6 +237,7 @@ export function PhoneVerificationScreen({
               <View style={styles.residentValue}>
                 <TextInput
                   accessibilityLabel="주민등록번호 앞자리"
+                  autoFocus={carrier !== undefined}
                   keyboardType="number-pad"
                   maxLength={6}
                   onChangeText={(value) => {
@@ -232,6 +247,7 @@ export function PhoneVerificationScreen({
                       residentBackRef.current?.focus?.();
                     }
                   }}
+                  ref={residentFrontRef}
                   placeholder="000000"
                   placeholderTextColor={colors.text.tertiary}
                   style={[styles.residentInput, styles.frontInput]}

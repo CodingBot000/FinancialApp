@@ -1104,6 +1104,26 @@
 - `design-qa.md` 최종 결과 `passed`
 - contract/API/DB 변경 없음
 
+## FE-0024 — 내정보 탭 공통 navigation chrome 복원
+
+- 날짜: 2026-09-03
+- Milestone: 7B 포트폴리오 고객 UI
+- 상태: COMPLETED
+- contract revision: `platform-v1` unchanged
+
+### 완료
+
+- 내정보 탭의 공통 WM 로고·알림함 상단바와 홈·종목·주문·플랜·내 정보 하단 내비게이션을
+  복원
+- overview를 탭 safe-area/content 정책에 맞는 shared `Screen`으로 전환
+- 설정·관리용 root full-screen route는 공통 navigation chrome 없이 유지
+
+### 검증
+
+- mobile 50 files/144 tests, typecheck/lint/architecture/route/design check 통과
+- Android Emulator에서 내정보 탭 상·하단 chrome 및 overview route 확인
+- contract/API/DB 변경 없음
+
 ## FE-0023 — 재활용 가능한 뒤로가기 포함 full-screen template
 
 - 날짜: 2026-09-03

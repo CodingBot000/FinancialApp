@@ -1,20 +1,13 @@
 import { useCallback, useState, type ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image, Pressable, StyleSheet, Switch, View } from 'react-native';
 
 import appIcon from '../../../../assets/icon-wm.png';
 import {
   AppText,
   colors,
+  Screen,
   spacing,
   typography,
 } from '../../../shared/design-system';
@@ -26,64 +19,56 @@ export function MyInfoOverviewScreen() {
   const noOp = useCallback(() => undefined, []);
 
   return (
-    <SafeAreaView
-      edges={['top', 'right', 'bottom', 'left']}
-      style={styles.safe}
-    >
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <InfoSection label="내정보">
-          <InfoRow
-            label="내 정보 관리"
-            onPress={() => router.push('/my-info-management' as never)}
-          />
-        </InfoSection>
+    <Screen contentContainerStyle={styles.content}>
+      <InfoSection label="내정보">
+        <InfoRow
+          label="내 정보 관리"
+          onPress={() => router.push('/my-info-management' as never)}
+        />
+      </InfoSection>
 
-        <InfoSection label="알림">
-          <InfoRow
-            label="알림 설정"
-            onPress={() => router.push('/notification-settings' as never)}
-          />
-        </InfoSection>
+      <InfoSection label="알림">
+        <InfoRow
+          label="알림 설정"
+          onPress={() => router.push('/notification-settings' as never)}
+        />
+      </InfoSection>
 
-        <InfoSection label="보안">
-          <InfoRow label="간편비밀번호 변경" onPress={noOp} />
-          <SwitchRow
-            label="자동로그인 사용"
-            onValueChange={setAutoLoginEnabled}
-            value={autoLoginEnabled}
-          />
-          <SwitchRow
-            label="생체인증 사용"
-            onValueChange={setBiometricEnabled}
-            value={biometricEnabled}
-          />
-        </InfoSection>
+      <InfoSection label="보안">
+        <InfoRow label="간편비밀번호 변경" onPress={noOp} />
+        <SwitchRow
+          label="자동로그인 사용"
+          onValueChange={setAutoLoginEnabled}
+          value={autoLoginEnabled}
+        />
+        <SwitchRow
+          label="생체인증 사용"
+          onValueChange={setBiometricEnabled}
+          value={biometricEnabled}
+        />
+      </InfoSection>
 
-        <InfoSection label="고객센터">
-          <InfoRow label="공지사항" onPress={noOp} />
-          <InfoRow label="문의하기" onPress={noOp} />
-        </InfoSection>
+      <InfoSection label="고객센터">
+        <InfoRow label="공지사항" onPress={noOp} />
+        <InfoRow label="문의하기" onPress={noOp} />
+      </InfoSection>
 
-        <InfoSection divider={false} label="이용정보">
-          <InfoRow
-            accessibilityLabel="WM 브랜드"
-            label="브랜드"
-            leading={
-              <Image
-                accessibilityLabel="WM 로고"
-                resizeMode="contain"
-                source={appIcon}
-                style={styles.brandLogo}
-              />
-            }
-            onPress={noOp}
-          />
-        </InfoSection>
-      </ScrollView>
-    </SafeAreaView>
+      <InfoSection divider={false} label="이용정보">
+        <InfoRow
+          accessibilityLabel="WM 브랜드"
+          label="브랜드"
+          leading={
+            <Image
+              accessibilityLabel="WM 로고"
+              resizeMode="contain"
+              source={appIcon}
+              style={styles.brandLogo}
+            />
+          }
+          onPress={noOp}
+        />
+      </InfoSection>
+    </Screen>
   );
 }
 
@@ -163,8 +148,14 @@ function SwitchRow({
 }
 
 const styles = StyleSheet.create({
-  brandLogo: { height: 52, marginLeft: -spacing[2], width: 118 },
+  brandLogo: {
+    height: 44,
+    marginLeft: -spacing[4],
+    marginRight: -spacing[5],
+    width: 86,
+  },
   content: {
+    gap: 0,
     paddingBottom: spacing[12],
     paddingHorizontal: spacing[5],
     paddingTop: spacing[2],
@@ -182,7 +173,6 @@ const styles = StyleSheet.create({
     lineHeight: 26,
   },
   rows: { gap: 0 },
-  safe: { backgroundColor: colors.background.screen, flex: 1 },
   section: { paddingBottom: spacing[2], paddingTop: spacing[4] },
   sectionDivider: {
     borderBottomColor: colors.border.subtle,

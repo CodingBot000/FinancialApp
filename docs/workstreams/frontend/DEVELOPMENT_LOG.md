@@ -997,6 +997,29 @@
 - source/implementation full-view와 focused comparison의 `design-qa.md` 최종 결과 `passed`
 - contract/API/DB 변경 없음
 
+## FE-0024 — 내정보 탭 공통 navigation chrome 복원
+
+- 날짜: 2026-09-03
+- Milestone: 7B 포트폴리오 고객 UI
+- 상태: COMPLETED
+- contract revision: `platform-v1` unchanged
+
+### 구현
+
+- `내 정보` 탭에서만 custom bottom bar를 숨기던 예외를 제거하고 공통 `AppTopBar`와
+  `AppBottomBar`를 다른 메인 탭과 동일하게 표시했다.
+- overview를 탭 safe-area 정책을 따르는 shared `Screen` 기반으로 전환해 상단바·하단바와
+  콘텐츠가 이중 inset 없이 배치되도록 했다.
+- `내 정보 관리`와 `알림 설정` root stack route는 기존처럼 global chrome 없는
+  full-screen page로 유지했다.
+
+### 검증
+
+- mobile 50 files/144 tests, typecheck/lint/architecture/route/design check 통과
+- Android Emulator에서 내정보 탭의 WM 로고·알림함·5개 하단 메뉴 노출 확인
+- full-screen management/notification route의 global chrome 미표시 동작 유지
+- contract/API/DB 변경 없음
+
 ## FE-0023 — 재활용 가능한 뒤로가기 포함 full-screen template
 
 - 날짜: 2026-09-03
