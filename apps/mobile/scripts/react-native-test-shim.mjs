@@ -24,6 +24,9 @@ export const Platform = { OS: 'android' };
 export const SafeAreaView = createNativeTestComponent('SafeAreaView');
 export const ScrollView = createNativeTestComponent('ScrollView');
 export const StatusBar = createNativeTestComponent('StatusBar');
+export const Switch = forwardRef(function Switch(props, ref) {
+  return createElement('Switch', { ...props, accessible: true, ref });
+});
 export const Text = createNativeTestComponent('Text');
 export const TextInput = createNativeTestComponent('TextInput');
 export const View = createNativeTestComponent('View');

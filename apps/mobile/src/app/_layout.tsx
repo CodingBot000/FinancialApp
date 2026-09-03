@@ -66,6 +66,22 @@ export default function RootLayout() {
                       }}
                     >
                       <Stack.Screen
+                        name="my-info-management"
+                        options={{
+                          animation: 'slide_from_right',
+                          headerShown: false,
+                          presentation: 'card',
+                        }}
+                      />
+                      <Stack.Screen
+                        name="notification-settings"
+                        options={{
+                          animation: 'slide_from_right',
+                          headerShown: false,
+                          presentation: 'card',
+                        }}
+                      />
+                      <Stack.Screen
                         name="notifications"
                         options={{
                           animation: 'slide_from_right',

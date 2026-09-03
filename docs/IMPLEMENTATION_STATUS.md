@@ -3,7 +3,7 @@
 - 현재 Milestone: 7B — 포트폴리오 생체인증 진입
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-03
-- 마지막 로컬 구현 ID: FE-0020
+- 마지막 로컬 구현 ID: FE-0022
 - 다음 작업 ID: FE-0019/FE-0020 물리 기기 검증 / FE-0017 iOS 회귀
 - 활성 계획: `PORTFOLIO_BIOMETRIC_ONBOARDING_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
@@ -345,6 +345,41 @@
 - [x] root verify: mobile 141/simulator 12/platform 96 총 249 tests와 두 backend build
 - [ ] iOS 및 Android/iOS 물리 기기 native prompt 수동 확인
 - 상태: PARTIAL — Android Emulator 완료, physical/iOS evidence 대기
+
+## FE-0021 내 정보 overview와 관리 route — 진행 상태
+
+- [x] `내 정보` tab에서 첨부 기준의 전체 화면 overview 구성
+- [x] overview에서 global app header와 custom bottom tab bar 제거
+- [x] `내 정보 관리`만 기존 투자성향·계정 관리 화면으로 root stack 이동
+- [x] 관리 화면도 global app header와 bottom tab bar 없이 표시
+- [x] 자동로그인/생체인증 switch의 local visual toggle 구현
+- [x] 알림·간편비밀번호·공지·문의·브랜드 row에 no-op press handler 등록
+- [x] 기존 top bar의 `icon-wm.png`를 WM 브랜드 row에 재사용
+- [x] Android Emulator screenshot full/focused design QA 통과
+- [x] mobile 49 files/142 tests, route 12 files, design-system 40 UI files 통과
+- 상태: DONE local visual implementation; source device chrome 차이는 의도된 범위
+
+## FE-0022 알림 설정 full-screen route — 진행 상태
+
+- [x] `내 정보` overview의 `알림 설정` row를 root stack route로 연결
+- [x] global top/bottom app bar 없는 알림 설정 full-screen layout 구현
+- [x] 서비스 이용 알림 ON, 혜택·앱 푸시·알림톡/문자·전화 OFF 기본 상태 반영
+- [x] 첨부 기준 copy, 안내 배너, switch, 마케팅 동의 버튼과 로컬 이벤트 구현
+- [x] switch 우측 정렬 및 동의 버튼의 레퍼런스 기준 높이·간격 반영
+- [x] Android Emulator에서 알림 설정 진입·스위치 toggle·뒤로가기 확인
+- [x] source/implementation side-by-side 및 focused design QA 재실행
+- [x] mobile 50 files/144 tests, route 13 files, design-system 42 UI files 통과
+- 상태: DONE local visual implementation; notification preference persistence/backend는 범위 외
+
+## FE-0023 재활용 가능한 뒤로가기 포함 full-screen template — 진행 상태
+
+- [x] 온보딩 전용 `FullScreenSurface`와 앱 페이지용 `FullScreenPage` 레이아웃 분리
+- [x] `FullScreenPage`에 safe area, 고정 back action, 중앙 title, scroll content 지원
+- [x] `내 정보 관리`와 `알림 설정`을 공통 full-screen page template으로 전환
+- [x] 기존 알림 설정의 header 높이·title style·content spacing을 template 옵션으로 보존
+- [x] Android Emulator에서 두 페이지의 상단 `뒤로가기` 노출과 복귀 동작 확인
+- [x] mobile 50 files/144 tests, route 13 files, design-system 42 UI files 통과
+- 상태: DONE local reusable layout; onboarding backless surface와 app-owned back page 분리 완료
 
 ## 외부 조건
 

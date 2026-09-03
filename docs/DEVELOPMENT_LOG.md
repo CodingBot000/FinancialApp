@@ -1076,3 +1076,76 @@
   force-stop/relaunch 권한 화면 생략 통과
 - iOS/physical permission prompt는 `GAP-0010`/`FE-GAP-0005`로 유지한다.
 - 원격 자원은 사용하지 않았다.
+
+## FE-0021 — 내 정보 overview와 관리 route
+
+- 날짜: 2026-09-03
+- Milestone: 7B 포트폴리오 고객 UI
+- 상태: COMPLETED
+- contract revision: `platform-v1` unchanged
+
+### 완료
+
+- 첨부 screenshot의 `내정보`, `알림`, `보안`, `고객센터`, `이용정보` 구조와 copy를
+  `내 정보` tab overview에 구현했다.
+- overview에서는 global top bar와 bottom tab bar를 숨기고, `내 정보 관리`만
+  `my-info-management` root stack route로 연결했다.
+- 기존 SettingsScreen의 계정·투자 성향·개인정보·로그아웃 내용은 관리 route에서
+  유지하고 global navigation chrome을 제거했다.
+- 알림/보안/고객센터/브랜드 row는 no-op event를 등록했으며 두 switch는 local visual
+  state만 변경한다.
+- 기존 top bar와 같은 `icon-wm.png`를 WM 브랜드 row에 사용했다.
+
+### 검증
+
+- mobile 49 files/142 tests, typecheck/lint/architecture/route/design check 통과
+- Android Emulator overview screenshot과 management navigation 통과
+- source/implementation side-by-side 및 security/bottom focused design QA 통과
+- `design-qa.md` 최종 결과 `passed`
+- contract/API/DB 변경 없음
+
+## FE-0023 — 재활용 가능한 뒤로가기 포함 full-screen template
+
+- 날짜: 2026-09-03
+- Milestone: 7B 포트폴리오 고객 UI
+- 상태: COMPLETED
+- contract revision: `platform-v1` unchanged
+
+### 완료
+
+- 온보딩 전용 backless `FullScreenSurface`와 앱 stack 화면용 `FullScreenPage`를 분리
+- `FullScreenPage`에 safe area, 고정 뒤로가기, 중앙 title, scroll content와 화면별 style
+  override를 구현
+- `내 정보 관리`와 `알림 설정`을 공통 template으로 전환하고 기존 알림 화면의 시각 기준을
+  유지
+
+### 검증
+
+- mobile 50 files/144 tests, typecheck/lint/architecture/route/design check 통과
+- Android Emulator에서 두 full-screen route의 뒤로가기·복귀 동작 통과
+- template 전환 후 `design-qa.md` full/focused comparison `passed`
+- contract/API/DB 변경 없음
+
+## FE-0022 — 알림 설정 full-screen route
+
+- 날짜: 2026-09-03
+- Milestone: 7B 포트폴리오 고객 UI
+- 상태: COMPLETED
+- contract revision: `platform-v1` unchanged
+
+### 완료
+
+- `내 정보` overview의 `알림 설정` row를 global navigation chrome이 없는 root stack
+  full-screen route로 연결
+- 첨부 기준의 안내 배너, 서비스 이용/혜택 및 이벤트 알림 영역, 세부 채널 switch,
+  마케팅 정보 활용 동의 버튼 구현
+- 서비스 이용 알림 ON 및 나머지 OFF 기본값과 local visual event 구현
+- Android Emulator full-view/focused side-by-side comparison으로 간격·스위치 정렬·버튼
+  높이 확인
+
+### 검증
+
+- mobile 50 files/143 tests, typecheck/lint/architecture/route/design check 통과
+- Android Emulator에서 알림 설정 진입 → 앱 푸시 toggle → 뒤로가기 복귀 통과
+- `design-qa.md` 최종 결과 `passed`
+- contract/API/DB 변경 없음

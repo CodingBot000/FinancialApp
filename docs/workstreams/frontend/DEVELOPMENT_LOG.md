@@ -949,3 +949,77 @@
 - root verify: mobile 141/simulator 12/platform 96 총 249 tests와 두 backend build 통과
 - Android API 36 Emulator notification/camera deny 후 onboarding과 relaunch skip 통과
 - physical/iOS는 `FE-GAP-0005`로 유지
+
+## FE-0021 — 내 정보 overview와 관리 route
+
+- 날짜: 2026-09-03
+- Milestone: 7B 포트폴리오 고객 UI
+- 상태: COMPLETED
+- contract revision: `platform-v1` unchanged
+
+### 구현
+
+- screenshot 기준 overview를 `내 정보` tab에 추가하고 global top/bottom navigation을
+  숨겼다.
+- `내 정보 관리`는 기존 SettingsScreen을 root stack의 full-screen route로 열도록
+  연결했다.
+- switch는 로컬 state만 토글하고 나머지 row는 no-op press handler를 등록했다.
+- 기존 `icon-wm.png`를 브랜드 row에 재사용했다.
+
+### 검증
+
+- mobile 49 files/142 tests, route 12 files와 design-system 40 UI files 통과
+- Android Emulator screenshot, switch toggle와 management navigation 통과
+- `design-qa.md` side-by-side/focused comparison `passed`
+
+## FE-0022 — 알림 설정 full-screen route
+
+- 날짜: 2026-09-03
+- Milestone: 7B 포트폴리오 고객 UI
+- 상태: COMPLETED
+- contract revision: `platform-v1` unchanged
+
+### 구현
+
+- overview의 `알림 설정` row를 `notification-settings` root stack route로 연결했다.
+- global top/bottom app bar 없이 첨부 화면의 back/title, 안내 배너, 알림 그룹,
+  marketing consent row를 구현했다.
+- 서비스 이용 알림은 ON, 혜택·앱 푸시·알림톡/문자·전화는 OFF로 초기화하고,
+  각 switch와 동의 버튼은 포트폴리오용 local visual state만 변경한다.
+- 레퍼런스의 copy, switch 우측 정렬, divider와 consent button의 위치·높이를
+  Android Emulator 캡처와 pixel 기준으로 조정했다.
+
+### 검증
+
+- mobile 50 files/143 tests, typecheck/lint/architecture/route/design check 통과
+- route smoke 13 files, design-system 42 UI files 통과
+- Android Emulator에서 overview → 알림 설정 진입, 앱 푸시 toggle, 상단 뒤로가기 복귀 통과
+- source/implementation full-view와 focused comparison의 `design-qa.md` 최종 결과 `passed`
+- contract/API/DB 변경 없음
+
+## FE-0023 — 재활용 가능한 뒤로가기 포함 full-screen template
+
+- 날짜: 2026-09-03
+- Milestone: 7B 포트폴리오 고객 UI
+- 상태: COMPLETED
+- contract revision: `platform-v1` unchanged
+
+### 구현
+
+- 온보딩과 launch가 사용하는 backless `FullScreenSurface`는 유지하고, 앱 소유 stack
+  페이지용 `FullScreenPage`를 shared design system에 추가했다.
+- `FullScreenPage`는 safe area, 항상 노출되는 `뒤로가기` action, 중앙 title, scrollable
+  content와 화면별 header/content style override를 제공한다.
+- `내 정보 관리`는 `SettingsScreen`의 full-screen mode로 template을 사용하고,
+  `알림 설정`도 동일 template으로 전환했다.
+- 관리 route는 실제 Ionicons back asset을 전달하며, 두 route 모두 global top/bottom
+  navigation chrome 없이 이전 화면으로 복귀한다.
+
+### 검증
+
+- mobile 50 files/144 tests, typecheck/lint/architecture/route/design check 통과
+- route smoke 13 files, design-system 42 UI files 통과
+- Android Emulator에서 관리 화면과 알림 설정 화면의 `뒤로가기` accessibility action,
+  알림 설정 switch와 route 복귀 통과
+- 알림 설정 template migration 후 source/implementation full/focused design QA 재통과
+- contract/API/DB 변경 없음

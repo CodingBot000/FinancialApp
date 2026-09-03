@@ -1,5 +1,5 @@
-import { SettingsScreen } from '../../features/settings';
+import { MyInfoOverviewScreen } from '../../features/settings';
 
 export default function MeRoute() {
-  return <SettingsScreen />;
+  return <MyInfoOverviewScreen />;
 }

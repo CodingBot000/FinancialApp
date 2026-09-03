@@ -6,6 +6,7 @@ export { DemoDisclosure } from './demo-disclosure';
 export { EmptyState } from './empty-state';
 export { ErrorState } from './error-state';
 export { FullScreenLayer } from './full-screen-layer';
+export { FullScreenPage } from './full-screen-page';
 export { FullScreenSurface } from './full-screen-surface';
 export { IconButton } from './icon-button';
 export { ListRow } from './list-row';

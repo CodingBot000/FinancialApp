@@ -7,6 +7,7 @@ import {
   Button,
   DemoDisclosure,
   FullScreenLayer,
+  FullScreenPage,
   MarketChange,
   MoneyValue,
   SegmentedControl,
@@ -26,6 +27,19 @@ describe('design system primitives', () => {
     expect(onBack).toHaveBeenCalledOnce();
     expect(view.getByRole('header', { name: '알림함' })).toBeTruthy();
     expect(view.getByText('레이어 본문')).toBeTruthy();
+  });
+
+  it('provides a scrollable full-screen page with an always-visible back action', async () => {
+    const onBack = vi.fn();
+    const view = await render(
+      <FullScreenPage backIcon={<></>} onBack={onBack} title="내 정보">
+        <AppText>페이지 본문</AppText>
+      </FullScreenPage>,
+    );
+    fireEvent.press(view.getByRole('button', { name: '뒤로가기' }));
+    expect(onBack).toHaveBeenCalledOnce();
+    expect(view.getByRole('header', { name: '내 정보' })).toBeTruthy();
+    expect(view.getByText('페이지 본문')).toBeTruthy();
   });
 
   it('keeps the screenshot-aligned visual foundation stable', () => {

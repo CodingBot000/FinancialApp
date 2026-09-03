@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import {
@@ -15,6 +15,7 @@ import {
   Card,
   DemoDisclosure,
   ErrorState,
+  FullScreenPage,
   LoadingState,
   NoticeBanner,
   PageHeader,
@@ -39,7 +40,11 @@ function problemMessage(error: unknown) {
     : '요청을 완료하지 못했습니다.';
 }
 
-export function SettingsScreen() {
+type SettingsScreenProps =
+  | { readonly onBack?: never; readonly backIcon?: never }
+  | { readonly backIcon: ReactNode; readonly onBack: () => void };
+
+export function SettingsScreen({ backIcon, onBack }: SettingsScreenProps = {}) {
   const api = usePlatformApi();
   const auth = useAuthSession();
   const portfolioAccess = useOptionalPortfolioAccess();
@@ -117,12 +122,18 @@ export function SettingsScreen() {
     }
   };
 
-  return (
-    <Screen>
-      <PageHeader
-        subtitle="보안, 개인정보 보호와 투자 성향을 관리하세요."
-        title="내 정보"
-      />
+  const content = (
+    <>
+      {onBack ? (
+        <AppText style={styles.fullScreenSubtitle} tone="secondary">
+          보안, 개인정보 보호와 투자 성향을 관리하세요.
+        </AppText>
+      ) : (
+        <PageHeader
+          subtitle="보안, 개인정보 보호와 투자 성향을 관리하세요."
+          title="내 정보"
+        />
+      )}
       <Card>
         <AppText variant="heading">내 계정</AppText>
         {user.isPending ? (
@@ -251,11 +262,20 @@ export function SettingsScreen() {
         </Button>
       )}
       <DemoDisclosure />
-    </Screen>
+    </>
+  );
+
+  return onBack ? (
+    <FullScreenPage backIcon={backIcon} onBack={onBack} title="내 정보">
+      {content}
+    </FullScreenPage>
+  ) : (
+    <Screen>{content}</Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  fullScreenSubtitle: { marginBottom: spacing[2] },
   name: { marginTop: spacing[3] },
   riskButton: {
     alignItems: 'center',

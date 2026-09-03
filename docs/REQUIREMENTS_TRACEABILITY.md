@@ -10,6 +10,7 @@
 | App Lock와 주문 전 biometric | LocalAuthentication adapter와 두 gate | component tests + Android emulator | DONE; physical/iOS gap |
 | 포트폴리오 최초/재실행 biometric | Device-aware gate, SecureStore setup marker, memory-only unlock, mock Home | 46 mobile suites + Android API 36 clean/relaunch smoke | DONE local; physical/iOS gap |
 | launch 선택 권한 요청 | notification/photo/camera native adapters, handled marker, sequential coordinator | 48 mobile suites + Android API 36 deny/relaunch smoke | DONE local; physical/iOS gap |
+| 내 정보 overview와 관리 route | screenshot-matched full-screen overview, notification settings route, local switches, management stack route | 50 mobile suites + Android screenshot/navigation smoke + design QA | DONE local |
 | `/me`와 risk profile | owner-scoped GET/PUT, optimistic version | provider/consumer + actual version smoke | DONE |
 | 단일 기관 connection/sync | HTTP simulator adapter, raw/processing/normalization | 12-step smoke + PostgreSQL assertions | DONE |
 | 자산 조회와 차트 | summary/accounts/holdings/history/allocation | provider/mobile tests + actual smoke | DONE |
