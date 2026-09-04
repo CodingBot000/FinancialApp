@@ -28,6 +28,7 @@
    - `DEMO_SCRIPT.md`
    - `ENV_FILES_GUIDE.md`
    - `ENVIRONMENT_MATRIX.md`
+   - `GOOGLE_CLOUD_DEPLOYMENT.md` — Cloud Run, Cloud SQL, Secret Manager와 APK 배포 절차
 10. 관련 `adr/ADR-*.md`
 11. `CODEX_IMPLEMENTATION_PLAN.md` — 최초 milestone과 병렬 개발 전 실행 기준선
 12. `PARALLEL_DEVELOPMENT_GUIDE.md` — 종료된 분리 개발 이력과 향후 재분리 기준
