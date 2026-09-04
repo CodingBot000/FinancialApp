@@ -20,6 +20,7 @@ export const BackHandler = {
 };
 export const Image = createNativeTestComponent('Image');
 export const Keyboard = { dismiss() {} };
+export const Modal = createNativeTestComponent('Modal');
 export const Platform = { OS: 'android' };
 export const SafeAreaView = createNativeTestComponent('SafeAreaView');
 export const ScrollView = createNativeTestComponent('ScrollView');

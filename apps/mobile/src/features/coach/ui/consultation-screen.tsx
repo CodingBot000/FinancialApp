@@ -24,10 +24,9 @@ import {
 import {
   createDemoConsultationAvailability,
   formatConsultationDate,
-  type ConsultationSlot,
 } from '../model/consultation-availability';
 import { configureKoreanCalendarLocale } from '../model/consultation-calendar-locale';
-import { TimeSlotWheel } from './time-slot-wheel';
+import { TimeSlotPicker } from './time-slot-picker';
 
 configureKoreanCalendarLocale();
 
@@ -111,7 +110,9 @@ export function ConsultationScreen({
       return;
     }
     setSelectedDate(day.date);
-    setSelectedSlotId(undefined);
+    setSelectedSlotId(
+      day.slots.find((slot) => slot.status === 'AVAILABLE')?.slotId,
+    );
   };
 
   const handleRequest = () => {
@@ -213,13 +214,11 @@ export function ConsultationScreen({
             <Card>
               <SectionHeader title="상담 시간" />
               <AppText tone="secondary" variant="caption">
-                선택한 날짜의 가능한 시간을 골라 주세요.
+                기본 시간이 선택되어 있어요. 탭하면 변경할 수 있어요.
               </AppText>
               {selectedDay.slots.some((slot) => slot.status === 'AVAILABLE') ? (
-                <TimeSlotWheel
-                  onSelect={(slot: ConsultationSlot) =>
-                    setSelectedSlotId(slot.slotId)
-                  }
+                <TimeSlotPicker
+                  onSelect={(slot) => setSelectedSlotId(slot.slotId)}
                   selectedSlotId={selectedSlotId}
                   slots={selectedDay.slots}
                 />

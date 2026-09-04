@@ -50,16 +50,25 @@ describe('ConsultationScreen', () => {
     );
     expect(view.getByText('선택한 날짜 · 9월 5일 (토)')).toBeTruthy();
 
-    await fireEvent.press(view.getByRole('radio', { name: '10:00 상담 가능' }));
+    expect(
+      view.getByRole('button', {
+        name: '상담 시간 선택, 현재 10:00',
+      }),
+    ).toBeTruthy();
+    expect(view.queryByTestId('consultation-time-picker-modal')).toBeNull();
+    await fireEvent.press(view.getByTestId('consultation-time-trigger'));
+    expect(view.getByTestId('consultation-time-picker-modal')).toBeTruthy();
+    await fireEvent.press(view.getByRole('radio', { name: '13:00 상담 가능' }));
+    await fireEvent.press(view.getByRole('button', { name: '선택 완료' }));
     await fireEvent.press(view.getByRole('tab', { name: '전화' }));
     const enabledSubmit = view.getByRole('button', { name: '상담 요청하기' });
     expect(enabledSubmit.props.accessibilityState).toEqual({ disabled: false });
-    expect(view.getByText('9월 5일 (토) · 10:00 · 전화 상담')).toBeTruthy();
+    expect(view.getByText('9월 5일 (토) · 13:00 · 전화 상담')).toBeTruthy();
 
     await fireEvent.press(enabledSubmit);
 
     expect(onRequestNotification).toHaveBeenCalledWith(
-      '9월 5일 (토) · 10:00 · 전화 상담',
+      '9월 5일 (토) · 13:00 · 전화 상담',
     );
     expect(
       view.getByRole('header', { name: '상담 요청이 완료되었어요.' }),
@@ -86,19 +95,30 @@ describe('ConsultationScreen', () => {
     await fireEvent.press(
       view.getByTestId('coach-consultation-calendar.day_2026-09-05'),
     );
-    await fireEvent.press(view.getByRole('radio', { name: '10:00 상담 가능' }));
     expect(
-      view.getByRole('radio', { name: '10:00 상담 가능' }).props
-        .accessibilityState,
-    ).toEqual({ disabled: false, selected: true });
+      view.getByRole('button', {
+        name: '상담 시간 선택, 현재 10:00',
+      }),
+    ).toBeTruthy();
+
+    await fireEvent.press(view.getByTestId('consultation-time-trigger'));
+    await fireEvent.press(view.getByRole('radio', { name: '13:00 상담 가능' }));
+    await fireEvent.press(view.getByRole('button', { name: '선택 완료' }));
 
     await fireEvent.press(
       view.getByTestId('coach-consultation-calendar.day_2026-09-07'),
     );
     expect(
+      view.getByRole('button', {
+        name: '상담 시간 선택, 현재 10:00',
+      }),
+    ).toBeTruthy();
+
+    await fireEvent.press(view.getByTestId('consultation-time-trigger'));
+    expect(
       view.getByRole('radio', { name: '10:00 상담 가능' }).props
         .accessibilityState,
-    ).toEqual({ disabled: false, selected: false });
+    ).toEqual({ disabled: false, selected: true });
     expect(
       view.getByRole('radio', { name: '15:00 마감' }).props.accessibilityState,
     ).toEqual({ disabled: true, selected: false });

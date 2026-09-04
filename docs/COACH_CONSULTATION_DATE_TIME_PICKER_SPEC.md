@@ -23,7 +23,7 @@
 → 포트폴리오용 가상 요청 완료
 ```
 
-달력에서는 예약 가능한 날과 불가능한 날을 한눈에 구분하고, 날짜를 고른 뒤에만 해당 날짜의 시간대를 보여 준다. 시간을 고르기 전에는 상담 요청 CTA를 활성화하지 않는다.
+달력에서는 예약 가능한 날과 불가능한 날을 한눈에 구분하고, 날짜를 고른 뒤에만 해당 날짜의 시간을 보여 준다. 날짜를 선택하면 첫 번째 예약 가능 시간이 기본값으로 선택되며, 시간 텍스트를 눌렀을 때만 반투명 오버레이가 있는 모달에서 변경할 수 있다. 상담 방식까지 선택하기 전에는 상담 요청 CTA를 활성화하지 않는다.
 
 ### 1.2 구현 결정
 
@@ -33,7 +33,7 @@
 4. 가용 날짜·시간 데이터는 서버가 아닌 feature model의 합성 availability config에서 생성한다.
 5. 상담 완료와 선택값은 기존과 같이 component local state로 처리한다. 현재 존재하는 local notification callback은 유지한다.
 6. 기존 `FullScreenPage`, `Card`, `Button`, `SegmentedControl`, `NoticeBanner`, `DemoDisclosure`와 현재 token을 유지한다.
-7. 새 범용 디자인 시스템 component는 만들지 않는다. 시간대 버튼은 상담 feature 전용 component로 둔다.
+7. 새 범용 디자인 시스템 component는 만들지 않는다. 시간 트리거와 모달 조합은 상담 feature 전용 component로 둔다.
 8. `ExpandableCalendar`, `Agenda`, custom `dayComponent`는 첫 구현에서 사용하지 않는다.
 9. 실제 예약 API, 캘린더 권한, 원격 push·문자·이메일 발송, 예약 충돌 검사는 범위 밖이다. 기존 local notification demo callback은 완료 시 선택 요약을 전달한다.
 
@@ -107,7 +107,7 @@
 
 1. 상담 주제 카드
 2. 상담 날짜 Calendar 카드
-3. 선택 날짜의 시간대 slot 카드
+3. 선택 날짜의 기본 시간과 시간 변경 트리거 카드
 4. 상담 방식 카드
 5. 예약 내용 요약 카드
 6. 상담 요청 CTA
@@ -141,12 +141,19 @@
 #### 시간 카드
 
 - section title: `상담 시간`
-- helper: `선택한 날짜의 가능한 시간을 골라 주세요.`
+- helper: `기본 시간이 선택되어 있어요. 탭하면 변경할 수 있어요.`
+- initial value: 선택한 날짜의 첫 번째 `AVAILABLE` slot
+- trigger: 버튼처럼 보이지 않는 텍스트형 `Pressable`, 현재 시간과 chevron 표시
+- trigger accessibility label: `상담 시간 선택, 현재 {HH:mm}`
+- trigger test ID: `consultation-time-trigger`
+- initial state: 시간 변경 모달은 닫혀 있음
 - group labels: `오전`, `오후`, `저녁`
 - available slot: `{HH:mm}`
 - full slot: `{HH:mm}`와 함께 `마감` 표시
 - no slot banner: `이 날짜에는 상담 가능한 시간이 없어요.`
 - no slot body: `다른 날짜를 선택해 주세요.`
+
+시간 트리거를 누르면 화면 위에 검정색 반투명 scrim을 깔고 `상담 시간 선택` 모달을 표시한다. 모달 안에서만 세로 wheel을 조작하며, `선택 완료`를 누르면 변경값을 확정하고 모달을 닫는다. 닫기 아이콘·scrim·Android 뒤로가기는 변경을 확정하지 않고 닫힌다.
 
 #### 방식 카드
 
@@ -255,14 +262,24 @@ font size와 weight는 `typography.caption`, `typography.body`, `typography.labe
 
 오전·오후·저녁 그룹을 분리해 시간 목록을 빠르게 훑을 수 있게 한다. 그룹에 slot이 없으면 해당 그룹은 렌더링하지 않는다.
 
-### 3.5 상담 방식
+### 3.5 시간 트리거와 모달
+
+- React Native `Modal`의 `transparent`와 `animationType="fade"`를 사용한다.
+- scrim은 `colors.background.inverse`와 opacity를 사용해 후면 화면을 검정색 반투명으로 처리한다.
+- dialog는 기존 `Card`와 동일한 surface·radius·shadow token 감각을 따른다.
+- dialog header에는 `상담 시간 선택`, 보조 문구와 닫기 `IconButton`을 둔다.
+- wheel의 임시 선택값은 모달 내부에서만 유지하고 `선택 완료` 시 부모의 최종 slot을 갱신한다.
+- 초기 기본값은 모달을 열 때 중앙에 위치한다.
+- 모달은 화면 첫 진입과 날짜 선택 직후에는 노출하지 않는다.
+
+### 3.6 상담 방식
 
 기존 `SegmentedControl`을 유지한다.
 
 - `전화`
 - `화상`
 
-시간 wheel 선택이 완료된 뒤 방식 카드를 보여 준다. 방식은 default 선택하지 않고, 사용자의 명시 선택을 요구한다.
+날짜를 고르면 첫 번째 available 시간이 기본 선택되고 시간 trigger와 방식 카드가 표시된다. 시간을 바꾸고 싶을 때만 trigger를 눌러 모달 wheel을 열며, 방식은 default 선택하지 않고 사용자의 명시 선택을 요구한다.
 
 ### 3.6 예약 내용 요약
 
@@ -284,7 +301,7 @@ font size와 weight는 `typography.caption`, `typography.body`, `typography.labe
 consultation-screen.tsx
 → createDemoConsultationAvailability(referenceDate)
 → 날짜별 slot과 상태를 view model로 변환
-→ Calendar + TimeSlotWheel 렌더링
+→ Calendar + TimeSlotPicker 렌더링
 ```
 
 화면 JSX에 날짜·시간·마감 상태를 직접 작성하지 않는다. 기존 데이터 하드코딩 금지 원칙과 동일하게, 고정 제품 설정은 model/config에 두고 UI는 view model만 렌더링한다.
@@ -337,7 +354,7 @@ interface ConsultationDay {
 
 ### 4.5 날짜 변경 규칙
 
-- 날짜를 바꾸면 이전에 선택한 시간 slot을 즉시 해제한다.
+- 날짜를 바꾸면 새 날짜의 첫 번째 available slot을 기본값으로 선택한다.
 - 새 날짜에 가능한 slot이 없으면 시간 카드 대신 no-slot banner를 표시한다.
 - 날짜를 바꿔도 상담 방식 선택은 유지한다.
 - 월을 넘겨도 선택 날짜는 변경하지 않는다.
@@ -357,8 +374,8 @@ DATE_UNSELECTED
 | 상태 | 조건 | 표시 | CTA |
 |---|---|---|---|
 | `DATE_UNSELECTED` | 날짜 없음 | 주제 + Calendar | disabled |
-| `DATE_SELECTED` | 날짜만 선택 | 선택 날짜 + 시간 slot | disabled |
-| `TIME_SELECTED` | 날짜·시간 선택 | 방식 선택 | disabled |
+| `DATE_SELECTED` | 날짜 선택, 첫 available 시간 기본 선택 | 선택 날짜 + 텍스트형 시간 trigger + 방식 선택 | disabled |
+| `TIME_SELECTED` | 모달에서 시간 변경 후 선택 완료 | 확정 시간 + 방식 선택 | disabled |
 | `METHOD_SELECTED` | 날짜·시간·방식 선택 | 예약 요약 | enabled |
 | `COMPLETED` | 상담 요청하기 선택 | 완료 카드 | 코치 홈/선택 변경 |
 | `NO_SLOT` | 선택 날짜 slot 없음 | warning banner | 다른 날짜 선택 |
@@ -442,9 +459,9 @@ export function consultationSelectionLabel({
 #### `apps/mobile/src/features/coach/ui/consultation-screen.tsx`
 
 - 기존 `CONSULTATION_TIMES` SegmentedControl 제거
-- `Calendar`와 `TimeSlotWheel` 추가
+- `Calendar`와 `TimeSlotPicker` 추가
 - local state를 `selectedDate`, `selectedSlotId`, `method`, `completed`로 변경
-- 날짜 변경 시 selected slot reset
+- 날짜 변경 시 새 날짜의 첫 번째 available slot을 기본값으로 설정
 - 날짜·시간·방식 선택 뒤 예약 요약 card 표시
 - 기존 `FullScreenPage`, topic card, method card, completion card와 callback 유지
 - navigation callback(`onBack`, `onComplete`)은 유지
@@ -453,13 +470,27 @@ export function consultationSelectionLabel({
 - `react-native-calendars` Calendar import와 locale setup은 UI 경계에서만 사용
 - JSX에는 실제 날짜·시간 literal을 작성하지 않음
 
+#### `apps/mobile/src/features/coach/ui/time-slot-picker.tsx`
+
+- 선택된 시간 label을 텍스트형 trigger로 표시
+- trigger를 누르기 전에는 wheel dialog를 렌더링하지 않음
+- transparent `Modal`과 inverse scrim으로 후면 화면을 반투명 처리
+- 모달 내부에서 `TimeSlotWheel`을 임시 선택 상태로 조작
+- `선택 완료`, 닫기 아이콘, scrim press와 Android back 처리
+- 기본값·최종 선택값은 availability model에서 파생
+
 #### `apps/mobile/src/features/coach/ui/consultation-screen.test.tsx`
 
 - 기존 고정 시간 tab query 제거
 - fixed reference date availability로 Calendar render
 - available date day test ID press
 - selected date와 slot group 표시 검증
-- 날짜 변경 시 slot reset 검증
+- 날짜 선택 직후 첫 available slot이 기본값으로 표시되는지 검증
+- trigger를 누르기 전 모달이 닫혀 있는지 검증
+- trigger press 후 scrim·dialog·wheel이 표시되는지 검증
+- 선택 완료 시 최종 slot이 갱신되고 모달이 닫히는지 검증
+- 닫기 동작 시 slot이 변경되지 않는지 검증
+- 날짜 변경 시 새 날짜의 기본 slot으로 갱신되는지 검증
 - full slot disabled 검증
 - 방식·날짜·시간이 모두 선택되기 전 CTA disabled 검증
 - review summary와 완료 카드 검증
@@ -551,15 +582,17 @@ npm run contract:check
 1. 코치 탭에서 `코치 상담 요청` 진입
 2. Calendar에 예약 가능 dot와 disabled 날짜가 함께 보이는지 확인
 3. 예약 가능한 날짜 선택
-4. 오전·오후·저녁 세로 시간 wheel 표시 확인
-5. 마감 slot disabled 확인
-6. 시간 선택 시 선택 스타일 확인
-7. 전화 또는 화상 선택
-8. 예약 내용 요약 확인
-9. `상담 요청하기` 선택
-10. 완료 카드에서 선택 날짜·시간·방식과 데모 고지 확인
-11. `코치 홈으로` 복귀
-12. 다른 날짜를 선택했을 때 이전 시간이 초기화되는지 확인
+4. 기본 시간이 선택된 텍스트형 trigger로 보이고 모달이 닫혀 있는지 확인
+5. trigger를 누르고 반투명 scrim·시간 선택 dialog 표시 확인
+6. 오전·오후·저녁 세로 시간 wheel과 마감 slot disabled 확인
+7. 다른 시간을 고른 뒤 `선택 완료`를 누르면 trigger가 갱신되고 dialog가 닫히는지 확인
+8. 닫기 아이콘 또는 scrim을 누르면 변경 없이 닫히는지 확인
+9. 전화 또는 화상 선택
+10. 예약 내용 요약 확인
+11. `상담 요청하기` 선택
+12. 완료 카드에서 선택 날짜·시간·방식과 데모 고지 확인
+13. `코치 홈으로` 복귀
+14. 다른 날짜를 선택했을 때 새 날짜의 기본 시간이 표시되는지 확인
 
 ### 8.3 web export
 
@@ -572,12 +605,15 @@ npm run contract:check
 
 - 고정 3개 시간 선택지가 화면에서 사라진다.
 - Calendar에서 예약 가능 날짜와 disabled 날짜가 시각적으로 구분된다.
-- 날짜 선택 후 해당 날짜의 slot만 표시된다.
-- 날짜를 바꾸면 이전 시간 선택이 해제된다.
+- 날짜 선택 후 해당 날짜의 첫 번째 available 시간이 기본값으로 표시된다.
+- 화면 진입과 날짜 선택 직후에는 시간 모달이 닫혀 있고 텍스트형 trigger만 보인다.
+- 시간 trigger를 누르면 반투명 scrim과 세로 wheel dialog가 표시된다.
+- `선택 완료` 시 최종 시간이 갱신되고 dialog가 닫힌다.
+- 날짜를 바꾸면 새 날짜의 첫 번째 available 시간이 기본 선택된다.
 - slot은 오전·오후·저녁 정보를 유지하면서 세로 wheel로 읽기 쉽다.
 - 가운데 선택 영역이 고정되어 현재 선택 위치를 즉시 알 수 있다.
 - full slot은 비활성화되고 `마감` 텍스트를 제공한다.
-- 날짜·시간·방식 선택 전 상담 요청 CTA는 disabled다.
+- 날짜·상담 방식 선택 전 상담 요청 CTA는 disabled다. 시간은 날짜 선택 시 기본값이 생긴다.
 - 완료 화면에 선택한 날짜·시간·방식이 정확히 표시된다.
 - 화면 숫자와 날짜 결과를 JSX에 하드코딩하지 않는다.
 - 기존 디자인 시스템 component와 token을 우선 사용한다.
@@ -606,10 +642,11 @@ npm run contract:check
 2. `consultation-availability.ts`와 순수 model test 작성
 3. 한국어 Calendar locale과 `markedDates` helper 작성
 4. `TimeSlotWheel`와 상태·접근성 test 작성
-5. `ConsultationScreen`에 Calendar → slot → method → summary 흐름 연결
-6. 기존 consultation test를 새 test ID와 상태 전이 기준으로 수정
-7. architecture, route, design-system, typecheck와 mobile test 실행
-8. Android 화면과 web export 검증
-9. 이전 코치 명세의 상담 section, limitations와 portfolio 문서 갱신
+5. `TimeSlotPicker`의 텍스트 trigger·Modal·임시 선택 상태 연결
+6. `ConsultationScreen`에 Calendar → time trigger/modal → method → summary 흐름 연결
+7. 기존 consultation test를 새 test ID와 상태 전이 기준으로 수정
+8. architecture, route, design-system, typecheck와 mobile test 실행
+9. Android 화면과 web export 검증
+10. 이전 코치 명세의 상담 section, limitations와 portfolio 문서 갱신
 
 이 범위는 상담 화면 하나에 한정되며 기존 backend와 금융 업무 흐름을 건드리지 않는다.
