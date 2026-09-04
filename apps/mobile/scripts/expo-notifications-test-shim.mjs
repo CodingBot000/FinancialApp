@@ -1,4 +1,5 @@
 export const AndroidImportance = { DEFAULT: 3 };
+export const AndroidNotificationPriority = { HIGH: 'high' };
 
 const granted = {
   canAskAgain: true,
@@ -17,4 +18,14 @@ export async function requestPermissionsAsync() {
 
 export async function setNotificationChannelAsync() {
   return null;
+}
+
+export function setNotificationHandler() {}
+
+export function addNotificationReceivedListener() {
+  return { remove() {} };
+}
+
+export async function scheduleNotificationAsync() {
+  return 'test-local-notification';
 }

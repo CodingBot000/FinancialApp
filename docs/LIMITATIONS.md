@@ -26,7 +26,8 @@
   파생한 client-only 코치 진단·예시 배분이 있지만, 규제상 투자 추천·적합성 판단이나 실제
   상품 추천·리밸런싱 지시가 아니다.
 - 코치 상담 요청은 화면 component의 local state에서만 완료되는 포트폴리오 시연이며,
-  예약 backend, 담당자 배정, 알림 발송과 상담 이력은 없다.
+  예약 backend, 담당자 배정, 원격 알림 발송과 상담 이력은 없다. 선택 요약을 보여 주는
+  local notification demo callback만 포함한다.
 - 실제 금융기관, 실제 시세, 실제 개인정보·계좌번호, 실제 자금 이동은 사용하지 않는다.
 - push, realtime stream, offline ledger, 관리자 콘솔과 정식 store 배포는 없다.
 

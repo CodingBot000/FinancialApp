@@ -75,16 +75,23 @@ function AppTopBar() {
             style={styles.wordmark}
           />
         </View>
-        <IconButton
-          accessibilityLabel="알림함 열기"
-          onPress={() => router.push('/notifications' as never)}
-        >
-          <Ionicons
-            color={colors.text.primary}
-            name="notifications-outline"
-            size={34}
+        <View style={styles.notificationButton}>
+          <IconButton
+            accessibilityLabel="알림함 열기"
+            onPress={() => router.push('/notifications' as never)}
+          >
+            <Ionicons
+              color={colors.text.primary}
+              name="notifications-outline"
+              size={34}
+            />
+          </IconButton>
+          <View
+            accessibilityElementsHidden
+            pointerEvents="none"
+            style={styles.notificationBadge}
           />
-        </IconButton>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -222,5 +229,17 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   tabLabel: { textAlign: 'center' },
+  notificationBadge: {
+    backgroundColor: colors.text.danger,
+    borderColor: colors.background.screen,
+    borderRadius: 6,
+    borderWidth: 2,
+    height: 12,
+    position: 'absolute',
+    right: 1,
+    top: 1,
+    width: 12,
+  },
+  notificationButton: { position: 'relative' },
   wordmark: { height: 64, width: 64 },
 });
