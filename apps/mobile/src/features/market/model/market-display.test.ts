@@ -67,8 +67,8 @@ describe('market display model', () => {
     const timestamp = Date.parse('2026-09-02T06:30:00.000Z');
     expect(formatMarketChartXLabel(timestamp, 'MINUTE')).toBe('15:30');
     expect(formatMarketChartXLabel(timestamp, 'DAILY')).toMatch(/09.*02/);
-    expect(formatMarketChartXLabel(timestamp, 'YEARLY')).toBe('2026년');
-    expect(formatMarketChartYLabel(74_200)).toBe('7.4만');
-    expect(formatMarketChartYLabel(125_000_000)).toBe('1.3억');
+    expect(formatMarketChartXLabel(timestamp, 'YEARLY')).toBe('2026');
+    expect(formatMarketChartYLabel(74_200)).toBe('74.2K');
+    expect(formatMarketChartYLabel(125_000_000)).toBe('125M');
   });
 });

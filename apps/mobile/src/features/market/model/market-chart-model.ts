@@ -87,10 +87,11 @@ export function formatMarketChartXLabel(
     }).format(date);
   }
   if (interval === 'YEARLY') {
-    return new Intl.DateTimeFormat('ko-KR', {
+    const year = new Intl.DateTimeFormat('en-US', {
       timeZone: SEOUL_TIME_ZONE,
       year: 'numeric',
     }).format(date);
+    return year;
   }
   return new Intl.DateTimeFormat('ko-KR', {
     day: '2-digit',
@@ -102,10 +103,9 @@ export function formatMarketChartXLabel(
 export function formatMarketChartYLabel(value: number): string {
   const absolute = Math.abs(value);
   if (!Number.isFinite(value)) return '-';
-  if (absolute >= 100_000_000) {
-    return `${trimDecimal(value / 100_000_000)}억`;
-  }
-  if (absolute >= 10_000) return `${trimDecimal(value / 10_000)}만`;
+  if (absolute >= 1_000_000_000) return `${trimDecimal(value / 1_000_000_000)}B`;
+  if (absolute >= 1_000_000) return `${trimDecimal(value / 1_000_000)}M`;
+  if (absolute >= 1_000) return `${trimDecimal(value / 1_000)}K`;
   return Math.round(value).toLocaleString('ko-KR');
 }
 

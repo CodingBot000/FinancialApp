@@ -33,11 +33,7 @@ const INTERVALS: readonly Readonly<{ value: MarketInterval; label: string }>[] =
     { value: 'YEARLY', label: '연봉' },
   ];
 
-export function MarketScreen({
-  onOpenDetails,
-}: {
-  readonly onOpenDetails?: (stock: MarketStock) => void;
-} = {}) {
+export function MarketScreen() {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<MarketStock>();
   const [interval, setInterval] = useState<MarketInterval>('DAILY');
@@ -79,7 +75,6 @@ export function MarketScreen({
               key={stock.symbol}
               onPress={() => {
                 setSelected(stock);
-                onOpenDetails?.(stock);
               }}
               selected={false}
               title={stock.name}
