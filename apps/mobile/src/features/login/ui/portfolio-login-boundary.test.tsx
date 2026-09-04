@@ -30,6 +30,7 @@ import {
   ConfiguredPlatformApiProvider,
   createConfiguredPlatformApi,
 } from '../model/configured-platform-api-provider';
+import { createOidcSessionComposition } from '../model/create-oidc-session-composition';
 import { LoginBoundary } from './login-boundary';
 
 class EmptyRefreshTokenStore implements RefreshTokenStore {
@@ -76,6 +77,27 @@ describe('portfolio login composition', () => {
     const api = createConfiguredPlatformApi(manager);
 
     expect(api.constructor.name).toBe('HttpPlatformApi');
+  });
+
+  it('reads the test login mode from the bundled environment', () => {
+    vi.stubEnv('EXPO_PUBLIC_APP_ENV', 'local');
+    vi.stubEnv('EXPO_PUBLIC_LOGIN_MODE', 'test');
+    vi.stubEnv('EXPO_PUBLIC_LOCAL_TEST_ACCESS_TOKEN', '<local-test-token>');
+    vi.stubEnv('EXPO_PUBLIC_PLATFORM_API_MODE', 'http');
+    vi.stubEnv('EXPO_PUBLIC_PLATFORM_API_URL', 'http://10.0.2.2:8081');
+    vi.stubEnv('EXPO_PUBLIC_OIDC_CLIENT_ID', 'finapp-mobile');
+    vi.stubEnv('EXPO_PUBLIC_OIDC_ISSUER', 'https://portfolio.invalid/realms/finapp');
+
+    const manager = new AuthSessionManager(
+      new MemoryAccessTokenStore(),
+      new EmptyRefreshTokenStore(),
+    );
+    const composition = createOidcSessionComposition(manager);
+
+    expect(composition.status).toBe('configured');
+    if (composition.status === 'configured') {
+      expect(composition.loginMode).toBe('test');
+    }
   });
 
   it('keeps HTTP API mode when the local portfolio is unlocked', () => {

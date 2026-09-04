@@ -8,6 +8,7 @@ import {
   isLocalTestLoginEnabled,
   readOidcPublicConfig,
 } from '../../../shared/config';
+import { readExpoPublicEnvironment } from './configured-platform-api-provider';
 import { OidcLoginService } from './oidc-login-service';
 
 type PublicEnvironment = Readonly<Record<string, string | undefined>>;
@@ -27,7 +28,7 @@ export type OidcSessionComposition =
 
 export function createOidcSessionComposition(
   manager: AuthSessionManager,
-  environment: PublicEnvironment = process.env,
+  environment: PublicEnvironment = readExpoPublicEnvironment(),
 ): OidcSessionComposition {
   if (isLocalTestLoginEnabled(environment)) {
     const client = new LocalTestOidcClient();

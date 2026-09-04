@@ -71,7 +71,7 @@ export function createConfiguredPlatformApi(
   });
 }
 
-function readExpoPublicEnvironment(): PublicEnvironment {
+export function readExpoPublicEnvironment(): PublicEnvironment {
   return {
     EXPO_PUBLIC_APP_ENV: process.env.EXPO_PUBLIC_APP_ENV,
     EXPO_PUBLIC_LOGIN_MODE: process.env.EXPO_PUBLIC_LOGIN_MODE,
