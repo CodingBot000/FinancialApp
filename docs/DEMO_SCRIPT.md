@@ -49,7 +49,7 @@ acceptance 결과로 보여주며 모바일은 DB/simulator에 직접 연결하�
 
 ## 1:40–2:25 — 안전한 BUY와 UNKNOWN 복구
 
-1. holding에서 BUY preview를 열어 가격·만료·예상 금액을 확인한다.
+1. holding에서 원화 매수금액을 입력하고 BUY preview의 1,000좌 기준 가상 기준가·예상 매입좌수·예상 금액을 확인한다.
 2. 주문 직전 biometric gate를 통과하고 NORMAL 주문이 FILLED 되는 것을 보여준다.
 3. local developer panel에서 `ORDER_UNKNOWN_THEN_FILLED`를 선택한다.
 4. 두 번째 주문이 UNKNOWN으로 표시된 뒤 order GET polling/reconciliation으로 FILLED 되는 것을 보여준다.

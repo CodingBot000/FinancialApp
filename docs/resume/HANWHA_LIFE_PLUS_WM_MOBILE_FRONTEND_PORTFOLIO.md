@@ -29,7 +29,7 @@ Wealth Flow는 자산 통합 조회, 투자 성향 기반 예시 코치 진단, 
 | 채용 직무의 핵심 요구 | 프로젝트에서 적용한 내용 | 검증 상태 |
 |---|---|---|
 | React Native·TypeScript·Expo | React Native 0.86, TypeScript strict, Expo SDK 57 기반 단일 앱 | 구현·자동 검증 완료 |
-| 앱 아키텍처 | feature-first 구조, route adapter, public entry, 순환 의존 금지 | 240개 소스 파일 구조 검사 통과 |
+| 앱 아키텍처 | feature-first 구조, route adapter, public entry, 순환 의존 금지 | 244개 소스 파일 구조 검사 통과 |
 | 상태 관리 | TanStack Query로 서버 상태, Zustand로 화면 초안·앱 잠금·표시 설정 관리 | 구현·단위 테스트 완료 |
 | 네비게이션 | Expo Router의 Stack·Tabs·동적 route와 typed routes 적용 | 16개 필수 route smoke 통과 |
 | 웹/모바일 전환 표준 | React Native primitive, 디자인 토큰, 공통 컴포넌트, 필요한 경우 플랫폼별 파일 분리 | Web export 및 Android 화면 검증 이력 |
@@ -39,7 +39,7 @@ Wealth Flow는 자산 통합 조회, 투자 성향 기반 예시 코치 진단, 
 | 모바일 차트·Reanimated | Victory Native, React Native Skia, Reanimated, Gesture Handler | 종목·자산·시뮬레이션 차트 구현 |
 | 온보딩·금융 산출 화면 | 최초 실행, 본인확인·PIN 설정 UI, 권한 요청, 자산→성향→진단→제안 비교→simulation/상담 흐름 | Android 포트폴리오 흐름 검증 |
 | REST API 협업 | canonical OpenAPI, 엄격한 runtime response mapper, contract mock | 38 operations·41 fixtures 검증 |
-| 테스트·CI | Vitest, Testing Library, architecture/route/design gate, GitHub Actions | 모바일 63 files·202 tests 통과 |
+| 테스트·CI | Vitest, Testing Library, architecture/route/design gate, GitHub Actions | 모바일 65 files·209 tests 통과 |
 
 ## 3. 전체 시스템 아키텍처
 
@@ -478,7 +478,7 @@ sequenceDiagram
     participant Broker as Institution Simulator
     participant Worker as Reconciliation
 
-    User->>Mobile: 수량 입력·미리보기
+    User->>Mobile: 원화 매수금액 입력·예상 확인
     Mobile->>API: POST /orders/preview
     API-->>Mobile: quote + expiresAt
     User->>Mobile: 주문 확인
@@ -500,7 +500,7 @@ sequenceDiagram
     Mobile->>Mobile: 자산·보유종목·주문 query invalidate
 ```
 
-모바일에서 quote 만료를 다시 확인하고, 생체인증이 취소되거나 실패하면 주문 API를 호출하지 않습니다. 주문 mutation은 자동 retry하지 않으며, 체결 완료 후에만 자산 관련 cache를 갱신합니다.
+일반 펀드의 금액 중심 매수 경험에 맞춰 화면에는 원화 매수금액을 입력받고, 1,000좌 기준의 가상 기준가로 예상 매입좌수를 계산합니다. 소수점 8자리 quantity는 화면에 노출하지 않고 기존 주문 계약으로 전달하는 내부값으로만 유지합니다. 모바일에서 quote 만료를 다시 확인하고, 생체인증이 취소되거나 실패하면 주문 API를 호출하지 않습니다. 주문 mutation은 자동 retry하지 않으며, 체결 완료 후에만 자산 관련 cache를 갱신합니다.
 
 ## 10. 차트 렌더링과 성능 전략
 
@@ -559,11 +559,11 @@ HTTP 응답은 TypeScript type assertion만으로 신뢰하지 않습니다. exa
 ### 12.2 2026-09-04 현재 실행 결과
 
 ```text
-Mobile architecture       240 source files passed
+Mobile architecture       244 source files passed
 Route smoke               16 route files passed
-Design-system check       51 UI files passed
+Design-system check       52 UI files passed
 TypeScript typecheck      passed
-Mobile Vitest             63 files / 202 tests passed
+Mobile Vitest             65 files / 209 tests passed
 OpenAPI contract          38 operations / 41 fixtures passed
 ```
 
@@ -703,8 +703,8 @@ AWS KMS adapter와 fail-closed 구성 경계를 구현해 환경별 key provider
 ```text
 Platform API Vitest             21 files / 97 tests passed
 Institution Simulator Vitest     4 files / 12 tests passed
-Mobile Vitest                   63 files / 202 tests passed
-합계                            88 files / 311 tests passed
+Mobile Vitest                   65 files / 209 tests passed
+합계                            90 files / 318 tests passed
 
 OpenAPI contract                38 operations / 41 fixtures passed
 ```
@@ -746,7 +746,7 @@ OpenAPI contract                38 operations / 41 fixtures passed
 - React Native·Expo 기반 공통 모바일 코드와 Android Development Build
 - Android API 36 Emulator의 최초 실행·재실행·권한·앱 잠금·차트와 코치 시나리오 A~D 흐름
 - OIDC PKCE, SecureStore, refresh 조정과 cache clear의 코드·자동 테스트
-- 모바일 architecture·route·design system·typecheck·202개 테스트
+- 모바일 architecture·route·design system·typecheck·209개 테스트
 - 합성 자산→성향→결정적 진단→제안 비교→동일 allocation simulation과 화면 로컬 상담 연결
 - 실제 Fastify API, PostgreSQL, Keycloak과 Simulator의 로컬 통합 구조 및 KIS/local 시세 provider 경계
 - OpenAPI 38 operations·41 fixtures의 provider·consumer 호환성

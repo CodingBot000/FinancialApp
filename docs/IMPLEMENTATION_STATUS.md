@@ -207,6 +207,7 @@
 ## FE-0013 BUY Order와 Recovery
 
 - [x] canonical quote/order/history/status 4개 operation strict adapter와 fixture 구현
+- [x] 펀드 주문 UI를 원화 매수금액 중심으로 구성하고 가상 기준가에서 계산한 quantity만 기존 API 계약에 전달
 - [x] quote expiry 검증 뒤 local biometric success 전 submit 금지
 - [x] 사용자 action별 UUID idempotency key와 mutation/AuthenticatedFetch POST no-retry 보장
 - [x] UNKNOWN은 POST replay 없이 GET polling, FILLED 뒤 wealth/order exact invalidation
@@ -410,8 +411,8 @@
 - [x] Calendar 예약 가능일·disabled일 표시, 날짜별 기본 시간 trigger와 반투명 Modal 세로 시간 wheel, 전화/화상·완료를 component local state로 처리하는 상담 demo 구현
 - [x] 홈·종목·코치·주문 최초 진입에만 adaptive skeleton을 표시하고 내 정보 탭은 제외
 - [x] skeleton 방문 상태는 process-memory provider가 소유해 재방문에는 숨기고 앱 프로세스 재시작 시 초기화
-- [x] architecture 240 files, route 16 files, design-system 51 UI files와 mobile typecheck 통과
-- [x] mobile Vitest 63 files/202 tests, canonical contract 38 operations/41 fixtures 통과
+- [x] architecture 244 files, route 16 files, design-system 52 UI files와 mobile typecheck 통과
+- [x] mobile Vitest 65 files/209 tests, canonical contract 38 operations/41 fixtures 통과
 - [x] Android API 36 arm64 Emulator Development Build 484 Gradle tasks와 시나리오 A~D 화면 검증 통과
 - [x] Android 홈·종목·주문·내 정보 탭 smoke와 runtime crash/error 0 확인
 - [x] 탭 전환·현재 탭 재선택 시 화면 상태를 유지하면서 ScrollView만 상단으로 복귀하는 Android smoke 통과

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { PlatformApiError } from '../../../shared/api';
 import type { BiometricGate } from '../../../shared/auth/biometric-gate';
@@ -19,11 +19,22 @@ import {
   TextField,
 } from '../../../shared/design-system';
 import { displayLabel } from '../../../shared/format/display-labels';
-import { formatDateTime } from '../../../shared/format/finance-format';
+import {
+  formatDateTime,
+  formatQuantity,
+  formatWon,
+} from '../../../shared/format/finance-format';
 import { useMoneyVisibilityStore } from '../../../shared/privacy';
 import { useOrderFlow } from '../hooks/use-order-flow';
+import {
+  FUND_ORDER_PRESET,
+  formatFundPurchaseAmountInput,
+  fundUnitsFromOrderQuantity,
+  normalizeFundPurchaseAmountInput,
+  validateFundPurchaseAmount,
+} from '../model/fund-order';
 
-function errorMessage(error: unknown) {
+function errorMessage(error: unknown, purchaseAmount: string) {
   const code = error instanceof PlatformApiError ? error.code : error;
   switch (code) {
     case 'QUOTE_EXPIRED':
@@ -35,7 +46,10 @@ function errorMessage(error: unknown) {
     case 'BIOMETRIC_REQUIRED':
       return '기기 생체인증이 완료되어야 주문할 수 있습니다.';
     case 'VALIDATION_FAILED':
-      return '수량을 0보다 큰 값, 소수점 8자리 이내로 입력하세요.';
+      return (
+        validateFundPurchaseAmount(purchaseAmount) ??
+        '매수금액과 가상 기준가를 확인해 주세요.'
+      );
     default:
       return error
         ? '요청 결과가 불명확합니다. 상태를 확인해 주세요.'
@@ -49,7 +63,10 @@ export function OrderScreen({
   readonly biometricGate?: BiometricGate;
 }) {
   const amountsHidden = useMoneyVisibilityStore((state) => state.hidden);
-  const [quantity, setQuantity] = useState('1.00000000');
+  const [purchaseAmount, setPurchaseAmount] = useState<string>(
+    FUND_ORDER_PRESET.defaultPurchaseAmount,
+  );
+  const [purchaseAmountFocused, setPurchaseAmountFocused] = useState(false);
   const [defaultGate] = useState(() =>
     createPortfolioBiometricGate({
       physicalGate: new ExpoBiometricGate({
@@ -59,8 +76,12 @@ export function OrderScreen({
       }),
     }),
   );
-  const flow = useOrderFlow(quantity);
-  const message = errorMessage(flow.error);
+  const flow = useOrderFlow(purchaseAmount);
+  const message = errorMessage(flow.error, purchaseAmount);
+  const pricingUnitLabel = formatQuantity(FUND_ORDER_PRESET.pricingUnitSize);
+  const expectedFundUnits = flow.quote
+    ? fundUnitsFromOrderQuantity(flow.quote.quantity)
+    : undefined;
 
   return (
     <Screen>
@@ -82,38 +103,66 @@ export function OrderScreen({
           {flow.selection.holding?.displayName ?? '보유 자산 없음'}
         </AppText>
         <TextField
-          keyboardType="decimal-pad"
-          label="수량"
-          onChangeText={setQuantity}
-          value={quantity}
+          helperText={`최소 ${formatWon(FUND_ORDER_PRESET.minimumPurchaseAmount)}부터 신청할 수 있어요.`}
+          keyboardType="number-pad"
+          label="매수금액(원)"
+          onBlur={() => setPurchaseAmountFocused(false)}
+          onChangeText={(value) =>
+            setPurchaseAmount(normalizeFundPurchaseAmountInput(value))
+          }
+          onFocus={() => setPurchaseAmountFocused(true)}
+          selectTextOnFocus
+          value={
+            purchaseAmountFocused
+              ? purchaseAmount
+              : formatFundPurchaseAmountInput(purchaseAmount)
+          }
         />
         <Button onPress={flow.runPreview} variant="secondary">
-          견적 확인
+          매수 예상 확인
         </Button>
       </Card>
       {flow.quote ? (
         <Card variant="warm">
-          <AppText variant="heading">60초 견적</AppText>
+          <AppText variant="heading">매수 예상</AppText>
+          <AppText tone="secondary" variant="caption">
+            매수 신청금액
+          </AppText>
           <MoneyValue
             hidden={amountsHidden}
             size="large"
             value={flow.quote.estimatedAmount}
           />
-          <AppText tone="secondary" variant="caption">
-            단가{' '}
+          <View style={styles.quoteDetail}>
+            <AppText tone="secondary" variant="caption">
+              가상 기준가({pricingUnitLabel}좌)
+            </AppText>
             <MoneyValue
               hidden={amountsHidden}
               size="small"
               value={flow.quote.unitPrice}
-            />{' '}
-            · 만료 {formatDateTime(flow.quote.expiresAt)}
+            />
+          </View>
+          <View style={styles.quoteDetail}>
+            <AppText tone="secondary" variant="caption">
+              예상 매입좌수
+            </AppText>
+            <AppText variant="label">
+              {formatQuantity(expectedFundUnits ?? flow.quote.quantity)}좌
+            </AppText>
+          </View>
+          <AppText tone="secondary" variant="caption">
+            예상 정보 유효시간 · {formatDateTime(flow.quote.expiresAt)}까지
+          </AppText>
+          <AppText tone="secondary" variant="legal">
+            실제 매입좌수는 적용 기준가에 따라 달라질 수 있어요.
           </AppText>
           <Button
             disabled={flow.preview.isPending}
             onPress={() => void flow.confirm(biometricGate ?? defaultGate)}
             variant="brand"
           >
-            생체인증 후 매수 확정
+            생체인증 후 매수 신청
           </Button>
         </Card>
       ) : null}
@@ -170,7 +219,17 @@ export function OrderScreen({
           ))
         )}
       </Card>
-      <DemoDisclosure />
+      <DemoDisclosure>
+        가상 펀드와 기준가를 사용한 포트폴리오용 매수 예시입니다.
+      </DemoDisclosure>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  quoteDetail: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+});
