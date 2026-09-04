@@ -66,6 +66,7 @@ export function OrderScreen({
   const [purchaseAmount, setPurchaseAmount] = useState<string>(
     FUND_ORDER_PRESET.defaultPurchaseAmount,
   );
+  const [purchaseAmountFocused, setPurchaseAmountFocused] = useState(false);
   const [defaultGate] = useState(() =>
     createPortfolioBiometricGate({
       physicalGate: new ExpoBiometricGate({
@@ -105,10 +106,17 @@ export function OrderScreen({
           helperText={`최소 ${formatWon(FUND_ORDER_PRESET.minimumPurchaseAmount)}부터 신청할 수 있어요.`}
           keyboardType="number-pad"
           label="매수금액(원)"
+          onBlur={() => setPurchaseAmountFocused(false)}
           onChangeText={(value) =>
             setPurchaseAmount(normalizeFundPurchaseAmountInput(value))
           }
-          value={formatFundPurchaseAmountInput(purchaseAmount)}
+          onFocus={() => setPurchaseAmountFocused(true)}
+          selectTextOnFocus
+          value={
+            purchaseAmountFocused
+              ? purchaseAmount
+              : formatFundPurchaseAmountInput(purchaseAmount)
+          }
         />
         <Button onPress={flow.runPreview} variant="secondary">
           매수 예상 확인

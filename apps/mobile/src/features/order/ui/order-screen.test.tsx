@@ -46,6 +46,12 @@ describe('OrderScreen', () => {
     expect(await view.findByText('Synthetic Equity Fund')).toBeTruthy();
     expect(view.getByLabelText('매수금액(원)').props.value).toBe('1,000,000');
 
+    await fireEvent(view.getByLabelText('매수금액(원)'), 'focus');
+    expect(view.getByLabelText('매수금액(원)').props.value).toBe('1000000');
+    await fireEvent.changeText(view.getByLabelText('매수금액(원)'), '1000000');
+    await fireEvent(view.getByLabelText('매수금액(원)'), 'blur');
+    expect(view.getByLabelText('매수금액(원)').props.value).toBe('1,000,000');
+
     fireEvent.press(view.getByRole('button', { name: '매수 예상 확인' }));
     expect(await view.findByText('예상 매입좌수')).toBeTruthy();
     expect(view.getByText('가상 기준가(1,000좌)')).toBeTruthy();
