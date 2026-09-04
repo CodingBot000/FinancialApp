@@ -27,7 +27,15 @@ export function useMarketSearch(query: string) {
     staleTime: 30_000,
   });
 
-  return { debouncedQuery, search };
+  const searchNow = () => {
+    const normalizedQuery = query.trim();
+    setDebouncedQuery(normalizedQuery);
+    if (normalizedQuery.length > 0 && normalizedQuery === debouncedQuery) {
+      void search.refetch();
+    }
+  };
+
+  return { debouncedQuery, search, searchNow };
 }
 
 export function useMarketStockBySymbol(symbol: string | undefined) {

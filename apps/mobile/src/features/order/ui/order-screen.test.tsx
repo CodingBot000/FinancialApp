@@ -90,6 +90,37 @@ describe('OrderScreen', () => {
     expect(prepare).not.toHaveBeenCalled();
   });
 
+  it('clears the biometric error after a later authenticated submission', async () => {
+    const api = new ContractMockPlatformApi({ latencyMs: 0 });
+    let biometricCalls = 0;
+    const view = await renderScreen(api, {
+      authenticate: () => {
+        biometricCalls += 1;
+        return Promise.resolve(
+          biometricCalls === 1
+            ? ({ status: 'cancelled' } as const)
+            : ({ status: 'authenticated' } as const),
+        );
+      },
+    });
+    await view.findByText('Synthetic Equity Fund');
+    fireEvent.press(view.getByRole('button', { name: '매수 예상 확인' }));
+    const submitButton = await view.findByRole('button', {
+      name: '생체인증 후 매수 신청',
+    });
+
+    fireEvent.press(submitButton);
+    expect(
+      await view.findByText('기기 생체인증이 완료되어야 주문할 수 있습니다.'),
+    ).toBeTruthy();
+
+    fireEvent.press(submitButton);
+    expect(await view.findByText('주문 상태')).toBeTruthy();
+    expect(
+      view.queryByText('기기 생체인증이 완료되어야 주문할 수 있습니다.'),
+    ).toBeNull();
+  });
+
   it('validates the minimum won amount before requesting a quote', async () => {
     const api = new ContractMockPlatformApi({ latencyMs: 0 });
     const preview = vi.spyOn(api, 'previewBuyOrder');

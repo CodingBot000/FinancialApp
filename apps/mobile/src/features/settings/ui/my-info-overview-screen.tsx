@@ -1,6 +1,7 @@
 import { useCallback, useState, type ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import * as LocalAuthentication from 'expo-local-authentication';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Image, Pressable, StyleSheet, Switch, View } from 'react-native';
 
 import appIcon from '../../../../assets/icon-wm.png';
@@ -17,6 +18,29 @@ export function MyInfoOverviewScreen() {
   const [autoLoginEnabled, setAutoLoginEnabled] = useState(true);
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const noOp = useCallback(() => undefined, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+
+      const syncBiometricStatus = async () => {
+        try {
+          const [hasHardware, isEnrolled] = await Promise.all([
+            LocalAuthentication.hasHardwareAsync(),
+            LocalAuthentication.isEnrolledAsync(),
+          ]);
+          if (active) setBiometricEnabled(hasHardware && isEnrolled);
+        } catch {
+          if (active) setBiometricEnabled(false);
+        }
+      };
+
+      void syncBiometricStatus();
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
 
   return (
     <Screen contentContainerStyle={styles.content}>

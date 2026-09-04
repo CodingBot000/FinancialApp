@@ -1,6 +1,11 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
-import { describe, expect, it, vi } from 'vitest';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  waitFor,
+} from '@testing-library/react-native';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PlatformApiProvider } from '../../../shared/api';
 import { ContractMockPlatformApi } from '../../../shared/api/mock/contract-mock-platform-api';
@@ -32,6 +37,8 @@ vi.mock('@shopify/react-native-skia', () => ({
 }));
 
 describe('MarketScreen', () => {
+  afterEach(cleanup);
+
   it('searches, selects a stock, and renders quote/chart data', async () => {
     const queryClient = createMobileQueryClient();
     queryClient.setDefaultOptions({ queries: { retry: false } });
@@ -43,10 +50,8 @@ describe('MarketScreen', () => {
       </PlatformApiProvider>,
     );
 
-    fireEvent.changeText(
-      view.getByLabelText('종목명 또는 종목코드 검색'),
-      '삼성',
-    );
+    const input = view.getByLabelText('종목명 또는 종목코드 검색');
+    fireEvent.changeText(input, '삼성');
     expect(await view.findByText('삼성전자')).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: /삼성전자/ }));
 
@@ -62,5 +67,25 @@ describe('MarketScreen', () => {
     fireEvent.press(view.getByRole('tab', { name: '주봉' }));
     await waitFor(() => expect(view.getByText('주봉 6개')).toBeTruthy());
     expect(view.queryByText('가격 흐름을 확인하지 못했습니다.')).toBeNull();
+  });
+
+  it('runs the search from the separate search button', async () => {
+    const queryClient = createMobileQueryClient();
+    queryClient.setDefaultOptions({ queries: { retry: false } });
+    const view = await render(
+      <PlatformApiProvider api={new ContractMockPlatformApi({ latencyMs: 0 })}>
+        <QueryClientProvider client={queryClient}>
+          <MarketScreen />
+        </QueryClientProvider>
+      </PlatformApiProvider>,
+    );
+
+    fireEvent.changeText(
+      view.getByLabelText('종목명 또는 종목코드 검색'),
+      '삼성',
+    );
+    fireEvent.press(view.getByRole('button', { name: '검색 실행' }));
+
+    expect(await view.findByText('삼성전자')).toBeTruthy();
   });
 });

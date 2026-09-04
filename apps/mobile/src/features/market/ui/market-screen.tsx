@@ -41,7 +41,7 @@ export function MarketScreen({
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<MarketStock>();
   const [interval, setInterval] = useState<MarketInterval>('DAILY');
-  const { debouncedQuery, search } = useMarketSearch(query);
+  const { debouncedQuery, search, searchNow } = useMarketSearch(query);
   const data = useMarketStockData(selected, interval);
   const quote = data.quote.data;
   const bars = data.bars.data;
@@ -55,6 +55,7 @@ export function MarketScreen({
       <SearchField
         onChangeText={setQuery}
         onClear={() => setQuery('')}
+        onSearch={searchNow}
         value={query}
       />
       {search.isFetching ? (

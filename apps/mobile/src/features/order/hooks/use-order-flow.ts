@@ -121,6 +121,7 @@ export function useOrderFlow(purchaseAmount: string) {
       setLocalError('BIOMETRIC_REQUIRED');
       return;
     }
+    setLocalError(undefined);
     submit.mutate({ ...input, quoteId: currentQuote.quoteId });
   };
 
