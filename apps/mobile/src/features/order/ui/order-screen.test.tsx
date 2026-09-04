@@ -44,16 +44,21 @@ describe('OrderScreen', () => {
     const prepare = vi.spyOn(api, 'prepareBuyOrder');
     const view = await renderScreen(api, authenticatedGate);
     expect(await view.findByText('Synthetic Equity Fund')).toBeTruthy();
+    expect(view.getByLabelText('매수금액(원)').props.value).toBe('1,000,000');
 
-    fireEvent.press(view.getByRole('button', { name: '견적 확인' }));
+    fireEvent.press(view.getByRole('button', { name: '매수 예상 확인' }));
+    expect(await view.findByText('예상 매입좌수')).toBeTruthy();
+    expect(view.getByText('가상 기준가(1,000좌)')).toBeTruthy();
+    expect(view.getByText('8,000좌')).toBeTruthy();
     fireEvent.press(
-      await view.findByRole('button', { name: '생체인증 후 매수 확정' }),
+      await view.findByRole('button', { name: '생체인증 후 매수 신청' }),
     );
 
     expect(await view.findByText('주문 상태')).toBeTruthy();
     expect(prepare).toHaveBeenCalledOnce();
     expect(prepare.mock.calls[0]?.[0]).toMatchObject({
       instrumentId: 'c805563c-148c-4451-8a9a-4808da7b32ae',
+      quantity: '8.00000000',
       side: 'BUY',
     });
     expect(prepare.mock.calls[0]?.[1]).toMatch(
@@ -68,15 +73,44 @@ describe('OrderScreen', () => {
       authenticate: () => Promise.resolve({ status: 'cancelled' }),
     });
     await view.findByText('Synthetic Equity Fund');
-    fireEvent.press(view.getByRole('button', { name: '견적 확인' }));
+    fireEvent.press(view.getByRole('button', { name: '매수 예상 확인' }));
     fireEvent.press(
-      await view.findByRole('button', { name: '생체인증 후 매수 확정' }),
+      await view.findByRole('button', { name: '생체인증 후 매수 신청' }),
     );
 
     expect(
       await view.findByText('기기 생체인증이 완료되어야 주문할 수 있습니다.'),
     ).toBeTruthy();
     expect(prepare).not.toHaveBeenCalled();
+  });
+
+  it('validates the minimum won amount before requesting a quote', async () => {
+    const api = new ContractMockPlatformApi({ latencyMs: 0 });
+    const preview = vi.spyOn(api, 'previewBuyOrder');
+    const view = await renderScreen(api, authenticatedGate);
+    await view.findByText('Synthetic Equity Fund');
+
+    await fireEvent.changeText(view.getByLabelText('매수금액(원)'), '9999');
+    await fireEvent.press(view.getByRole('button', { name: '매수 예상 확인' }));
+
+    expect(
+      await view.findByText('매수금액은 10,000원 이상이어야 해요.'),
+    ).toBeTruthy();
+    expect(preview).not.toHaveBeenCalled();
+  });
+
+  it('hides a stale preview and recalculates units after the amount changes', async () => {
+    const api = new ContractMockPlatformApi({ latencyMs: 0 });
+    const view = await renderScreen(api, authenticatedGate);
+    await view.findByText('Synthetic Equity Fund');
+
+    await fireEvent.press(view.getByRole('button', { name: '매수 예상 확인' }));
+    expect(await view.findByText('8,000좌')).toBeTruthy();
+
+    await fireEvent.changeText(view.getByLabelText('매수금액(원)'), '500,000');
+    expect(view.queryByText('매수 예상')).toBeNull();
+    await fireEvent.press(view.getByRole('button', { name: '매수 예상 확인' }));
+    expect(await view.findByText('4,000좌')).toBeTruthy();
   });
 
   it('blocks an expired quote before biometric authentication or POST', async () => {
@@ -100,9 +134,9 @@ describe('OrderScreen', () => {
       },
     });
     await view.findByText('Synthetic Equity Fund');
-    fireEvent.press(view.getByRole('button', { name: '견적 확인' }));
+    fireEvent.press(view.getByRole('button', { name: '매수 예상 확인' }));
     fireEvent.press(
-      await view.findByRole('button', { name: '생체인증 후 매수 확정' }),
+      await view.findByRole('button', { name: '생체인증 후 매수 신청' }),
     );
 
     expect(
@@ -132,9 +166,9 @@ describe('OrderScreen', () => {
     const get = vi.spyOn(api, 'getOrder');
     const view = await renderScreen(api, authenticatedGate);
     await view.findByText('Synthetic Equity Fund');
-    fireEvent.press(view.getByRole('button', { name: '견적 확인' }));
+    fireEvent.press(view.getByRole('button', { name: '매수 예상 확인' }));
     fireEvent.press(
-      await view.findByRole('button', { name: '생체인증 후 매수 확정' }),
+      await view.findByRole('button', { name: '생체인증 후 매수 신청' }),
     );
 
     expect(await view.findByText('주문 상태')).toBeTruthy();

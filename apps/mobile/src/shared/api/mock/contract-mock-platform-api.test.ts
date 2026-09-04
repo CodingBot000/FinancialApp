@@ -47,10 +47,14 @@ describe('ContractMockPlatformApi', () => {
     const input = {
       accountId: '688c601b-ab70-4683-9dd4-6a1174550653',
       instrumentId: 'c805563c-148c-4451-8a9a-4808da7b32ae',
-      quantity: '3.00000000',
+      quantity: '8.00000000',
       side: 'BUY' as const,
     };
     const quote = await api.previewBuyOrder(input);
+    expect(quote).toMatchObject({
+      estimatedAmount: '1000000.0000',
+      quantity: '8.00000000',
+    });
     const order = await api.prepareBuyOrder(
       { ...input, quoteId: quote.quoteId },
       '92000000-0000-4000-8000-000000000001',

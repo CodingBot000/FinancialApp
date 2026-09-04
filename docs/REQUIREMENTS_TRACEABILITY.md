@@ -5,7 +5,7 @@
 
 | 요구사항 | 구현 증거 | 자동/실제 검증 | 상태 |
 |---|---|---|---|
-| Expo React Native 화면과 상태 분리 | Dashboard, Coach, Simulation, Order, Settings; Query/Zustand/local state 분리 | mobile architecture 230 files + 195 tests | DONE |
+| Expo React Native 화면과 상태 분리 | Dashboard, Coach, Simulation, Order, Settings; Query/Zustand/local state 분리 | mobile architecture 244 files + 209 tests | DONE |
 | 탭 전환 시 화면 상단 복귀 | tab press revision과 공통 `Screen` ScrollView reset; 화면 local/query 상태는 remount하지 않음 | `screen.test.tsx` + Android API 36 탭 전환·재선택 smoke | DONE |
 | 탭 최초 진입 skeleton | process-memory 방문 session, adaptive design-system skeleton과 탭 `screenLayout` gate; `me` 제외 | skeleton/gate tests + Android API 36 최초·재방문·프로세스 재시작 smoke | DONE |
 | OIDC Authorization Code + PKCE | auth/session adapter, Keycloak realm | actual PKCE/JWT/refresh/logout smoke | DONE (local/Android emulator) |
@@ -21,7 +21,7 @@
 | 단일 기관 connection/sync | HTTP simulator adapter, raw/processing/normalization | 12-step smoke + PostgreSQL assertions | DONE |
 | 자산 조회와 차트 | summary/accounts/holdings/history/allocation | provider/mobile tests + actual smoke | DONE |
 | deterministic simulation | persisted p10/p50/p90 engine result | 13-point actual smoke + tests | DONE |
-| BUY preview/submit | quote expiry, biometric, idempotency | FILLED/REJECTED actual smoke | DONE |
+| BUY preview/submit | 원화 매수금액→가상 기준가 기반 quantity 변환, 예상 매입좌수, quote expiry, biometric, idempotency | amount adapter/component tests + FILLED/REJECTED actual smoke | DONE |
 | 현금 예약과 settlement | order/execution/ledger/position transaction | Testcontainers invariant + DB smoke | DONE |
 | UNKNOWN reconciliation | POST no-retry, GET recovery, lease/backoff | UNKNOWN→FILLED actual smoke | DONE |
 | transactional outbox | atomic event, claim, delivery receipt | crash-window/idempotency tests + DB smoke | DONE |

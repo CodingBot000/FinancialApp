@@ -8,9 +8,13 @@ import {
   type Quote,
 } from '../../../shared/api';
 import type { BiometricGate } from '../../../shared/auth/biometric-gate';
+import {
+  fundOrderQuantityFromAmount,
+  fundReferenceUnitPrice,
+  validateFundPurchaseAmount,
+} from '../model/fund-order';
 
 const finalStatuses = new Set(['FAILED', 'FILLED', 'REJECTED']);
-const quantityPattern = /^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,8})?$/;
 
 function actionId() {
   return typeof globalThis.crypto?.randomUUID === 'function'
@@ -18,7 +22,7 @@ function actionId() {
     : `00000000-0000-4000-8000-${Date.now().toString().padStart(12, '0').slice(-12)}`;
 }
 
-export function useOrderFlow(quantity: string) {
+export function useOrderFlow(purchaseAmount: string) {
   const api = usePlatformApi();
   const client = useQueryClient();
   const accounts = useQuery({
@@ -41,8 +45,17 @@ export function useOrderFlow(quantity: string) {
     account: accounts.data?.items[0],
     holding: holdings.data?.items[0],
   };
+  const referenceUnitPrice = selection.holding
+    ? fundReferenceUnitPrice(
+        selection.holding.marketValue,
+        selection.holding.quantity,
+      )
+    : undefined;
+  const quantity = referenceUnitPrice
+    ? fundOrderQuantityFromAmount(purchaseAmount, referenceUnitPrice)
+    : undefined;
   const input: BuyOrderInput | undefined =
-    selection.account && selection.holding && quantityPattern.test(quantity)
+    selection.account && selection.holding && quantity
       ? {
           accountId: selection.account.accountId,
           instrumentId: selection.holding.instrumentId,
@@ -50,6 +63,7 @@ export function useOrderFlow(quantity: string) {
           side: 'BUY',
         }
       : undefined;
+
   const preview = useMutation({
     mutationFn: (value: BuyOrderInput) => api.previewBuyOrder(value),
     onSuccess: (value) => {
@@ -81,6 +95,8 @@ export function useOrderFlow(quantity: string) {
         ? false
         : (query.state.data?.statusRefreshRecommendedAfterMs ?? 2000),
   });
+  const currentQuote =
+    quote && input && quote.quantity === input.quantity ? quote : undefined;
 
   useEffect(() => {
     if (status.data?.status !== 'FILLED') return;
@@ -95,8 +111,8 @@ export function useOrderFlow(quantity: string) {
   }, [client, status.data?.status]);
 
   const confirm = async (gate: BiometricGate) => {
-    if (!quote || !input || !idempotencyKey.current) return;
-    if (Date.parse(quote.expiresAt) <= Date.now()) {
+    if (!currentQuote || !input || !idempotencyKey.current) return;
+    if (Date.parse(currentQuote.expiresAt) <= Date.now()) {
       setLocalError('QUOTE_EXPIRED');
       return;
     }
@@ -105,7 +121,7 @@ export function useOrderFlow(quantity: string) {
       setLocalError('BIOMETRIC_REQUIRED');
       return;
     }
-    submit.mutate({ ...input, quoteId: quote.quoteId });
+    submit.mutate({ ...input, quoteId: currentQuote.quoteId });
   };
 
   return {
@@ -115,9 +131,9 @@ export function useOrderFlow(quantity: string) {
     input,
     pending: accounts.isPending || holdings.isPending || history.isPending,
     preview,
-    quote,
+    quote: currentQuote,
     runPreview: () => {
-      if (!input || Number(quantity) <= 0) {
+      if (!input || validateFundPurchaseAmount(purchaseAmount)) {
         setLocalError('VALIDATION_FAILED');
         return;
       }

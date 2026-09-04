@@ -56,6 +56,45 @@ const marketStocks = marketFixture.stocks as readonly MarketStock[];
 const marketQuote = marketFixture.quote as MarketQuote;
 const marketBars = marketFixture.bars as MarketBars;
 
+function scaledDecimal(value: string, scale: number): bigint | undefined {
+  const match = /^(?:0|[1-9][0-9]*)(?:\.([0-9]+))?$/.exec(value);
+  if (!match) return undefined;
+  const fraction = match[1] ?? '';
+  if (fraction.length > scale) return undefined;
+  const whole = value.split('.')[0] ?? '0';
+  return (
+    BigInt(whole) * 10n ** BigInt(scale) +
+    BigInt(fraction.padEnd(scale, '0') || '0')
+  );
+}
+
+function fixedDecimal(value: bigint, scale: number): string {
+  const divisor = 10n ** BigInt(scale);
+  return `${value / divisor}.${(value % divisor)
+    .toString()
+    .padStart(scale, '0')}`;
+}
+
+function normalizedOrderValues(quantity: string, unitPrice: string) {
+  const scaledQuantity = scaledDecimal(quantity, 8);
+  const scaledPrice = scaledDecimal(unitPrice, 4);
+  if (
+    scaledQuantity === undefined ||
+    scaledQuantity <= 0n ||
+    scaledPrice === undefined ||
+    scaledPrice <= 0n
+  ) {
+    throw new Error('Contract mock received invalid order decimal values.');
+  }
+  return {
+    estimatedAmount: fixedDecimal(
+      (scaledQuantity * scaledPrice) / 100_000_000n,
+      4,
+    ),
+    quantity: fixedDecimal(scaledQuantity, 8),
+  };
+}
+
 function marketBarsForInterval(interval: MarketInterval): MarketBars {
   const anchor = new Date('2026-09-02T00:00:00.000Z');
   const bars = marketBars.bars.map((bar, index, values) => {
@@ -109,6 +148,7 @@ export class ContractMockPlatformApi implements PlatformApi {
   private readonly latencyMs: number;
   private readonly scenario: ContractMockHealthScenario;
   private developerScenario: DeveloperScenarioMode = 'NORMAL';
+  private latestOrder: Order | undefined;
   private riskProfile: UserRiskProfile = {
     riskLevel: 'BALANCED',
     investmentHorizonMonths: 120,
@@ -270,7 +310,7 @@ export class ContractMockPlatformApi implements PlatformApi {
 
   async getOrder(_orderId: string, options: PlatformRequestOptions = {}) {
     await waitForMockLatency(this.latencyMs, options.signal);
-    return structuredClone(orderFlow.order);
+    return structuredClone(this.latestOrder ?? orderFlow.order);
   }
 
   async getSimulation(
@@ -320,7 +360,10 @@ export class ContractMockPlatformApi implements PlatformApi {
     void cursor;
     void limit;
     await waitForMockLatency(this.latencyMs, options.signal);
-    return { items: [structuredClone(orderFlow.order)], nextCursor: null };
+    return {
+      items: [structuredClone(this.latestOrder ?? orderFlow.order)],
+      nextCursor: null,
+    };
   }
 
   async listTransactions(
@@ -331,20 +374,38 @@ export class ContractMockPlatformApi implements PlatformApi {
   }
 
   async prepareBuyOrder(
-    _input: CreateOrderInput,
+    input: CreateOrderInput,
     _idempotencyKey: string,
     options: PlatformRequestOptions = {},
   ) {
     await waitForMockLatency(this.latencyMs, options.signal);
-    return structuredClone(orderFlow.order);
+    const values = normalizedOrderValues(
+      input.quantity,
+      orderFlow.quote.unitPrice,
+    );
+    this.latestOrder = {
+      ...orderFlow.order,
+      estimatedAmount: values.estimatedAmount,
+      filledAmount: values.estimatedAmount,
+      quantity: values.quantity,
+    };
+    return structuredClone(this.latestOrder);
   }
 
   async previewBuyOrder(
-    _input: BuyOrderInput,
+    input: BuyOrderInput,
     options: PlatformRequestOptions = {},
   ) {
     await waitForMockLatency(this.latencyMs, options.signal);
-    return structuredClone(orderFlow.quote);
+    const values = normalizedOrderValues(
+      input.quantity,
+      orderFlow.quote.unitPrice,
+    );
+    return {
+      ...structuredClone(orderFlow.quote),
+      estimatedAmount: values.estimatedAmount,
+      quantity: values.quantity,
+    };
   }
 
   async resetDeveloperDataset(
@@ -352,6 +413,7 @@ export class ContractMockPlatformApi implements PlatformApi {
   ): Promise<DeveloperResetResponse> {
     await waitForMockLatency(this.latencyMs, options.signal);
     this.developerScenario = 'NORMAL';
+    this.latestOrder = undefined;
     return {
       datasetVersion: currentUser.datasetVersion,
       scenarioMode: 'NORMAL',
