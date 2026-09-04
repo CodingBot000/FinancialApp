@@ -407,7 +407,7 @@
 - [x] 안정형 20/50/30, 균형형 10/30/60, 성장형 5/15/80을 shared planning preset 하나로 통합
 - [x] 3문항 간이 진단에서 기존 monthly contribution/version을 유지한 `updateRiskProfile` 저장과 cache 즉시 갱신
 - [x] 현재 성향의 동일 preset을 목표 자산 미리보기 화면과 `createSimulation` input에 전달
-- [x] Calendar 예약 가능일·disabled일 표시, 날짜별 오전·오후·저녁 slot, 전화/화상·완료를 component local state로 처리하는 상담 demo 구현
+- [x] Calendar 예약 가능일·disabled일 표시, 날짜별 오전·오후·저녁 세로 시간 wheel, 전화/화상·완료를 component local state로 처리하는 상담 demo 구현
 - [x] 홈·종목·코치·주문 최초 진입에만 adaptive skeleton을 표시하고 내 정보 탭은 제외
 - [x] skeleton 방문 상태는 process-memory provider가 소유해 재방문에는 숨기고 앱 프로세스 재시작 시 초기화
 - [x] architecture 240 files, route 16 files, design-system 51 UI files와 mobile typecheck 통과

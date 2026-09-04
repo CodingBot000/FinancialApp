@@ -12,6 +12,7 @@ import {
   SectionHeader,
   SegmentedControl,
   colors,
+  radius,
   spacing,
   typography,
 } from '../../../shared/design-system';
@@ -26,7 +27,7 @@ import {
   type ConsultationSlot,
 } from '../model/consultation-availability';
 import { configureKoreanCalendarLocale } from '../model/consultation-calendar-locale';
-import { TimeSlotGrid } from './time-slot-grid';
+import { TimeSlotWheel } from './time-slot-wheel';
 
 configureKoreanCalendarLocale();
 
@@ -215,7 +216,7 @@ export function ConsultationScreen({
                 선택한 날짜의 가능한 시간을 골라 주세요.
               </AppText>
               {selectedDay.slots.some((slot) => slot.status === 'AVAILABLE') ? (
-                <TimeSlotGrid
+                <TimeSlotWheel
                   onSelect={(slot: ConsultationSlot) =>
                     setSelectedSlotId(slot.slotId)
                   }
@@ -292,7 +293,7 @@ export function ConsultationScreen({
 const styles = StyleSheet.create({
   calendarWrap: {
     borderColor: colors.border.subtle,
-    borderRadius: 16,
+    borderRadius: radius.input,
     borderWidth: 1,
     overflow: 'hidden',
   },

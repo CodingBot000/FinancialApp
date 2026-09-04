@@ -17,7 +17,7 @@
 | 코치 진단과 제안 배분 | `shared/planning/allocation-presets.ts`, 순수 `coach-diagnosis.ts`, 병렬 asset/profile query와 기존 cache key | model/component tests + Android API 36 시나리오 A | DONE (client-only example) |
 | 투자 성향 간이 진단 | 설정 파일의 3문항·점수 경계·기간 매핑, 기존 contribution/version을 보존하는 `updateRiskProfile` | `risk-check-screen.test.tsx` + Android API 36 시나리오 B | DONE local; 규제상 적합성 판단 제외 |
 | 코치 제안 simulation 연결 | 단일 planning preset을 화면과 `createSimulation` input에 함께 전달, profile 실패 시 균형형 fallback | draft/screen payload tests + Android API 36 시나리오 C | DONE |
-| 코치 상담 demo | `react-native-calendars` Calendar의 예약 가능일·disabled일, 날짜별 slot grid, 방식·완료를 component local state로 관리 | availability/slot/component tests + Android API 36 시나리오 D | DONE (screen-local demo) |
+| 코치 상담 demo | `react-native-calendars` Calendar의 예약 가능일·disabled일, 날짜별 세로 시간 wheel, 방식·완료를 component local state로 관리 | availability/wheel/component tests + Android API 36 시나리오 D | DONE (screen-local demo) |
 | 단일 기관 connection/sync | HTTP simulator adapter, raw/processing/normalization | 12-step smoke + PostgreSQL assertions | DONE |
 | 자산 조회와 차트 | summary/accounts/holdings/history/allocation | provider/mobile tests + actual smoke | DONE |
 | deterministic simulation | persisted p10/p50/p90 engine result | 13-point actual smoke + tests | DONE |

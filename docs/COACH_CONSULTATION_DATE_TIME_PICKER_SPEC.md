@@ -29,7 +29,7 @@
 
 1. 달력은 `react-native-calendars`의 기본 `Calendar` 컴포넌트를 사용한다.
 2. 날짜 계산과 날짜 문자열 포맷은 `date-fns`를 사용한다.
-3. 시간은 임의의 시각을 입력하는 native time picker가 아니라, 상담 예약에 맞는 가용 시간대 slot grid로 제공한다.
+3. 시간은 임의의 시각을 입력하는 native time picker가 아니라, 상담 예약에 맞는 가용 시간대 세로 wheel로 제공한다.
 4. 가용 날짜·시간 데이터는 서버가 아닌 feature model의 합성 availability config에서 생성한다.
 5. 상담 완료와 선택값은 기존과 같이 component local state로 처리한다. 현재 존재하는 local notification callback은 유지한다.
 6. 기존 `FullScreenPage`, `Card`, `Button`, `SegmentedControl`, `NoticeBanner`, `DemoDisclosure`와 현재 token을 유지한다.
@@ -237,18 +237,20 @@ font size와 weight는 `typography.caption`, `typography.body`, `typography.labe
 - week start는 월요일(`firstDay=1`)로 설정한다.
 - locale 등록은 component render마다 실행하지 않는다.
 
-### 3.4 시간대 slot grid
+### 3.4 세로 시간 wheel
 
-시간은 자유 입력이 아니라 상담 가능한 slot을 선택한다.
+시간은 자유 입력이 아니라 상담 가능한 slot을 세로로 스크롤해 선택한다.
 
-- 2열 grid
-- slot 최소 높이 52px
-- 선택 전: 흰색 배경, subtle border
-- 선택 후: `colors.surface.warm`, `colors.brand.primary` border
-- 마감: `colors.surface.subtle`, tertiary text, disabled
-- `pressed` 상태는 기존 Button과 같은 opacity/scale 감각을 사용한다.
+- React Native `ScrollView`에 `snapToInterval`을 적용한다.
+- 한 화면에 5개 row를 노출하고 가운데 row를 선택 영역으로 사용한다.
+- row 높이는 64px로 고정한다.
+- 가운데 선택 영역은 `colors.brand.primary` border로 강조한다.
+- 가운데 row는 `colors.surface.warm`, 인접 row는 축소·투명도 감소로 wheel 깊이를 표현한다.
+- 마감 row는 `colors.surface.subtle`, tertiary text와 `마감` label을 사용하고 disabled 처리한다.
+- `pressed` 상태는 기존 Button과 같은 opacity 감각을 사용한다.
 - 각 slot은 `accessibilityRole="radio"`와 `accessibilityState.selected/disabled`를 제공한다.
-- slot 전체 label은 `9월 8일 화요일 오후 7시 상담 가능`처럼 읽힌다.
+- slot 전체 label은 `10:00 상담 가능`, `15:00 마감`처럼 읽힌다.
+- 사용자가 마감 row에 멈추면 가장 가까운 예약 가능 row로 보정하고 그 slot을 선택한다.
 
 오전·오후·저녁 그룹을 분리해 시간 목록을 빠르게 훑을 수 있게 한다. 그룹에 slot이 없으면 해당 그룹은 렌더링하지 않는다.
 
@@ -259,7 +261,7 @@ font size와 weight는 `typography.caption`, `typography.body`, `typography.labe
 - `전화`
 - `화상`
 
-시간 선택이 완료된 뒤 방식 카드를 보여 준다. 방식은 default 선택하지 않고, 사용자의 명시 선택을 요구한다.
+시간 wheel 선택이 완료된 뒤 방식 카드를 보여 준다. 방식은 default 선택하지 않고, 사용자의 명시 선택을 요구한다.
 
 ### 3.6 예약 내용 요약
 
@@ -281,7 +283,7 @@ font size와 weight는 `typography.caption`, `typography.body`, `typography.labe
 consultation-screen.tsx
 → createDemoConsultationAvailability(referenceDate)
 → 날짜별 slot과 상태를 view model로 변환
-→ Calendar + TimeSlotGrid 렌더링
+→ Calendar + TimeSlotWheel 렌더링
 ```
 
 화면 JSX에 날짜·시간·마감 상태를 직접 작성하지 않는다. 기존 데이터 하드코딩 금지 원칙과 동일하게, 고정 제품 설정은 model/config에 두고 UI는 view model만 렌더링한다.
@@ -391,18 +393,23 @@ API 호출이 없으므로 loading 상태는 만들지 않는다. component moun
 - module render마다 중복 등록하지 않는 idempotent 함수 제공
 - locale 등록 자체는 component test에서 한 번만 확인
 
-#### `apps/mobile/src/features/coach/ui/time-slot-grid.tsx`
+#### `apps/mobile/src/features/coach/ui/time-slot-wheel.tsx`
 
-- 오전·오후·저녁 그룹별 2열 slot UI
+- 오전·오후·저녁 label과 시간 row를 포함한 세로 snap wheel
+- 외부 `FullScreenPage` ScrollView 안에 들어가므로 VirtualizedList인 `FlatList`는 사용하지 않는다.
+- slot 수가 작고 고정된 상담 시간 목록이므로 `ScrollView`가 nested list 경고 없이 적합하다.
+- 중앙 selection window와 인접 row fade/scale 표현
 - available, selected, full 상태 표현
+- 마감 row에서 가장 가까운 available row로 선택 보정
 - `accessibilityRole="radio"`
 - `accessibilityState` selected/disabled
 - 디자인 token만 사용
 - 상담 feature 밖으로 export하지 않음
 
-#### `apps/mobile/src/features/coach/ui/time-slot-grid.test.tsx`
+#### `apps/mobile/src/features/coach/ui/time-slot-wheel.test.tsx`
 
-- 그룹별 slot 표시
+- 세로 slot row와 시간대 label 표시
+- `snapToInterval`, 5-row wheel 높이와 test ID 확인
 - selected 상태 표시
 - full slot disabled와 `마감` 표시
 - press callback이 slot id를 전달하는지 검증
@@ -433,7 +440,7 @@ export function consultationSelectionLabel({
 #### `apps/mobile/src/features/coach/ui/consultation-screen.tsx`
 
 - 기존 `CONSULTATION_TIMES` SegmentedControl 제거
-- `Calendar`와 `TimeSlotGrid` 추가
+- `Calendar`와 `TimeSlotWheel` 추가
 - local state를 `selectedDate`, `selectedSlotId`, `method`, `completed`로 변경
 - 날짜 변경 시 selected slot reset
 - 날짜·시간·방식 선택 뒤 예약 요약 card 표시
@@ -460,7 +467,7 @@ export function consultationSelectionLabel({
 #### `apps/mobile/src/features/coach/index.ts`
 
 - `ConsultationScreen` public export 유지
-- availability model과 `TimeSlotGrid` 내부 구현은 export하지 않음
+- availability model과 `TimeSlotWheel` 내부 구현은 export하지 않음
 
 #### `apps/mobile/src/app/coach-consultation.tsx`
 
@@ -490,7 +497,7 @@ export function consultationSelectionLabel({
 - selected, disabled, pressed, accessibility test 추가
 - design-system check와 기존 component test 통과
 
-상담 시간 slot grid와 Calendar wrapper는 현재 화면에만 필요한 조합 UI이므로 `features/coach/ui`에 둔다.
+상담 시간 wheel과 Calendar wrapper는 현재 화면에만 필요한 조합 UI이므로 `features/coach/ui`에 둔다.
 
 ## 7. 접근성·안정성 기준
 
@@ -542,7 +549,7 @@ npm run contract:check
 1. 코치 탭에서 `코치 상담 요청` 진입
 2. Calendar에 예약 가능 dot와 disabled 날짜가 함께 보이는지 확인
 3. 예약 가능한 날짜 선택
-4. 오전·오후·저녁 slot grid 표시 확인
+4. 오전·오후·저녁 세로 시간 wheel 표시 확인
 5. 마감 slot disabled 확인
 6. 시간 선택 시 선택 스타일 확인
 7. 전화 또는 화상 선택
@@ -565,7 +572,8 @@ npm run contract:check
 - Calendar에서 예약 가능 날짜와 disabled 날짜가 시각적으로 구분된다.
 - 날짜 선택 후 해당 날짜의 slot만 표시된다.
 - 날짜를 바꾸면 이전 시간 선택이 해제된다.
-- slot은 오전·오후·저녁으로 그룹화되고 2열 카드로 읽기 쉽다.
+- slot은 오전·오후·저녁 정보를 유지하면서 세로 wheel로 읽기 쉽다.
+- 가운데 선택 영역이 고정되어 현재 선택 위치를 즉시 알 수 있다.
 - full slot은 비활성화되고 `마감` 텍스트를 제공한다.
 - 날짜·시간·방식 선택 전 상담 요청 CTA는 disabled다.
 - 완료 화면에 선택한 날짜·시간·방식이 정확히 표시된다.
@@ -595,7 +603,7 @@ npm run contract:check
 1. `date-fns`와 `react-native-calendars` exact dependency 추가
 2. `consultation-availability.ts`와 순수 model test 작성
 3. 한국어 Calendar locale과 `markedDates` helper 작성
-4. `TimeSlotGrid`와 상태·접근성 test 작성
+4. `TimeSlotWheel`와 상태·접근성 test 작성
 5. `ConsultationScreen`에 Calendar → slot → method → summary 흐름 연결
 6. 기존 consultation test를 새 test ID와 상태 전이 기준으로 수정
 7. architecture, route, design-system, typecheck와 mobile test 실행

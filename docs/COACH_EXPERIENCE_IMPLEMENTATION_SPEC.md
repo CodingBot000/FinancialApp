@@ -433,7 +433,7 @@ profile 조회 실패 시 다음 warning을 표시한다.
 ### 날짜·시간 선택
 
 - `react-native-calendars` Calendar에서 예약 가능 날짜를 선택한다.
-- 선택한 날짜의 오전·오후·저녁 slot grid에서 시간을 선택한다.
+- 선택한 날짜의 오전·오후·저녁 세로 시간 wheel에서 시간을 선택한다.
 - 예약 가능·선택·마감·비활성 상태를 구분한다.
 - 상세 카피, availability 규칙과 test ID는 별도 날짜·시간 선택 명세를 따른다.
 
