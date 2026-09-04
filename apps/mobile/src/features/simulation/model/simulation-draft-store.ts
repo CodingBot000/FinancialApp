@@ -11,9 +11,9 @@ export interface SimulationDraft {
 
 const initialDraft: SimulationDraft = {
   durationMonths: '120',
-  initialAssets: '185400000.0000',
-  monthlyContribution: '1500000.0000',
-  targetAmount: '450000000.0000',
+  initialAssets: '185400000',
+  monthlyContribution: '1500000',
+  targetAmount: '450000000',
 };
 
 interface SimulationDraftState extends SimulationDraft {
@@ -27,7 +27,7 @@ export const useSimulationDraftStore = create<SimulationDraftState>((set) => ({
   setField: (field, value) => set({ [field]: value }),
 }));
 
-const MONEY_INPUT = /^[0-9]+(?:\.[0-9]{1,4})?$/;
+const MONEY_INPUT = /^[0-9]+$/;
 
 export function validateSimulationDraft(draft: SimulationDraft) {
   const errors: Partial<Record<keyof SimulationDraft, string>> = {};
@@ -37,7 +37,7 @@ export function validateSimulationDraft(draft: SimulationDraft) {
     'targetAmount',
   ] as const) {
     if (!MONEY_INPUT.test(draft[field]))
-      errors[field] = '0 이상의 금액을 소수점 4자리 이내로 입력하세요.';
+      errors[field] = '금액을 원 단위 정수로 입력하세요.';
   }
   const months = Number(draft.durationMonths);
   if (!Number.isInteger(months) || months < 1 || months > 600)

@@ -65,6 +65,9 @@ describe('SettingsScreen', () => {
     const updateSpy = vi.spyOn(api, 'updateRiskProfile');
     const { manager, view } = await renderSettings(api);
     expect(await view.findByText('테스트 사용자 A')).toBeTruthy();
+    expect((await view.findByLabelText('월 납입액')).props.value).toBe(
+      '1500000',
+    );
     expect(view.getByText('내 정보')).toBeTruthy();
     expect(view.queryByText('개발자 도구')).toBeNull();
     expect(view.queryByText('시나리오 TIMEOUT')).toBeNull();
@@ -75,7 +78,7 @@ describe('SettingsScreen', () => {
     await view.findByRole('button', { name: '성장형' });
     fireEvent.press(view.getByRole('button', { name: '성장형' }));
     fireEvent.changeText(view.getByLabelText('투자 기간 개월'), '180');
-    fireEvent.changeText(view.getByLabelText('월 납입액'), '2000000.0000');
+    fireEvent.changeText(view.getByLabelText('월 납입액'), '2000000');
     fireEvent.press(view.getByRole('button', { name: '투자 성향 저장' }));
     await waitFor(() => expect(updateSpy).toHaveBeenCalledOnce());
     expect(

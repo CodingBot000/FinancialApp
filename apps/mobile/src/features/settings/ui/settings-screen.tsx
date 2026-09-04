@@ -25,6 +25,7 @@ import {
   radius,
   spacing,
 } from '../../../shared/design-system';
+import { formatWonInput } from '../../../shared/format/finance-format';
 import { useMoneyVisibilityStore } from '../../../shared/privacy';
 
 const RISK_LEVELS: readonly Readonly<{ label: string; value: RiskProfile }>[] =
@@ -54,7 +55,7 @@ export function SettingsScreen({ backIcon, onBack }: SettingsScreenProps = {}) {
   const [message, setMessage] = useState<string>();
   const [riskLevel, setRiskLevel] = useState<RiskProfile>('BALANCED');
   const [horizon, setHorizon] = useState('120');
-  const [contribution, setContribution] = useState('1500000.0000');
+  const [contribution, setContribution] = useState('1500000');
   const user = useQuery({
     queryFn: ({ signal }) => api.getCurrentUser({ signal }),
     queryKey: ['current-user'],
@@ -68,7 +69,7 @@ export function SettingsScreen({ backIcon, onBack }: SettingsScreenProps = {}) {
     if (riskProfile.data === undefined) return;
     setRiskLevel(riskProfile.data.riskLevel);
     setHorizon(String(riskProfile.data.investmentHorizonMonths));
-    setContribution(riskProfile.data.monthlyContribution);
+    setContribution(formatWonInput(riskProfile.data.monthlyContribution));
   }, [riskProfile.data]);
 
   const updateRiskProfile = useMutation({
@@ -79,14 +80,14 @@ export function SettingsScreen({ backIcon, onBack }: SettingsScreenProps = {}) {
         !Number.isInteger(months) ||
         months < 1 ||
         months > 600 ||
-        !/^\d+(?:\.\d{1,4})?$/.test(contribution) ||
+        !/^\d+$/.test(contribution) ||
         Number(contribution) > 10_000_000_000 ||
         riskProfile.data === undefined
       ) {
         throw new PlatformApiError({
           code: 'VALIDATION_FAILED',
           kind: 'contract',
-          message: '기간과 월 납입액을 확인해 주세요.',
+          message: '기간과 월 납입액을 원 단위로 확인해 주세요.',
           retryable: false,
         });
       }
@@ -192,7 +193,7 @@ export function SettingsScreen({ backIcon, onBack }: SettingsScreenProps = {}) {
             />
             <TextField
               accessibilityLabel="월 납입액"
-              keyboardType="decimal-pad"
+              keyboardType="number-pad"
               label="월 납입액"
               onChangeText={setContribution}
               value={contribution}

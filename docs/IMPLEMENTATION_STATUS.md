@@ -3,7 +3,7 @@
 - 현재 Milestone: 7B — 포트폴리오 생체인증 진입
 - 전체 상태: IN_PROGRESS
 - 마지막 갱신: 2026-09-03
-- 마지막 로컬 구현 ID: FE-0022
+- 마지막 로컬 구현 ID: FE-0026
 - 다음 작업 ID: FE-0019/FE-0020 물리 기기 검증 / FE-0017 iOS 회귀
 - 활성 계획: `PORTFOLIO_BIOMETRIC_ONBOARDING_PLAN.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
@@ -367,6 +367,15 @@
 - [x] root stack의 관리·알림 설정 full-screen route에는 공통 navigation chrome 미표시 유지
 - [x] Android Emulator에서 내정보 탭의 상·하단 바 노출 및 route 진입 회귀 확인
 - 상태: DONE local navigation chrome behavior
+
+## FE-0026 원화 입력 화면 정수 표시 — 진행 상태
+
+- [x] 목표 자산 미리보기의 시작 자산·월 납입액·목표 금액 기본값에서 `.0000` 제거
+- [x] 내 정보 관리의 월 납입액 API 값을 화면용 원 단위 정수로 변환
+- [x] 원화 입력 필드를 `number-pad`와 원 단위 정수 검증으로 통일
+- [x] 자산·시세·주문·시뮬레이션 결과의 기존 `MoneyValue`/`formatWon` 정수 표시 유지
+- [x] 주식 수량의 소수점 정밀도와 API·DB canonical decimal 표현은 유지
+- 상태: DONE local KRW display/input formatting
 
 ## FE-0022 알림 설정 full-screen route — 진행 상태
 

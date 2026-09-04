@@ -33,9 +33,9 @@ describe('simulation draft', () => {
       }),
     ).toEqual({
       durationMonths: '기간은 1~600개월의 정수여야 합니다.',
-      initialAssets: '0 이상의 금액을 소수점 4자리 이내로 입력하세요.',
-      monthlyContribution: '0 이상의 금액을 소수점 4자리 이내로 입력하세요.',
-      targetAmount: '0 이상의 금액을 소수점 4자리 이내로 입력하세요.',
+      initialAssets: '금액을 원 단위 정수로 입력하세요.',
+      monthlyContribution: '금액을 원 단위 정수로 입력하세요.',
+      targetAmount: '금액을 원 단위 정수로 입력하세요.',
     });
   });
 });

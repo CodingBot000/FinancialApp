@@ -1124,6 +1124,25 @@
 - Android Emulator에서 내정보 탭 상·하단 chrome 및 overview route 확인
 - contract/API/DB 변경 없음
 
+## FE-0026 — 원화 입력 화면 정수 표시
+
+- 날짜: 2026-09-04
+- Milestone: 7B 포트폴리오 고객 UI
+- 상태: COMPLETED
+- contract revision: `platform-v1` unchanged
+
+### 완료
+
+- 목표 자산 미리보기와 내 정보 관리의 원화 입력값에서 display-only `.0000` 제거
+- API·DB fixed-decimal 표현은 유지하고 화면 입력은 원 단위 정수로 제한
+- 자산·시세·주문·결과 화면의 기존 정수 원화 formatter를 전체 경로로 재확인
+
+### 검증
+
+- mobile 51 files/149 tests, typecheck/lint/architecture/route/design check 통과
+- 원화 formatter 및 화면 회귀 테스트 통과
+- contract/API/DB 변경 없음
+
 ## FE-0023 — 재활용 가능한 뒤로가기 포함 full-screen template
 
 - 날짜: 2026-09-03

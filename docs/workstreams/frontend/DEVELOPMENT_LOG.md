@@ -1046,3 +1046,25 @@
   알림 설정 switch와 route 복귀 통과
 - 알림 설정 template migration 후 source/implementation full/focused design QA 재통과
 - contract/API/DB 변경 없음
+
+## FE-0026 — 원화 입력 화면 정수 표시
+
+- 날짜: 2026-09-04
+- Milestone: 7B 포트폴리오 고객 UI
+- 상태: COMPLETED
+- contract revision: `platform-v1` unchanged
+
+### 구현
+
+- 목표 자산 미리보기의 금액 기본값을 원 단위 문자열로 정리하고 금액 입력 키보드를
+  `number-pad`로 변경했다.
+- 내 정보 관리에서 API의 fixed-scale `monthlyContribution`를 화면용 원 단위 정수로
+  변환해 `.0000` 노출을 제거했다.
+- 원화 입력 validation도 소수점 없는 정수 기준으로 변경했으며 API·DB의 canonical
+  fixed-decimal 계약과 주식 수량 정밀도는 변경하지 않았다.
+
+### 검증
+
+- mobile 51 files/149 tests, typecheck/lint/architecture/route/design check 통과
+- 원화 formatter, simulation draft, settings component 회귀 테스트 통과
+- contract/API/DB 변경 없음

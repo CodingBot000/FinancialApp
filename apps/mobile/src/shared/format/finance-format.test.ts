@@ -6,6 +6,7 @@ import {
   formatDateTime,
   formatQuantity,
   formatWon,
+  formatWonInput,
   isMaskedAccountIdentifier,
 } from './finance-format';
 
@@ -17,6 +18,12 @@ describe('wealth contract formatters', () => {
     expect(formatCompactWon('185400000.0000', true)).toBe('••••만원');
     expect(formatQuantity('1360.00000000')).toBe('1,360');
     expect(formatQuantity('0.12345678')).toBe('0.12345678');
+  });
+
+  it('formats KRW input values without decimal padding', () => {
+    expect(formatWonInput('185400000.0000')).toBe('185400000');
+    expect(formatWonInput('1500000.5')).toBe('1500001');
+    expect(formatWonInput('')).toBe('');
   });
 
   it('fails closed for invalid decimals and unmasked identifiers', () => {

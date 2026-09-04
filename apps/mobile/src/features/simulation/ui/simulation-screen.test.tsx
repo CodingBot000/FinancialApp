@@ -34,6 +34,10 @@ describe('SimulationScreen', () => {
     const get = vi.spyOn(api, 'getSimulation');
     const view = await renderScreen(api);
 
+    expect(view.getByLabelText('시작 자산').props.value).toBe('185400000');
+    expect(view.getByLabelText('월 납입액').props.value).toBe('1500000');
+    expect(view.getByLabelText('목표 금액').props.value).toBe('450000000');
+
     fireEvent.press(view.getByRole('button', { name: '미리보기 만들기' }));
     expect(await view.findByText('예상 결과')).toBeTruthy();
     expect(view.getByText('목표 달성 가능성 71%')).toBeTruthy();

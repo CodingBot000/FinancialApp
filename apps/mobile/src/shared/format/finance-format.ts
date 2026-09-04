@@ -16,6 +16,12 @@ export function formatWon(value: string, hidden = false) {
     : `${Math.round(parsed).toLocaleString('ko-KR')}원`;
 }
 
+/** Formats a valid KRW input value without display-only decimal padding. */
+export function formatWonInput(value: string) {
+  const parsed = decimal(value);
+  return parsed === undefined ? value : String(Math.round(parsed));
+}
+
 export function formatCompactWon(value: string, hidden = false) {
   if (hidden) return '••••만원';
   const parsed = decimal(value);

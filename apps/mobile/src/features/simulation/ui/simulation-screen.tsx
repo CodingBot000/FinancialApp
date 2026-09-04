@@ -67,7 +67,7 @@ export function SimulationScreen() {
           <View key={field} style={{ marginTop: 12 }}>
             <TextField
               {...(errors[field] ? { errorText: errors[field] } : {})}
-              keyboardType="decimal-pad"
+              keyboardType="number-pad"
               label={label}
               onChangeText={(value) => draft.setField(field, value)}
               secureTextEntry={amountsHidden && field !== 'durationMonths'}
