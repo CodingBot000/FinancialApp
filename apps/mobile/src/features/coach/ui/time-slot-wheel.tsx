@@ -87,13 +87,19 @@ function WheelRow({
           {slot.label}
         </AppText>
       </View>
-      {selected ? (
-        <Ionicons color={colors.text.brand} name="checkmark-circle" size={24} />
-      ) : full ? (
-        <AppText tone="tertiary" variant="caption">
-          마감
-        </AppText>
-      ) : null}
+      <View style={styles.trailingSlot}>
+        {selected ? (
+          <Ionicons
+            color={colors.text.brand}
+            name="checkmark-circle"
+            size={24}
+          />
+        ) : full ? (
+          <AppText tone="tertiary" variant="caption">
+            마감
+          </AppText>
+        ) : null}
+      </View>
     </Pressable>
   );
 }
@@ -208,6 +214,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface.warm,
     borderColor: colors.brand.primary,
     borderWidth: 1,
+  },
+  trailingSlot: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40,
   },
   selectionWindow: {
     borderColor: colors.brand.primary,

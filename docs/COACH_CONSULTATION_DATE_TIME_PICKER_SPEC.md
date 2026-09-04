@@ -246,6 +246,7 @@ font size와 weight는 `typography.caption`, `typography.body`, `typography.labe
 - row 높이는 64px로 고정한다.
 - 가운데 선택 영역은 `colors.brand.primary` border로 강조한다.
 - 가운데 row는 `colors.surface.warm`, 인접 row는 축소·투명도 감소로 wheel 깊이를 표현한다.
+- 선택·미선택·마감 row 모두 동일한 우측 trailing slot을 예약해 시간 텍스트의 중앙 정렬을 유지한다.
 - 마감 row는 `colors.surface.subtle`, tertiary text와 `마감` label을 사용하고 disabled 처리한다.
 - `pressed` 상태는 기존 Button과 같은 opacity 감각을 사용한다.
 - 각 slot은 `accessibilityRole="radio"`와 `accessibilityState.selected/disabled`를 제공한다.
@@ -399,6 +400,7 @@ API 호출이 없으므로 loading 상태는 만들지 않는다. component moun
 - 외부 `FullScreenPage` ScrollView 안에 들어가므로 VirtualizedList인 `FlatList`는 사용하지 않는다.
 - slot 수가 작고 고정된 상담 시간 목록이므로 `ScrollView`가 nested list 경고 없이 적합하다.
 - 중앙 selection window와 인접 row fade/scale 표현
+- trailing slot 고정 폭으로 선택 아이콘 유무와 관계없이 시간 중앙 정렬 유지
 - available, selected, full 상태 표현
 - 마감 row에서 가장 가까운 available row로 선택 보정
 - `accessibilityRole="radio"`
