@@ -57,16 +57,34 @@ describe('MarketScreen', () => {
 
     await waitFor(() => expect(view.queryByText('검색 결과')).toBeNull());
     expect(view.getByText('005930 · 코스피 · 전자부품 제조업')).toBeTruthy();
-    expect(await view.findAllByText('74,200원')).toHaveLength(2);
+    expect(await view.findAllByText('74,200원')).toHaveLength(1);
+    expect(view.getByText('종가 74,200원')).toBeTruthy();
     expect(view.getByText('전일대비')).toBeTruthy();
     expect(view.getByText('등락률')).toBeTruthy();
     expect(view.getByText('거래량')).toBeTruthy();
+    expect(view.queryByText(/일봉 \d+개/)).toBeNull();
+    expect(view.queryByText('최근 봉 정보')).toBeNull();
     expect(
       await view.findByLabelText(/삼성전자 일봉 가격 흐름 차트/),
     ).toBeTruthy();
     fireEvent.press(view.getByRole('tab', { name: '주봉' }));
-    await waitFor(() => expect(view.getByText('주봉 6개')).toBeTruthy());
+    expect(
+      await view.findByLabelText(/삼성전자 주봉 가격 흐름 차트/),
+    ).toBeTruthy();
+    expect(view.queryByText(/주봉 \d+개/)).toBeNull();
     expect(view.queryByText('가격 흐름을 확인하지 못했습니다.')).toBeNull();
+
+    fireEvent.changeText(
+      view.getByLabelText('종목명 또는 종목코드 검색'),
+      '하이닉스',
+    );
+    fireEvent.press(
+      await view.findByRole('button', { name: /SK하이닉스/ }),
+    );
+    expect(
+      await view.findByText('000660 · 코스피 · 반도체 제조업'),
+    ).toBeTruthy();
+    expect(view.queryByText('삼성전자')).toBeNull();
   });
 
   it('runs the search from the separate search button', async () => {

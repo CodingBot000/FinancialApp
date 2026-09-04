@@ -209,8 +209,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: spacing[2],
   },
-  chart: { height: 250, marginTop: spacing[3] },
-  container: { marginTop: spacing[3] },
+  chart: { height: 240 },
+  container: { marginTop: spacing[1] },
   ohlcList: { gap: spacing[1] },
   tooltip: {
     backgroundColor: colors.surface.subtle,

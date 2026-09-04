@@ -18,10 +18,9 @@ import {
   StatusChip,
   spacing,
 } from '../../../shared/design-system';
-import { displayLabel } from '../../../shared/format/display-labels';
 import { marketNameLabel } from '../model/market-display';
 import { useMarketSearch, useMarketStockData } from '../hooks/use-market-data';
-import { MarketBarSummary, MarketQuoteSummary } from './market-quote-summary';
+import { MarketQuoteSummary } from './market-quote-summary';
 import { StockPriceChart } from './stock-price-chart';
 
 const INTERVALS: readonly Readonly<{ value: MarketInterval; label: string }>[] =
@@ -41,6 +40,18 @@ export function MarketScreen() {
   const data = useMarketStockData(selected, interval);
   const quote = data.quote.data;
   const bars = data.bars.data;
+  const clearSelection = () => {
+    setSelected(undefined);
+    setInterval('DAILY');
+  };
+  const updateQuery = (value: string) => {
+    setQuery(value);
+    clearSelection();
+  };
+  const runSearch = () => {
+    clearSelection();
+    searchNow();
+  };
 
   return (
     <Screen>
@@ -49,9 +60,9 @@ export function MarketScreen() {
         title="종목"
       />
       <SearchField
-        onChangeText={setQuery}
-        onClear={() => setQuery('')}
-        onSearch={searchNow}
+        onChangeText={updateQuery}
+        onClear={() => updateQuery('')}
+        onSearch={runSearch}
         value={query}
       />
       {search.isFetching ? (
@@ -103,14 +114,7 @@ export function MarketScreen() {
             {quote ? <MarketQuoteSummary quote={quote} /> : null}
           </Card>
           <Card>
-            <SectionHeader
-              action={
-                <AppText tone="secondary" variant="caption">
-                  {displayLabel(interval)} {bars?.bars.length ?? 0}개
-                </AppText>
-              }
-              title="가격 흐름"
-            />
+            <SectionHeader title="가격 흐름" />
             <SegmentedControl
               onChange={setInterval}
               options={INTERVALS}
@@ -123,19 +127,11 @@ export function MarketScreen() {
               <ErrorState title="가격 흐름을 확인하지 못했습니다." />
             ) : null}
             {bars ? (
-              <>
-                <StockPriceChart
-                  bars={bars.bars}
-                  interval={interval}
-                  stockName={selected.name}
-                />
-                {bars.bars.at(-1) ? (
-                  <MarketBarSummary
-                    bar={bars.bars.at(-1)!}
-                    previousBar={bars.bars.at(-2)}
-                  />
-                ) : null}
-              </>
+              <StockPriceChart
+                bars={bars.bars}
+                interval={interval}
+                stockName={selected.name}
+              />
             ) : null}
             {bars?.freshness === 'STALE' ? (
               <NoticeBanner
