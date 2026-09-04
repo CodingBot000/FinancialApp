@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import type { ComponentProps } from 'react';
+import { useCallback, useMemo, useState, type ComponentProps } from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/tabs';
 import {
@@ -134,9 +134,22 @@ function AppBottomBar({
 }
 
 export default function TabsLayout() {
+  const [scrollResetRevision, setScrollResetRevision] = useState(0);
+  const resetTabScroll = useCallback(() => {
+    setScrollResetRevision((current) => current + 1);
+  }, []);
+  const screenListeners = useMemo(
+    () => ({ tabPress: resetTabScroll }),
+    [resetTabScroll],
+  );
+
   return (
-    <ScreenSafeAreaProvider includeTopInset={false}>
+    <ScreenSafeAreaProvider
+      includeTopInset={false}
+      scrollResetRevision={scrollResetRevision}
+    >
       <Tabs
+        screenListeners={screenListeners}
         tabBar={AppBottomBar}
         screenOptions={{
           header: AppTopBar,

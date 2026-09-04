@@ -5,7 +5,8 @@
 
 | 요구사항 | 구현 증거 | 자동/실제 검증 | 상태 |
 |---|---|---|---|
-| Expo React Native 화면과 상태 분리 | Dashboard, Coach, Simulation, Order, Settings; Query/Zustand/local state 분리 | mobile architecture 222 files + 187 tests | DONE |
+| Expo React Native 화면과 상태 분리 | Dashboard, Coach, Simulation, Order, Settings; Query/Zustand/local state 분리 | mobile architecture 223 files + 189 tests | DONE |
+| 탭 전환 시 화면 상단 복귀 | tab press revision과 공통 `Screen` ScrollView reset; 화면 local/query 상태는 remount하지 않음 | `screen.test.tsx` + Android API 36 탭 전환·재선택 smoke | DONE |
 | OIDC Authorization Code + PKCE | auth/session adapter, Keycloak realm | actual PKCE/JWT/refresh/logout smoke | DONE (local/Android emulator) |
 | App Lock와 주문 전 biometric | LocalAuthentication adapter와 두 gate | component tests + Android emulator | DONE; physical/iOS gap |
 | 포트폴리오 최초/재실행 biometric | Device-aware gate, SecureStore setup marker, memory-only unlock, mock Home | 46 mobile suites + Android API 36 clean/relaunch smoke | DONE local; physical/iOS gap |
