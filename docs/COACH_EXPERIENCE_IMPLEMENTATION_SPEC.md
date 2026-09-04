@@ -410,6 +410,8 @@ profile 조회 실패 시 다음 warning을 표시한다.
 
 ## 4.4 코치 상담 요청
 
+날짜·시간 선택 UX의 상세 구현은 별도 명세인 [`COACH_CONSULTATION_DATE_TIME_PICKER_SPEC.md`](./COACH_CONSULTATION_DATE_TIME_PICKER_SPEC.md)를 따른다. 아래는 코치 상담 feature의 공통 목적과 완료 경계만 남긴다.
+
 ### 목적
 
 실제 예약 backend 없이 코치 중심 서비스의 다음 행동을 완성한다.
@@ -428,32 +430,34 @@ profile 조회 실패 시 다음 warning을 표시한다.
 - 섹션 제목: `상담 방식`
 - 선택지: `전화`, `화상`
 
-### 희망 시간
+### 날짜·시간 선택
 
-- 섹션 제목: `희망 시간`
-- 선택지:
-  - `오늘 19:00`
-  - `내일 13:00`
-  - `내일 19:00`
+- `react-native-calendars` Calendar에서 예약 가능 날짜를 선택한다.
+- 날짜를 선택하면 첫 번째 예약 가능 시간이 기본 선택되고 텍스트형 trigger로 표시한다.
+- trigger를 눌렀을 때만 반투명 scrim과 세로 시간 wheel Modal을 표시한다.
+- Modal의 `선택 완료`로 시간 변경을 확정하고 닫기·scrim·Android back은 변경 없이 닫는다.
+- 예약 가능·선택·마감·비활성 상태를 구분한다.
+- 상세 카피, availability 규칙과 test ID는 별도 날짜·시간 선택 명세를 따른다.
 
 ### 요청 전 상태
 
 - CTA: `상담 요청하기`
-- 상담 방식과 희망 시간을 모두 선택하기 전 disabled
+- 상담 날짜와 방식을 선택하기 전 disabled. 시간은 날짜 선택 시 첫 available slot이 기본값으로 생긴다.
 - 네트워크 요청과 loading 상태 없음
 
 ### 완료 상태
 
 - 제목: `상담 요청이 완료되었어요.`
-- 설명: `{상담 방식} 상담 · {희망 시간}`
+- 설명: `{상담 날짜} · {상담 시간} · {상담 방식} 상담`
 - 보조 문구: `포트폴리오 시연을 위해 이 화면에서만 처리된 요청입니다.`
 - CTA: `코치 홈으로`
 - CTA 동작: 이전 코치 화면으로 복귀
 
 ### 상태 소유권
 
-- 방식, 시간과 완료 여부는 component `useState`로만 관리한다.
+- 날짜, 시간, 방식과 완료 여부는 component `useState`로만 관리한다.
 - Zustand, SecureStore, Query cache와 서버에 저장하지 않는다.
+- 현재 연결된 local notification callback은 동적 상담 요약을 전달한다.
 
 ## 5. CTA와 이동 규칙
 
@@ -758,9 +762,9 @@ contract:check
 #### 시나리오 D — 상담 demo
 
 1. 코치 홈에서 `코치 상담 요청` 선택
-2. 방식과 시간 미선택 상태에서 CTA disabled 확인
-3. 전화와 희망 시간 선택
-4. 완료 상태와 포트폴리오 고지 확인
+2. 날짜 선택 직후 기본 시간이 보이고 시간 Modal이 닫힌 상태인지 확인
+3. 시간 trigger를 눌러 scrim·wheel Modal을 연 뒤 전화와 희망 시간 선택
+4. `선택 완료`로 확정하고 완료 상태와 포트폴리오 고지 확인
 5. 코치 홈 복귀
 
 ### 8.3 완료 조건

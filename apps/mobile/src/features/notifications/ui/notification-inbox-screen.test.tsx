@@ -32,6 +32,11 @@ describe('NotificationInboxScreen', () => {
     notifications.getPermissionsAsync.mockResolvedValue({ granted: true });
     const view = await render(<NotificationInboxScreen onBack={vi.fn()} />);
 
+    expect(view.getByLabelText('알림 목록')).toBeTruthy();
+    expect(view.getByText('최근 알림')).toBeTruthy();
+    expect(view.getByText('서비스 이용 안내')).toBeTruthy();
+    expect(view.getByText('자산 업데이트 완료')).toBeTruthy();
+    expect(view.getByText('주문 체결 안내')).toBeTruthy();
     await waitFor(() => {
       expect(
         view.queryByText(
@@ -50,6 +55,7 @@ describe('NotificationInboxScreen', () => {
     expect(
       view.getByText('앱 푸시 알림을 켜고 다양한 혜택과 정보를 놓치지 마세요!'),
     ).toBeTruthy();
+    expect(view.getByText('새로운 플랜을 준비했어요')).toBeTruthy();
     fireEvent.press(button);
 
     await waitFor(() =>

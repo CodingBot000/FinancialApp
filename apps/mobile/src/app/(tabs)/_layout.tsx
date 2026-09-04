@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import type { ComponentProps } from 'react';
+import { useCallback, useMemo, useState, type ComponentProps } from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/tabs';
 import {
@@ -14,6 +14,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import appIcon from '../../../assets/icon-wm.png';
 
 import {
+  FirstVisitTabSkeletonGate,
+  isFirstVisitSkeletonTab,
+} from '../../features/launch';
+import {
   AppText,
   BottomBar,
   colors,
@@ -23,6 +27,19 @@ import {
 } from '../../shared/design-system';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
+type TabScreenLayoutProps = Parameters<
+  NonNullable<ComponentProps<typeof Tabs>['screenLayout']>
+>[0];
+
+function TabScreenLayout({ children, route }: TabScreenLayoutProps) {
+  return isFirstVisitSkeletonTab(route.name) ? (
+    <FirstVisitTabSkeletonGate tabName={route.name}>
+      {children}
+    </FirstVisitTabSkeletonGate>
+  ) : (
+    children
+  );
+}
 
 function createTabIcon(active: IoniconName, inactive: IoniconName) {
   return ({
@@ -40,8 +57,8 @@ function createTabIcon(active: IoniconName, inactive: IoniconName) {
 
 const homeIcon = createTabIcon('home', 'home-outline');
 const marketIcon = createTabIcon('stats-chart', 'stats-chart-outline');
+const coachIcon = createTabIcon('compass', 'compass-outline');
 const orderIcon = createTabIcon('receipt', 'receipt-outline');
-const planIcon = createTabIcon('analytics', 'analytics-outline');
 const profileIcon = createTabIcon('person-circle', 'person-circle-outline');
 
 function AppTopBar() {
@@ -58,16 +75,23 @@ function AppTopBar() {
             style={styles.wordmark}
           />
         </View>
-        <IconButton
-          accessibilityLabel="알림함 열기"
-          onPress={() => router.push('/notifications' as never)}
-        >
-          <Ionicons
-            color={colors.text.primary}
-            name="notifications-outline"
-            size={34}
+        <View style={styles.notificationButton}>
+          <IconButton
+            accessibilityLabel="알림함 열기"
+            onPress={() => router.push('/notifications' as never)}
+          >
+            <Ionicons
+              color={colors.text.primary}
+              name="notifications-outline"
+              size={34}
+            />
+          </IconButton>
+          <View
+            accessibilityElementsHidden
+            pointerEvents="none"
+            style={styles.notificationBadge}
           />
-        </IconButton>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -134,13 +158,28 @@ function AppBottomBar({
 }
 
 export default function TabsLayout() {
+  const [scrollResetRevision, setScrollResetRevision] = useState(0);
+  const resetTabScroll = useCallback(() => {
+    setScrollResetRevision((current) => current + 1);
+  }, []);
+  const screenListeners = useMemo(
+    () => ({ tabPress: resetTabScroll }),
+    [resetTabScroll],
+  );
+
   return (
-    <ScreenSafeAreaProvider includeTopInset={false}>
+    <ScreenSafeAreaProvider
+      includeTopInset={false}
+      scrollResetRevision={scrollResetRevision}
+    >
       <Tabs
+        screenLayout={TabScreenLayout}
+        screenListeners={screenListeners}
         tabBar={AppBottomBar}
         screenOptions={{
           header: AppTopBar,
           headerShown: true,
+          lazy: true,
           tabBarActiveTintColor: colors.tab.active,
           tabBarInactiveTintColor: colors.tab.inactive,
         }}
@@ -154,12 +193,12 @@ export default function TabsLayout() {
           options={{ tabBarIcon: marketIcon, title: '종목' }}
         />
         <Tabs.Screen
-          name="order"
-          options={{ tabBarIcon: orderIcon, title: '주문' }}
+          name="coach"
+          options={{ tabBarIcon: coachIcon, title: '코치' }}
         />
         <Tabs.Screen
-          name="plan"
-          options={{ tabBarIcon: planIcon, title: '플랜' }}
+          name="order"
+          options={{ tabBarIcon: orderIcon, title: '주문' }}
         />
         <Tabs.Screen
           name="me"
@@ -190,5 +229,17 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   tabLabel: { textAlign: 'center' },
+  notificationBadge: {
+    backgroundColor: colors.text.danger,
+    borderColor: colors.background.screen,
+    borderRadius: 6,
+    borderWidth: 2,
+    height: 12,
+    position: 'absolute',
+    right: 1,
+    top: 1,
+    width: 12,
+  },
+  notificationButton: { position: 'relative' },
   wordmark: { height: 64, width: 64 },
 });

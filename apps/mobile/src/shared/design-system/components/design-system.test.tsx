@@ -112,9 +112,7 @@ describe('design system primitives', () => {
     expect(onChange).toHaveBeenCalledWith('3');
     expect(view.getByText('체결')).toBeTruthy();
     expect(
-      view.getByText(
-        '데이터는 실제 증권사 데이터 기반입니다.',
-      ),
+      view.getByText('데이터는 실제 증권사 데이터 기반입니다.'),
     ).toBeTruthy();
   });
 });

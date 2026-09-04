@@ -1,17 +1,23 @@
 # Requirements Traceability
 
-- 상태: DEV-0014 local hardening 최종 대응표
-- 기준: `MVP_SCOPE.md`, `SECURITY_MODEL.md`, canonical OpenAPI
+- 상태: FE-0027 WM 코치 경험 포함 local 대응표
+- 기준: `MVP_SCOPE.md`, `SECURITY_MODEL.md`, `COACH_EXPERIENCE_IMPLEMENTATION_SPEC.md`, canonical OpenAPI
 
 | 요구사항 | 구현 증거 | 자동/실제 검증 | 상태 |
 |---|---|---|---|
-| Expo React Native 화면과 상태 분리 | Dashboard, Accounts, Simulation, Order, Settings; Query/Zustand 분리 | mobile architecture + 97 tests | DONE |
+| Expo React Native 화면과 상태 분리 | Dashboard, Coach, Simulation, Order, Settings; Query/Zustand/local state 분리 | mobile architecture 230 files + 195 tests | DONE |
+| 탭 전환 시 화면 상단 복귀 | tab press revision과 공통 `Screen` ScrollView reset; 화면 local/query 상태는 remount하지 않음 | `screen.test.tsx` + Android API 36 탭 전환·재선택 smoke | DONE |
+| 탭 최초 진입 skeleton | process-memory 방문 session, adaptive design-system skeleton과 탭 `screenLayout` gate; `me` 제외 | skeleton/gate tests + Android API 36 최초·재방문·프로세스 재시작 smoke | DONE |
 | OIDC Authorization Code + PKCE | auth/session adapter, Keycloak realm | actual PKCE/JWT/refresh/logout smoke | DONE (local/Android emulator) |
 | App Lock와 주문 전 biometric | LocalAuthentication adapter와 두 gate | component tests + Android emulator | DONE; physical/iOS gap |
 | 포트폴리오 최초/재실행 biometric | Device-aware gate, SecureStore setup marker, memory-only unlock, mock Home | 46 mobile suites + Android API 36 clean/relaunch smoke | DONE local; physical/iOS gap |
 | launch 선택 권한 요청 | notification/photo/camera native adapters, handled marker, sequential coordinator | 48 mobile suites + Android API 36 deny/relaunch smoke | DONE local; physical/iOS gap |
 | 내 정보 overview와 관리 route | common app chrome overview, notification settings route, local switches, management stack route | 50 mobile suites + Android screenshot/navigation smoke + design QA | DONE local |
 | `/me`와 risk profile | owner-scoped GET/PUT, optimistic version | provider/consumer + actual version smoke | DONE |
+| 코치 진단과 제안 배분 | `shared/planning/allocation-presets.ts`, 순수 `coach-diagnosis.ts`, 병렬 asset/profile query와 기존 cache key | model/component tests + Android API 36 시나리오 A | DONE (client-only example) |
+| 투자 성향 간이 진단 | 설정 파일의 3문항·점수 경계·기간 매핑, 기존 contribution/version을 보존하는 `updateRiskProfile` | `risk-check-screen.test.tsx` + Android API 36 시나리오 B | DONE local; 규제상 적합성 판단 제외 |
+| 코치 제안 simulation 연결 | 단일 planning preset을 화면과 `createSimulation` input에 함께 전달, profile 실패 시 균형형 fallback | draft/screen payload tests + Android API 36 시나리오 C | DONE |
+| 코치 상담 demo | `react-native-calendars` Calendar의 예약 가능일·disabled일, 기본 시간 trigger와 반투명 Modal 세로 시간 wheel, 방식·완료를 component local state로 관리 | availability/wheel/picker/component tests + Android API 36 시나리오 D | DONE (screen-local demo) |
 | 단일 기관 connection/sync | HTTP simulator adapter, raw/processing/normalization | 12-step smoke + PostgreSQL assertions | DONE |
 | 자산 조회와 차트 | summary/accounts/holdings/history/allocation | provider/mobile tests + actual smoke | DONE |
 | deterministic simulation | persisted p10/p50/p90 engine result | 13-point actual smoke + tests | DONE |
@@ -30,6 +36,6 @@
 | fresh-clone acceptance | `make acceptance-test` | clean volume, install, verify, build, migration, seed, smoke, audit | DONE |
 | 실제 AWS KMS | adapter port/fake client only | actual AWS 미사용 | CURRENT_RUN_EXCLUDED |
 | 원격 DB/HTTPS/EAS | 문서화된 향후 stage 11 | 원격 작업 미실행 | CURRENT_RUN_EXCLUDED |
-| 투자 추천/실제 거래 | 명시적 비기능 범위 | recommendation output 없음 | EXCLUDED |
+| 규제상 투자 추천·실제 상품 추천·실제 상담 | client-only 예시 코치 진단과 화면 로컬 상담 외에는 명시적 비기능 범위 | 신규 backend/OpenAPI/DB 없음, 고지 문구와 Android 화면 확인 | EXCLUDED |
 
 상세 테스트 명령과 계층은 `TEST_STRATEGY.md`, 실제 query plan은 `PERFORMANCE_EVIDENCE.md`, 남은 위험은 `ISSUE_REGISTER.md`와 `LIMITATIONS.md`를 따른다.

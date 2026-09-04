@@ -97,12 +97,12 @@ describe('KisMarketDataAdapter', () => {
       );
     vi.stubGlobal('fetch', fetch);
 
-    await expect(new KisMarketDataAdapter().quote(stock)).resolves.toMatchObject(
-      {
-        changePrice: '-80000.0000',
-        changeRate: '-4.7300',
-      },
-    );
+    await expect(
+      new KisMarketDataAdapter().quote(stock),
+    ).resolves.toMatchObject({
+      changePrice: '-80000.0000',
+      changeRate: '-4.7300',
+    });
   });
 
   it('maps daily bars and rejects malformed provider rows', async () => {

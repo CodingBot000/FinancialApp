@@ -65,7 +65,7 @@ describe('portfolio login composition', () => {
   it('reads the Expo public API URL from the bundled environment', () => {
     vi.stubEnv('EXPO_PUBLIC_APP_ENV', 'local');
     vi.stubEnv('EXPO_PUBLIC_LOGIN_MODE', 'test');
-    vi.stubEnv('EXPO_PUBLIC_LOCAL_TEST_ACCESS_TOKEN', 'local-test-token');
+    vi.stubEnv('EXPO_PUBLIC_LOCAL_TEST_ACCESS_TOKEN', '<local-test-token>');
     vi.stubEnv('EXPO_PUBLIC_PLATFORM_API_MODE', 'http');
     vi.stubEnv('EXPO_PUBLIC_PLATFORM_API_URL', 'http://10.0.2.2:8081');
 
@@ -86,7 +86,7 @@ describe('portfolio login composition', () => {
     const api = createConfiguredPlatformApi(manager, {
       EXPO_PUBLIC_APP_ENV: 'local',
       EXPO_PUBLIC_LOGIN_MODE: 'test',
-      EXPO_PUBLIC_LOCAL_TEST_ACCESS_TOKEN: 'local-test-token',
+      EXPO_PUBLIC_LOCAL_TEST_ACCESS_TOKEN: '<local-test-token>',
       EXPO_PUBLIC_PLATFORM_API_MODE: 'http',
       EXPO_PUBLIC_PLATFORM_API_URL: 'http://10.0.2.2:8081',
     });

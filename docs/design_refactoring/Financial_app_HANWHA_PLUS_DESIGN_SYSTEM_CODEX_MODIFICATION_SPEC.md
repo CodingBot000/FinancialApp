@@ -217,7 +217,6 @@ export const APP_BRAND = {
 } as const;
 ```
 
-실제 한화, PLUS, PLUS 파이, 한화생명, 한화투자증권 명칭을 앱 브랜드로 사용하지 않는다.
 
 ---
 
