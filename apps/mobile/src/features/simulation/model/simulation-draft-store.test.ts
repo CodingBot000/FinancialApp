@@ -5,6 +5,7 @@ import {
   useSimulationDraftStore,
   validateSimulationDraft,
 } from './simulation-draft-store';
+import { allocationForRiskProfile } from '../../../shared/planning';
 
 describe('simulation draft', () => {
   beforeEach(() => useSimulationDraftStore.getState().reset());
@@ -21,6 +22,19 @@ describe('simulation draft', () => {
     });
     expect(draft).not.toHaveProperty('result');
     expect(draft).not.toHaveProperty('simulationId');
+  });
+
+  it('preserves an explicitly supplied planning allocation', () => {
+    const allocation = allocationForRiskProfile('GROWTH');
+    expect(
+      toSimulationInput(useSimulationDraftStore.getState(), allocation),
+    ).toMatchObject({ allocation });
+  });
+
+  it('uses the balanced planning allocation when none is supplied', () => {
+    expect(
+      toSimulationInput(useSimulationDraftStore.getState())?.allocation,
+    ).toEqual(allocationForRiskProfile('BALANCED'));
   });
 
   it('rejects invalid money precision and duration before network submit', () => {

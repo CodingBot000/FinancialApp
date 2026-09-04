@@ -66,6 +66,30 @@ export default function RootLayout() {
                       }}
                     >
                       <Stack.Screen
+                        name="coach-risk-check"
+                        options={{
+                          animation: 'slide_from_right',
+                          headerShown: false,
+                          presentation: 'card',
+                        }}
+                      />
+                      <Stack.Screen
+                        name="coach-consultation"
+                        options={{
+                          animation: 'slide_from_right',
+                          headerShown: false,
+                          presentation: 'card',
+                        }}
+                      />
+                      <Stack.Screen
+                        name="plan"
+                        options={{
+                          animation: 'slide_from_right',
+                          headerShown: false,
+                          presentation: 'card',
+                        }}
+                      />
+                      <Stack.Screen
                         name="my-info-management"
                         options={{
                           animation: 'slide_from_right',

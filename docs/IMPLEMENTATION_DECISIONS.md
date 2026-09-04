@@ -1,7 +1,7 @@
 # 구현 결정 기록
 
 - 상태: 실행 기준선
-- 마지막 갱신: 2026-09-03
+- 마지막 갱신: 2026-09-04
 
 이 문서는 ADR보다 작은 구현 결정을 한곳에 기록한다. `PENDING` 항목은 해당 milestone 전에 해결해야 한다.
 
@@ -63,6 +63,7 @@
 | D-052 | ACCEPTED | local performance gate는 runtime role의 actual PostgreSQL JSON plan에서 expected index와 100ms ceiling을 검증하되 capacity/SLO 증거로 과장하지 않는다. root moderate 18/high·critical 0과 backend runtime 0인 dependency 상태는 local 단계 조건부 통과로 판정하며, 원격 preview의 security-clean 판정은 upstream 해소 또는 사용자 위험 수용 전 보류한다. `npm audit fix --force`와 비호환 downgrade는 적용하지 않는다. |
 | D-053 | ACCEPTED | 포트폴리오 launch flow는 `Device.isDevice`로 physical/non-physical biometric adapter를 선택한다. setup 완료 marker는 SecureStore, 현재 process unlock은 메모리만 사용한다. 이 로컬 접근은 OIDC/MFA 증거가 아니며 가짜 token을 만들지 않고 contract mock Home만 연다. 실제 HTTP API와 OIDC 경계는 별도로 보존한다. |
 | D-054 | ACCEPTED | launch 권한 안내 확인 시 알림·사진·카메라의 현재 OS 상태를 순차 확인하고 미결정 권한만 native API로 요청한다. 승인 여부가 아닌 요청 처리 완료 marker를 SecureStore에 저장하며, 승인·거부와 무관하게 다음 실행부터 custom 안내와 OS 요청을 생략한다. 선택 권한 결과는 앱 진입을 차단하지 않는다. |
+| D-055 | ACCEPTED | 모바일은 합성 AssetSummary와 planning preference를 사용해 결정적 규칙으로 예시 코치 진단과 제안 배분을 파생한다. 서버 risk profile이나 simulation을 실제 투자 추천·적합성 판단으로 확장하지 않으며 신규 backend 계약을 만들지 않는다. |
 
 ## 정정 이력
 

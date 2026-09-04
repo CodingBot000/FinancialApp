@@ -1,6 +1,6 @@
 # Limitations와 정직한 주장 범위
 
-- 상태: DEV-0014 local hardening 최종 문서
+- 상태: FE-0027 WM 코치 경험을 포함한 local 검증 문서
 - 원칙: 확인한 것과 아직 확인하지 않은 것을 분리한다.
 
 ## 확인된 범위
@@ -12,6 +12,8 @@
 - Android API 36 emulator에서 launch 알림·카메라 native permission prompt, 거부 후
   onboarding 진행과 재실행 prompt 생략을 확인했다. 최신 Android photo picker는 별도
   runtime 사진 권한 prompt를 표시하지 않을 수 있다.
+- Android API 36 emulator Development Build에서 코치 기본 진단, 성장형 간이 진단 저장,
+  5/15/80 simulation 연결, 화면 로컬 상담 완료와 홈·종목·주문·내 정보 탭 회귀를 확인했다.
 - canonical OpenAPI, 실제 Fastify provider, mobile consumer fixture와 adapter를 35 operations/38 fixtures에 대해 추적한다.
 - Testcontainers PostgreSQL에서 migration, role, ownership, append-only, concurrency, settlement/outbox/crypto invariant를 검증한다.
 - production backend image의 runtime workspace dependency audit은 0건이다.
@@ -20,7 +22,11 @@
 
 - 단일 합성 기관과 `BALANCED_WORKER` dataset만 지원한다.
 - 주문은 BUY market order만 지원한다. SELL, limit, partial fill, cancel은 범위 밖이다.
-- risk profile은 planning preference일 뿐 투자 추천, 적합성 판정, 목표 배분이나 수익 보장을 생성하지 않는다.
+- risk profile은 planning preference다. 모바일에는 합성 자산과 성향별 고정 preset에서
+  파생한 client-only 코치 진단·예시 배분이 있지만, 규제상 투자 추천·적합성 판단이나 실제
+  상품 추천·리밸런싱 지시가 아니다.
+- 코치 상담 요청은 화면 component의 local state에서만 완료되는 포트폴리오 시연이며,
+  예약 backend, 담당자 배정, 알림 발송과 상담 이력은 없다.
 - 실제 금융기관, 실제 시세, 실제 개인정보·계좌번호, 실제 자금 이동은 사용하지 않는다.
 - push, realtime stream, offline ledger, 관리자 콘솔과 정식 store 배포는 없다.
 

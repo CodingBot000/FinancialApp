@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 
 import type { CreateSimulationInput } from '../../../shared/api';
+import {
+  DEFAULT_PLANNING_RISK_PROFILE,
+  allocationForRiskProfile,
+  type PlanningAllocation,
+} from '../../../shared/planning';
 
 export interface SimulationDraft {
   readonly durationMonths: string;
@@ -47,14 +52,13 @@ export function validateSimulationDraft(draft: SimulationDraft) {
 
 export function toSimulationInput(
   draft: SimulationDraft,
+  allocation: PlanningAllocation = allocationForRiskProfile(
+    DEFAULT_PLANNING_RISK_PROFILE,
+  ),
 ): CreateSimulationInput | undefined {
   if (Object.keys(validateSimulationDraft(draft)).length > 0) return undefined;
   return {
-    allocation: [
-      { assetClass: 'CASH', weight: 0.1 },
-      { assetClass: 'BOND', weight: 0.3 },
-      { assetClass: 'EQUITY', weight: 0.6 },
-    ],
+    allocation,
     durationMonths: Number(draft.durationMonths),
     initialAssets: draft.initialAssets,
     monthlyContribution: draft.monthlyContribution,

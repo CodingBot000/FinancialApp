@@ -1,11 +1,11 @@
 # 구현 상태
 
-- 현재 Milestone: 7B — 포트폴리오 생체인증 진입
+- 현재 Milestone: 7C — WM 코치 경험
 - 전체 상태: IN_PROGRESS
-- 마지막 갱신: 2026-09-03
-- 마지막 로컬 구현 ID: FE-0026
+- 마지막 갱신: 2026-09-04
+- 마지막 로컬 구현 ID: FE-0027
 - 다음 작업 ID: FE-0019/FE-0020 물리 기기 검증 / FE-0017 iOS 회귀
-- 활성 계획: `PORTFOLIO_BIOMETRIC_ONBOARDING_PLAN.md`
+- 활성 계획: `COACH_EXPERIENCE_IMPLEMENTATION_SPEC.md`
 - 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
 
 ## 상태 표기
@@ -39,6 +39,7 @@
 | 4. 서버 시뮬레이션 | DONE | deterministic server 저장/조회, frontend draft validation·persisted result·p10/p50/p90 chart와 local actual API smoke 완료 |
 | 5. BUY 주문과 복구 | DONE | quote/biometric/idempotent mobile BUY, backend reservation/simulator/settlement/reconciliation/audit, UNKNOWN GET recovery와 actual local smoke 완료; clean 전체 인수는 DEV-0011 |
 | 6A. 로컬 하드닝 | DONE | outbox, envelope crypto/KMS 경계, security/log, readiness/metrics/resilience, profile, query/dependency gate, 최종 문서와 clean acceptance 완료 |
+| 7C. WM 코치 경험 | DONE | 결정적 client-only 진단·간이 성향 진단·제안 simulation·화면 로컬 상담, Android API 36와 최종 root verify 완료 |
 | 6B. 원격 데모 | CURRENT_RUN_EXCLUDED | Lightsail migration, 실제 AWS KMS, HTTPS/EAS와 원격 rollback은 향후 별도 실행 |
 
 ## DEV-0010 계약 Gate
@@ -398,6 +399,22 @@
 - [x] Android Emulator에서 두 페이지의 상단 `뒤로가기` 노출과 복귀 동작 확인
 - [x] mobile 50 files/144 tests, route 13 files, design-system 42 UI files 통과
 - 상태: DONE local reusable layout; onboarding backless surface와 app-owned back page 분리 완료
+
+## FE-0027 WM 코치 경험 — 진행 상태
+
+- [x] 기존 플랜 탭을 코치 탭으로 교체하고 기존 simulation을 root `/plan` 전체 화면으로 이동
+- [x] 기존 `AssetSummary`와 `UserRiskProfile`을 병렬 조회해 순수 규칙으로 대표 진단과 현재/제안 배분 비교 파생
+- [x] 안정형 20/50/30, 균형형 10/30/60, 성장형 5/15/80을 shared planning preset 하나로 통합
+- [x] 3문항 간이 진단에서 기존 monthly contribution/version을 유지한 `updateRiskProfile` 저장과 cache 즉시 갱신
+- [x] 현재 성향의 동일 preset을 목표 자산 미리보기 화면과 `createSimulation` input에 전달
+- [x] 전화/화상·희망 시간·완료 여부를 component local state로만 처리하는 상담 demo 구현
+- [x] architecture 222 files, route 16 files, design-system 48 UI files와 전체 workspace typecheck 통과
+- [x] mobile Vitest 57 files/187 tests, canonical contract 38 operations/41 fixtures 통과
+- [x] Android API 36 arm64 Emulator Development Build 484 Gradle tasks와 시나리오 A~D 화면 검증 통과
+- [x] Android 홈·종목·주문·내 정보 탭 smoke와 runtime crash/error 0 확인
+- [x] 신규 backend API, OpenAPI operation, DB schema/migration과 전역 store 없음
+- [x] 최종 root `npm run verify`: mobile 187/simulator 12/platform 97, 총 296 tests와 두 backend build 통과
+- 상태: DONE local — 결정적 코치 경험, 필수 gate와 Android Emulator 검증 완료; 실제 추천·상담 backend는 비범위
 
 ## 외부 조건
 

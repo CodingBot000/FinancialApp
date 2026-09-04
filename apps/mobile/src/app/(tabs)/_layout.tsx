@@ -40,8 +40,8 @@ function createTabIcon(active: IoniconName, inactive: IoniconName) {
 
 const homeIcon = createTabIcon('home', 'home-outline');
 const marketIcon = createTabIcon('stats-chart', 'stats-chart-outline');
+const coachIcon = createTabIcon('compass', 'compass-outline');
 const orderIcon = createTabIcon('receipt', 'receipt-outline');
-const planIcon = createTabIcon('analytics', 'analytics-outline');
 const profileIcon = createTabIcon('person-circle', 'person-circle-outline');
 
 function AppTopBar() {
@@ -154,12 +154,12 @@ export default function TabsLayout() {
           options={{ tabBarIcon: marketIcon, title: '종목' }}
         />
         <Tabs.Screen
-          name="order"
-          options={{ tabBarIcon: orderIcon, title: '주문' }}
+          name="coach"
+          options={{ tabBarIcon: coachIcon, title: '코치' }}
         />
         <Tabs.Screen
-          name="plan"
-          options={{ tabBarIcon: planIcon, title: '플랜' }}
+          name="order"
+          options={{ tabBarIcon: orderIcon, title: '주문' }}
         />
         <Tabs.Screen
           name="me"

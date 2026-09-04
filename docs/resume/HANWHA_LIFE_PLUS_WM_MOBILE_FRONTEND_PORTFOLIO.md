@@ -11,7 +11,7 @@
 
 ## 1. 프로젝트 요약
 
-Wealth Flow는 자산 통합 조회, 국내 주식 시세, 목표 자산 시뮬레이션, 매수 주문과 장애 복구 흐름을 하나의 모바일 앱에서 보여 주는 금융 플랫폼 포트폴리오다. React Native와 Expo를 기반으로 iOS·Android 공통 코드를 구성하고, 모바일이 직접 데이터베이스나 외부 기관에 접근하지 않도록 Node.js Platform API를 단일 진입점으로 두었다.
+Wealth Flow는 자산 통합 조회, 투자 성향 기반 예시 코치 진단, 국내 주식 시세, 목표 자산 시뮬레이션, 매수 주문과 장애 복구 흐름을 하나의 모바일 앱에서 보여 주는 금융 플랫폼 포트폴리오다. React Native와 Expo를 기반으로 iOS·Android 공통 코드를 구성하고, 모바일이 직접 데이터베이스나 외부 기관에 접근하지 않도록 Node.js Platform API를 단일 진입점으로 두었다.
 
 이 프로젝트에서 가장 중요하게 다룬 문제는 화면 수 자체보다 다음과 같은 금융 모바일 앱의 경계다.
 
@@ -21,6 +21,7 @@ Wealth Flow는 자산 통합 조회, 국내 주식 시세, 목표 자산 시뮬�
 - 차트는 Skia 기반 렌더링과 Reanimated를 사용하고, 시스템의 모션 감소 설정과 접근성 레이블을 함께 반영한다.
 - 화면, 기능, 공통 기술 코드의 의존 방향을 CI에서 검사해 기능 증가에 따른 구조 붕괴를 방지한다.
 - API 명세, 모바일 mock, 실제 서버 응답을 같은 OpenAPI 계약으로 검증한다.
+- 코치 결과는 합성 자산과 planning preference를 결정적 client 규칙으로 연결한 포트폴리오 예시이며, 실제 투자 추천·적합성 판단이나 상담 backend로 표현하지 않는다.
 
 모든 사용자·계좌·거래 데이터는 합성 데이터이며 실제 금융거래나 개인정보를 사용하지 않는다.
 
@@ -29,17 +30,17 @@ Wealth Flow는 자산 통합 조회, 국내 주식 시세, 목표 자산 시뮬�
 | 채용 직무의 핵심 요구 | 프로젝트에서 적용한 내용 | 검증 상태 |
 |---|---|---|
 | React Native·TypeScript·Expo | React Native 0.86, TypeScript strict, Expo SDK 57 기반 단일 앱 | 구현·자동 검증 완료 |
-| 앱 아키텍처 | feature-first 구조, route adapter, public entry, 순환 의존 금지 | 203개 소스 파일 구조 검사 통과 |
+| 앱 아키텍처 | feature-first 구조, route adapter, public entry, 순환 의존 금지 | 222개 소스 파일 구조 검사 통과 |
 | 상태 관리 | TanStack Query로 서버 상태, Zustand로 화면 초안·앱 잠금·표시 설정 관리 | 구현·단위 테스트 완료 |
-| 네비게이션 | Expo Router의 Stack·Tabs·동적 route와 typed routes 적용 | 13개 필수 route smoke 통과 |
+| 네비게이션 | Expo Router의 Stack·Tabs·동적 route와 typed routes 적용 | 16개 필수 route smoke 통과 |
 | 웹/모바일 전환 표준 | React Native primitive, 디자인 토큰, 공통 컴포넌트, 필요한 경우 플랫폼별 파일 분리 | Web export 및 Android 화면 검증 이력 |
 | 생체인증 | `expo-local-authentication`을 포트 뒤에 격리하고 앱 잠금·주문 승인에 적용 | Android Emulator 및 어댑터 테스트 완료 |
 | Keychain·Keystore 토큰 보관 | `expo-secure-store`, `WHEN_UNLOCKED_THIS_DEVICE_ONLY`, access/refresh token 저장 위치 분리 | 구현·테스트 완료 |
 | 세션 만료·재인증 | PKCE 로그인, single-flight refresh, 안전한 메서드만 1회 replay, 실패 시 세션·Query cache 제거 | 구현·테스트 완료 |
 | 모바일 차트·Reanimated | Victory Native, React Native Skia, Reanimated, Gesture Handler | 종목·자산·시뮬레이션 차트 구현 |
-| 온보딩·금융 산출 화면 | 최초 실행, 본인확인·PIN 설정 UI, 권한 요청, 자산·시뮬레이션·주문 화면 | Android 포트폴리오 흐름 검증 |
+| 온보딩·금융 산출 화면 | 최초 실행, 본인확인·PIN 설정 UI, 권한 요청, 자산→성향→진단→제안 비교→simulation/상담 흐름 | Android 포트폴리오 흐름 검증 |
 | REST API 협업 | canonical OpenAPI, 엄격한 runtime response mapper, contract mock | 38 operations·41 fixtures 검증 |
-| 테스트·CI | Vitest, Testing Library, architecture/route/design gate, GitHub Actions | 모바일 51 files·149 tests 통과 |
+| 테스트·CI | Vitest, Testing Library, architecture/route/design gate, GitHub Actions | 모바일 57 files·187 tests 통과 |
 | EAS Build·Update | Expo Development Build 구조와 native project는 구성 | EAS profile·Update channel은 후속 범위 |
 | Swift·Kotlin 브리지 | 네이티브 기능을 교체 가능한 TypeScript port로 격리 | 직접 작성한 custom bridge는 후속 범위 |
 | 앱 위변조·루팅 탐지·보안키패드 | 통합 지점을 고려한 보안 포트 확장 구조 제시 | 상용 보안 모듈은 미통합 |
@@ -81,8 +82,12 @@ MVP 규모에서는 기능마다 서비스를 분리하는 대신 Platform API�
 3. 실제 HTTP 모드에서는 OIDC Authorization Code + PKCE로 로그인한다.
 4. 자산 연결·동기화 후 Dashboard, 계좌, 보유종목과 거래내역을 조회한다.
 5. 국내 주식 검색, 현재가와 기간별 차트를 확인한다.
-6. 목표·기간·납입액을 입력하고 서버 시뮬레이션 결과를 차트로 확인한다.
-7. 주문 미리보기 후 생체인증을 거쳐 매수를 요청하고, 불명확한 응답은 상태 조회로 복구한다.
+6. 자산과 투자 성향을 함께 조회해 결정적 규칙으로 현재 배분 진단과 예시 제안 배분을 비교한다.
+7. 간이 진단으로 성향을 변경하면 코치 진단과 제안 배분을 즉시 다시 파생한다.
+8. 같은 제안 배분으로 목표 simulation을 실행하거나 화면 로컬 상담 요청을 완료한다.
+9. 주문 미리보기 후 생체인증을 거쳐 매수를 요청하고, 불명확한 응답은 상태 조회로 복구한다.
+
+6~8의 코치 흐름은 client-only deterministic portfolio demonstration이다. 실제 투자 추천, 규제상 적합성 판단, 상품 추천이나 상담 예약 완료를 주장하지 않는다.
 
 ---
 
@@ -114,7 +119,10 @@ MVP 규모에서는 기능마다 서비스를 분리하는 대신 Platform API�
 apps/mobile/src/
 ├── app/                         # Expo Router: URL·화면 조합만 담당
 │   ├── _layout.tsx             # 전역 provider와 접근 경계 조합
-│   ├── (tabs)/                 # 홈·종목·주문·플랜·내 정보
+│   ├── (tabs)/                 # 홈·종목·코치·주문·내 정보
+│   ├── coach-risk-check.tsx    # 투자 성향 간이 진단
+│   ├── coach-consultation.tsx  # 화면 로컬 상담 요청
+│   ├── plan.tsx                # 코치 제안 배분 기반 목표 미리보기
 │   ├── market/[symbol].tsx     # 종목 상세 동적 route
 │   └── oauth/callback.tsx      # OIDC redirect 진입점
 ├── features/                   # 업무 기능 단위
@@ -123,6 +131,7 @@ apps/mobile/src/
 │   ├── app-lock/               # 생체인증 잠금과 background lifecycle
 │   ├── login/                  # 실제 OIDC·local portfolio 조합
 │   ├── wealth/                 # 자산 통합 조회·동기화
+│   ├── coach/                  # 진단·간이 성향 진단·상담 demo
 │   ├── market/                 # 종목 검색·현재가·기간별 차트
 │   ├── simulation/             # 입력 초안·서버 계산·결과 차트
 │   ├── order/                  # quote·생체승인·주문·복구 polling
@@ -132,6 +141,7 @@ apps/mobile/src/
     ├── auth/                   # 세션·OIDC·SecureStore·biometric port
     ├── query/                  # QueryClient와 native lifecycle 연결
     ├── design-system/          # token과 재사용 UI component
+    ├── planning/               # 성향별 예시 배분 preset
     ├── privacy/                # 금액 숨김 같은 횡단 표시 상태
     └── format/                 # 원화·수량·일자·시세 표현
 ```
@@ -191,7 +201,9 @@ SafeAreaProvider
 
 | 상태 종류 | 소유 기술 | 대표 상태 | 정책 |
 |---|---|---|---|
-| 서버 상태 | TanStack Query | 자산, 종목, 시뮬레이션 결과, 주문 | query key, stale time, abort signal, invalidation |
+| 서버 상태 | TanStack Query | 자산, 투자 성향, 종목, 시뮬레이션 결과, 주문 | query key, stale time, abort signal, invalidation |
+| 파생 코치 상태 | 순수 함수 + `useMemo` | 진단, 현재/제안 배분과 문구 | 저장하지 않고 자산·성향 응답에서 매번 파생 |
+| 화면 로컬 상태 | React `useState` | 간이 진단 답변·결과 표시, 상담 선택·완료 | 화면 이탈 시 폐기, 서버·전역 store에 복제하지 않음 |
 | 화면 초안 | Zustand | 기간·목표 금액·월 납입액 | 입력 중 route 이동에도 보존, 제출 결과와 분리 |
 | 보안 UI 상태 | Zustand vanilla store | locked·unlocking·unlocked·reauthentication-required | 명시적 상태 전이와 중복 인증 방지 |
 | 개인정보 표시 상태 | Zustand | 금액 보이기·숨기기 | 숫자와 차트 접근성 문구에 함께 적용 |
@@ -311,7 +323,10 @@ sequenceDiagram
 
 | Route | 화면 역할 |
 |---|---|
-| `/(tabs)` | 홈·종목·주문·플랜·내 정보의 공통 상·하단 navigation |
+| `/(tabs)` | 홈·종목·코치·주문·내 정보의 공통 상·하단 navigation |
+| `/coach-risk-check` | 투자 성향 간이 진단과 기존 profile 갱신 |
+| `/coach-consultation` | 방식·시간을 선택하는 화면 로컬 상담 demo |
+| `/plan` | 현재 성향의 예시 배분을 사용하는 목표 자산 미리보기 |
 | `/market/[symbol]` | 종목별 현재가·기간별 OHLC 차트 |
 | `/order` | 선택 종목에서 진입하는 매수 흐름 |
 | `/my-info-management` | 투자 성향·월 납입액 관리 full-screen page |
@@ -334,7 +349,7 @@ app config의 `typedRoutes`를 켜고, 별도의 route smoke script가 필수 ro
 - 44~48px 이상의 touch target, 접근성 role·label·state와 live region을 적용한다.
 - 시스템의 모션 감소 설정을 확인해 차트 animation을 비활성화할 수 있다.
 
-디자인 시스템 검사는 현재 42개 UI 파일을 대상으로 raw color와 금지된 기술 문구를 확인한다.
+디자인 시스템 검사는 현재 48개 UI 파일을 대상으로 raw color와 금지된 기술 문구를 확인한다.
 
 ## 9. 주요 모바일 기능
 
@@ -357,16 +372,29 @@ app config의 `typedRoutes`를 켜고, 별도의 route smoke script가 필수 ro
 - 한국 시장 관례에 맞춰 상승은 적색, 하락은 청색 계열 token을 사용한다.
 - 실제 chart press 값을 Reanimated shared value로 받고 선택 시각만 React state로 전달한다.
 
-### 9.3 목표 자산 시뮬레이션
+### 9.3 WM 코치와 투자 성향 연결
+
+코치 탭은 기존 API의 합성 `AssetSummary`와 planning preference인 `UserRiskProfile`을 병렬 조회한다. 현재 현금·채권·주식 비중을 정규화하고 성향별 shared preset과의 percentage-point 차이가 가장 큰 자산군을 순수 함수로 선택해 headline과 설명을 함께 만든다.
+
+- 안정형 20/50/30, 균형형 10/30/60, 성장형 5/15/80을 하나의 shared planning source에서 제공한다.
+- 코치 화면과 simulation이 같은 preset을 사용하므로 성향 변경 뒤 비교 값과 요청 allocation이 함께 바뀐다.
+- 3문항 간이 진단의 문항·점수 경계·기간 매핑은 model 설정이 소유하고, 기존 월 납입액과 optimistic version을 유지해 저장한다.
+- 코치 진단은 Query cache나 Zustand에 복제하지 않고 `useMemo`로 파생한다.
+- 상담 방식·희망 시간·완료 여부는 화면 `useState`에만 존재하며 backend 요청을 만들지 않는다.
+- 모든 결과에 합성 데이터 기반 예시이며 실제 투자 권유·적합성 판단·상품 추천이 아니라는 고지를 표시한다.
+
+### 9.4 목표 자산 시뮬레이션
 
 입력 초안은 Zustand가 소유하고 계산 결과는 서버가 소유한다. 앱에서 임의의 투자 결과를 계산하거나 서버 결과를 전역 store에 복제하지 않는다.
 
 - 기간, 초기 자산, 월 납입액과 목표 금액을 원 단위 입력으로 검증한다.
+- 현재 risk profile의 shared 제안 배분을 화면에 표시하고 같은 allocation을 생성 요청에 전달한다.
+- profile 직접 조회가 실패하면 명시적 warning과 함께 균형형 예시 배분을 사용한다.
 - 생성 mutation 성공 후 simulation ID로 저장된 결과를 재조회한다.
 - p10·p50·p90 예상 범위와 목표 달성 확률을 표시한다.
 - 엔진·가정 version과 “투자 추천·수익 보장이 아님”을 함께 표시한다.
 
-### 9.4 매수 주문과 불명확 응답 복구
+### 9.5 매수 주문과 불명확 응답 복구
 
 ```mermaid
 sequenceDiagram
@@ -444,12 +472,12 @@ HTTP 응답은 TypeScript type assertion만으로 신뢰하지 않는다. exact 
 
 | 계층 | 검증 대상 |
 |---|---|
-| Model | 앱 잠금 상태 전이, background timeout, 입력 검증, format |
+| Model | 앱 잠금 상태 전이, background timeout, 코치 진단·성향 점수·allocation preset, 입력 검증, format |
 | Native adapter | 생체인증 오류 mapping, SecureStore 실패, 권한 순서와 skip 조건 |
 | Auth | PKCE 구성, token 저장, single-flight refresh, 세션 만료·clear |
 | API adapter | URL·header·body, response mapper, 401 replay 제한, abort |
 | Query lifecycle | app focus, network 상태, session cache clear |
-| Hook | 자산 sync polling, query invalidation, 주문 상태 polling |
+| Hook | 자산 sync polling, 코치 병렬 query·파생 view model, query invalidation, 주문 상태 polling |
 | Component | loading·error·empty·success, 접근성 role과 사용자 interaction |
 | Contract | OpenAPI fixture가 모바일 runtime mapper를 통과하는지 검증 |
 | Architecture | 계층 위반, feature deep import와 cycle 검출 |
@@ -458,11 +486,11 @@ HTTP 응답은 TypeScript type assertion만으로 신뢰하지 않는다. exact 
 ### 12.2 2026-09-04 현재 실행 결과
 
 ```text
-Mobile architecture       203 source files passed
-Route smoke               13 route files passed
-Design-system check       42 UI files passed
+Mobile architecture       222 source files passed
+Route smoke               16 route files passed
+Design-system check       48 UI files passed
 TypeScript typecheck      passed
-Mobile Vitest             51 files / 149 tests passed
+Mobile Vitest             57 files / 187 tests passed
 OpenAPI contract          38 operations / 41 fixtures passed
 ```
 
@@ -483,7 +511,7 @@ CI는 pull request와 main push에서 설치, 계약, 모바일, 두 서버 work
 
 ## 13. iOS·Android 빌드와 스토어 대응 범위
 
-현재 repository에는 iOS와 Android native project, Expo config plugin, 포트폴리오용 placeholder bundle/package identifier와 권한 문구가 포함되어 있다. Android API 36 Emulator에서 Development Build, 최초 실행, 재실행, 권한과 차트 상호작용을 검증했다.
+현재 repository에는 iOS와 Android native project, Expo config plugin, 포트폴리오용 placeholder bundle/package identifier와 권한 문구가 포함되어 있다. Android API 36 Emulator에서 Development Build, 최초 실행, 재실행, 권한, 차트와 자산→성향→진단→제안 비교→simulation/상담 상호작용을 검증했다.
 
 다만 제출 시점까지 다음을 실제 경험으로 주장하지 않는다.
 
@@ -619,8 +647,8 @@ AWS KMS adapter와 fail-closed 구성 경계는 구현했지만 실제 AWS key p
 ```text
 Platform API Vitest             21 files / 97 tests passed
 Institution Simulator Vitest     4 files / 12 tests passed
-Mobile Vitest                   51 files / 149 tests passed
-합계                            76 files / 258 tests passed
+Mobile Vitest                   57 files / 187 tests passed
+합계                            82 files / 296 tests passed
 
 OpenAPI contract                38 operations / 41 fixtures passed
 ```
@@ -661,9 +689,10 @@ OpenAPI contract                38 operations / 41 fixtures passed
 ### 검증 완료
 
 - React Native·Expo 기반 공통 모바일 코드와 Android Development Build
-- Android API 36 Emulator의 최초 실행·재실행·권한·앱 잠금·차트 흐름
+- Android API 36 Emulator의 최초 실행·재실행·권한·앱 잠금·차트와 코치 시나리오 A~D 흐름
 - OIDC PKCE, SecureStore, refresh 조정과 cache clear의 코드·자동 테스트
-- 모바일 architecture·route·design system·typecheck·149개 테스트
+- 모바일 architecture·route·design system·typecheck·187개 테스트
+- 합성 자산→성향→결정적 진단→제안 비교→동일 allocation simulation과 화면 로컬 상담 연결
 - 실제 Fastify API, PostgreSQL, Keycloak과 Simulator의 로컬 통합 구조
 - OpenAPI 38 operations·41 fixtures의 provider·consumer 호환성
 - Platform API 97개, Simulator 12개 테스트
@@ -676,6 +705,7 @@ OpenAPI contract                38 operations / 41 fixtures passed
 - 간편비밀번호의 안전한 저장·검증과 실제 본인확인·OTP 연동
 - 실제 마이데이터 사업자·증권사 주문 원장·실명확인 연동
 - 실제 개인정보·자금 이동, 금융 규제 준수와 운영 보안성 심의
+- 규제상 투자 추천·적합성 판단, 실제 상품 추천·리밸런싱과 실제 상담 예약 backend
 - 원격 managed PostgreSQL, 실제 AWS KMS, TLS와 production monitoring
 - production 규모의 차트·API·DB 부하 시험과 SLO
 
@@ -691,6 +721,8 @@ OpenAPI contract                38 operations / 41 fixtures passed
 | 서버·클라이언트 상태 | `apps/mobile/src/shared/query`, `apps/mobile/src/features/*/hooks` |
 | OIDC·token·biometric | `apps/mobile/src/shared/auth`, `apps/mobile/src/features/app-lock` |
 | REST·runtime mapper | `apps/mobile/src/shared/api` |
+| 코치 진단·설문·상담 | `apps/mobile/src/features/coach` |
+| 성향별 제안 배분 | `apps/mobile/src/shared/planning` |
 | 종목 차트 | `apps/mobile/src/features/market/ui/stock-price-chart.tsx` |
 | 디자인 시스템 | `apps/mobile/src/shared/design-system` |
 | Platform API | `services/platform-api/src/modules` |
