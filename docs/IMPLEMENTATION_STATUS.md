@@ -408,14 +408,17 @@
 - [x] 3문항 간이 진단에서 기존 monthly contribution/version을 유지한 `updateRiskProfile` 저장과 cache 즉시 갱신
 - [x] 현재 성향의 동일 preset을 목표 자산 미리보기 화면과 `createSimulation` input에 전달
 - [x] 전화/화상·희망 시간·완료 여부를 component local state로만 처리하는 상담 demo 구현
-- [x] architecture 223 files, route 16 files, design-system 48 UI files와 전체 workspace typecheck 통과
-- [x] mobile Vitest 58 files/189 tests, canonical contract 38 operations/41 fixtures 통과
+- [x] 홈·종목·코치·주문 최초 진입에만 adaptive skeleton을 표시하고 내 정보 탭은 제외
+- [x] skeleton 방문 상태는 process-memory provider가 소유해 재방문에는 숨기고 앱 프로세스 재시작 시 초기화
+- [x] architecture 230 files, route 16 files, design-system 49 UI files와 전체 workspace typecheck 통과
+- [x] mobile Vitest 60 files/195 tests, canonical contract 38 operations/41 fixtures 통과
 - [x] Android API 36 arm64 Emulator Development Build 484 Gradle tasks와 시나리오 A~D 화면 검증 통과
 - [x] Android 홈·종목·주문·내 정보 탭 smoke와 runtime crash/error 0 확인
 - [x] 탭 전환·현재 탭 재선택 시 화면 상태를 유지하면서 ScrollView만 상단으로 복귀하는 Android smoke 통과
+- [x] Android에서 최초 탭 skeleton, 재방문 미표시, 내 정보 제외와 프로세스 재시작 후 재표시 확인
 - [x] 신규 backend API, OpenAPI operation, DB schema/migration과 전역 store 없음
-- [x] 최종 root `npm run verify`: mobile 189/simulator 12/platform 97, 총 298 tests와 두 backend build 통과
-- 상태: DONE local — 탭 스크롤 회귀 자동·Android 검증과 최종 root verify 완료
+- [x] 최종 root `npm run verify`: mobile 195/simulator 12/platform 97, 총 304 tests와 두 backend build 통과
+- 상태: DONE local — 최초 진입 skeleton 자동·Android 검증과 최종 root verify 완료
 
 ## 외부 조건
 

@@ -20,5 +20,7 @@ export { Screen, ScreenSafeAreaProvider } from './screen';
 export { SearchField } from './search-field';
 export { SectionHeader } from './section-header';
 export { SegmentedControl } from './segmented-control';
+export { SkeletonBlock, TabScreenSkeleton } from './skeleton';
+export type { SkeletonBlockHeight } from './skeleton';
 export { StatusChip } from './status-chip';
 export { TextField } from './text-field';

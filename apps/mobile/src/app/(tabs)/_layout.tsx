@@ -14,6 +14,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import appIcon from '../../../assets/icon-wm.png';
 
 import {
+  FirstVisitTabSkeletonGate,
+  isFirstVisitSkeletonTab,
+} from '../../features/launch';
+import {
   AppText,
   BottomBar,
   colors,
@@ -23,6 +27,19 @@ import {
 } from '../../shared/design-system';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
+type TabScreenLayoutProps = Parameters<
+  NonNullable<ComponentProps<typeof Tabs>['screenLayout']>
+>[0];
+
+function TabScreenLayout({ children, route }: TabScreenLayoutProps) {
+  return isFirstVisitSkeletonTab(route.name) ? (
+    <FirstVisitTabSkeletonGate tabName={route.name}>
+      {children}
+    </FirstVisitTabSkeletonGate>
+  ) : (
+    children
+  );
+}
 
 function createTabIcon(active: IoniconName, inactive: IoniconName) {
   return ({
@@ -149,11 +166,13 @@ export default function TabsLayout() {
       scrollResetRevision={scrollResetRevision}
     >
       <Tabs
+        screenLayout={TabScreenLayout}
         screenListeners={screenListeners}
         tabBar={AppBottomBar}
         screenOptions={{
           header: AppTopBar,
           headerShown: true,
+          lazy: true,
           tabBarActiveTintColor: colors.tab.active,
           tabBarInactiveTintColor: colors.tab.inactive,
         }}
