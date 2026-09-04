@@ -19,9 +19,16 @@ export function LoginBoundary({ children }: PropsWithChildren) {
     () => createOidcSessionComposition(manager),
     [manager],
   );
+  const apiMode = process.env.EXPO_PUBLIC_PLATFORM_API_MODE?.trim();
+  const mockApiMode =
+    apiMode === 'mock' ||
+    (apiMode === undefined &&
+      (typeof __DEV__ !== 'undefined'
+        ? __DEV__
+        : process.env.NODE_ENV !== 'production'));
 
   if (
-    portfolioAccess?.state.phase === 'unlocked' ||
+    (mockApiMode && portfolioAccess?.state.phase === 'unlocked') ||
     sessionPresence !== 'absent'
   ) {
     return children;
