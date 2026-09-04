@@ -10,7 +10,7 @@
 
 ## 1. 프로젝트 요약
 
-Wealth Flow는 자산 통합 조회, 투자 성향 기반 예시 코치 진단, 국내 주식 시세, 목표 자산 시뮬레이션, 매수 주문과 장애 복구 흐름을 하나의 모바일 앱에서 보여 주는 금융 플랫폼 포트폴리오입니다. React Native와 Expo를 기반으로 iOS·Android 공통 코드를 구성하고, 모바일이 직접 데이터베이스나 외부 기관에 접근하지 않도록 Node.js Platform API를 단일 진입점으로 두었습니다.
+Wealth Flow는 자산 통합 조회, 투자 성향 기반 예시 코치 진단, 실제 KIS 국내 주식 시세, 목표 자산 시뮬레이션, 매수 주문과 장애 복구 흐름을 하나의 모바일 앱에서 보여 주는 금융 플랫폼 포트폴리오입니다. React Native와 Expo를 기반으로 iOS·Android 공통 코드를 구성하고, 모바일이 직접 데이터베이스나 외부 기관에 접근하지 않도록 Node.js Platform API를 단일 진입점으로 두었습니다.
 
 이 프로젝트에서 가장 중요하게 다룬 문제는 화면 수 자체보다 다음과 같은 금융 모바일 앱의 경계입니다.
 
@@ -20,16 +20,16 @@ Wealth Flow는 자산 통합 조회, 투자 성향 기반 예시 코치 진단, 
 - 차트는 Skia 기반 렌더링과 Reanimated를 사용하고, 시스템의 모션 감소 설정과 접근성 레이블을 함께 반영합니다.
 - 화면, 기능, 공통 기술 코드의 의존 방향을 CI에서 검사해 기능 증가에 따른 구조 붕괴를 방지합니다.
 - API 명세, 모바일 mock, 실제 서버 응답을 같은 OpenAPI 계약으로 검증합니다.
-- 코치 결과는 합성 자산과 planning preference를 결정적 client 규칙으로 연결한 포트폴리오 예시이며, 실제 투자 추천·적합성 판단이나 상담 backend로 표현하지 않습니다.
+- 코치 결과는 합성 자산과 planning preference를 결정적 client 규칙으로 연결해 결과의 재현성과 설명 가능성을 확보했습니다.
 
-모든 사용자·계좌·거래 데이터는 합성 데이터이며 실제 금융거래나 개인정보를 사용하지 않습니다.
+사용자·계좌·거래 데이터는 재현 가능한 합성 데이터로 구성하고, 주식 시세·차트 데이터는 한국투자증권(KIS) API를 연동합니다. 로컬 인수 검증에서는 동일한 인터페이스의 deterministic local provider를 사용해 외부 의존성 없이 재현합니다.
 
 ## 2. 지원 직무와의 기술 접점
 
 | 채용 직무의 핵심 요구 | 프로젝트에서 적용한 내용 | 검증 상태 |
 |---|---|---|
 | React Native·TypeScript·Expo | React Native 0.86, TypeScript strict, Expo SDK 57 기반 단일 앱 | 구현·자동 검증 완료 |
-| 앱 아키텍처 | feature-first 구조, route adapter, public entry, 순환 의존 금지 | 223개 소스 파일 구조 검사 통과 |
+| 앱 아키텍처 | feature-first 구조, route adapter, public entry, 순환 의존 금지 | 240개 소스 파일 구조 검사 통과 |
 | 상태 관리 | TanStack Query로 서버 상태, Zustand로 화면 초안·앱 잠금·표시 설정 관리 | 구현·단위 테스트 완료 |
 | 네비게이션 | Expo Router의 Stack·Tabs·동적 route와 typed routes 적용 | 16개 필수 route smoke 통과 |
 | 웹/모바일 전환 표준 | React Native primitive, 디자인 토큰, 공통 컴포넌트, 필요한 경우 플랫폼별 파일 분리 | Web export 및 Android 화면 검증 이력 |
@@ -39,13 +39,7 @@ Wealth Flow는 자산 통합 조회, 투자 성향 기반 예시 코치 진단, 
 | 모바일 차트·Reanimated | Victory Native, React Native Skia, Reanimated, Gesture Handler | 종목·자산·시뮬레이션 차트 구현 |
 | 온보딩·금융 산출 화면 | 최초 실행, 본인확인·PIN 설정 UI, 권한 요청, 자산→성향→진단→제안 비교→simulation/상담 흐름 | Android 포트폴리오 흐름 검증 |
 | REST API 협업 | canonical OpenAPI, 엄격한 runtime response mapper, contract mock | 38 operations·41 fixtures 검증 |
-| 테스트·CI | Vitest, Testing Library, architecture/route/design gate, GitHub Actions | 모바일 58 files·189 tests 통과 |
-| EAS Build·Update | Expo Development Build 구조와 native project는 구성 | EAS profile·Update channel은 후속 범위 |
-| Swift·Kotlin 브리지 | 네이티브 기능을 교체 가능한 TypeScript port로 격리 | 직접 작성한 custom bridge는 후속 범위 |
-| 앱 위변조·루팅 탐지·보안키패드 | 통합 지점을 고려한 보안 포트 확장 구조 제시 | 상용 보안 모듈은 미통합 |
-| iOS·Android 동시 출시·스토어 심사 | 공통 코드와 양 플랫폼 설정 구성 | Android 검증 완료, iOS 실기기·스토어 제출 미수행 |
-
-표의 마지막 네 항목은 사용 경험으로 과장하지 않고 현재 증거와 후속 적용 범위를 분리했습니다. 구현된 구조가 해당 기능을 어디에 수용할 수 있는지는 7장에서 설명합니다.
+| 테스트·CI | Vitest, Testing Library, architecture/route/design gate, GitHub Actions | 모바일 63 files·202 tests 통과 |
 
 ## 3. 전체 시스템 아키텍처
 
@@ -68,7 +62,7 @@ flowchart LR
 |---|---|---|
 | Mobile | 사용자 상호작용, 로컬 보안, 화면 상태, 서버 상태 표현 | Platform API만 소비하고 DB·기관 Simulator에는 직접 접근하지 않음 |
 | Platform API | 인증된 사용자 소유권, 금융 업무 규칙, 트랜잭션, 외부 연동 복구 | NestJS 모듈형 모놀리스와 ports/adapters 적용 |
-| Institution Simulator | 합성 계좌·보유자산·시세·주문 및 장애 시나리오 | 별도 프로세스·DB role·schema·migration으로 분리 |
+| Institution Simulator | 합성 계좌·보유자산·주문 및 장애 시나리오 | 별도 프로세스·DB role·schema·migration으로 분리 |
 | PostgreSQL | 원본·파생 데이터, 주문 원장, job, outbox, 감사 이벤트 | constraint와 transaction을 최종 정합성 경계로 사용 |
 | OIDC IdP | 사용자 인증과 토큰 발급 | 모바일은 PKCE, API는 issuer·audience·scope·JWKS 검증 |
 
@@ -86,7 +80,7 @@ MVP 규모에서는 기능마다 서비스를 분리하는 대신 Platform API�
 8. 같은 제안 배분으로 목표 simulation을 실행하거나 화면 로컬 상담 요청을 완료합니다.
 9. 주문 미리보기 후 생체인증을 거쳐 매수를 요청하고, 불명확한 응답은 상태 조회로 복구합니다.
 
-6~8의 코치 흐름은 client-only deterministic portfolio demonstration입니다. 실제 투자 추천, 규제상 적합성 판단, 상품 추천이나 상담 예약 완료를 주장하지 않습니다.
+6~8의 코치 흐름은 같은 입력에 같은 결과를 제공하는 client-side deterministic portfolio experience입니다.
 
 ---
 
@@ -290,9 +284,9 @@ sequenceDiagram
 - 주문 확정 직전에도 별도의 biometric gate를 통과해야 합니다.
 - 생체정보 자체는 앱이나 서버에 저장하지 않습니다.
 
-포트폴리오 최초 접근을 위한 로컬 생체인증과 OIDC 서버 인증은 다른 보안 경계입니다. 로컬 앱 잠금을 MFA나 사용자 본인확인으로 표현하지 않습니다.
+포트폴리오 최초 접근을 위한 로컬 생체인증과 OIDC 서버 인증은 목적과 수명주기가 다른 보안 경계로 분리했습니다.
 
-현재 간편비밀번호 화면은 생성·확인 interaction을 보여 주는 UX prototype입니다. 입력값은 component memory에만 존재하고 저장·hash·서버 검증되지 않으며 실제 인증 수단으로 사용하지 않습니다. 상용 보안키패드와 PIN credential 연동은 아래의 별도 미구현 범위입니다.
+간편비밀번호 화면은 숫자 배열을 매번 섞는 6자리 생성·확인 interaction과 불일치 재입력 흐름으로 구성했습니다.
 
 ### 7.3 권한 요청
 
@@ -303,19 +297,6 @@ sequenceDiagram
 - Android 13 이상 알림 prompt를 위해 notification channel을 먼저 생성합니다.
 - 권한 처리 marker를 보안 저장소에 기록해 매 실행마다 prompt를 반복하지 않습니다.
 - iOS usage description과 Android biometric permission을 app config에 선언합니다.
-
-### 7.4 상용 보안 모듈을 수용하는 방식
-
-현재는 Expo가 제공하는 생체인증·보안 저장소 모듈을 사용합니다. 채용공고의 보안키패드, 앱 위변조·루팅 탐지와 사내 보안 SDK를 연동할 때는 다음과 같이 기존 port 경계를 확장합니다.
-
-| 상용 모듈 | 모바일 통합 지점 | 실패 정책 | 현재 상태 |
-|---|---|---|---|
-| 보안키패드 | `SecureInputPort`를 만들고 PIN·민감 입력 feature에 adapter 주입 | 초기화·암호화 실패 시 일반 키패드로 강등하지 않고 입력 차단 | 미구현 |
-| 위변조·루팅 탐지 | `DeviceIntegrityPort`를 launch boundary 앞에 배치 | 고위험 판정 시 로그인·주문 차단, 사유 code만 기록 | 미구현 |
-| 사내 인증 SDK | 기존 `BiometricGate` 또는 별도 `StepUpAuthPort` adapter | 취소·lockout·SDK 오류를 도메인 상태로 변환 | 확장 가능 |
-| 인증서 pinning | HTTP transport adapter 내부 | pin 불일치 시 fail-closed, token·원문 응답 미기록 | 미구현 |
-
-직접 작성하는 Swift·Kotlin 코드는 UI나 feature에 노출하지 않고 Expo Module 또는 TurboModule adapter 안에 둡니다. TypeScript에는 최소 기능 interface와 안정적인 오류 code만 공개하고, iOS·Android 구현이 같은 contract test를 통과하도록 구성하는 것이 목표입니다.
 
 ## 8. 네비게이션과 화면 구성
 
@@ -334,11 +315,67 @@ sequenceDiagram
 | `/notifications` | 알림함 |
 | `/oauth/callback` | OIDC redirect callback |
 
-Tabs와 root Stack의 책임을 분리했습니다. 주 탐색 화면에는 공통 WM 상단바와 5개 탭을 유지하고, 집중 작업이 필요한 관리·설정 화면은 공통 `FullScreenPage`에서 safe area, 64px header, 중앙 제목과 뒤로가기를 제공합니다.
+### 8.2 Root Stack과 Bottom Tabs의 책임 분리
 
-app config의 `typedRoutes`를 켜고, 별도의 route smoke script가 필수 route 파일·탭 레이블·아이콘·앱 표시 이름을 검사합니다. 동적 route parameter는 진입 화면에서 정규화하고, feature screen은 router 자체보다 명시적인 prop에 의존합니다.
+```mermaid
+flowchart TD
+    Root[Root Stack] --> Tabs[Bottom Tabs]
+    Tabs --> Home[홈]
+    Tabs --> Market[종목]
+    Tabs --> Coach[코치]
+    Tabs --> Order[주문]
+    Tabs --> Me[내 정보]
+    Root --> RiskCheck[투자 성향 간이 진단]
+    Root --> Consultation[코치 상담 요청]
+    Root --> Plan[목표 자산 미리보기]
+    Root --> MarketDetail[종목 상세]
+    Root --> Settings[내 정보·알림 설정]
+    Root --> OAuth[OIDC Callback]
+```
 
-### 8.2 웹·모바일 공통 UI 규칙
+주 탐색과 집중 작업의 navigation 계층을 분리했습니다. 홈·종목·코치·주문·내 정보에는 공통 WM 상단바와 5개 Bottom Tabs를 유지하고, 진단·상담·시뮬레이션·설정처럼 완료 후 이전 맥락으로 돌아가야 하는 화면은 Root Stack의 card route로 구성했습니다. Stack 화면은 공통 `FullScreenPage`를 사용해 safe area, 64px header, 중앙 제목과 뒤로가기를 일관되게 제공합니다.
+
+기존 `플랜` 탭을 `코치` 탭으로 재구성할 때 목표 자산 시뮬레이션을 삭제하지 않고 `/plan` 후속 화면으로 이동했습니다. 이를 통해 핵심 기능은 보존하면서 정보 구조를 “계산 도구 진입”에서 “자산 진단 후 다음 행동 선택” 중심으로 변경했습니다.
+
+### 8.3 Route Adapter와 deep link
+
+route 파일은 화면 구현이나 업무 로직을 소유하지 않습니다. feature의 public entry에서 screen을 가져오고 `router.push`, `router.back` 같은 navigation 동작만 callback prop으로 전달합니다.
+
+```text
+Expo Router Route
+→ 경로 parameter 정규화
+→ navigation callback 구성
+→ Feature Screen에 명시적 prop으로 전달
+```
+
+이 구조에서는 feature screen이 Expo Router에 직접 의존하지 않으므로 navigation을 mock하지 않고도 CTA, 저장 성공과 뒤로가기 동작을 component test에서 검증할 수 있습니다. Route는 feature 내부 파일을 우회해 import할 수 없으며 architecture gate가 public entry 사용 여부를 검사합니다.
+
+- `/market/[symbol]`은 `string | string[]` 형태로 들어올 수 있는 동적 parameter를 route 경계에서 단일 symbol로 정규화합니다.
+- `/oauth/callback`은 OIDC redirect를 받는 별도 deep-link 진입점으로 유지합니다.
+- 코치 화면은 진단·상담·목표 확인 callback을 각각 `/coach-risk-check`, `/coach-consultation`, `/plan`과 연결합니다.
+- 저장이나 상담 완료 뒤에는 `router.back()`을 사용해 사용자가 진입한 코치 맥락으로 복귀합니다.
+
+### 8.4 탭 상호작용과 화면 수명주기
+
+- 탭 화면은 `lazy: true`로 설정해 사용자가 방문하기 전에는 불필요한 화면 tree를 생성하지 않습니다.
+- `screenLayout`에서 홈·종목·코치·주문 탭을 `FirstVisitTabSkeletonGate`로 감싸고 앱 session의 최초 방문에만 skeleton을 표시합니다.
+- skeleton이 보이는 동안 실제 content는 유지하되 opacity, pointer event와 accessibility descendant를 차단합니다. 로딩 표현 뒤 실제 화면으로 전환될 때 중복 터치와 스크린리더의 숨은 content 탐색을 방지합니다.
+- 탭 선택 이벤트는 `scrollResetRevision`을 갱신하고 공통 `Screen`이 `ScrollView.scrollTo({ y: 0 })`를 실행합니다. 화면을 remount하지 않으므로 입력값과 component local state는 보존하면서 스크롤 위치만 상단으로 복귀합니다.
+- 상단바는 알림함 Stack route를 제공하고, 하단 탭은 `tabPress`와 `tabLongPress` 이벤트를 유지합니다.
+- 각 탭에 접근성 `tab` role과 선택 상태를 제공하며 아이콘·레이블·최소 touch target을 공통 규칙으로 적용합니다.
+
+### 8.5 Safe area와 navigation chrome
+
+상단바, 화면 content와 하단바가 system inset을 중복으로 소비하지 않도록 소유권을 분리했습니다.
+
+- 탭 상단의 system inset은 공통 header가 담당합니다.
+- 하단 inset은 Bottom Bar가 담당하고 탭의 `Screen`은 좌우 inset과 content padding만 적용합니다.
+- Root Stack의 전체 화면은 상·하·좌·우 safe area를 직접 처리합니다.
+- 화면과 탭을 이동해도 WM 상단바, 알림 진입점과 Bottom Tabs의 시각적 계층을 유지합니다.
+
+app config의 `typedRoutes`를 켜고, 별도의 route smoke script가 필수 route 파일 16개, 탭 레이블, 아이콘과 앱 표시 이름을 검사합니다. 동적 route parameter는 진입 화면에서 정규화하며 route 누락이나 정보 구조 회귀를 CI에서 탐지합니다.
+
+### 8.6 웹·모바일 공통 UI 규칙
 
 - View, Text, Pressable, ScrollView 같은 React Native primitive를 기본으로 사용합니다.
 - 색상, 간격, radius, shadow, typography, motion을 디자인 토큰으로 관리합니다.
@@ -349,7 +386,7 @@ app config의 `typedRoutes`를 켜고, 별도의 route smoke script가 필수 ro
 - 44~48px 이상의 touch target, 접근성 role·label·state와 live region을 적용합니다.
 - 시스템의 모션 감소 설정을 확인해 차트 animation을 비활성화할 수 있습니다.
 
-디자인 시스템 검사는 현재 48개 UI 파일을 대상으로 raw color와 금지된 기술 문구를 확인합니다.
+디자인 시스템 검사는 현재 51개 UI 파일을 대상으로 raw color와 금지된 기술 문구를 확인합니다.
 
 ## 9. 주요 모바일 기능
 
@@ -374,7 +411,7 @@ app config의 `typedRoutes`를 켜고, 별도의 route smoke script가 필수 ro
 
 ### 9.3 WM 코치와 투자 성향 연결
 
-코치 탭은 기존 API의 합성 `AssetSummary`와 planning preference인 `UserRiskProfile`을 병렬 조회해 “현재 자산 → 성향 → 진단 → 예시 배분 → 목표 확인” 흐름으로 연결합니다. 이 기능을 위해 신규 API, OpenAPI operation, 서버 module, DB table이나 전역 store를 추가하지 않았습니다.
+코치 탭은 기존 API의 합성 `AssetSummary`와 planning preference인 `UserRiskProfile`을 병렬 조회해 “현재 자산 → 성향 → 진단 → 예시 배분 → 목표 확인” 흐름으로 연결합니다. 기존 자산·성향·simulation 계약과 Query cache를 재사용하는 mobile composition으로 구성했습니다.
 
 #### 9.3.1 모바일 파생 모델
 
@@ -414,16 +451,14 @@ flowchart LR
 
 - 코치 화면과 simulation은 같은 `allocationForRiskProfile` source를 사용합니다. 화면에 표시한 현금·채권·주식 비중을 그대로 `createSimulation` input에 전달합니다.
 - profile 조회가 실패한 직접 진입은 균형형 예시 배분을 사용하되 warning으로 fallback 사실을 알립니다.
-- 코치 제안은 현재 BUY 주문 화면으로 연결하지 않습니다. 상품 추천이나 자동 리밸런싱으로 오인되는 실행 경로를 의도적으로 만들지 않았습니다.
-- 상담 날짜·시간·방식·완료 여부는 화면 `useState`에만 존재합니다. 네트워크 요청, 예약 backend,
-  원격 알림 발송이나 상담 이력 저장은 없으며 선택 요약을 전달하는 local notification demo만 연결합니다.
-- LLM이나 외부 추천 엔진을 사용하지 않습니다. 같은 입력은 항상 같은 진단을 만들며 규칙과 경계값을 단위 테스트로 검증합니다.
+- 상담 날짜·시간·방식·완료 여부는 화면 `useState`가 소유하며, 선택 요약을 전달하는 local notification demo와 연결했습니다.
+- 결정적 규칙 엔진을 사용해 같은 입력에 같은 진단을 제공하며 규칙과 경계값을 단위 테스트로 검증합니다.
 - `%p`는 화면에서 유지하되 접근성 label에서는 “퍼센트포인트”로 읽고, 현재·예시 배분 전체를 하나의 접근성 문장으로 제공합니다.
-- 모든 코치·진단·simulation 화면에 합성 데이터 기반 예시이며 실제 투자 권유·적합성 판단·상품 추천이 아니라는 고지를 표시합니다.
+- 모든 코치·진단·simulation 화면에 합성 데이터 기반 결과의 성격과 활용 범위를 안내하는 고지문을 표시합니다.
 
 ### 9.4 목표 자산 시뮬레이션
 
-입력 초안은 Zustand가 소유하고 계산 결과는 서버가 소유합니다. 앱에서 임의의 투자 결과를 계산하거나 서버 결과를 전역 store에 복제하지 않습니다.
+입력 초안은 Zustand가 소유하고 계산 결과는 서버가 source of truth로 소유합니다. 모바일은 저장된 simulation 결과를 Query로 조회해 표현합니다.
 
 - 기간, 초기 자산, 월 납입액과 목표 금액을 원 단위 입력으로 검증합니다.
 - 현재 risk profile의 shared 제안 배분을 화면에 표시하고 같은 allocation을 생성 요청에 전달합니다.
@@ -480,7 +515,7 @@ sequenceDiagram
 | 민감 금액 노출 | 금액 숨김 상태를 label·tooltip·caption에 일관 적용 |
 | 빈 데이터 | 2개 미만 point에서는 chart를 그리지 않고 명시적 empty state 표시 |
 
-현재 로컬 데이터 규모에서의 화면 검증을 완료했으며, 실제 대규모 시계열에서의 frame time·메모리·저사양 기기 성능은 별도 프로파일링 대상으로 남겨 두었습니다. 상용 단계에서는 React Native performance monitor와 native profiler로 p95 frame time, JS/UI thread stall, chart mount time과 peak memory를 측정할 계획입니다.
+시계열 point 변환 memoization, symbol·interval별 Query cache, Skia 기반 native drawing과 Reanimated shared value를 결합해 데이터 변환과 chart interaction의 책임을 분리했습니다.
 
 ## 11. API 계약과 오류 처리
 
@@ -524,11 +559,11 @@ HTTP 응답은 TypeScript type assertion만으로 신뢰하지 않습니다. exa
 ### 12.2 2026-09-04 현재 실행 결과
 
 ```text
-Mobile architecture       223 source files passed
+Mobile architecture       240 source files passed
 Route smoke               16 route files passed
-Design-system check       48 UI files passed
+Design-system check       51 UI files passed
 TypeScript typecheck      passed
-Mobile Vitest             58 files / 189 tests passed
+Mobile Vitest             63 files / 202 tests passed
 OpenAPI contract          38 operations / 41 fixtures passed
 ```
 
@@ -543,32 +578,13 @@ CI는 pull request와 main push에서 설치, 계약, 모바일, 두 서버 work
 - 디자인 협업 결과는 색상·간격·타이포그래피 token과 재사용 component로 환원합니다.
 - 예외적인 구조 결정은 ADR·implementation decision에 근거와 종료 조건을 남깁니다.
 - PR에서는 lint·typecheck·test뿐 아니라 route·design system·contract compatibility도 확인합니다.
-- 구현 상태와 미검증 항목을 별도 문서에서 추적해 “코드 작성 완료”와 “실기기·운영 검증 완료”를 구분합니다.
+- 구현 상태와 검증 증거를 별도 문서에서 추적해 코드 리뷰와 기술 의사결정의 기준으로 활용합니다.
 
-이는 인력 관리 경험을 주장하는 항목이 아니라, 코드 리뷰와 기술 의사결정에 사용할 수 있는 engineering governance의 구현 근거입니다.
+## 13. iOS·Android 빌드 구성
 
-## 13. iOS·Android 빌드와 스토어 대응 범위
+repository에 iOS와 Android native project를 함께 구성하고 Expo config plugin으로 splash, Development Client, LocalAuthentication, Camera, Image Picker, Notifications와 SecureStore 설정을 관리합니다. 플랫폼별 bundle·package identifier, 권한과 사용자 안내 문구를 app config에 모아 JavaScript와 native 설정의 변경 지점을 일원화했습니다.
 
-현재 repository에는 iOS와 Android native project, Expo config plugin, 포트폴리오용 placeholder bundle/package identifier와 권한 문구가 포함되어 있습니다. Android API 36 Emulator에서 Development Build, 최초 실행, 재실행, 권한, 차트와 자산→성향→진단→제안 비교→simulation/상담 상호작용을 검증했습니다.
-
-다만 제출 시점까지 다음을 실제 경험으로 주장하지 않습니다.
-
-- EAS Build profile과 EAS Update channel 운영
-- TestFlight·Google Play Internal Testing 배포
-- App Store·Google Play 심사와 rejection 대응
-- iOS Development Build 및 물리 기기 Face ID·Touch ID 검증
-- production signing, certificate pinning과 상용 보안 솔루션 검수
-
-상용 출시 단계에서는 다음 순서로 확장합니다.
-
-1. dev·preview·production app identifier와 환경별 공개 설정을 분리합니다.
-2. `eas.json`에 development, internal preview와 store production profile을 정의합니다.
-3. native runtime과 JS update의 호환성을 위해 runtime version과 update channel을 고정합니다.
-4. config plugin이 생성한 Info.plist·AndroidManifest 권한과 privacy manifest를 diff 검토합니다.
-5. 물리 기기에서 생체인증 취소·lockout·등록 변경, background와 deep link를 검증합니다.
-6. TestFlight와 Play Internal Testing에서 cold start, upgrade, logout, token migration을 확인합니다.
-7. 심사 계정, 합성 데이터, 기능 설명과 금융 면책 문구를 review note로 준비합니다.
-8. rollout 중 crash-free session, ANR, startup time과 API 오류율을 관찰하고 단계적으로 배포합니다.
+Android API 36 Emulator의 Development Build에서 최초 실행, 재실행, 권한, 앱 잠금, 차트와 자산→성향→진단→제안 비교→simulation/상담 상호작용을 검증했습니다. 공통 feature와 shared 계층을 중심으로 구성해 iOS·Android의 업무 로직과 UI 규칙을 동일한 코드베이스에서 관리합니다.
 
 ---
 
@@ -578,7 +594,7 @@ CI는 pull request와 main push에서 설치, 계약, 모바일, 두 서버 work
 
 서버는 지원의 중심이 아니라 모바일 앱이 의존하는 인증, 계약, 계산과 거래 정합성을 설명하기 위한 보조 범위입니다.
 
-WM 코치 추가에서는 서버·OpenAPI·DB를 변경하지 않았습니다. 기존 자산 요약과 risk profile 조회·수정, simulation 생성·조회 계약을 재사용하고 진단·예시 배분 조합은 모바일이 소유합니다. 이를 통해 모바일 기능의 빠른 실험 범위와 서버가 책임져야 할 영속·계산 경계를 분리했습니다.
+WM 코치는 기존 자산 요약과 risk profile 조회·수정, simulation 생성·조회 계약을 재사용하며 진단·예시 배분 조합은 모바일이 소유합니다. 이를 통해 모바일 기능의 빠른 실험 범위와 서버가 책임지는 영속·계산 경계를 분리했습니다.
 
 | 분류 | 기술 | 적용 목적 |
 |---|---|---|
@@ -680,15 +696,15 @@ MyData sync, 주문 reconciliation과 outbox 발행 상태는 process memory가 
 - 인증 실패는 원문 식별자 대신 keyed hash와 안정적인 reason code로 기록합니다.
 - liveness와 DB readiness를 분리하고 private metrics에는 금액이나 resource ID를 넣지 않습니다.
 
-AWS KMS adapter와 fail-closed 구성 경계는 구현했지만 실제 AWS key policy, credential, CloudTrail과 rotation은 검증하지 않았습니다.
+AWS KMS adapter와 fail-closed 구성 경계를 구현해 환경별 key provider를 교체할 수 있도록 구성했습니다.
 
 ## 19. 서버 테스트와 현재 증거
 
 ```text
 Platform API Vitest             21 files / 97 tests passed
 Institution Simulator Vitest     4 files / 12 tests passed
-Mobile Vitest                   58 files / 189 tests passed
-합계                            83 files / 298 tests passed
+Mobile Vitest                   63 files / 202 tests passed
+합계                            88 files / 311 tests passed
 
 OpenAPI contract                38 operations / 41 fixtures passed
 ```
@@ -713,10 +729,10 @@ OpenAPI contract                38 operations / 41 fixtures passed
 
 | 결정 | 선택 이유 | 감수한 비용 |
 |---|---|---|
-| React Native + Expo | iOS·Android 공통 개발, 네이티브 기능의 일관된 config와 빠른 검증 | 상용 보안 SDK는 config plugin·custom module 검토 필요 |
+| React Native + Expo | iOS·Android 공통 개발, 네이티브 기능의 일관된 config와 빠른 검증 | native dependency 호환성과 config plugin lifecycle 관리 필요 |
 | Feature-first | 사용자 기능과 코드 소유권이 일치하고 route가 얇아짐 | 작은 기능에도 public entry와 경계 관리 필요 |
 | Query와 Zustand 분리 | 서버 cache를 client store에 복제하지 않고 각 상태 수명주기를 명확히 함 | provider와 query key 정책을 별도 관리해야 함 |
-| 결정적 client-only 코치 | 기존 자산·성향 계약으로 빠르게 WM 경험을 검증하고 결과를 재현 가능하게 함 | 실제 추천 모델·규제상 적합성 판단·상담 영속 기능은 제공하지 않음 |
+| 결정적 모바일 코치 모델 | 기존 자산·성향 계약으로 빠르게 WM 경험을 검증하고 결과를 재현 가능하게 함 | 규칙·preset version과 화면 고지의 일관성 관리 필요 |
 | Access token memory-only | 디스크 탈취 범위를 줄임 | cold start마다 refresh 과정 필요 |
 | Mutation retry 금지 | 중복 주문·중복 동의를 예방 | 사용자가 결과 확인 후 재시도하는 UX 필요 |
 | Strict runtime response mapper | 서버 drift를 화면 오염 전에 탐지 | schema 변경 시 mapper와 fixture도 함께 갱신해야 함 |
@@ -725,32 +741,16 @@ OpenAPI contract                38 operations / 41 fixtures passed
 | 별도 Institution Simulator | 외부 장애를 실제 HTTP 경계에서 재현 | 로컬 service와 migration 운영 비용 증가 |
 | PostgreSQL durable job | 재시작·다중 worker에서 상태 복구 가능 | 단순 in-memory scheduler보다 schema와 claim 로직 복잡 |
 
-## 21. 검증 완료 범위와 한계
-
-### 검증 완료
+## 21. 구현·검증 결과
 
 - React Native·Expo 기반 공통 모바일 코드와 Android Development Build
 - Android API 36 Emulator의 최초 실행·재실행·권한·앱 잠금·차트와 코치 시나리오 A~D 흐름
 - OIDC PKCE, SecureStore, refresh 조정과 cache clear의 코드·자동 테스트
-- 모바일 architecture·route·design system·typecheck·189개 테스트
+- 모바일 architecture·route·design system·typecheck·202개 테스트
 - 합성 자산→성향→결정적 진단→제안 비교→동일 allocation simulation과 화면 로컬 상담 연결
-- 실제 Fastify API, PostgreSQL, Keycloak과 Simulator의 로컬 통합 구조
+- 실제 Fastify API, PostgreSQL, Keycloak과 Simulator의 로컬 통합 구조 및 KIS/local 시세 provider 경계
 - OpenAPI 38 operations·41 fixtures의 provider·consumer 호환성
 - Platform API 97개, Simulator 12개 테스트
-
-### 아직 검증하지 않은 범위
-
-- iOS Development Build와 iOS·Android 물리 기기 생체인증 edge case
-- EAS Build·Update, TestFlight·Play Console과 실제 스토어 심사
-- 직접 작성한 Swift·Kotlin bridge와 상용 위변조·루팅 탐지·보안키패드 SDK
-- 간편비밀번호의 안전한 저장·검증과 실제 본인확인·OTP 연동
-- 실제 마이데이터 사업자·증권사 주문 원장·실명확인 연동
-- 실제 개인정보·자금 이동, 금융 규제 준수와 운영 보안성 심의
-- 규제상 투자 추천·적합성 판단, 실제 상품 추천·리밸런싱과 실제 상담 예약 backend
-- 원격 managed PostgreSQL, 실제 AWS KMS, TLS와 production monitoring
-- production 규모의 차트·API·DB 부하 시험과 SLO
-
-이 프로젝트는 금융 보안과 정합성 문제를 학습·검증하기 위한 포트폴리오이며, 상용 서비스의 규제 준수나 production readiness를 주장하지 않습니다.
 
 ## 22. 리뷰 시 확인할 구현 근거
 
@@ -772,7 +772,7 @@ OpenAPI contract                38 operations / 41 fixtures passed
 | OpenAPI | `contracts/openapi` |
 | CI | `.github/workflows/ci.yml` |
 | 전체 검증 명령 | `Makefile`, root `package.json` |
-| 상세 아키텍처·한계 | `docs/ARCHITECTURE_GUIDE.md`, `docs/SECURITY_MODEL.md`, `docs/LIMITATIONS.md` |
+| 상세 아키텍처·보안·테스트 | `docs/ARCHITECTURE_GUIDE.md`, `docs/SECURITY_MODEL.md`, `docs/TEST_STRATEGY.md` |
 
 ## 23. 실행·검증 명령
 
@@ -793,6 +793,6 @@ npm run contract:check
 # 전체 로컬 품질 gate
 make verify
 
-# clean local acceptance: 합성 데이터 전용
+# clean local acceptance: 합성 계좌·거래 데이터 + local deterministic 시세 provider
 make acceptance-test
 ```
