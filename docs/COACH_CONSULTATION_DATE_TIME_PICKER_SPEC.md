@@ -249,8 +249,8 @@ font size와 weight는 `typography.caption`, `typography.body`, `typography.labe
 시간은 자유 입력이 아니라 상담 가능한 slot을 세로로 스크롤해 선택한다.
 
 - React Native `ScrollView`에 `snapToInterval`을 적용한다.
-- 한 화면에 5개 row를 노출하고 가운데 row를 선택 영역으로 사용한다.
-- row 높이는 64px로 고정한다.
+- 기본 wheel은 한 화면에 5개 row를 노출하고 가운데 row를 선택 영역으로 사용한다.
+- 기본 row 높이는 64px이며, Modal에서는 `compact` 3-row wheel과 56px row를 사용해 dialog 높이를 줄인다.
 - 가운데 선택 영역은 `colors.brand.primary` border로 강조한다.
 - 가운데 row는 `colors.surface.warm`, 인접 row는 축소·투명도 감소로 wheel 깊이를 표현한다.
 - 선택·미선택·마감 row 모두 동일한 우측 trailing slot을 예약해 시간 텍스트의 중앙 정렬을 유지한다.
@@ -281,7 +281,7 @@ font size와 weight는 `typography.caption`, `typography.body`, `typography.labe
 
 날짜를 고르면 첫 번째 available 시간이 기본 선택되고 시간 trigger와 방식 카드가 표시된다. 시간을 바꾸고 싶을 때만 trigger를 눌러 모달 wheel을 열며, 방식은 default 선택하지 않고 사용자의 명시 선택을 요구한다.
 
-### 3.6 예약 내용 요약
+### 3.7 예약 내용 요약
 
 날짜·시간·방식을 모두 선택했을 때만 표시한다. CTA 바로 위에 배치해 사용자가 제출 전 선택 내용을 검토할 수 있게 한다.
 
@@ -414,6 +414,7 @@ API 호출이 없으므로 loading 상태는 만들지 않는다. component moun
 #### `apps/mobile/src/features/coach/ui/time-slot-wheel.tsx`
 
 - 오전·오후·저녁 label과 시간 row를 포함한 세로 snap wheel
+- 기본 5-row/64px와 Modal 전용 `compact` 3-row/56px 변형 제공
 - 외부 `FullScreenPage` ScrollView 안에 들어가므로 VirtualizedList인 `FlatList`는 사용하지 않는다.
 - slot 수가 작고 고정된 상담 시간 목록이므로 `ScrollView`가 nested list 경고 없이 적합하다.
 - 중앙 selection window와 인접 row fade/scale 표현
@@ -428,7 +429,7 @@ API 호출이 없으므로 loading 상태는 만들지 않는다. component moun
 #### `apps/mobile/src/features/coach/ui/time-slot-wheel.test.tsx`
 
 - 세로 slot row와 시간대 label 표시
-- `snapToInterval`, 5-row wheel 높이와 test ID 확인
+- `snapToInterval`, 기본 5-row/compact 3-row wheel 높이와 test ID 확인
 - selected 상태 표시
 - full slot disabled와 `마감` 표시
 - press callback이 slot id를 전달하는지 검증

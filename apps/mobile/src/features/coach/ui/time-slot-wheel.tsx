@@ -17,11 +17,14 @@ import {
 } from '../../../shared/design-system';
 import type { ConsultationSlot } from '../model/consultation-availability';
 
-const ITEM_HEIGHT = 64;
-const VISIBLE_ITEMS = 5;
-const CENTER_INDEX = Math.floor(VISIBLE_ITEMS / 2);
-const WHEEL_PADDING = ITEM_HEIGHT * CENTER_INDEX;
-const WHEEL_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
+const DEFAULT_WHEEL_CONFIG = {
+  itemHeight: 64,
+  visibleItems: 5,
+} as const;
+const COMPACT_WHEEL_CONFIG = {
+  itemHeight: 56,
+  visibleItems: 3,
+} as const;
 
 function nearestAvailableIndex(
   slots: readonly ConsultationSlot[],
@@ -51,17 +54,21 @@ function periodLabel(slot: ConsultationSlot): string {
 
 function WheelRow({
   index,
+  centerIndex,
+  itemHeight,
   onSelect,
   selected,
   slot,
 }: {
+  readonly centerIndex: number;
   readonly index: number;
+  readonly itemHeight: number;
   readonly onSelect: (slot: ConsultationSlot, index: number) => void;
   readonly selected: boolean;
   readonly slot: ConsultationSlot;
 }) {
   const full = slot.status === 'FULL';
-  const distanceFromCenter = Math.abs(index - CENTER_INDEX);
+  const distanceFromCenter = Math.abs(index - centerIndex);
   const faded = !selected && distanceFromCenter > 0;
   return (
     <Pressable
@@ -72,6 +79,7 @@ function WheelRow({
       onPress={() => onSelect(slot, index)}
       style={({ pressed }) => [
         styles.row,
+        { height: itemHeight },
         selected && styles.rowSelected,
         full && styles.rowDisabled,
         faded && styles.rowFaded,
@@ -105,14 +113,20 @@ function WheelRow({
 }
 
 export function TimeSlotWheel({
+  compact = false,
   onSelect,
   selectedSlotId,
   slots,
 }: {
+  readonly compact?: boolean;
   readonly onSelect: (slot: ConsultationSlot) => void;
   readonly selectedSlotId: string | undefined;
   readonly slots: readonly ConsultationSlot[];
 }) {
+  const config = compact ? COMPACT_WHEEL_CONFIG : DEFAULT_WHEEL_CONFIG;
+  const centerIndex = Math.floor(config.visibleItems / 2);
+  const wheelPadding = config.itemHeight * centerIndex;
+  const wheelHeight = config.itemHeight * config.visibleItems;
   const scrollRef = useRef<ScrollView>(null);
   const selectedIndex = slots.findIndex(
     (slot) => slot.slotId === selectedSlotId,
@@ -124,15 +138,15 @@ export function TimeSlotWheel({
     if (initialIndex === undefined) return;
     scrollRef.current?.scrollTo?.({
       animated: false,
-      y: initialIndex * ITEM_HEIGHT,
+      y: initialIndex * config.itemHeight,
     });
-  }, [initialIndex, slots]);
+  }, [config.itemHeight, initialIndex, slots]);
 
   const onSelectWithScroll = (slot: ConsultationSlot, index: number) => {
     if (slot.status === 'FULL') return;
     scrollRef.current?.scrollTo?.({
       animated: true,
-      y: index * ITEM_HEIGHT,
+      y: index * config.itemHeight,
     });
     onSelect(slot);
   };
@@ -144,7 +158,7 @@ export function TimeSlotWheel({
       0,
       Math.min(
         slots.length - 1,
-        Math.round(event.nativeEvent.contentOffset.y / ITEM_HEIGHT),
+        Math.round(event.nativeEvent.contentOffset.y / config.itemHeight),
       ),
     );
     const index = nearestAvailableIndex(slots, requestedIndex);
@@ -152,7 +166,7 @@ export function TimeSlotWheel({
     if (index !== requestedIndex) {
       scrollRef.current?.scrollTo?.({
         animated: true,
-        y: index * ITEM_HEIGHT,
+        y: index * config.itemHeight,
       });
     }
     onSelect(slots[index]!);
@@ -161,23 +175,28 @@ export function TimeSlotWheel({
   return (
     <View
       accessibilityLabel="상담 가능한 시간을 세로로 스크롤해 선택하는 휠"
-      style={styles.container}
+      style={[styles.container, { height: wheelHeight }]}
     >
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingVertical: wheelPadding },
+        ]}
         decelerationRate="fast"
         nestedScrollEnabled
         onMomentumScrollEnd={handleMomentumEnd}
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
         snapToAlignment="start"
-        snapToInterval={ITEM_HEIGHT}
-        style={styles.list}
+        snapToInterval={config.itemHeight}
+        style={[styles.list, { height: wheelHeight }]}
         testID="consultation-time-wheel"
       >
         {slots.map((slot, index) => (
           <WheelRow
+            centerIndex={centerIndex}
             index={index}
+            itemHeight={config.itemHeight}
             key={slot.slotId}
             onSelect={onSelectWithScroll}
             selected={slot.slotId === selectedSlotId}
@@ -185,24 +204,27 @@ export function TimeSlotWheel({
           />
         ))}
       </ScrollView>
-      <View pointerEvents="none" style={styles.selectionWindow} />
+      <View
+        pointerEvents="none"
+        style={[
+          styles.selectionWindow,
+          { height: config.itemHeight, top: wheelPadding },
+        ]}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    height: WHEEL_HEIGHT,
     overflow: 'hidden',
     position: 'relative',
   },
-  content: { paddingVertical: WHEEL_PADDING },
-  list: { height: WHEEL_HEIGHT },
+  content: {},
   row: {
     alignItems: 'center',
     borderRadius: radius.button,
     flexDirection: 'row',
-    height: ITEM_HEIGHT,
     justifyContent: 'space-between',
     paddingHorizontal: spacing[5],
   },
@@ -224,10 +246,9 @@ const styles = StyleSheet.create({
     borderColor: colors.brand.primary,
     borderRadius: radius.button,
     borderWidth: 1,
-    height: ITEM_HEIGHT,
     left: 0,
     position: 'absolute',
     right: 0,
-    top: WHEEL_PADDING,
   },
+  list: {},
 });

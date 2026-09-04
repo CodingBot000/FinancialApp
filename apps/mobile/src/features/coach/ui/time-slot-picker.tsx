@@ -132,6 +132,7 @@ export function TimeSlotPicker({
               </View>
 
               <TimeSlotWheel
+                compact
                 onSelect={(slot) => setDraftSlotId(slot.slotId)}
                 selectedSlotId={draftSlotId ?? defaultSlotId}
                 slots={slots}

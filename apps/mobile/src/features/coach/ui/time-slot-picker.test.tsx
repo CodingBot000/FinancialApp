@@ -48,6 +48,9 @@ describe('TimeSlotPicker', () => {
 
     await fireEvent.press(view.getByTestId('consultation-time-trigger'));
     expect(view.getByTestId('consultation-time-picker-modal')).toBeTruthy();
+    expect(view.getByTestId('consultation-time-wheel').props).toMatchObject({
+      snapToInterval: 56,
+    });
     expect(view.getByRole('button', { name: '시간 선택 닫기' })).toBeTruthy();
     await fireEvent.press(view.getByRole('radio', { name: '19:00 상담 가능' }));
     await fireEvent.press(view.getByRole('button', { name: '선택 완료' }));
