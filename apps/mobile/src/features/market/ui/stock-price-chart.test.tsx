@@ -53,7 +53,7 @@ vi.mock('@shopify/react-native-skia', () => ({
 }));
 
 describe('StockPriceChart', () => {
-  it('uses timestamp axes, bottom area baseline, and monotone price paths', async () => {
+  it('uses timestamp axes, bottom area baseline, and linear price paths', async () => {
     const view = await render(
       <StockPriceChart
         bars={[
@@ -88,13 +88,13 @@ describe('StockPriceChart', () => {
     );
     expect(areaSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        curveType: 'monotoneX',
+        curveType: 'linear',
         opacity: 0.14,
         y0: 200,
       }),
     );
     expect(lineSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ curveType: 'monotoneX' }),
+      expect.objectContaining({ curveType: 'linear' }),
     );
     expect(view.getByText('종가 74,200원')).toBeTruthy();
     expect(view.getByText('시가 74,000원')).toBeTruthy();

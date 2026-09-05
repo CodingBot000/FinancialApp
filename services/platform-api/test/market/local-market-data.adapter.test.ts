@@ -11,7 +11,7 @@ const stock = {
 };
 
 describe('LocalMarketDataAdapter', () => {
-  it('returns deterministic unique buckets for every interval', async () => {
+  it('returns deterministic market-like OHLC bars for every interval', async () => {
     const provider = new LocalMarketDataAdapter();
     for (const interval of Object.keys(MARKET_BAR_LIMITS) as Array<
       keyof typeof MARKET_BAR_LIMITS
@@ -26,6 +26,39 @@ describe('LocalMarketDataAdapter', () => {
       expect(first.bars.map((bar) => bar.bucketAt)).toEqual(
         [...first.bars].map((bar) => bar.bucketAt).sort(),
       );
+      for (const bar of first.bars) {
+        expect(Number(bar.high)).toBeGreaterThanOrEqual(
+          Math.max(Number(bar.open), Number(bar.close)),
+        );
+        expect(Number(bar.low)).toBeLessThanOrEqual(
+          Math.min(Number(bar.open), Number(bar.close)),
+        );
+        expect(Number(bar.volume)).toBeGreaterThan(0);
+      }
     }
+  });
+
+  it('aligns the latest daily bar with the quote and excludes weekends', async () => {
+    const provider = new LocalMarketDataAdapter();
+    const quote = await provider.quote(stock);
+    const result = await provider.bars(stock, 'DAILY');
+    const latest = result.bars.at(-1)!;
+    const previous = result.bars.at(-2)!;
+
+    expect(latest.close).toBe(quote.currentPrice);
+    expect(latest.volume).toBe(quote.volume);
+    expect(Number(latest.close) - Number(previous.close)).toBeCloseTo(
+      Number(quote.changePrice),
+      0,
+    );
+    expect(
+      result.bars.every((bar) => {
+        const day = new Date(bar.bucketAt).getUTCDay();
+        return day !== 0 && day !== 6;
+      }),
+    ).toBe(true);
+    expect(new Set(result.bars.map((bar) => bar.close)).size).toBeGreaterThan(
+      result.bars.length * 0.8,
+    );
   });
 });

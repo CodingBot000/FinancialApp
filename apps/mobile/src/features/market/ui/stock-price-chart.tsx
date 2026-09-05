@@ -127,7 +127,7 @@ export function StockPriceChart({
                     ? {}
                     : { animate: { duration: 500, type: 'timing' as const } })}
                   color={colors.brand.primary}
-                  curveType="monotoneX"
+                  curveType="linear"
                   opacity={0.14}
                   points={chartPoints.close}
                   y0={chartBounds.bottom}
@@ -137,7 +137,7 @@ export function StockPriceChart({
                     ? {}
                     : { animate: { duration: 500, type: 'timing' as const } })}
                   color={colors.brand.primary}
-                  curveType="monotoneX"
+                  curveType="linear"
                   points={chartPoints.close}
                   strokeCap="round"
                   strokeJoin="round"
