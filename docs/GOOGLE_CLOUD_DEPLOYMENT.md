@@ -482,12 +482,14 @@ git grep -nE 'postgres(ql)?://|AIza|ghp_|sk-|-----BEGIN|Bearer [A-Za-z0-9._-]{20
 |---|---|
 | Google Cloud project | nexuslink-490118 |
 | Region | asia-northeast3 |
-| Platform API image tag | platform-api:da82149 |
-| Platform API Cloud Run revision | finapp-platform-api-00002-jjr |
+| Platform API image tag | platform-api:ee9f812 |
+| Platform API image digest | sha256:2de0ae11f22cd4c7f79886d9992172154242b7c2d97d8221f075dfcec2578d1a |
+| Platform API Cloud Build | f96bf0d3-6e3d-40c5-bd20-e18cf8fa9d94 |
+| Platform API Cloud Run revision | finapp-platform-api-00003-tv2 |
 | Market seed execution | finapp-platform-market-seed-w4dw9 |
-| Latest APK artifact commit | 27dc9df |
+| Market bar refresh verification | 6 symbols × 5 intervals passed |
+| Latest APK artifact commit | ba2b6bb |
 | APK ABI | arm64-v8a only |
 
 위 기록에는 password, token, DB URL, private key, 인증 코드, Cloud SQL public IP를
 포함하지 않는다.
-
