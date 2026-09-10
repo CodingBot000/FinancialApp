@@ -1,5 +1,11 @@
 # Financial_app 한화 PLUS 스타일 디자인 시스템 및 고객용 UI 전환 지시서
 
+- 상태: `IMPLEMENTED_REFERENCE`
+- 구현 범위: FE-0015, FE-0016, FE-0018
+- 현재 대체 문서: 소스 검토는 `docs/FRONTEND_REFACTOR_REVIEW_PLAN.md`
+- 부분 대체: 하단 탭과 코치 정보 구조는 `docs/COACH_EXPERIENCE_IMPLEMENTATION_SPEC.md`
+- 남은 검증: iOS/native는 `ISSUE-0017`, `GAP-0002`; chart accessibility 보강은
+  `MARKET_CHART_REPAIR_AND_PARITY_PLAN.md`의 미완료 항목 참조
 - 문서 목적: Codex가 현재 `CodingBot000/FinancialApp` 저장소를 직접 분석한 뒤, 기존 기능을 보존하면서 모바일 앱 전체를 고객 중심의 한화 PLUS 계열 톤앤매너로 전환하도록 지시한다.
 - 대상 저장소: `CodingBot000/FinancialApp`
 - 기준 브랜치: Codex 실행 시점의 현재 작업 브랜치
@@ -12,7 +18,9 @@
 
 ## 0. Codex에 대한 실행 명령
 
-이 문서는 검토 의견서가 아니라 **직접 구현 지시서**다.
+이 section은 FE-0015 착수 당시 사용한 **직접 구현 지시**를 이력으로 보존한다. 현재는
+동일 작업을 다시 실행하라는 의미가 아니며, 새 리팩터링 후보는
+`docs/FRONTEND_REFACTOR_REVIEW_PLAN.md` 기준으로 검토한다.
 
 Codex는 다음 원칙으로 작업한다.
 
@@ -2210,7 +2218,10 @@ test(mobile): add design-system and customer-copy regression checks
 
 # 23. 최종 Definition of Done
 
-아래 항목을 모두 충족해야 완료다.
+아래 checklist는 FE-0015 착수 당시의 완료 기준이다. 현재 구현 증거는
+`docs/IMPLEMENTATION_STATUS.md`와 frontend 개발 로그가 기준이며, 이후 코치 기능으로
+바뀐 5개 하단 탭은 원래 4개 탭 조건을 대체한다. 체크되지 않은 원문을 현재 미구현
+목록으로 해석하지 않는다.
 
 ## Design System
 

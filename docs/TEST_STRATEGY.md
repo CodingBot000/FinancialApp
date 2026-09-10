@@ -1,12 +1,14 @@
 # 테스트 전략
 
-- 상태: MVP 실행 기준선
+- 상태: 구현·리팩터링 검증 기준선
 - 작성일: 2026-09-01
+- 마지막 문서 갱신: 2026-09-10
 
 ## 1. 원칙
 
-- 테스트는 원격 Lightsail DB를 사용하지 않는다.
-- 원격 Lightsail에서는 별도의 승인된 migration/role/TLS/E2E smoke만 실행하고 자동 test suite의 test data source로 사용하지 않는다.
+- 자동 테스트는 원격 managed DB를 사용하지 않는다.
+- Google Cloud 배포 smoke와 자동 test suite를 분리한다. 원격 Cloud SQL은 승인된
+  migration/role/TLS/smoke에만 사용하고 test data source로 사용하지 않는다.
 - DB integration test는 `@testcontainers/postgresql`을 사용한다.
 - 시간은 주입된 `Clock`, random은 명시적 seed를 사용한다.
 - 테스트 간 데이터와 scenario는 독립적이어야 한다.
@@ -114,6 +116,9 @@ HTTP adapter mock은 세부 client unit test에 사용할 수 있지만 이 suit
 - biometric adapter 결과 분기
 - Reduce Motion 분기
 - 시장 종목 검색, quote source/freshness, 5개 interval chart rendering
+- launch permission 순서와 재실행 marker
+- 코치 진단, risk profile update, simulation allocation과 상담 local state
+- 탭 재선택 scroll-to-top과 최초 진입 skeleton session
 
 ### Mobile architecture
 
@@ -121,6 +126,8 @@ HTTP adapter mock은 세부 client unit test에 사용할 수 있지만 이 suit
 - route가 API transport, store implementation과 feature internal file을 직접 import하지 않는지 검사
 - feature 간 cycle과 공개 `index.ts` 밖의 deep import 검사
 - TanStack Query server state를 Zustand에 복제하지 않는지 review와 targeted test로 확인
+- AppState/timer/native subscription cleanup과 중복 prompt 방지 확인
+- 금액 숨김이 접근성 label과 chart summary에도 적용되는지 확인
 
 ### Frontend contract mock
 
@@ -184,6 +191,20 @@ launch 선택 권한 자동화 범위:
 Android API 36 actual smoke는 알림 거부 → 카메라 거부 뒤 onboarding 진행과
 force-stop/relaunch의 권한 화면 생략을 검증한다. Android 최신 photo picker처럼 OS가
 runtime permission을 요구하지 않는 경우에는 별도 prompt를 강제하지 않는다.
+
+### Mobile refactor review regression
+
+리팩터링 후보를 구현하기 전 다음 안전망을 먼저 확인한다.
+
+- route/provider composition 변경은 기본 진입, back/deep link와 auth/App Lock 경계를 보호한다.
+- Query/hook 변경은 loading, empty, error, retry, invalidation과 logout cache clear를 보호한다.
+- native lifecycle 변경은 listener/timer cleanup, single-flight prompt와 background relock을 보호한다.
+- 주문 변경은 biometric success 전 submit 금지, POST no-retry와 UNKNOWN GET recovery를 보호한다.
+- chart 변경은 input transform, empty/stale, selected point, Reduce Motion과 hidden amount를 보호한다.
+- 공통 component 변경은 role/label, disabled/loading, font scale과 touch target을 보호한다.
+
+검토 단계에서는 baseline 실패를 고치기 위해 소스를 수정하지 않는다. 명령, 재현 결과와
+영향만 기록하고 구현은 별도 사용자 요청 후 수행한다.
 
 ## 3. 핵심 동시성 Scenario
 
@@ -282,6 +303,15 @@ runtime permission을 요구하지 않는 경우에는 별도 prompt를 강제�
 - migration rehearsal
 - rollback rehearsal
 - iOS/Android preview build 결과
+
+### Milestone 8 — Google Cloud 포트폴리오 데모
+
+- Cloud Build image와 Cloud Run revision의 Git SHA/digest 추적
+- Cloud SQL migration/seed job과 service role 분리 확인
+- health/readiness와 사용자·자산·시장 API smoke
+- Android release APK의 HTTPS Platform API 연결
+- 자동 test suite는 계속 local/Testcontainers만 사용
+- dependency issue와 production readiness를 배포 성공과 별도로 기록
 
 ## 6. 통합 명령 계약
 

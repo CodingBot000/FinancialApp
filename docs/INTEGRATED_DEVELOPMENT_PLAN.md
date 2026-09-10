@@ -1,10 +1,12 @@
 # 단일 Main 통합 개발 실행계획
 
-- 상태: CURRENT_RUN_COMPLETE
+- 상태: `ARCHIVED` — DEV-0007~DEV-0014 실행 완료 이력
 - 작성일: 2026-09-02
+- 완료일: 2026-09-02
+- 현재 대체 문서: `FRONTEND_REFACTOR_REVIEW_PLAN.md`
 - 적용 시작: `DEV-0007`
 - 검토 기준 commit: `2574ad0be71c1c71e44c862ab37f395ac498f449`
-- 활성 branch/worktree: `main` / `/Users/switch/Development/Web/FinancialApp`
+- 당시 branch/worktree: `main` / repository root
 - 현재 실행 종료선: 단계 10 로컬 하드닝 완료 후 STOP
 - 현재 실행 제외: 원격 DB 접속·사전점검·migration/seed와 원격 배포
 - 완료 단계: 단계 1 `DEV-0010`, 단계 2 `BE-0009`, 단계 3 `BE-0010`, 단계 4 `FE-0010`, 단계 5 `FE-0011`, 단계 6 `FE-0012`, FE-0013 진입 보강 `BE-0011`, 단계 7 `FE-0013`, 단계 8 `FE-0014`, 단계 9 `DEV-0011`, 단계 10 `BE-0012`~`BE-0015`·`DEV-0012`~`DEV-0014`
@@ -12,7 +14,11 @@
 
 ## 1. 목적과 문서 권한
 
-이 문서는 `DEV-0006`에서 frontend와 backend 병렬 작업을 `main`에 통합한 뒤, 한 작업 흐름에서 로컬 MVP와 Milestone 6의 로컬 하드닝까지 이어서 개발하기 위한 활성 실행계획이다. 이번 실행은 원격 DB 단계 직전에 반드시 종료한다.
+이 문서는 `DEV-0006`에서 frontend와 backend 병렬 작업을 `main`에 통합한 뒤,
+로컬 MVP와 Milestone 6의 로컬 하드닝까지 진행한 완료 이력이다. 본문의 현재형 지시는
+당시 실행 기준을 보존한 것이며 신규 작업의 활성 순서가 아니다. 이후 Google Cloud 배포
+결과는 `GOOGLE_CLOUD_DEPLOYMENT.md`, 현재 모바일 검토 순서는
+`FRONTEND_REFACTOR_REVIEW_PLAN.md`를 따른다.
 
 기존 `CODEX_IMPLEMENTATION_PLAN.md`는 최초 milestone과 작업 원칙의 기준선으로, `PARALLEL_DEVELOPMENT_GUIDE.md`와 `docs/workstreams/**`의 기존 항목은 분리 개발 이력으로 보존한다. 이후 작업 순서, commit 분할과 통합 완료 판정은 본 문서를 따른다. 제품 범위, 보안, 아키텍처와 계약 자체는 본 문서가 임의로 변경하지 않는다.
 
@@ -118,7 +124,7 @@ OpenAPI lint만 통과한 상태를 구현 일치로 간주하지 않는다. 수
 목표:
 
 - 분리 작업과 승인 요구사항의 차이를 문서로 확정한다.
-- 본 문서를 활성 실행계획으로 지정하고 중앙 Gap과 다음 작업을 연결한다.
+- 당시 본 문서를 활성 실행계획으로 지정하고 중앙 Gap과 다음 작업을 연결한다.
 - workstream 문서를 read-only branch 이력과 main의 영역별 로그로 구분한다.
 
 완료 조건:

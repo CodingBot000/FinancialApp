@@ -1,7 +1,7 @@
 # 구현 결정 기록
 
 - 상태: 실행 기준선
-- 마지막 갱신: 2026-09-04
+- 마지막 갱신: 2026-09-10
 
 이 문서는 ADR보다 작은 구현 결정을 한곳에 기록한다. `PENDING` 항목은 해당 milestone 전에 해결해야 한다.
 
@@ -15,9 +15,9 @@
 | D-004 | ACCEPTED | 모바일은 Expo SDK 57, React Native 0.86, React 19.2.3과 npm을 사용한다. |
 | D-005 | ACCEPTED | native package는 `npx expo install`이 선택한 호환 버전을 사용한다. |
 | D-006 | ACCEPTED | Reanimated는 New Architecture에서 사용하며 chart stack은 Milestone 1 smoke test 후 lock한다. |
-| D-007 | ACCEPTED | Keycloak 26.7.3을 local/demo IdP로 사용한다. 모바일 client는 public client이며 PKCE S256을 강제한다. |
+| D-007 | ACCEPTED | Keycloak 26.7.3을 local OIDC IdP로 사용한다. 모바일 client는 public client이며 PKCE S256을 강제한다. 현재 Cloud demo 인증 profile은 `GAP-0011`에서 별도 대조한다. |
 | D-008 | ACCEPTED | access token은 메모리, refresh token은 SecureStore에 저장한다. token을 Zustand/AsyncStorage에 저장하지 않는다. |
-| D-009 | ACCEPTED | 로컬 DB는 PostgreSQL 17 major를 사용한다. 원격 연결 전 실제 Lightsail engine과 호환성을 다시 확인한다. |
+| D-009 | ACCEPTED | 로컬 DB는 PostgreSQL 17 major를 사용한다. 원격 배포 대상은 D-056에서 별도로 기록한다. |
 | D-010 | ACCEPTED | platform과 simulator는 같은 로컬 PostgreSQL instance를 사용할 수 있지만 schema와 login role을 분리한다. |
 | D-011 | ACCEPTED | simulator 연동은 HTTP로만 수행하며 platform role은 `finapp_simulator` schema를 조회할 수 없다. |
 | D-012 | ACCEPTED | MVP는 단일 기관과 `BALANCED_WORKER` dataset만 구현한다. |
@@ -44,26 +44,27 @@
 | D-033 | ACCEPTED | backend unit/module/integration test runner는 NestJS 신규 프로젝트 기본값인 Vitest를 사용한다. PostgreSQL integration은 Testcontainers for Node.js를 사용한다. |
 | D-034 | ACCEPTED | NestJS HTTP provider는 `@nestjs/platform-fastify`의 Fastify adapter를 사용하며 Express 전용 middleware를 혼용하지 않는다. |
 | D-035 | ACCEPTED | OAuth2/OIDC access token은 Nest guard 뒤의 `jose` adapter가 remote JWKS, issuer, audience와 시간 claim을 검증한다. 암호 검증 코드를 직접 구현하거나 controller에서 token을 파싱하지 않는다. |
-| D-036 | ACCEPTED | frontend와 backend Codex session은 별도 Git worktree/branch와 `FE-####`/`BE-####` 추적 ID를 사용한다. backend session을 기본 integration owner로 두고 shared file, root lockfile과 main merge를 직렬 처리한다. |
+| D-036 | SUPERSEDED | frontend와 backend를 별도 worktree/branch로 운영한 초기 병렬 개발 결정이다. DEV-0006 이후 운영 방식은 D-041이 대체한다. |
 | D-037 | ACCEPTED | backend가 canonical OpenAPI artifact를 소유하고 frontend mock/API client는 특정 contract commit revision을 사용한다. mock payload는 schema validation과 deterministic dataset 기준을 통과해야 한다. |
-| D-038 | ACCEPTED | frontend는 원격 DB에 연결하지 않는다. 원격 Lightsail migration은 backend의 단일 migration owner만 승인 후 수행하며 자동 test는 local/Testcontainers PostgreSQL을 사용한다. 합성 데이터는 destructive DB 작업의 허가 근거가 아니다. |
+| D-038 | ACCEPTED | frontend는 원격 DB에 연결하지 않는다. 원격 managed PostgreSQL migration은 backend의 단일 migration owner만 승인 후 수행하며 자동 test는 local/Testcontainers PostgreSQL을 사용한다. 합성 데이터는 destructive DB 작업의 허가 근거가 아니다. |
 | D-039 | ACCEPTED | 공통 scaffold는 NodeNext ESM과 TypeScript 6.0.3을 사용한다. TypeScript 7.0.2는 현재 typescript-eslint 8.69.0의 `<6.1.0` peer 범위를 벗어나므로 사용하지 않는다. |
 | D-040 | ACCEPTED | `contracts/openapi/platform-v1.yaml`과 simulator 계약을 canonical baseline으로 commit하고 Redocly lint와 JSON Schema fixture validation을 CI gate로 사용한다. |
 | D-041 | ACCEPTED | DEV-0006 이후 frontend/backend 병렬 worktree 단계는 종료하고 모든 신규 개발과 통합 책임을 단일 `main` 작업 흐름으로 전환한다. 기존 `codex/frontend`와 `codex/backend`는 원격에 보존한다. |
 | D-042 | ACCEPTED | mobile import boundary와 두 backend dependency-cruiser 검사를 root `verify`와 CI의 필수 gate로 실행한다. |
 | D-043 | ACCEPTED | npm install script는 version-pinned allow/deny policy로 관리한다. Docker build context는 `.dockerignore`로 제한하고 backend image build는 해당 workspace와 root build tool만 clean install한다. |
-| D-044 | ACCEPTED | DEV-0007 이후 `INTEGRATED_DEVELOPMENT_PLAN.md`를 단일 `main`의 활성 실행 순서로 사용한다. 기존 분리 branch는 이력으로 보존하고 FE/BE ID와 lane log는 영역별 추적을 위해 main에서도 유지한다. |
-| D-045 | ACCEPTED | 이번 연속 개발 실행은 Milestone 6 local hardening까지 진행하고 원격 DB 사전점검·접속·migration/seed와 원격 배포 직전에 반드시 멈춘다. 원격 단계는 과거 승인과 무관하게 사용자가 향후 별도 실행으로 명시적으로 재개해야 한다. |
+| D-044 | SUPERSEDED | DEV-0007~DEV-0014 동안 `INTEGRATED_DEVELOPMENT_PLAN.md`를 활성 순서로 사용한 결정이다. 해당 계획 완료 후 현재 모바일 검토 순서는 `FRONTEND_REFACTOR_REVIEW_PLAN.md`가 대체한다. |
+| D-045 | SUPERSEDED | DEV-0014 실행을 원격 단계 직전에 종료하기 위한 당시 STOP 결정이다. 이후 별도 사용자 요청으로 Google Cloud 배포를 수행했고 D-056이 현재 원격 데모 대상을 기록한다. |
 | D-046 | ACCEPTED | local Keycloak mobile client는 PKCE S256 public client, `basic` subject default scope와 `offline_access` optional scope를 사용한다. 합성 test user password는 실행 환경변수로만 주입하고 source/fixture/log에 저장하지 않는다. |
 | D-047 | ACCEPTED | settlement는 같은 DB transaction에 redacted `ORDER_SETTLED` outbox를 기록한다. local publisher는 `SKIP LOCKED` lease와 `(event_id, consumer_name)` durable receipt로 crash-window 중복을 억제하며 Kafka나 원격 broker를 도입하지 않는다. |
 | D-048 | ACCEPTED | MyData customer identifier는 `DataKeyProvider`가 제공한 per-value DEK와 owner/schema/table/column AAD로 AES-256-GCM 암호화하고 encrypted DEK를 versioned ciphertext envelope에 포함한다. local provider는 demo/production에서 fail-closed하며 AWS KMS client binding과 실제 KMS 검증은 별도 승인된 원격 단계에서만 수행한다. |
 | D-049 | ACCEPTED | 인증·인가 실패는 append-only security event에 stable reason code, trace ID, HMAC source IP와 allowlist metadata만 저장한다. 일반 HTTP log는 query/header/body를 받지 않는 구조화 allowlist event만 출력하며 보안 이벤트 저장 실패가 인증 fail-closed 결정을 바꾸지 않는다. |
 | D-050 | ACCEPTED | readiness는 bounded timeout을 둔 application DB `SELECT 1`만 필수 dependency로 검사하고 IdP·simulator 장애와 강결합하지 않는다. metrics는 private monitoring ingress에서만 노출하는 process-local bounded JSON counter/pool snapshot으로 시작한다. 외부 simulator adapter는 closed/open/half-open circuit breaker를 공유하되 외부 HTTP 중 DB transaction을 유지하지 않고 주문 POST를 자동 retry하지 않는다. |
 | D-051 | ACCEPTED | Milestone 6 onboarding은 검증된 OIDC subject의 합성 기본 risk profile 자동 생성과 Settings의 owner-scoped 조회/수정으로 완료한다. 별도 wizard는 만들지 않는다. risk profile은 planning preference이며 portfolio recommendation, 목표 배분 생성, 투자 적합성 판정이나 수익 보장 표현을 제공하지 않는다. update는 `financial.write`와 optimistic version을 요구한다. |
-| D-052 | ACCEPTED | local performance gate는 runtime role의 actual PostgreSQL JSON plan에서 expected index와 100ms ceiling을 검증하되 capacity/SLO 증거로 과장하지 않는다. root moderate 18/high·critical 0과 backend runtime 0인 dependency 상태는 local 단계 조건부 통과로 판정하며, 원격 preview의 security-clean 판정은 upstream 해소 또는 사용자 위험 수용 전 보류한다. `npm audit fix --force`와 비호환 downgrade는 적용하지 않는다. |
+| D-052 | ACCEPTED | local performance gate는 runtime role의 actual PostgreSQL JSON plan에서 expected index와 100ms ceiling을 검증하되 capacity/SLO 증거로 과장하지 않는다. 기록된 root moderate 18/high·critical 0과 backend runtime 0은 당시 local 조건부 통과 근거다. 이후 원격 데모 배포 완료는 `ISSUE-0002`/`ISSUE-0003` 해소나 security-clean 판정을 의미하지 않는다. `npm audit fix --force`와 비호환 downgrade는 적용하지 않는다. |
 | D-053 | ACCEPTED | 포트폴리오 launch flow는 `Device.isDevice`로 physical/non-physical biometric adapter를 선택한다. setup 완료 marker는 SecureStore, 현재 process unlock은 메모리만 사용한다. 이 로컬 접근은 OIDC/MFA 증거가 아니며 가짜 token을 만들지 않고 contract mock Home만 연다. 실제 HTTP API와 OIDC 경계는 별도로 보존한다. |
 | D-054 | ACCEPTED | launch 권한 안내 확인 시 알림·사진·카메라의 현재 OS 상태를 순차 확인하고 미결정 권한만 native API로 요청한다. 승인 여부가 아닌 요청 처리 완료 marker를 SecureStore에 저장하며, 승인·거부와 무관하게 다음 실행부터 custom 안내와 OS 요청을 생략한다. 선택 권한 결과는 앱 진입을 차단하지 않는다. |
 | D-055 | ACCEPTED | 모바일은 합성 AssetSummary와 planning preference를 사용해 결정적 규칙으로 예시 코치 진단과 제안 배분을 파생한다. 서버 risk profile이나 simulation을 실제 투자 추천·적합성 판단으로 확장하지 않으며 신규 backend 계약을 만들지 않는다. |
+| D-056 | ACCEPTED | 현재 원격 포트폴리오 데모 대상은 Google Cloud Run, Cloud SQL PostgreSQL 17, Cloud Build, Artifact Registry와 Secret Manager다. 초기 Lightsail/Nginx 실행안은 배경 이력으로만 유지한다. 배포 완료와 production readiness·security-clean·실제 AWS KMS 검증은 서로 다른 주장으로 관리한다. |
 
 ## 정정 이력
 
@@ -113,15 +114,15 @@
 - access/refresh token TTL
 - redirect URI: `wealthsandbox://oauth/callback`
 
-### Milestone 6
+### Milestone 6 원격안 — 이력
 
-- Lightsail PostgreSQL engine/version, endpoint, database/schema 생성 권한
-- 전용 DB role 생성 권한
-- TLS CA와 `verify-full` 가능 여부
-- Lightsail instance CPU/memory
+초기 Lightsail/Nginx 원격안의 미결정 목록이다. 실제 원격 데모 대상은 D-056의 Google
+Cloud 배포가 대체했으며 현재 배포 기록은 `GOOGLE_CLOUD_DEPLOYMENT.md`를 따른다.
+
 - Keycloak 원격 유지 또는 관리형 IdP 변경
-- AWS region, KMS key policy, 배포 domain
-- Apple/Google signing credential 사용 가능 여부
+- 실제 AWS KMS region/key policy와 권한 검증
+- Apple/Google store signing credential 사용 가능 여부
+- 원격 rollback rehearsal과 production SLO
 
 ## 공식 호환성 근거
 

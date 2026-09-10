@@ -67,8 +67,8 @@ git status --short --branch
 
 설명 포인트:
 
-- canonical 38 operations/41 fixtures, 현재 root verify의 mobile 136/simulator 12/platform
-  96 총 244 tests와 두 backend build
+- canonical 38 operations/41 fixtures, FE-0027 최종 root verify의
+  mobile 195/simulator 12/platform 97 총 304 tests와 두 backend build
 - runtime DB role의 네 query가 expected `finapp_` index를 사용
 - Android Emulator의 portfolio first/relaunch flow는 검증했으며 실제 AWS KMS, 원격
   DB/HTTPS/EAS와 iOS·물리 biometric은 아직 검증하지 않음

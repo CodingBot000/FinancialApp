@@ -1,7 +1,8 @@
 # 프론트엔드·백엔드 병렬 개발 운영 지침
 
-- 상태: DEV-0006에서 병렬 단계 종료, 이 문서는 이력/재분리 기준으로 보존
+- 상태: `ARCHIVED` — DEV-0006에서 병렬 단계 종료, 재분리 시 참고
 - 작성일: 2026-09-01
+- 현재 대체 문서: `FRONTEND_REFACTOR_REVIEW_PLAN.md`
 - 적용 대상: Codex frontend session, backend session과 integration owner
 
 ## 0. 현재 운영 상태
@@ -10,7 +11,8 @@
 - 두 branch는 `origin/codex/backend`, `origin/codex/frontend`에 이력으로 보존한다.
 - 로컬 보조 worktree directory는 변경사항이 없는 것을 확인한 뒤 DEV-0008에서 제거했다.
 - 이후 신규 개발은 사용자의 결정에 따라 단일 `main` 작업 흐름에서 직렬 진행한다.
-- 현재 활성 순서와 완료 조건은 `INTEGRATED_DEVELOPMENT_PLAN.md`를 따른다.
+- DEV-0007~DEV-0014의 후속 순서는 `INTEGRATED_DEVELOPMENT_PLAN.md`에서 완료됐다.
+- 현재 React Native 검토 순서와 완료 조건은 `FRONTEND_REFACTOR_REVIEW_PLAN.md`를 따른다.
 - 이 문서의 worktree/session 규칙은 향후 다시 병렬화할 때만 적용한다. 별도 결정 없이 기존 worktree branch에서 신규 commit을 만들지 않는다.
 
 ## 1. 결론

@@ -1,7 +1,11 @@
 # WM 코치 경험 구현 명세
 
-- 상태: 구현 착수 가능 확정안
+- 상태: `IMPLEMENTED`
 - 작성일: 2026-09-04
+- 구현 ID: `FE-0027`
+- 검증: Android API 36 시나리오 A~D, mobile 209 tests, 최종 root 304 tests
+- 남은 범위: 실제 상담 backend와 규제상 적합성 판단은 명시적 비범위
+- 현재 소스 검토 기준: `FRONTEND_REFACTOR_REVIEW_PLAN.md`
 - 대상: `apps/mobile`
 - 목표: 기존 금융 기능을 유지하면서 합성 자산과 투자 성향을 연결해 코치 중심 WM 경험을 짧고 명확하게 보여 준다.
 

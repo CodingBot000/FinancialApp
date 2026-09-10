@@ -1,13 +1,16 @@
 # Frontend Workstream Issue와 Gap Register
 
 - 다음 ISSUE ID: `FE-ISSUE-0017`
-- 다음 GAP ID: `FE-GAP-0006`
-- active issue: `FE-ISSUE-0001`
-- active gap: `FE-GAP-0002`, `FE-GAP-0004`, `FE-GAP-0005`
+- 다음 GAP ID: `FE-GAP-0007`
+- active issue: `FE-ISSUE-0001`, `FE-ISSUE-0016`
+- active gap: `FE-GAP-0002`, `FE-GAP-0004`, `FE-GAP-0005`, `FE-GAP-0006`
 
 frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한다. backend·계약·milestone 완료에도 영향을 주면 handoff와 중앙 `ISSUE_REGISTER.md`에 연결한다.
 
-## Active Issue
+## Issue 목록
+
+해결된 항목도 append-only 이력으로 남는다. 상단 active 요약과 각 항목의 `상태`를 현재
+판정 기준으로 사용한다.
 
 ### FE-ISSUE-0016 — iOS native simulator destination unavailable
 
@@ -98,7 +101,22 @@ frontend에 국한된 defect, blocker와 누락을 삭제하지 않고 추적한
 - 해결 FE:
 - 검증: DEV-0013에서 registry current stable Expo `57.0.19`, Expo Router `57.0.18`과 현재 compatible pin이 일치하고 `expo install --check`가 통과했다. root audit은 Expo 경로 moderate 14를 포함해 총 moderate 18/high 0/critical 0이다. 제안된 강제 fix는 Expo 46 또는 Router 5의 비호환 downgrade라 적용하지 않았다. local release는 조건부 통과, 원격 preview 전 upstream 해소 또는 사용자 위험 수용이 필요하다.
 
-## Active Gap
+## Gap 목록
+
+### FE-GAP-0006 — Cloud demo 모바일 인증 경계 문서·소스 대조
+
+- 상태: UNVERIFIED
+- 심각도: HIGH
+- 발견 FE: 문서 정합성 검토
+- 누락/연기 이유: Cloud demo APK의 test bearer token 사용 기록, `EXPO_PUBLIC_*` 예시와
+  token 비노출 원칙 사이의 실제 runtime composition을 아직 소스로 대조하지 않았다.
+- 현재 영향: 실제 token 노출을 의미하지는 않지만, 검증 전에는 release bundle의 인증
+  경계와 production-grade login을 완료로 주장할 수 없다.
+- 목표 Milestone: React Native 리팩터링 소스 검토 첫 단계
+- 재확인 조건: mobile config, login/API composition, 환경 주입과 token 저장·전달 경계를
+  읽기 전용으로 확인하고 중앙 `GAP-0011`과 문서를 갱신
+- 해결 FE:
+- 검증: 중앙 `GAP-0011`. 이번 문서 정리 단계에서는 소스를 검토하지 않음.
 
 ### FE-GAP-0005 — 물리 기기 launch 선택 권한 prompt 검증
 

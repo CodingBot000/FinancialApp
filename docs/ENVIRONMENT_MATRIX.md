@@ -1,17 +1,18 @@
 # 환경 Matrix
 
-- 상태: 실행 기준선
+- 상태: 현재 환경 기준선
 - 작성일: 2026-09-01
+- 마지막 갱신: 2026-09-10
 
 ## 환경 구분
 
 | 항목 | local | test | demo | production |
 |---|---|---|---|---|
 | 목적 | 개발자 로컬 실행 | 자동 테스트 | 포트폴리오 원격 시연 | 일반 공개를 가정한 안전 설정 검증 |
-| PostgreSQL | Docker Compose | Testcontainers | Lightsail 전용 DB/schema | 별도 승인 전 미사용 |
-| Keycloak | Docker `start-dev` | container/fixture | production mode container | 별도 승인 전 미사용 |
-| simulator | local container | actual test container | private container network | 외부 노출 금지 |
-| KMS | local provider | deterministic test provider | AWS KMS | AWS KMS |
+| PostgreSQL | Docker Compose | Testcontainers | Cloud SQL PostgreSQL 17 | 별도 승인 전 미사용 |
+| 인증 | Keycloak `start-dev` OIDC | container/fixture | 현재 Cloud demo profile은 `GAP-0011` 대조 대상 | 별도 IdP 결정 필요 |
+| simulator | local container | actual test container | 별도 Cloud Run service, 모바일은 직접 호출하지 않음 | 외부 직접 노출 금지 |
+| 암호화 key 경계 | local provider | deterministic test provider | DataKeyProvider + Secret Manager 주입, 실제 AWS KMS 미검증 | KMS 정책 별도 승인 필요 |
 | dev scenario API | 활성 | test fixture | `scenario.admin` 필요 | controller/provider 미등록, 404 |
 | synthetic reset | 활성 | test setup | admin만 허용 | 비활성 |
 | HTTPS | 선택 | 불필요 | 필수 | 필수 |
@@ -22,19 +23,23 @@
 
 - `local`: `NODE_ENV=development`, Compose dependency와 local crypto provider
 - `test`: `NODE_ENV=test`, Testcontainers, fixed Clock, deterministic key provider
-- `demo`: `APP_ENV=demo`, remote PostgreSQL, AWS KMS, dev scenario endpoint를 admin scope로 제한
+- `demo`: Cloud Run과 Cloud SQL 기반 포트폴리오 시연. 정확한 모바일 로그인/token
+  composition은 `GAP-0011`에서 문서와 소스를 대조하기 전 production 인증으로 주장하지 않음
 - `production`: `NODE_ENV=production`, AWS KMS, dev/reset module 미등록, 엄격한 CORS와 HTTPS
 
 `demo`를 `production`처럼 표현하지 않는다. 개발자 장애 시나리오를 사용한 시연 환경임을 문서화한다.
 
-## 병렬 session과 원격 DB
+## 개발 작업과 원격 DB
 
 - frontend session은 모든 환경에서 platform API 또는 contract mock만 사용하고 PostgreSQL에 직접 연결하지 않는다.
 - backend unit/integration/concurrency test는 local Compose 또는 Testcontainers PostgreSQL을 사용한다.
-- Lightsail PostgreSQL은 `demo` integration과 remote smoke 용도이며 backend의 단일 migration owner만 접근한다.
+- 현재 demo의 Cloud SQL PostgreSQL은 backend의 단일 migration owner만 접근한다.
 - 합성 데이터만 사용하더라도 shared remote DB의 migration, seed와 reset은 동시에 실행하지 않는다.
 - 원격 migration은 사용자 승인, snapshot/backup 확인, `finapp_` 객체 catalog 확인과 TLS 검증 후 실행한다.
 - 원격 실행 결과에는 commit SHA, migration history와 `datasetVersion`을 기록한다.
+
+초기 Lightsail/Nginx 계획은 `INTEGRATED_DEVELOPMENT_PLAN.md`와 초기 명세의 이력이다.
+현재 원격 배포와 재배포 절차는 `GOOGLE_CLOUD_DEPLOYMENT.md`를 따른다.
 
 ## 기본 로컬 port
 
@@ -62,6 +67,10 @@
 
 `EXPO_PUBLIC_*`에는 secret을 넣지 않는다.
 
+`GOOGLE_CLOUD_DEPLOYMENT.md`에 기록된 test bearer 흐름과 실제 모바일 환경변수 이름·token
+획득 방식은 `GAP-0011`의 소스 검토 대상이다. 대조 전에는 실제 token이 공개 번들에 없다고
+추정하거나 production 수준 인증이라고 주장하지 않는다.
+
 모바일 developer panel은 `EXPO_PUBLIC_APP_ENV=local|demo`로 명시한 빌드에서만 활성화한다. production과 환경 값 누락 시 UI 진입점이 없으며, backend도 production에서 developer module을 등록하지 않아 route를 404로 처리한다.
 
 ### 서버 비밀정보
@@ -75,7 +84,7 @@
 
 실제 값은 `.env.local`, CI secret, 배포 secret store에서만 제공한다.
 
-## 원격 배포 전 확인표
+## 원격 배포·재배포 확인표
 
 - [ ] database 또는 전용 schema 생성 가능
 - [ ] 모든 애플리케이션 소유 DB 객체가 `finapp_` prefix를 사용하는지 catalog query로 확인

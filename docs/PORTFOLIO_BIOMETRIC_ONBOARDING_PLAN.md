@@ -1,12 +1,13 @@
 # 포트폴리오 생체인증 온보딩·재실행 개발계획
 
-- 상태: `IMPLEMENTED_LOCAL_PHYSICAL_PENDING`
+- 상태: `IMPLEMENTED` — local/Android Emulator 완료, physical/iOS 검증은 `UNVERIFIED`
 - 작성일: 2026-09-03
 - 작업 ID: `FE-0019`
 - 대상: `apps/mobile` React Native / Expo 앱
 - API·DB 계약 변경: 없음
 - 원격 자원 사용: 없음
 - 선행 기준: 현재 `main`의 launch onboarding, OIDC session, App Lock, LocalAuthentication 구현
+- 현재 소스 검토 기준: `FRONTEND_REFACTOR_REVIEW_PLAN.md`
 
 ## 구현 결과 (2026-09-03)
 

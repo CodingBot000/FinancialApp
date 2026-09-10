@@ -1,12 +1,13 @@
 # 종목 차트 복구와 StockTracker 정보 확장 실행계획
 
-- 상태: `IMPLEMENTED_LOCAL_PENDING_KIS_SMOKE`
+- 상태: `IMPLEMENTED` — local chart/data 복구 완료, 실제 KIS smoke와 일부 P2 QA는 미검증
 - 작성일: 2026-09-03
 - 대상: FinancialApp React Native 시장 화면과 Platform API `MarketModule`
 - 기준 구현: commit `4ac2659`
 - 참고 구현: `/Users/switch/Development/Web/StockTracker`
-- 원격 자원 사용: 금지 — 별도 승인 전 local/Testcontainers만 사용
-- 원격 DB migration/deploy: 금지
+- 당시 원격 범위: local/Testcontainers만 사용
+- 이후 원격 배포: Google Cloud 결과는 `GOOGLE_CLOUD_DEPLOYMENT.md`를 따름
+- 현재 남은 항목: 실제 KIS credential smoke, 고정 상태 높이, accessibility/font scale QA
 
 ## 구현 결과 (2026-09-03)
 

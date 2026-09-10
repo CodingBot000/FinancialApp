@@ -1,7 +1,11 @@
 # 코치 상담 날짜·시간 선택 UI/UX 구현 명세
 
-- 상태: 구현 착수 가능 확정안
+- 상태: `IMPLEMENTED`
 - 작성일: 2026-09-04
+- 구현 ID: `FE-0027`
+- 검증: Calendar/availability/wheel/component test와 Android API 36 시나리오 D
+- 남은 범위: 실제 예약 생성, 서버 availability와 외부 알림은 명시적 비범위
+- 현재 소스 검토 기준: `FRONTEND_REFACTOR_REVIEW_PLAN.md`
 - 대상: `apps/mobile`
 - 선행 문서: `docs/COACH_EXPERIENCE_IMPLEMENTATION_SPEC.md`
 - 적용 범위: 기존 `/coach-consultation` 화면의 날짜·시간 선택 영역

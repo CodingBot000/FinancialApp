@@ -1,8 +1,8 @@
 # 개발 로그
 
 - 기록 방식: append-only
-- 마지막 DEV ID: `DEV-0011`
-- 다음 영역 ID: `DEV-0012`
+- 마지막 DEV ID: `DEV-0015`
+- 다음 영역 ID: `DEV-0016`
 
 모든 integration/shared commit은 하나의 `DEV-####`와 연결한다. frontend와 backend 영역 commit은 각각 `FE-####`, `BE-####`와 workstream 개발 로그를 사용한다. DEV-0006 이후에는 단일 main에서 작업하되 영역별 ID namespace와 기록은 유지한다. commit subject에도 같은 ID를 넣어 Git history와 문서 기록을 상호 추적할 수 있게 한다.
 
@@ -1188,3 +1188,50 @@
 - Android Emulator에서 알림 설정 진입 → 앱 푸시 toggle → 뒤로가기 복귀 통과
 - `design-qa.md` 최종 결과 `passed`
 - contract/API/DB 변경 없음
+
+## DEV-0015 — React Native 리팩터링 검토 문서 기준선
+
+- 날짜: 2026-09-10
+- Milestone: documentation governance
+- 상태: COMPLETED
+- 범위: `docs/**/*.md`만 변경, 모바일·backend 소스 검토 및 구현 없음
+
+### 완료
+
+- `FRONTEND_REFACTOR_REVIEW_PLAN.md`를 ACTIVE 문서로 추가하고 backend 제외 범위,
+  판정 기준, P0~P3 우선순위, 검토 순서와 발견사항 형식을 고정했다.
+- 완료된 통합·초기·병렬 실행계획을 ARCHIVED로 전환하고 현재 문서 읽기 순서를 갱신했다.
+- Google Cloud 배포가 초기 Lightsail/STOP 결정을 대체한 사실을 D-056으로 기록하고
+  D-036, D-044, D-045를 SUPERSEDED로 정리했다.
+- 이미 구현된 디자인 시스템, 시장, 생체인증과 코치 명세를 IMPLEMENTED/REFERENCE로
+  전환하고 4탭 계획이 이후 5탭 코치 구조로 대체됐음을 기록했다.
+- 중앙/frontend issue summary를 실제 OPEN/UNVERIFIED 항목과 맞추고 Cloud demo 모바일
+  인증 경계 대조를 `GAP-0011`/`FE-GAP-0006`으로 추가했다.
+- 최신 계약 38 operations/41 fixtures와 FE-0027 최종 root 304 tests를 현재 주장
+  문서에 반영하고 실제 KIS smoke, dependency, iOS/physical-device 제한을 분리했다.
+- frontend append-only log에 누락된 FE-0027 구현·검증 기록을 추가했다.
+
+### 변경 파일
+
+- 문서 index/status/decision/environment/scope/issue/limitation/traceability
+- React Native architecture/test/refactor review plan
+- 완료된 frontend feature plan과 frontend development log
+- Google Cloud deployment 문서의 인증 경계 재확인 표시
+
+### 검증
+
+- 변경 문서 reference와 상태 문자열을 `rg`로 대조했다.
+- `git diff --check -- docs ':!docs/resume/**'`로 이번 정리 대상의 whitespace 오류를
+  검사했다.
+- 기존 사용자 수정인 `docs/resume/**`는 변경하거나 정리하지 않았다.
+- `apps/mobile/**`, `services/**`, package 설정과 실행 코드는 읽거나 수정하지 않았다.
+
+### 이슈와 누락
+
+- `GAP-0011`/`FE-GAP-0006`: Cloud demo APK의 실제 login/token composition은 문서만으로
+  확정하지 않고 후속 모바일 소스 검토 대상으로 유지한다.
+
+### 다음 작업
+
+- 사용자 요청 후 `FRONTEND_REFACTOR_REVIEW_PLAN.md` 순서로 backend를 제외한 React Native
+  소스 검토를 시작한다.

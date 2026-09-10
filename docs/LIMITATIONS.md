@@ -14,7 +14,7 @@
   runtime 사진 권한 prompt를 표시하지 않을 수 있다.
 - Android API 36 emulator Development Build에서 코치 기본 진단, 성장형 간이 진단 저장,
   5/15/80 simulation 연결, 화면 로컬 상담 완료와 홈·종목·주문·내 정보 탭 회귀를 확인했다.
-- canonical OpenAPI, 실제 Fastify provider, mobile consumer fixture와 adapter를 35 operations/38 fixtures에 대해 추적한다.
+- canonical OpenAPI, 실제 Fastify provider, mobile consumer fixture와 adapter를 38 operations/41 fixtures에 대해 추적한다.
 - Testcontainers PostgreSQL에서 migration, role, ownership, append-only, concurrency, settlement/outbox/crypto invariant를 검증한다.
 - production backend image의 runtime workspace dependency audit은 0건이다.
 
@@ -33,7 +33,10 @@
 
 ## 환경·운영 제한
 
-- 이번 증거는 local/Testcontainers/PostgreSQL Compose에 한정된다. 원격 managed PostgreSQL, TLS/backup, network/storage latency와 rollback은 검증하지 않았다.
+- DEV-0014의 hardening 증거는 local/Testcontainers/PostgreSQL Compose에 한정된다.
+  이후 Google Cloud Run·Cloud SQL 배포와 Android release APK HTTPS 연결은 별도 smoke로
+  검증했지만 production SLO, 장애조치, backup 복구, 장기 network/storage latency와
+  rollback rehearsal을 증명하지 않는다.
 - AWS KMS adapter는 fake client contract와 fail-closed bootstrap 경계까지만 검증했다. 실제 AWS credential, key policy, CloudTrail과 rotation은 미검증이다.
 - local publisher는 outbox 불변조건을 보여주지만 외부 broker나 다중 instance 운영의 throughput/partition 검증은 아니다.
 - process-local metrics는 private JSON snapshot이며 dashboard, alert routing, long-term retention은 구현하지 않았다.
@@ -42,7 +45,9 @@
 ## 성능·의존성 제한
 
 - query plan은 작은 합성 dataset의 index shape 회귀 gate다. capacity benchmark, 부하 시험 또는 production SLO 증거가 아니다.
-- root audit은 Expo 경로 14건과 Drizzle Kit build-time 경로 4건, 총 moderate 18건을 유지한다. 현재 stable pin과 일치하고 runtime backend image는 0건이지만 원격 preview를 security-clean으로 판정하지 않는다.
+- DEV-0013 기록의 root audit은 Expo 경로 14건과 Drizzle Kit build-time 경로 4건,
+  총 moderate 18건이다. 당시 stable pin과 일치하고 runtime backend image는 0건이지만
+  이후 원격 배포 완료를 security-clean 판정으로 사용하지 않는다.
 - advisory 해소에는 upstream compatible release 또는 사용자의 명시적 위험 수용이 필요하다. `npm audit fix --force`나 비호환 downgrade는 적용하지 않았다.
 
 ## 아직 수동 확인이 필요한 항목
@@ -53,4 +58,13 @@
 - iOS 및 Android 물리 기기의 알림·사진·카메라 권한 prompt와 설정 변경 edge case
 - 원격 HTTPS 환경의 redirect/CORS/certificate와 EAS Preview Build
 
-위 항목은 `GAP-0002`, `GAP-0003`, `ISSUE-0002`, `ISSUE-0003`에서 계속 추적한다. 이 프로젝트는 금융 규제 준수, production readiness 또는 실제 투자 서비스 적합성을 주장하지 않는다.
+## 시장 데이터 주장 제한
+
+- local provider, cache, 정규화와 5개 interval UI는 구현·검증됐다.
+- Cloud demo의 market seed는 synthetic data다.
+- 실제 KIS credential을 사용한 smoke는 `MARKET_DATA_INTEGRATION_PLAN.md` 기준
+  `UNVERIFIED`다. 따라서 실제 KIS 운영 시세를 Cloud demo에서 검증했다고 주장하지 않는다.
+
+위 항목은 `ISSUE-0002`, `ISSUE-0003`, `ISSUE-0017`, `GAP-0002`, `GAP-0003`,
+`GAP-0010`, `GAP-0011`에서 계속 추적한다. 이 프로젝트는 금융 규제 준수,
+production readiness 또는 실제 투자 서비스 적합성을 주장하지 않는다.

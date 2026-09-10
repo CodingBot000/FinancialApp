@@ -2,6 +2,7 @@
 
 - 상태: 실행 기준선
 - 작성일: 2026-09-01
+- 마지막 문서 갱신: 2026-09-10
 - 적용 대상: `apps/mobile`, `services/platform-api`, `services/institution-simulator`
 - 관련 결정: `ADR-0001`, `D-001`~`D-003`, `D-028`~`D-038`
 
@@ -350,6 +351,10 @@ architecture rule을 ignore하려면 만료 조건이 있는 `ISSUE-####` 또는
 
 Expo Router의 `src/app`에는 route와 layout만 둔다. 재사용 component, API 호출, 상태와 업무 규칙은 route 폴더에 두지 않는다.
 
+아래 tree는 허용 책임과 의존 방향을 설명하는 **규범적 예시**이며 현재 repository의
+완전한 파일 inventory가 아니다. 실제 feature와 route 목록은 소스 검토 첫 단계에서
+생성하고 이 원칙과 대조한다.
+
 ```text
 apps/mobile/src/
 ├── app/                           # Expo Router route adapter
@@ -434,6 +439,39 @@ app/routes ─────> features ─────> shared
 - dependency-cruiser/import restriction으로 `shared → features/app`과 deep import 차단
 - formatter, unit/component test와 route smoke test
 - feature/import cycle 검사
+
+### 8.5 React effect와 native lifecycle
+
+- effect는 외부 시스템과 동기화할 때만 사용하고 파생 가능한 값을 effect로 복제하지 않는다.
+- timer, AppState, Linking, keyboard와 native event subscription은 cleanup과 중복 등록 방지를 갖는다.
+- biometric과 permission prompt는 동일 사용자 동작에서 single-flight를 보장한다.
+- background/foreground 전환은 화면별 임의 listener보다 명시적 소유 component 또는 hook이 담당한다.
+- effect dependency를 숨기기 위한 lint disable은 근거와 종료 조건 없이 추가하지 않는다.
+
+### 8.6 Component 책임과 렌더링
+
+- 화면 component가 transport, 상태 전이, navigation과 표현을 동시에 구현하면 hook/model/UI
+  경계를 검토한다.
+- Context value, selector, callback과 object identity를 안정화할 필요는 실제 소비 범위와
+  render 증거로 판단한다. 모든 값을 습관적으로 memoize하지 않는다.
+- chart/date/decimal 변환, 정렬과 집계는 render마다 반복하지 않고 mapper 또는 memoized
+  view model 경계에서 한 번 수행한다.
+- 큰 동적 목록은 `ScrollView` 전체 렌더링보다 적절한 virtualized list를 우선 검토한다.
+- 파일 길이만으로 분리하지 않고 서로 다른 변경 이유와 독립 테스트 가능성을 기준으로 나눈다.
+
+### 8.7 React Native UX와 접근성
+
+- safe area, keyboard, back action과 deep link가 route 유형별로 일관돼야 한다.
+- 주요 action은 충분한 touch target, role, label, disabled/loading 상태를 제공한다.
+- font scale 증가 시 핵심 금액·CTA·상태 정보가 잘리거나 겹치지 않아야 한다.
+- 금액 숨김은 시각 텍스트뿐 아니라 accessibility label과 chart summary에도 동일하게 적용한다.
+- Reduce Motion은 장식 animation뿐 아니라 chart transition과 loading motion에도 적용한다.
+
+### 8.8 현재 소스 검토 적용
+
+React Native 리팩터링 검토 범위, 순서, 우선순위와 발견사항 형식은
+`FRONTEND_REFACTOR_REVIEW_PLAN.md`를 따른다. 해당 검토는 backend 구현을 평가하지 않으며
+모바일의 API 소비 경계까지만 포함한다.
 
 ## 9. 공통 코드 품질 규칙
 

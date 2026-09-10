@@ -1,12 +1,13 @@
 # 외부 주식 시세·차트 통합 실행계획
 
-- 상태: `IMPLEMENTED_LOCAL_PENDING_KIS_SMOKE`
+- 상태: `IMPLEMENTED` — local/provider 경계 완료, 실제 KIS credential smoke는 `UNVERIFIED`
 - 작성일: 2026-09-02
 - 대상: React Native(Expo) + NestJS/Fastify + PostgreSQL/Drizzle FinancialApp
 - 구현 난이도 기준: Luna 모델이 단계별로 독립 구현 가능한 수준
-- 구현 시작 여부: Phase 0~5 구현 완료, Phase 6의 실제 KIS smoke만 credential 대기
-- 외부 유료 자원 실행: 없음
-- 원격 DB migration: 금지 — 별도 승인 전 local/Testcontainers에서만 검증
+- 구현 결과: Phase 0~5 완료, Phase 6의 실제 KIS smoke만 credential 대기
+- 당시 외부 실행 범위: local/Testcontainers만 사용
+- 이후 원격 배포: Google Cloud 결과는 `GOOGLE_CLOUD_DEPLOYMENT.md`를 따름
+- 주장 제한: Cloud demo의 synthetic market seed를 실제 KIS smoke 증거로 사용하지 않음
 
 ## 구현 진행 상태 (2026-09-02)
 
@@ -911,7 +912,8 @@ npx expo run:android --no-bundler
 
 ## 20. Definition of Done
 
-아래가 모두 충족되어야 완료다.
+아래는 최초 실행계획의 완료 조건이다. 구현 자체와 실제 KIS credential smoke를 분리해
+판정한다. local/provider 경계는 구현됐고 실제 KIS smoke는 명시적 `UNVERIFIED` 상태다.
 
 - [ ] 앱에 `시장` 탭이 있다.
 - [ ] 종목명/코드 검색이 동작한다.

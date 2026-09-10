@@ -4,6 +4,9 @@
 - 작성일: 2026-09-01
 - 목적: 개인 포트폴리오 프로젝트의 첫 완성 단위를 고정하고 범위 증가를 방지한다.
 
+이 문서의 `Wealth Sandbox`는 합성 금융 플랫폼이라는 기술 프로젝트명이다. 모바일
+사용자 화면의 독립 브랜드명은 `Wealth Flow`다.
+
 ## 1. 제품 정의
 
 `Wealth Sandbox`는 합성 금융 데이터와 가상 금융기관을 이용해 실제 모바일–API–DB–외부기관 연동 구조를 시연하는 기술 포트폴리오다.
@@ -87,6 +90,10 @@
 - 최소 smoke test
 
 ## 3. 로컬 MVP에서 제외하고 Milestone 6으로 이동
+
+아래 목록은 2026-09-01에 고정한 **로컬 MVP의 비범위**다. 이후 별도 승인으로 수행한
+Google Cloud 배포 결과는 `IMPLEMENTATION_STATUS.md`와 `GOOGLE_CLOUD_DEPLOYMENT.md`를
+따르며, 이 과거 로컬 완료 조건을 소급해 바꾸지 않는다.
 
 - 실제 AWS KMS 연결
 - Lightsail Managed PostgreSQL

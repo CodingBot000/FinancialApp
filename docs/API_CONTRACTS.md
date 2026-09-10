@@ -1,10 +1,11 @@
 # API 계약 v0
 
-- 상태: Milestone 1~5 구현 기준선
+- 상태: `IMPLEMENTED` canonical v1 계약 설명서
 - 작성일: 2026-09-01
 - API version: `v1`
 
-이 문서는 구현 전 계약 초안이다. 실제 controller와 OpenAPI가 이 문서와 다르면 같은 변경에서 문서를 갱신한다.
+이 문서는 구현 전 초안에서 시작해 canonical v1 계약 설명서가 됐다. 실제 controller와
+OpenAPI가 이 문서와 다르면 canonical artifact를 기준으로 같은 변경에서 문서를 갱신한다.
 
 ## 0. Canonical 계약 검증과 추적
 

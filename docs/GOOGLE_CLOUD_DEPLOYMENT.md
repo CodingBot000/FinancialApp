@@ -1,5 +1,8 @@
 # Google Cloud 배포 가이드
 
+- 상태: `IMPLEMENTED`
+- 마지막 배포 기록: 2026-09-05 / source `ee9f812` / document `4bc7400`
+- 인증 경계 재확인: `GAP-0011`, `FE-GAP-0006`
 - 대상: Wealth Sandbox 포트폴리오 데모
 - 현재 사용 프로젝트: nexuslink-490118
 - 현재 리전: asia-northeast3
@@ -22,7 +25,7 @@ flowchart LR
     B[Cloud Build]
     V[Secret Manager]
 
-    M -->|HTTPS + test bearer token| A
+    M -->|HTTPS + test bearer token\nsource verification pending GAP-0011| A
     A --> D
     A -->|합성 기관 API| S
     S --> D
@@ -99,6 +102,11 @@ EXPO_PUBLIC_LOCAL_TEST_ACCESS_TOKEN=<LOCAL_TEST_ACCESS_TOKEN>
 
 <LOCAL_TEST_ACCESS_TOKEN>은 자리표시자다. 실제 토큰·DB URL·비밀번호·private key를
 EXPO_PUBLIC_*에 넣지 않는다. Expo 환경변수는 릴리스 JS 번들에 포함될 수 있다.
+
+이 예시는 실제 release APK의 token 획득·주입 방식을 증명하지 않는다. 모바일 config,
+login/API composition과 build 환경 주입 경로는 `GAP-0011`에서 소스와 대조한다. 대조 전에는
+실제 token이 번들에 있다고 단정하지도, token 비노출 또는 production 인증 완료를
+주장하지도 않는다.
 
 ### 3.2 서버 비밀정보
 

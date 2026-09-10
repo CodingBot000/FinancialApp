@@ -1,8 +1,10 @@
 # 이슈와 누락 Register
 
-- 마지막 갱신: 2026-09-03
+- 마지막 갱신: 2026-09-10
 - 다음 ISSUE ID: `ISSUE-0018`
-- 다음 GAP ID: `GAP-0011`
+- 다음 GAP ID: `GAP-0012`
+- active issue: `ISSUE-0002`, `ISSUE-0003`, `ISSUE-0017`
+- active gap: `GAP-0002`, `GAP-0003`, `GAP-0010`, `GAP-0011`
 
 이 문서는 defect, blocker, 위험과 불가피한 누락을 삭제하지 않고 추적한다.
 
@@ -18,7 +20,10 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - `RESOLVED`: 수정과 검증 완료
 - `ACCEPTED_RISK`: 사용자가 잔여 위험을 명시적으로 수용함
 
-## Active Issue
+## Issue 목록
+
+이 section에는 append-only 이력 보존 때문에 해결된 항목도 포함된다. 상단 active 요약과
+각 항목의 `상태`가 현재 판정의 기준이다.
 
 ### ISSUE-0017 — iOS native simulator destination unavailable
 
@@ -128,7 +133,10 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
 - 해결 DEV:
 - 검증: DEV-0013에서 registry current stable이 Drizzle Kit `0.31.10`, ORM `0.45.2`로 현재 pin과 같음을 확인했다. root audit은 Drizzle build-time 경로 moderate 4건을 유지하고 두 production backend image workspace audit은 vulnerability 0이다. local release gate는 조건부 통과하며 강제 downgrade/override는 적용하지 않았다.
 
-## Active Gap
+## Gap 목록
+
+이 section에는 해결된 과거 gap도 함께 남는다. 상단 active 요약과 각 항목의 `상태`를
+현재 판정 기준으로 사용한다.
 
 ### GAP-0002 — iOS Development Build runtime 검증
 
@@ -174,6 +182,25 @@ frontend 내부 항목은 `workstreams/frontend/ISSUE_REGISTER.md`의 `FE-ISSUE-
   설정 앱에서 권한 변경 후 앱 진입을 수동 확인
 - 해결 DEV:
 - 검증: frontend `FE-GAP-0005` 참조
+
+### GAP-0011 — Cloud demo 모바일 인증 경계 문서·소스 대조
+
+- 상태: UNVERIFIED
+- 심각도: HIGH
+- 최초 발견: 2026-09-10
+- 발견 범위: 문서 정합성 검토
+- 원래 요구사항: access token은 메모리, refresh token은 SecureStore가 소유하고 실제
+  secret/token을 `EXPO_PUBLIC_*` 또는 release bundle에 포함하지 않음
+- 누락/연기 이유: `GOOGLE_CLOUD_DEPLOYMENT.md`는 Android APK가 test bearer token으로
+  Platform API를 호출한다고 기록하면서 공개 환경변수 예시에 token placeholder도 포함한다.
+  동시에 실제 token은 `EXPO_PUBLIC_*`에 넣지 않는다고 설명해 실제 composition이 문서만으로
+  확정되지 않는다.
+- 현재 영향: 실제 token 노출이 있다고 단정할 수는 없지만, source 대조 전에는 Cloud demo를
+  production 수준 인증으로 표현하거나 token 비노출을 검증 완료로 주장할 수 없다.
+- 재확인 조건: 모바일 config, API composition, login mode와 release build 환경 주입 경로를
+  읽기 전용으로 대조하고 token 획득·저장·전달 경계를 문서화
+- 해결 DEV:
+- 검증: frontend `FE-GAP-0006` 참조. 이번 문서 정리 단계에서는 소스를 검토하지 않음.
 
 ### GAP-0007 — Local Full-stack E2E와 Fresh-clone 인수
 

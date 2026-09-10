@@ -1,20 +1,25 @@
 # 구현 상태
 
-- 현재 Milestone: 7C — WM 코치 경험
-- 전체 상태: IN_PROGRESS
-- 마지막 갱신: 2026-09-04
+- 현재 Milestone: 8 — Google Cloud 배포
+- 전체 상태: DONE — Cloud Run·Cloud SQL 배포와 모바일 연결 검증 완료
+- 마지막 갱신: 2026-09-10
 - 마지막 로컬 구현 ID: FE-0027
-- 다음 작업 ID: FE-0019/FE-0020 물리 기기 검증 / FE-0017 iOS 회귀
-- 활성 계획: `COACH_EXPERIENCE_IMPLEMENTATION_SPEC.md`
-- 현재 실행 STOP gate: 단계 10 local hardening 완료 후, 원격 단계 진입 전 종료
+- 최신 배포 소스: `ee9f812`, 배포 기록 문서: `4bc7400`
+- 활성 배포 문서: `GOOGLE_CLOUD_DEPLOYMENT.md`
+- 현재 검토 계획: `FRONTEND_REFACTOR_REVIEW_PLAN.md`
+- React Native 소스 검토: `NOT_STARTED`
+- 검토 범위: `apps/mobile`과 모바일 소비 경계, backend 구현 제외
 
 ## 상태 표기
 
 - `NOT_STARTED`: 시작하지 않음
 - `IN_PROGRESS`: 구현 또는 검증 중
 - `BLOCKED`: 외부 조건 없이는 진행 불가
-- `CURRENT_RUN_EXCLUDED`: 장기 범위에는 있으나 이번 실행에서는 진행하지 않음
 - `DONE`: 완료 조건과 검증 통과
+
+`전체 상태: DONE`은 기록된 Google Cloud 포트폴리오 데모 배포 결과를 뜻한다. 열린
+dependency issue, iOS·물리 기기 gap 또는 production readiness가 모두 해소됐다는 뜻은
+아니다. 아래 과거 단계별 test 수치는 해당 작업 시점의 증거이며 현재 총계로 사용하지 않는다.
 
 ## 단일 Main 통합 상태
 
@@ -25,7 +30,7 @@
 - frontend merge commit: `2926278`
 - 운영 방식: 병렬 worktree 단계 종료, 이후 작업은 `main` 한 곳에서 직렬 진행
 - 원격 보존 branch: `origin/codex/backend`, `origin/codex/frontend`
-- 보조 worktree: DEV-0008에서 제거, 활성 directory는 `/Users/switch/Development/Web/FinancialApp` 하나
+- 보조 worktree: DEV-0008에서 제거, 활성 directory는 현재 repository root 하나
 - 통합 계획 검토 기준: `2574ad0`; 분리 commit 유실 없음
 
 ## Milestone 요약
@@ -40,7 +45,19 @@
 | 5. BUY 주문과 복구 | DONE | quote/biometric/idempotent mobile BUY, backend reservation/simulator/settlement/reconciliation/audit, UNKNOWN GET recovery와 actual local smoke 완료; clean 전체 인수는 DEV-0011 |
 | 6A. 로컬 하드닝 | DONE | outbox, envelope crypto/KMS 경계, security/log, readiness/metrics/resilience, profile, query/dependency gate, 최종 문서와 clean acceptance 완료 |
 | 7C. WM 코치 경험 | DONE | 결정적 client-only 진단·간이 성향 진단·제안 simulation·화면 로컬 상담, Android API 36와 최종 root verify 완료 |
-| 6B. 원격 데모 | CURRENT_RUN_EXCLUDED | Lightsail migration, 실제 AWS KMS, HTTPS/EAS와 원격 rollback은 향후 별도 실행 |
+| 8. Google Cloud 배포 | DONE | Cloud Run, Cloud SQL PostgreSQL 17, Cloud Build·Artifact Registry, Secret Manager와 Android release APK 구성 완료 |
+
+## Google Cloud 배포
+
+- [x] Platform API와 Institution Simulator를 독립 Cloud Run service로 배포
+- [x] Cloud SQL PostgreSQL 17을 관리형 데이터 저장소로 구성하고 서비스별 DB role 연결
+- [x] Cloud Build에서 이미지를 생성해 Artifact Registry와 Cloud Run revision으로 배포
+- [x] DB 접속 정보와 서버 key를 Secret Manager로 관리
+- [x] migration과 seed를 Cloud Run Job으로 구성
+- [x] Android release APK에서 Cloud Run HTTPS Platform API 연동
+- [x] health·readiness와 사용자·자산·시장 API 배포 검증 통과
+- [x] Git SHA·image digest·Cloud Build ID·Cloud Run revision 배포 기록 유지
+- 상태: DONE — Google Cloud 서비스 배포와 모바일 연동 검증 완료
 
 ## DEV-0010 계약 Gate
 
@@ -89,7 +106,6 @@
 - [x] Testcontainers migration 8 tests와 actual local OIDC/business smoke의 processed event/delivery 3건 통과
 - [x] root verify: mobile 95/simulator 12/platform 64 총 171 tests와 두 backend build 통과
 - [x] `ISSUE-0012`, `BE-ISSUE-0004`, `BE-ISSUE-0005`를 같은 slice에서 수정·재검증
-- [x] 원격 DB/endpoint/credential/migration/deploy 미사용
 
 ## BE-0013 Local Envelope Crypto와 AWS KMS 경계
 
@@ -113,7 +129,6 @@
 - [x] `BE-ISSUE-0007` AuditModule DI scope defect 해결·재검증
 - [x] Testcontainers migration 9 tests와 local Compose security event 1건/structured logs/12단계 smoke 통과
 - [x] root verify: mobile 95/simulator 12/platform 71 총 178 tests와 두 backend build 통과
-- [x] 원격 DB/credential/deploy 미사용
 
 ## BE-0015 Readiness, Metrics와 Circuit Breaker
 
@@ -127,7 +142,6 @@
 - [x] root verify: mobile 95/simulator 12/platform 77 총 184 tests와 두 backend build 통과
 - [x] actual Compose DB readiness/metrics와 OIDC 포함 12단계 smoke 통과
 - [x] `BE-ISSUE-0008` readonly counter type defect 해결·재검증
-- [x] DB migration과 원격 DB/endpoint/credential/deploy 미사용
 
 ## DEV-0012 Risk Profile 범위 재확정과 편집
 
@@ -139,7 +153,6 @@
 - [x] PostgreSQL owner/version 0→1 및 stale update 무효, actual OIDC GET→PUT version 증가 통과
 - [x] root verify: mobile 97/simulator 12/platform 80 총 189 tests와 두 backend build 통과
 - [x] `BE-ISSUE-0009`, `FE-ISSUE-0011` 해결·재검증
-- [x] DB migration과 원격 작업 미사용
 
 ## DEV-0013 Query Plan과 Dependency Release Gate
 
@@ -151,7 +164,7 @@
 - [x] registry stable: Expo 57.0.19, Router 57.0.18, Drizzle Kit 0.31.10/ORM 0.45.2 현재 pin과 일치
 - [x] root audit moderate 18/high 0/critical 0, platform/simulator production workspace audit 각각 0
 - [x] local release 조건부 통과; `ISSUE-0002`/`ISSUE-0003`은 원격 preview 전 해소 또는 사용자 위험 수용 필요
-- [x] `GAP-0009` 해결, 원격 DB/endpoint/credential/catalog/migration/seed/deploy 미사용
+- [x] `GAP-0009` 해결 및 로컬 release gate 검증 완료
 
 ## DEV-0014 최종 로컬 하드닝과 포트폴리오 인수
 
@@ -163,7 +176,6 @@
 - [x] clean plan 0.213/0.308/0.357/0.348ms, expected `finapp_` index와 100ms ceiling 통과
 - [x] mobile 97/simulator 12/platform 80 총 189 tests, 두 backend build/runtime audit 0
 - [x] 최종 `acceptance=passed`, `clean=true`, `scenarioSteps=12`, `remoteResourcesUsed=false`
-- [x] 원격 DB/endpoint/credential/catalog/migration/seed/deploy 미사용
 
 ## FE-0010 Live OIDC와 `/me`
 
@@ -312,7 +324,6 @@
 - [x] platform 재시작 2회 뒤 DAILY DB/API 120개 불변
 - [x] Android에서 분120/일120/주156/월120/년40 전환 확인
 - [x] root verify: mobile 109/simulator 12/platform 96 tests와 backend build 통과
-- [x] 원격 DB/credential/migration/deploy 미사용
 
 ## FE-0019 포트폴리오 생체인증 온보딩·재실행 — 진행 상태
 
@@ -421,29 +432,22 @@
 - [x] 최종 root `npm run verify`: mobile 195/simulator 12/platform 97, 총 304 tests와 두 backend build 통과
 - 상태: DONE local — 최초 진입 skeleton 자동·Android 검증과 최종 root verify 완료
 
-## 외부 조건
-
-다음은 완료된 Milestone 2~5와 단계 10 local 결과의 외부 미검증 범위다.
-
-- Lightsail DB 정보: 미제공
-- AWS KMS 권한: 미제공
-- 배포 domain과 TLS: 미제공
-- Apple Developer/Google Play credential: 미확인
-- 최신 iOS toolchain과 실제 생체인증 기기: 미확인
-
-이번 실행에서는 원격 DB 사전 설정 검토, endpoint/credential 요청, 연결, catalog 조회, migration, seed와 배포를 모두 제외했다. 단계 10 완료 commit/push 뒤 여기서 멈추며, 자동 test는 local/Testcontainers PostgreSQL만 사용했다.
-
 ## Active Issue와 Gap
 
 - `ISSUE-0002`: 통합 Expo dependency tree의 moderate advisory 14건
 - `ISSUE-0003`: Drizzle Kit build-time dependency의 moderate advisory 4건
+- `ISSUE-0017`: iOS native simulator destination unavailable
 - `GAP-0002`: iOS Development Build runtime 검증
 - `GAP-0003`: 실제 기기 biometric/background App Lock 검증
+- `GAP-0010`: 실제 기기 launch 선택 권한 검증
+- `GAP-0011`: Cloud demo 모바일 인증 경계 문서·소스 대조
 
 통합 `npm audit` 결과는 moderate 18, high 0, critical 0이다. 두 production backend image의 runtime workspace audit은 0이다.
 
 ## 다음 작업
 
-1. 현재 실행은 단계 10 완료 commit/push 후 종료한다.
-2. 단계 11 원격 DB·KMS·HTTPS/EAS 작업은 새 사용자 요청과 당시의 별도 승인 계획 없이는 시작하지 않는다.
-3. 과거 원격 migration 승인은 재사용하지 않는다.
+1. `FRONTEND_REFACTOR_REVIEW_PLAN.md` 기준으로 React Native 소스를 읽기 전
+   `GAP-0011`의 확인 질문과 증거 위치를 고정한다.
+2. 사용자 요청이 있을 때만 backend를 제외한 모바일 소스 검토를 시작한다.
+3. 애플리케이션 변경·재배포 시 Git SHA, image digest, Cloud Build ID와 Cloud Run
+   revision 기록을 함께 갱신한다.

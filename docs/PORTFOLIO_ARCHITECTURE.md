@@ -2,7 +2,7 @@
 
 - 상태: DEV-0014 local hardening 최종 문서
 - 범위: 합성 데이터 기반 local/Testcontainers/Docker Compose
-- 기준 계약: canonical OpenAPI 35 operations / 38 fixtures
+- 기준 계약: canonical OpenAPI 38 operations / 41 fixtures
 
 ## 1. 시스템 구조
 

@@ -1,9 +1,9 @@
 # Frontend Workstream 개발 로그
 
 - 기록 방식: append-only
-- 다음 ID: Milestone 6A frontend 보강 발견 시 배정
+- 다음 ID: `FE-0028`
 - 운영 상태: `codex/frontend`는 DEV-0006 통합 이력으로 보존, 신규 FE commit은 단일 `main`에서 수행
-- 활성 worktree: `/Users/switch/Development/Web/FinancialApp`
+- 활성 worktree: repository root의 `main`
 - 통합 검토 기준: `main` at `2574ad0`, `platform-v1` at DEV-0006
 
 기존 FE-0001~FE-0009 항목의 base/contract revision은 분리 당시 사실로 보존한다. FE-0010 이후에는 `INTEGRATED_DEVELOPMENT_PLAN.md`에 따라 `main`의 `apps/mobile/**` 변경을 commit 단위로 기록하고 중앙 상태·issue도 같은 단계에서 갱신한다.
@@ -1068,3 +1068,37 @@
 - mobile 51 files/149 tests, typecheck/lint/architecture/route/design check 통과
 - 원화 formatter, simulation draft, settings component 회귀 테스트 통과
 - contract/API/DB 변경 없음
+
+## FE-0027 — WM 코치 경험
+
+- 날짜: 2026-09-04
+- Milestone: 7C WM 코치 경험
+- 상태: COMPLETED
+- contract revision: `platform-v1` unchanged
+
+### 구현
+
+- 기존 플랜 탭을 코치 탭으로 교체하고 목표 자산 시뮬레이션을 `/plan` 전체 화면으로
+  이동했다.
+- 기존 `AssetSummary`와 `UserRiskProfile`에서 결정적 코치 진단과 현재/제안 배분을
+  파생하고 공통 allocation preset을 simulation input과 공유했다.
+- 간이 투자 성향 저장, 화면 로컬 상담 demo, Calendar와 시간 wheel을 연결했다.
+- 탭 최초 진입 skeleton과 탭 재선택 시 화면 상태를 유지하는 scroll-to-top 동작을
+  구현했다.
+- 신규 backend API, OpenAPI operation, DB schema/migration과 전역 store는 추가하지 않았다.
+
+### 검증
+
+- architecture 244 files, route 16 files, design-system 52 UI files와 mobile typecheck 통과
+- mobile Vitest 65 files/209 tests, canonical contract 38 operations/41 fixtures 통과
+- Android API 36 Development Build와 시나리오 A~D, 기존 홈·종목·주문·내 정보 회귀 통과
+- 최종 root verify: mobile 195/simulator 12/platform 97, 총 304 tests와 backend build 통과
+
+### 이슈·누락·Handoff
+
+- 실제 상담 backend와 규제상 적합성 판단은 명시적 비범위다.
+- iOS와 물리 기기 검증은 기존 frontend issue/gap에서 계속 추적한다.
+
+### 다음 작업
+
+- `FRONTEND_REFACTOR_REVIEW_PLAN.md`에 따른 모바일 소스 검토는 별도 사용자 요청 후 시작한다.

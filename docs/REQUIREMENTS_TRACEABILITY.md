@@ -1,7 +1,7 @@
 # Requirements Traceability
 
-- 상태: FE-0027 WM 코치 경험 포함 local 대응표
-- 기준: `MVP_SCOPE.md`, `SECURITY_MODEL.md`, `COACH_EXPERIENCE_IMPLEMENTATION_SPEC.md`, canonical OpenAPI
+- 상태: FE-0027 WM 코치 경험과 Google Cloud 배포 포함 대응표
+- 기준: `MVP_SCOPE.md`, `SECURITY_MODEL.md`, `COACH_EXPERIENCE_IMPLEMENTATION_SPEC.md`, `GOOGLE_CLOUD_DEPLOYMENT.md`, canonical OpenAPI
 
 | 요구사항 | 구현 증거 | 자동/실제 검증 | 상태 |
 |---|---|---|---|
@@ -20,6 +20,7 @@
 | 코치 상담 demo | `react-native-calendars` Calendar의 예약 가능일·disabled일, 기본 시간 trigger와 반투명 Modal 세로 시간 wheel, 방식·완료를 component local state로 관리 | availability/wheel/picker/component tests + Android API 36 시나리오 D | DONE (screen-local demo) |
 | 단일 기관 connection/sync | HTTP simulator adapter, raw/processing/normalization | 12-step smoke + PostgreSQL assertions | DONE |
 | 자산 조회와 차트 | summary/accounts/holdings/history/allocation | provider/mobile tests + actual smoke | DONE |
+| 시장 데이터와 차트 | local/KIS provider adapter, cache, 5개 interval과 mobile chart | local/contract/Android smoke 완료; 실제 KIS credential smoke는 미실행 | DONE local / KIS UNVERIFIED |
 | deterministic simulation | persisted p10/p50/p90 engine result | 13-point actual smoke + tests | DONE |
 | BUY preview/submit | 원화 매수금액→가상 기준가 기반 quantity 변환, 예상 매입좌수, quote expiry, biometric, idempotency | amount adapter/component tests + FILLED/REJECTED actual smoke | DONE |
 | 현금 예약과 settlement | order/execution/ledger/position transaction | Testcontainers invariant + DB smoke | DONE |
@@ -27,15 +28,17 @@
 | transactional outbox | atomic event, claim, delivery receipt | crash-window/idempotency tests + DB smoke | DONE |
 | 별도 institution simulator | independent Nest/Fastify service와 DB role | contract/integration + Compose | DONE |
 | PostgreSQL + Drizzle migration | 10 forward migrations, prefixed objects | empty Testcontainers + preserved Compose | DONE |
-| API 계약과 표준 오류 | two canonical OpenAPI documents | 35 operations/38 fixtures/provider/consumer gate | DONE |
+| API 계약과 표준 오류 | two canonical OpenAPI documents | 38 operations/41 fixtures/provider/consumer gate | DONE |
 | owner/scope isolation | JWT guard와 repository owner condition | auth/ownership/provider tests | DONE |
 | 합성 identifier 암호화 | `FAE2` AES-GCM envelope와 HMAC lookup | wrong AAD/tamper/fake KMS tests | DONE (local boundary) |
 | audit/security event와 redacted log | append-only stores, allowlist structured logger | role tests + actual log/security smoke | DONE (local) |
 | readiness/metrics/resilience | bounded DB probe, private metrics, circuit breaker | unit/provider + actual Compose | DONE (local) |
 | 핵심 query plan | four runtime-role actual JSON plans | expected index + <100ms local gate | DONE (non-SLO) |
 | fresh-clone acceptance | `make acceptance-test` | clean volume, install, verify, build, migration, seed, smoke, audit | DONE |
-| 실제 AWS KMS | adapter port/fake client only | actual AWS 미사용 | CURRENT_RUN_EXCLUDED |
-| 원격 DB/HTTPS/EAS | 문서화된 향후 stage 11 | 원격 작업 미실행 | CURRENT_RUN_EXCLUDED |
+| KMS 암호화 경계 | data-key provider port, AWS KMS adapter와 fail-closed bootstrap | adapter contract·wrong AAD·tamper tests | DONE (adapter boundary) |
+| Google Cloud 배포 | Platform API·Simulator Cloud Run service, Cloud SQL PostgreSQL 17, Cloud Build·Artifact Registry와 Secret Manager | health·readiness·사용자·자산·시장 API, Cloud Run revision과 APK 검증 | DONE |
+| 모바일 Cloud API 연결 | 독립 실행 Android release APK와 Cloud Run HTTPS Platform API | APK 실행, bundled endpoint와 주요 화면 확인 | DONE |
+| Cloud demo 모바일 인증 경계 | test bearer 기록, 공개 환경변수 예시와 token 비노출 원칙 | mobile config/login/API composition source 대조 전 | UNVERIFIED (`GAP-0011`) |
 | 규제상 투자 추천·실제 상품 추천·실제 상담 | client-only 예시 코치 진단과 화면 로컬 상담 외에는 명시적 비기능 범위 | 신규 backend/OpenAPI/DB 없음, 고지 문구와 Android 화면 확인 | EXCLUDED |
 
-상세 테스트 명령과 계층은 `TEST_STRATEGY.md`, 실제 query plan은 `PERFORMANCE_EVIDENCE.md`, 남은 위험은 `ISSUE_REGISTER.md`와 `LIMITATIONS.md`를 따른다.
+상세 테스트 명령과 계층은 `TEST_STRATEGY.md`, 실제 query plan은 `PERFORMANCE_EVIDENCE.md`, Google Cloud 배포 구조·절차·검증 기록은 `GOOGLE_CLOUD_DEPLOYMENT.md`, 남은 위험은 `ISSUE_REGISTER.md`와 `LIMITATIONS.md`를 따른다.

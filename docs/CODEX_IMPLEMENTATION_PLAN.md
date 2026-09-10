@@ -1,7 +1,8 @@
 # Financial App Codex 구현 계획
 
-- 상태: 최초 실행 기준선/이력 — DEV-0007 이후 작업 순서는 `INTEGRATED_DEVELOPMENT_PLAN.md` 적용
+- 상태: `ARCHIVED` — 최초 milestone과 실행 원칙 이력
 - 작성일: 2026-09-01
+- 현재 대체 문서: `FRONTEND_REFACTOR_REVIEW_PLAN.md`
 - 대상: 이 저장소에서 구현을 수행하는 Codex와 개발자
 - 원본 요구사항: `Financial_app_CODEX_DETAILED_IMPLEMENTATION_SPEC.md`
 
@@ -9,7 +10,10 @@
 
 이 문서는 원본 상세 명세를 실제 개발 순서로 축소한 실행 계획이다. 원본 명세는 최종 포트폴리오 목표와 배경 설명으로 유지한다.
 
-`DEV-0006`에서 분리 작업이 `main`에 통합됐으므로 이후 실제 작업 순서와 commit 분할은 `INTEGRATED_DEVELOPMENT_PLAN.md`를 따른다. 본 문서의 milestone, 지속 실행, 기록과 금지 규칙은 새 계획과 충돌하지 않는 범위에서 계속 유효하다.
+`DEV-0006`에서 분리 작업이 `main`에 통합된 뒤 DEV-0007~DEV-0014의 실제 순서는
+`INTEGRATED_DEVELOPMENT_PLAN.md`를 따랐다. 두 문서 모두 완료 이력이며 현재 React Native
+소스 검토는 `FRONTEND_REFACTOR_REVIEW_PLAN.md`를 따른다. 본 문서의 과거 milestone과
+기록 원칙은 현재 ACTIVE 문서와 충돌하지 않는 범위에서 참고한다.
 
 문서가 충돌할 경우 다음 순서로 판단한다.
 
